@@ -14,16 +14,180 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ghost_users: {
+        Row: {
+          created_at: string | null
+          id: string
+          position: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          position: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          position?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          annual_data_spend: number | null
+          annual_electricity_spend: number | null
+          created_at: string | null
+          email: string
+          id: string
+          last_active: string | null
+          queue_position: number | null
+          referral_code: string | null
+          referred_by: string | null
+          selected_goal: string | null
+          target_amount: number | null
+          total_annual_spend: number | null
+        }
+        Insert: {
+          annual_data_spend?: number | null
+          annual_electricity_spend?: number | null
+          created_at?: string | null
+          email: string
+          id: string
+          last_active?: string | null
+          queue_position?: number | null
+          referral_code?: string | null
+          referred_by?: string | null
+          selected_goal?: string | null
+          target_amount?: number | null
+          total_annual_spend?: number | null
+        }
+        Update: {
+          annual_data_spend?: number | null
+          annual_electricity_spend?: number | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          last_active?: string | null
+          queue_position?: number | null
+          referral_code?: string | null
+          referred_by?: string | null
+          selected_goal?: string | null
+          target_amount?: number | null
+          total_annual_spend?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          referred_user_id: string
+          referrer_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          referred_user_id: string
+          referrer_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          referred_user_id?: string
+          referrer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_user_id_fkey"
+            columns: ["referred_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      waitlist_activity: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          positions_moved: number | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          positions_moved?: number | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          positions_moved?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_activity_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_referral_code: { Args: never; Returns: string }
+      get_next_queue_position: { Args: never; Returns: number }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +314,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

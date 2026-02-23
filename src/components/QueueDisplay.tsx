@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import { Users, Share2, Copy, Check, TrendingUp } from "lucide-react";
@@ -20,18 +22,37 @@ const goalLabels: Record<string, string> = {
 };
 
 const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProps) => {
-  const [position, setPosition] = useState(201);
-  const [referrals, setReferrals] = useState(0);
+  const { profile, refreshProfile } = useAuth();
   const [copied, setCopied] = useState(false);
-  const [skippedToday, setSkippedToday] = useState(0);
+  const [referralCount, setReferralCount] = useState(0);
+  const [todaySkipped, setTodaySkipped] = useState(0);
 
-  const referralLink = "https://reallo.app/ref/user123";
+  const position = profile?.queue_position ?? 201;
+  const referralLink = profile?.referral_code
+    ? `${window.location.origin}/auth?ref=${profile.referral_code}`
+    : "";
 
-  const handleRefer = () => {
-    setReferrals((r) => r + 1);
-    setPosition((p) => Math.max(1, p - 5));
-    setSkippedToday((s) => s + 5);
-  };
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!profile) return;
+
+      const { count } = await supabase
+        .from("referrals")
+        .select("id", { count: "exact", head: true })
+        .eq("referrer_id", profile.id);
+      setReferralCount(count || 0);
+
+      const today = new Date().toISOString().split("T")[0];
+      const { data: acts } = await supabase
+        .from("waitlist_activity")
+        .select("positions_moved")
+        .eq("user_id", profile.id)
+        .gte("created_at", today);
+      const totalSkipped = (acts || []).reduce((sum, a) => sum + (a.positions_moved || 0), 0);
+      setTodaySkipped(totalSkipped);
+    };
+    fetchStats();
+  }, [profile]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
@@ -39,13 +60,17 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Simulate daily movement
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setPosition((p) => Math.max(1, p - 1));
-    }, 8000);
-    return () => clearInterval(timer);
-  }, []);
+  const handleShare = async () => {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Join Reallo",
+        text: "Reclaim your utility spend! Use my referral link:",
+        url: referralLink,
+      });
+    } else {
+      handleCopy();
+    }
+  };
 
   const isNext = position <= 1;
 
@@ -100,7 +125,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-muted-foreground font-display">Your Goal</p>
-              <p className="font-display font-semibold text-foreground">{goalLabels[goal]}</p>
+              <p className="font-display font-semibold text-foreground">{goalLabels[goal] || goal}</p>
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground font-display">Claimable</p>
@@ -124,12 +149,12 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
         <div className="grid grid-cols-3 gap-3">
           <GlassCard className="text-center p-4">
             <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
-            <p className="font-display font-bold text-foreground">{skippedToday}</p>
+            <p className="font-display font-bold text-foreground">{todaySkipped}</p>
             <p className="text-[10px] text-muted-foreground">Skipped Today</p>
           </GlassCard>
           <GlassCard className="text-center p-4">
             <Share2 className="w-4 h-4 text-primary mx-auto mb-1" />
-            <p className="font-display font-bold text-foreground">{referrals}</p>
+            <p className="font-display font-bold text-foreground">{referralCount}</p>
             <p className="text-[10px] text-muted-foreground">Referrals</p>
           </GlassCard>
           <GlassCard className="text-center p-4">
@@ -149,19 +174,26 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
               For every friend you refer, skip 5 positions.
             </p>
 
-            <div className="flex gap-2">
-              <div className="flex-1 glass-input rounded-xl px-3 py-2.5 text-xs text-muted-foreground truncate">
-                {referralLink}
-              </div>
-              <GlassButton variant="outline" onClick={handleCopy} className="px-3">
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              </GlassButton>
-            </div>
+            {profile?.referral_code && (
+              <>
+                <p className="text-xs text-muted-foreground mb-1 font-display">Your referral code</p>
+                <p className="font-display font-bold text-primary text-lg mb-3">{profile.referral_code}</p>
 
-            <GlassButton variant="primary" className="w-full mt-4" onClick={handleRefer}>
-              <Share2 className="inline w-4 h-4 mr-2" />
-              Share Referral Link
-            </GlassButton>
+                <div className="flex gap-2">
+                  <div className="flex-1 glass-input rounded-xl px-3 py-2.5 text-xs text-muted-foreground truncate">
+                    {referralLink}
+                  </div>
+                  <GlassButton variant="outline" onClick={handleCopy} className="px-3">
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </GlassButton>
+                </div>
+
+                <GlassButton variant="primary" className="w-full mt-4" onClick={handleShare}>
+                  <Share2 className="inline w-4 h-4 mr-2" />
+                  Share Referral Link
+                </GlassButton>
+              </>
+            )}
           </GlassCard>
         )}
       </div>

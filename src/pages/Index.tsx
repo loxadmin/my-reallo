@@ -1,36 +1,20 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import SpendCalculator from "@/components/SpendCalculator";
-import GoalSelector from "@/components/GoalSelector";
-import QueueDisplay from "@/components/QueueDisplay";
-
-type AppStep = "hero" | "calculator" | "goal" | "queue";
-
-interface SpendResult {
-  weeklyData: number;
-  monthlyElectricity: number;
-  annualData: number;
-  annualElectricity: number;
-  totalAnnual: number;
-}
 
 const Index = () => {
-  const [step, setStep] = useState<AppStep>("hero");
-  const [spendResult, setSpendResult] = useState<SpendResult | null>(null);
-  const [selectedGoal, setSelectedGoal] = useState("");
-  const [targetAmount, setTargetAmount] = useState(0);
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSpendComplete = (result: SpendResult) => {
-    setSpendResult(result);
-    setStep("goal");
-  };
-
-  const handleGoalSelect = (goal: string, target: number) => {
-    setSelectedGoal(goal);
-    setTargetAmount(target);
-    setStep("queue");
+  const handleGetStarted = () => {
+    if (user) {
+      navigate("/dashboard");
+    } else {
+      navigate("/auth");
+    }
   };
 
   return (
@@ -45,24 +29,13 @@ const Index = () => {
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={step}
+          key="hero"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {step === "hero" && <HeroSection onGetStarted={() => setStep("calculator")} />}
-          {step === "calculator" && <SpendCalculator onComplete={handleSpendComplete} />}
-          {step === "goal" && spendResult && (
-            <GoalSelector totalAnnualSpend={spendResult.totalAnnual} onSelect={handleGoalSelect} />
-          )}
-          {step === "queue" && spendResult && (
-            <QueueDisplay
-              totalAnnualSpend={spendResult.totalAnnual}
-              goal={selectedGoal}
-              targetAmount={targetAmount}
-            />
-          )}
+          <HeroSection onGetStarted={handleGetStarted} />
         </motion.div>
       </AnimatePresence>
     </div>
