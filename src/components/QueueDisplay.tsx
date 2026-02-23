@@ -1,0 +1,172 @@
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import GlassCard from "./GlassCard";
+import GlassButton from "./GlassButton";
+import { Users, Share2, Copy, Check, TrendingUp } from "lucide-react";
+
+interface QueueDisplayProps {
+  totalAnnualSpend: number;
+  goal: string;
+  targetAmount: number;
+}
+
+const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
+
+const goalLabels: Record<string, string> = {
+  education: "Education",
+  vacation: "Vacation",
+  business: "Business Funding",
+  rent: "Rent Support",
+};
+
+const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProps) => {
+  const [position, setPosition] = useState(201);
+  const [referrals, setReferrals] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const [skippedToday, setSkippedToday] = useState(0);
+
+  const referralLink = "https://reallo.app/ref/user123";
+
+  const handleRefer = () => {
+    setReferrals((r) => r + 1);
+    setPosition((p) => Math.max(1, p - 5));
+    setSkippedToday((s) => s + 5);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(referralLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Simulate daily movement
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPosition((p) => Math.max(1, p - 1));
+    }, 8000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const isNext = position <= 1;
+
+  return (
+    <section className="min-h-screen flex items-center justify-center px-6 py-20">
+      <div className="w-full max-w-md space-y-4">
+        {/* Queue position */}
+        <GlassCard variant="glow" className="text-center">
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200 }}
+          >
+            {isNext ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4 pulse-glow">
+                  <Check className="w-8 h-8 text-primary" />
+                </div>
+                <h2 className="font-display text-2xl font-bold gradient-text mb-2">
+                  You're Next!
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Activate your reclaim now.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-7 h-7 text-primary" />
+                </div>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest font-display mb-1">
+                  People ahead of you
+                </p>
+                <motion.h2
+                  key={position}
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="font-display text-5xl font-bold gradient-text"
+                >
+                  {position}
+                </motion.h2>
+                <p className="text-sm text-muted-foreground mt-3">
+                  Skip the queue — refer a friend and move up 5 spots.
+                </p>
+              </>
+            )}
+          </motion.div>
+        </GlassCard>
+
+        {/* Goal summary */}
+        <GlassCard>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground font-display">Your Goal</p>
+              <p className="font-display font-semibold text-foreground">{goalLabels[goal]}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground font-display">Claimable</p>
+              <p className="font-display font-semibold text-primary">{formatNaira(totalAnnualSpend)}</p>
+            </div>
+          </div>
+          <div className="mt-3 w-full h-1.5 bg-muted rounded-full overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-primary"
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min((totalAnnualSpend / targetAmount) * 100, 100)}%` }}
+              transition={{ duration: 1, delay: 0.3 }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            {formatNaira(totalAnnualSpend)} / {formatNaira(targetAmount)}
+          </p>
+        </GlassCard>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          <GlassCard className="text-center p-4">
+            <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
+            <p className="font-display font-bold text-foreground">{skippedToday}</p>
+            <p className="text-[10px] text-muted-foreground">Skipped Today</p>
+          </GlassCard>
+          <GlassCard className="text-center p-4">
+            <Share2 className="w-4 h-4 text-primary mx-auto mb-1" />
+            <p className="font-display font-bold text-foreground">{referrals}</p>
+            <p className="text-[10px] text-muted-foreground">Referrals</p>
+          </GlassCard>
+          <GlassCard className="text-center p-4">
+            <Users className="w-4 h-4 text-primary mx-auto mb-1" />
+            <p className="font-display font-bold text-foreground">{position}</p>
+            <p className="text-[10px] text-muted-foreground">Position</p>
+          </GlassCard>
+        </div>
+
+        {/* Referral */}
+        {!isNext && (
+          <GlassCard variant="strong">
+            <h3 className="font-display font-semibold text-foreground mb-3">
+              Refer & Skip the Queue
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              For every friend you refer, skip 5 positions.
+            </p>
+
+            <div className="flex gap-2">
+              <div className="flex-1 glass-input rounded-xl px-3 py-2.5 text-xs text-muted-foreground truncate">
+                {referralLink}
+              </div>
+              <GlassButton variant="outline" onClick={handleCopy} className="px-3">
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </GlassButton>
+            </div>
+
+            <GlassButton variant="primary" className="w-full mt-4" onClick={handleRefer}>
+              <Share2 className="inline w-4 h-4 mr-2" />
+              Share Referral Link
+            </GlassButton>
+          </GlassCard>
+        )}
+      </div>
+    </section>
+  );
+};
+
+export default QueueDisplay;
