@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, Shield, LayoutDashboard } from "lucide-react";
+import RealloEyeLogo from "./RealloEyeLogo";
 
 const Navbar = () => {
   const { user, isAdmin, signOut } = useAuth();
@@ -15,7 +16,8 @@ const Navbar = () => {
       className="fixed top-0 left-0 right-0 z-50 px-6 py-4"
     >
       <div className="max-w-lg mx-auto glass rounded-2xl px-5 py-3 flex items-center justify-between">
-        <button onClick={() => navigate("/")} className="font-display text-lg font-bold gradient-text tracking-tight">
+        <button onClick={() => navigate("/")} className="font-display text-lg font-bold gradient-text tracking-tight flex items-center">
+          <RealloEyeLogo size={28} />
           Reallo
         </button>
         <div className="flex items-center gap-2">
