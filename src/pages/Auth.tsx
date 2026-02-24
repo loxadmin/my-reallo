@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import GlassInput from "@/components/GlassInput";
@@ -17,6 +17,16 @@ const Auth = () => {
   const [signupSuccess, setSignupSuccess] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Auto-fill referral code from URL and switch to signup mode
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      setReferralCode(ref.toUpperCase());
+      setMode("signup");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async () => {
     setError("");

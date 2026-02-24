@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
-import { Users, Share2, Copy, Check, TrendingUp } from "lucide-react";
+import { Users, Share2, Copy, Check, TrendingUp, Clock, Zap } from "lucide-react";
 
 interface QueueDisplayProps {
   totalAnnualSpend: number;
@@ -27,10 +27,27 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
   const [referralCount, setReferralCount] = useState(0);
   const [todaySkipped, setTodaySkipped] = useState(0);
 
+  const [nextUnlock, setNextUnlock] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const position = profile?.queue_position ?? 201;
   const referralLink = profile?.referral_code
     ? `${window.location.origin}/auth?ref=${profile.referral_code}`
     : "";
+
+  // Countdown timer until next queue batch unlock (every 24h from midnight UTC)
+  useEffect(() => {
+    const calcTimeLeft = () => {
+      const now = new Date();
+      const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+      const diff = tomorrow.getTime() - now.getTime();
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setNextUnlock({ hours, minutes, seconds });
+    };
+    calcTimeLeft();
+    const interval = setInterval(calcTimeLeft, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -142,6 +159,33 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
           </div>
           <p className="text-xs text-muted-foreground mt-2">
             {formatNaira(totalAnnualSpend)} / {formatNaira(targetAmount)}
+          </p>
+        </GlassCard>
+
+        {/* Next unlock timer */}
+        <GlassCard variant="strong" className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Clock className="w-4 h-4 text-primary" />
+            <p className="text-xs text-muted-foreground font-display uppercase tracking-widest">Next Queue Unlock</p>
+          </div>
+          <div className="flex items-center justify-center gap-3">
+            <div className="text-center">
+              <p className="font-display text-2xl font-bold text-foreground">{String(nextUnlock.hours).padStart(2, "0")}</p>
+              <p className="text-[10px] text-muted-foreground">Hours</p>
+            </div>
+            <span className="font-display text-xl text-primary font-bold">:</span>
+            <div className="text-center">
+              <p className="font-display text-2xl font-bold text-foreground">{String(nextUnlock.minutes).padStart(2, "0")}</p>
+              <p className="text-[10px] text-muted-foreground">Min</p>
+            </div>
+            <span className="font-display text-xl text-primary font-bold">:</span>
+            <div className="text-center">
+              <p className="font-display text-2xl font-bold text-foreground">{String(nextUnlock.seconds).padStart(2, "0")}</p>
+              <p className="text-[10px] text-muted-foreground">Sec</p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1">
+            <Zap className="w-3 h-3 text-primary" /> 10 users unlock & move up every day
           </p>
         </GlassCard>
 
