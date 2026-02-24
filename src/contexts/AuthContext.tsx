@@ -103,63 +103,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       options: { emailRedirectTo: window.location.origin },
     });
 
-    if (!error && data.user) {
-      // Create profile
-      const refCode = await supabase.rpc("generate_referral_code");
-      const queuePos = await supabase.rpc("get_next_queue_position");
+    if (!error && data.user && referralCode) {
+      // Handle referral after trigger creates profile
+      const { data: referrer } = await supabase
+        .from("profiles")
+        .select("id, queue_position")
+        .eq("referral_code", referralCode.toUpperCase())
+        .maybeSingle();
 
-      let referredBy: string | null = null;
-      if (referralCode) {
-        const { data: referrer } = await supabase
+      if (referrer) {
+        await supabase
           .from("profiles")
-          .select("id")
-          .eq("referral_code", referralCode.toUpperCase())
-          .maybeSingle();
-        referredBy = referrer?.id ?? null;
-      }
+          .update({ referred_by: referrer.id })
+          .eq("id", data.user.id);
 
-      await supabase.from("profiles").insert({
-        id: data.user.id,
-        email,
-        referral_code: refCode.data,
-        queue_position: queuePos.data,
-        referred_by: referredBy,
-      });
-
-      // If referred, give referrer a skip
-      if (referredBy) {
-        // Award referrer 5 position skip
-        const { data: referrerProfile } = await supabase
+        const newPos = Math.max(1, referrer.queue_position - 5);
+        await supabase
           .from("profiles")
-          .select("queue_position")
-          .eq("id", referredBy)
-          .single();
+          .update({ queue_position: newPos })
+          .eq("id", referrer.id);
 
-        if (referrerProfile) {
-          const newPos = Math.max(1, referrerProfile.queue_position - 5);
-          await supabase
-            .from("profiles")
-            .update({ queue_position: newPos })
-            .eq("id", referredBy);
+        await supabase.from("referrals").insert({
+          referrer_id: referrer.id,
+          referred_user_id: data.user.id,
+        });
 
-          await supabase.from("referrals").insert({
-            referrer_id: referredBy,
-            referred_user_id: data.user.id,
-          });
-
-          await supabase.from("waitlist_activity").insert({
-            user_id: referredBy,
-            action_type: "referral",
-            positions_moved: 5,
-          });
-        }
+        await supabase.from("waitlist_activity").insert({
+          user_id: referrer.id,
+          action_type: "referral",
+          positions_moved: 5,
+        });
       }
-
-      // Assign default user role
-      await supabase.from("user_roles").insert({
-        user_id: data.user.id,
-        role: "user",
-      });
     }
 
     return { error };
