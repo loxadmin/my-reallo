@@ -100,41 +100,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: {
+        emailRedirectTo: window.location.origin,
+        data: referralCode ? { referral_code: referralCode.toUpperCase() } : {},
+      },
     });
-
-    if (!error && data.user && referralCode) {
-      // Handle referral after trigger creates profile
-      const { data: referrer } = await supabase
-        .from("profiles")
-        .select("id, queue_position")
-        .eq("referral_code", referralCode.toUpperCase())
-        .maybeSingle();
-
-      if (referrer) {
-        await supabase
-          .from("profiles")
-          .update({ referred_by: referrer.id })
-          .eq("id", data.user.id);
-
-        const newPos = Math.max(1, referrer.queue_position - 5);
-        await supabase
-          .from("profiles")
-          .update({ queue_position: newPos })
-          .eq("id", referrer.id);
-
-        await supabase.from("referrals").insert({
-          referrer_id: referrer.id,
-          referred_user_id: data.user.id,
-        });
-
-        await supabase.from("waitlist_activity").insert({
-          user_id: referrer.id,
-          action_type: "referral",
-          positions_moved: 5,
-        });
-      }
-    }
 
     return { error };
   };

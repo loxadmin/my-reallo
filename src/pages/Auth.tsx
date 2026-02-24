@@ -6,6 +6,7 @@ import GlassButton from "@/components/GlassButton";
 import GlassInput from "@/components/GlassInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { Mail, Lock, UserPlus, LogIn, Gift } from "lucide-react";
+import RealloEyeLogo from "@/components/RealloEyeLogo";
 
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -60,7 +61,10 @@ const Auth = () => {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="font-display text-3xl font-bold gradient-text mb-2">Reallo</h1>
+          <h1 className="font-display text-3xl font-bold gradient-text mb-2 flex items-center justify-center gap-2">
+            <RealloEyeLogo size={36} />
+            Reallo
+          </h1>
           <p className="text-sm text-muted-foreground">Reclaim what's yours</p>
         </div>
 

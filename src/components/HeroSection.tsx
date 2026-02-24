@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import GlassButton from "./GlassButton";
+import RealloEyeLogo from "./RealloEyeLogo";
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -53,6 +54,10 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           </span>
         </motion.div>
 
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <RealloEyeLogo size={48} />
+          <span className="font-display text-4xl font-bold gradient-text">Reallo</span>
+        </div>
         <h1 className="font-display text-5xl sm:text-6xl font-bold leading-[1.1] mb-6">
           <span className="text-foreground">Stop </span>
           <span className="gradient-text">Losing</span>
