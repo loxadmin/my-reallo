@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import GlassButton from "./GlassButton";
-import RealloEyeLogo from "./RealloEyeLogo";
 import WalletAnimation from "./WalletAnimation";
 
 interface HeroSectionProps {
@@ -41,17 +40,6 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           <span className="text-[11px] font-display text-primary/70 tracking-[0.2em] uppercase">
             Reclaim What's Yours
           </span>
-        </motion.div>
-
-        {/* Logo + Brand */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="flex items-center justify-center gap-2.5 mb-5"
-        >
-          <RealloEyeLogo size={48} />
-          <span className="font-display text-4xl font-bold gradient-text">Reallo</span>
         </motion.div>
 
         {/* Headline */}
