@@ -9,111 +9,94 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
-      {/* Layered ambient glow */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-primary/8 blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-20 right-10 w-[400px] h-[400px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
-      <div className="absolute top-1/3 left-10 w-[200px] h-[200px] rounded-full bg-accent/10 blur-[80px] pointer-events-none" />
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-24 pb-12 overflow-hidden">
+      {/* Soft ambient orbs */}
+      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/6 blur-[180px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[-5%] w-[300px] h-[300px] rounded-full bg-primary/4 blur-[140px] pointer-events-none" />
+      <div className="absolute top-[40%] left-[-5%] w-[200px] h-[200px] rounded-full bg-accent/6 blur-[100px] pointer-events-none" />
 
-      {/* Floating particles */}
-      {[...Array(8)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 rounded-full bg-primary/30"
-          style={{
-            top: `${15 + i * 10}%`,
-            left: `${8 + i * 12}%`,
-          }}
-          animate={{
-            y: [-25, 25, -25],
-            x: [-5, 5, -5],
-            opacity: [0.1, 0.5, 0.1],
-          }}
-          transition={{
-            duration: 5 + i * 0.5,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: i * 0.4,
-          }}
-        />
-      ))}
-
-      {/* Grid overlay for depth */}
+      {/* Subtle dot grid */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.02]"
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
         style={{
-          backgroundImage: `linear-gradient(hsl(48 96% 53% / 0.3) 1px, transparent 1px), linear-gradient(90deg, hsl(48 96% 53% / 0.3) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
+          backgroundImage: `radial-gradient(hsl(48 96% 53% / 0.4) 1px, transparent 1px)`,
+          backgroundSize: "32px 32px",
         }}
       />
 
       <motion.div
-        initial={{ opacity: 0, y: 40 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-        className="text-center max-w-lg mx-auto z-10"
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        className="text-center max-w-md mx-auto z-10 flex flex-col items-center"
       >
-        {/* Badge */}
+        {/* Status pill */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="inline-flex items-center gap-2 glass-card rounded-full px-5 py-2 mb-8"
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="inline-flex items-center gap-2.5 glass-pill rounded-full px-4 py-1.5 mb-6"
         >
-          <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
-          <span className="text-xs font-display text-primary/80 tracking-widest uppercase">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-glow" />
+          <span className="text-[11px] font-display text-primary/70 tracking-[0.2em] uppercase">
             Reclaim What's Yours
           </span>
         </motion.div>
 
-        {/* Logo + Title */}
+        {/* Logo + Brand */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.7 }}
-          className="flex items-center justify-center gap-3 mb-6"
+          transition={{ delay: 0.3, duration: 0.6 }}
+          className="flex items-center justify-center gap-2.5 mb-5"
         >
-          <RealloEyeLogo size={56} />
-          <span className="font-display text-5xl font-bold gradient-text">Reallo</span>
+          <RealloEyeLogo size={48} />
+          <span className="font-display text-4xl font-bold gradient-text">Reallo</span>
         </motion.div>
 
-        <h1 className="font-display text-4xl sm:text-6xl font-bold leading-[1.08] mb-4">
+        {/* Headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+          className="font-display text-3xl sm:text-5xl font-bold leading-[1.1] mb-3"
+        >
           <span className="text-foreground">Stop </span>
           <span className="gradient-text">Losing</span>
           <br />
           <span className="text-foreground">Your Money</span>
-        </h1>
+        </motion.h1>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.8 }}
-          className="text-muted-foreground text-base sm:text-lg mb-8 leading-relaxed max-w-sm mx-auto"
+          transition={{ delay: 0.5, duration: 0.7 }}
+          className="text-muted-foreground text-sm sm:text-base mb-6 leading-relaxed max-w-xs mx-auto"
         >
-          Calculate how much you spend on utilities yearly and claim it back toward your life goals.
+          Calculate your annual utility spend and claim it back toward your life goals.
         </motion.p>
 
-        {/* Wallet Animation */}
+        {/* Wallet Animation - contained size */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.8 }}
-          className="mb-8"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6, duration: 0.7 }}
+          className="mb-6 w-full max-w-[180px]"
         >
           <WalletAnimation />
         </motion.div>
 
         {/* CTA Buttons */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.6 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center"
+          transition={{ delay: 0.8, duration: 0.5 }}
+          className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-xs"
         >
-          <GlassButton variant="primary" onClick={onGetStarted} className="text-base px-8 py-4">
-            Calculate & Claim Now
+          <GlassButton variant="primary" onClick={onGetStarted} className="text-sm px-6 py-3 flex-1">
+            Calculate & Claim
           </GlassButton>
-          <GlassButton variant="outline" className="text-base px-8 py-4">
+          <GlassButton variant="outline" className="text-sm px-6 py-3 flex-1">
             How It Works
           </GlassButton>
         </motion.div>
@@ -122,17 +105,17 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.1, duration: 0.8 }}
-          className="flex justify-center gap-6 mt-10"
+          transition={{ delay: 1, duration: 0.7 }}
+          className="flex justify-center gap-3 mt-8"
         >
           {[
             { value: "2,000+", label: "In Queue" },
             { value: "₦0", label: "To Join" },
-            { value: "5x", label: "Skip Per Referral" },
+            { value: "5x", label: "Skip / Referral" },
           ].map((stat) => (
-            <div key={stat.label} className="glass-card rounded-xl px-4 py-3 text-center">
-              <p className="font-display text-lg font-bold text-primary glow-text">{stat.value}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</p>
+            <div key={stat.label} className="glass-stat rounded-2xl px-4 py-2.5 text-center min-w-[80px]">
+              <p className="font-display text-base font-bold text-primary glow-text">{stat.value}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">{stat.label}</p>
             </div>
           ))}
         </motion.div>

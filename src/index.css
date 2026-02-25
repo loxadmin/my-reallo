@@ -75,62 +75,114 @@
 
 @layer components {
   .glass {
-    background: hsl(var(--glass-bg));
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid hsl(var(--glass-border));
-  }
-
-  .glass-strong {
-    background: hsl(48 30% 95% / 0.12);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border: 1px solid hsl(48 30% 95% / 0.2);
-  }
-
-  .glass-card {
     background: hsl(48 30% 95% / 0.06);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid hsl(48 30% 95% / 0.1);
-    box-shadow: 0 8px 32px hsl(48 96% 53% / 0.05), inset 0 1px 0 hsl(48 30% 95% / 0.1);
+  }
+
+  .glass-strong {
+    background: hsl(48 30% 95% / 0.1);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid hsl(48 30% 95% / 0.15);
+  }
+
+  .glass-card {
+    background: hsl(48 30% 95% / 0.05);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid hsl(48 30% 95% / 0.08);
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(48 30% 95% / 0.08);
+  }
+
+  .glass-pill {
+    background: hsl(48 30% 95% / 0.04);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(48 30% 95% / 0.08);
+  }
+
+  .glass-stat {
+    background: hsl(48 30% 95% / 0.04);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(48 30% 95% / 0.06);
+    box-shadow: 0 4px 16px hsl(0 0% 0% / 0.15);
   }
 
   .glass-button {
-    background: hsl(48 30% 95% / 0.08);
+    background: hsl(48 30% 95% / 0.06);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid hsl(48 30% 95% / 0.15);
+    border: 1px solid hsl(48 30% 95% / 0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-button:hover {
-    background: hsl(48 96% 53% / 0.15);
-    border-color: hsl(48 96% 53% / 0.3);
-    box-shadow: 0 0 30px hsl(var(--glow-soft));
+    background: hsl(48 96% 53% / 0.1);
+    border-color: hsl(48 96% 53% / 0.2);
+    box-shadow: 0 0 24px hsl(var(--glow-soft));
   }
 
-  /* Claymorphic primary button */
-  .clay-button-primary {
-    background: linear-gradient(145deg, hsl(48 96% 58% / 0.9), hsl(45 90% 45% / 0.9));
-    border: 1px solid hsl(48 96% 70% / 0.4);
+  /* Claymorphic primary button — transparent yellow with 3D depth */
+  .clay-primary {
+    background: hsl(48 96% 53% / 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(48 96% 70% / 0.5);
     box-shadow:
-      0 6px 20px hsl(48 96% 53% / 0.35),
-      0 2px 4px hsl(48 96% 53% / 0.2),
-      inset 0 1px 2px hsl(48 96% 80% / 0.4),
-      inset 0 -1px 2px hsl(40 90% 35% / 0.3);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+      0 6px 20px hsl(48 96% 53% / 0.3),
+      0 2px 4px hsl(48 96% 53% / 0.15),
+      inset 0 2px 4px hsl(48 96% 85% / 0.5),
+      inset 0 -2px 4px hsl(40 90% 30% / 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .clay-primary:hover {
+    background: hsl(48 96% 53% / 0.8);
+    box-shadow:
+      0 8px 28px hsl(48 96% 53% / 0.4),
+      0 3px 6px hsl(48 96% 53% / 0.2),
+      inset 0 2px 6px hsl(48 96% 85% / 0.6),
+      inset 0 -2px 4px hsl(40 90% 30% / 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* Glass outline button */
+  .glass-outline {
+    background: hsl(48 96% 53% / 0.05);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(48 96% 53% / 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-outline:hover {
+    background: hsl(48 96% 53% / 0.12);
+    border-color: hsl(48 96% 53% / 0.4);
+    box-shadow: 0 0 20px hsl(var(--glow-soft));
+  }
+
+  /* Legacy compat */
+  .clay-button-primary {
+    background: hsl(48 96% 53% / 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(48 96% 70% / 0.5);
+    box-shadow:
+      0 6px 20px hsl(48 96% 53% / 0.3),
+      inset 0 2px 4px hsl(48 96% 85% / 0.5),
+      inset 0 -2px 4px hsl(40 90% 30% / 0.25);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .clay-button-primary:hover {
-    background: linear-gradient(145deg, hsl(48 96% 62% / 0.95), hsl(45 90% 48% / 0.95));
+    background: hsl(48 96% 53% / 0.8);
     box-shadow:
-      0 8px 30px hsl(48 96% 53% / 0.45),
-      0 3px 6px hsl(48 96% 53% / 0.25),
-      inset 0 1px 3px hsl(48 96% 80% / 0.5),
-      inset 0 -1px 2px hsl(40 90% 35% / 0.3);
+      0 8px 28px hsl(48 96% 53% / 0.4),
+      inset 0 2px 6px hsl(48 96% 85% / 0.6),
+      inset 0 -2px 4px hsl(40 90% 30% / 0.3);
   }
 
   .glass-input {
