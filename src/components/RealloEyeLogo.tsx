@@ -220,7 +220,7 @@ const RealloEyeLogo = ({ size = 32 }: { size?: number }) => {
              M ${w * 0.62} ${cy - h * 0.38} L ${w * 0.65} ${cy - h * 0.6}
              M ${w * 0.75} ${cy - h * 0.25} L ${w * 0.8} ${cy - h * 0.45}`}
           fill="none"
-          stroke="black"
+          stroke="hsl(45, 100%, 50%)"
           strokeWidth="1.2"
           strokeLinecap="round"
         />
