@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
-import { Users, Ghost, Activity, LogOut, RefreshCw, Shield } from "lucide-react";
+import GlassInput from "@/components/GlassInput";
+import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface ProfileRow {
   id: string;
@@ -25,6 +27,14 @@ interface ActivityRow {
   created_at: string;
 }
 
+interface GoalCategoryRow {
+  id: string;
+  goal_type: string;
+  subcategory: string | null;
+  label: string;
+  max_price: number;
+}
+
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 
 const Admin = () => {
@@ -33,8 +43,11 @@ const Admin = () => {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [ghostCount, setGhostCount] = useState(0);
   const [activities, setActivities] = useState<ActivityRow[]>([]);
-  const [activeTab, setActiveTab] = useState<"users" | "ghosts" | "activity">("users");
+  const [goalCategories, setGoalCategories] = useState<GoalCategoryRow[]>([]);
+  const [editedPrices, setEditedPrices] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<"users" | "ghosts" | "activity" | "goals">("users");
   const [refreshing, setRefreshing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -44,20 +57,41 @@ const Admin = () => {
 
   const fetchData = async () => {
     setRefreshing(true);
-    const [profilesRes, ghostsRes, activityRes] = await Promise.all([
+    const [profilesRes, ghostsRes, activityRes, goalsRes] = await Promise.all([
       supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
       supabase.from("ghost_users").select("id", { count: "exact", head: true }),
       supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("goal_categories").select("*").order("goal_type"),
     ]);
     setProfiles((profilesRes.data as ProfileRow[]) || []);
     setGhostCount(ghostsRes.count || 0);
     setActivities((activityRes.data as ActivityRow[]) || []);
+    setGoalCategories((goalsRes.data as GoalCategoryRow[]) || []);
+    setEditedPrices({});
     setRefreshing(false);
   };
 
   useEffect(() => {
     if (isAdmin) fetchData();
   }, [isAdmin]);
+
+  const handlePriceChange = (id: string, value: string) => {
+    setEditedPrices((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSavePrices = async () => {
+    setSaving(true);
+    const updates = Object.entries(editedPrices);
+    for (const [id, priceStr] of updates) {
+      const price = parseInt(priceStr, 10);
+      if (!isNaN(price) && price >= 0) {
+        await supabase.from("goal_categories").update({ max_price: price }).eq("id", id);
+      }
+    }
+    toast({ title: "Prices updated", description: `${updates.length} goal(s) updated.` });
+    await fetchData();
+    setSaving(false);
+  };
 
   if (loading) {
     return (
@@ -73,6 +107,7 @@ const Admin = () => {
     { id: "users" as const, label: "Users", icon: Users, count: profiles.length },
     { id: "ghosts" as const, label: "Ghosts", icon: Ghost, count: ghostCount },
     { id: "activity" as const, label: "Activity", icon: Activity, count: activities.length },
+    { id: "goals" as const, label: "Goals", icon: Settings, count: goalCategories.length },
   ];
 
   return (
@@ -104,7 +139,7 @@ const Admin = () => {
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -187,10 +222,7 @@ const Admin = () => {
             <h3 className="font-display font-semibold text-foreground mb-4">Recent Activity</h3>
             <div className="space-y-2">
               {activities.map((a) => (
-                <div
-                  key={a.id}
-                  className="flex items-center justify-between glass rounded-xl p-3"
-                >
+                <div key={a.id} className="flex items-center justify-between glass rounded-xl p-3">
                   <div>
                     <p className="text-xs text-muted-foreground font-mono">{a.user_id.slice(0, 8)}...</p>
                     <p className="text-sm font-display capitalize text-foreground">{a.action_type}</p>
@@ -206,6 +238,53 @@ const Admin = () => {
               {activities.length === 0 && (
                 <p className="text-center py-8 text-muted-foreground">No activity yet</p>
               )}
+            </div>
+          </GlassCard>
+        )}
+
+        {activeTab === "goals" && (
+          <GlassCard animate={false}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-semibold text-foreground">Goal Pricing</h3>
+              {Object.keys(editedPrices).length > 0 && (
+                <GlassButton variant="primary" onClick={handleSavePrices} disabled={saving} className="px-4 py-2 text-xs">
+                  <Save className="w-3 h-3 mr-1 inline" />
+                  {saving ? "Saving..." : "Save Changes"}
+                </GlassButton>
+              )}
+            </div>
+            <div className="space-y-3">
+              {goalCategories.map((cat) => {
+                const currentPrice = editedPrices[cat.id] !== undefined
+                  ? editedPrices[cat.id]
+                  : String(cat.max_price);
+                return (
+                  <div key={cat.id} className="glass rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-display font-semibold text-foreground text-sm capitalize">
+                          {cat.goal_type}
+                          {cat.subcategory && (
+                            <span className="text-muted-foreground font-normal"> → {cat.label}</span>
+                          )}
+                          {!cat.subcategory && (
+                            <span className="text-muted-foreground font-normal"> — {cat.label}</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground font-display">Max Price ₦</span>
+                      <input
+                        type="number"
+                        value={currentPrice}
+                        onChange={(e) => handlePriceChange(cat.id, e.target.value)}
+                        className="flex-1 glass-input rounded-lg px-3 py-2 text-sm text-foreground font-display"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </GlassCard>
         )}

@@ -32,6 +32,33 @@ export type Database = {
         }
         Relationships: []
       }
+      goal_categories: {
+        Row: {
+          created_at: string | null
+          goal_type: string
+          id: string
+          label: string
+          max_price: number
+          subcategory: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          goal_type: string
+          id?: string
+          label: string
+          max_price?: number
+          subcategory?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          goal_type?: string
+          id?: string
+          label?: string
+          max_price?: number
+          subcategory?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           annual_data_spend: number | null
