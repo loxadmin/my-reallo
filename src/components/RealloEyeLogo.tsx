@@ -36,13 +36,13 @@ const RealloEyeLogo = ({ size = 32 }: { size?: number }) => {
       opacity: 1,
       y: 0,
       rotate: 0,
-      transition: { duration: 0.15, ease: "easeOut" },
+      transition: { duration: 0.15, ease: "easeOut" as const },
     },
     closed: {
       opacity: 0,
       y: h * 0.1,
       rotate: 5,
-      transition: { duration: 0.1, ease: "easeIn" },
+      transition: { duration: 0.1, ease: "easeIn" as const },
     },
   };
 
