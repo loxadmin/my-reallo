@@ -1,12 +1,29 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import GlassButton from "./GlassButton";
 import WalletAnimation from "./WalletAnimation";
+import CountUpAnimation from "./CountUpAnimation";
+import TypewriterText from "./TypewriterText";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HeroSectionProps {
   onGetStarted: () => void;
 }
 
 const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
+  const [queueCount, setQueueCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const [profilesRes, ghostsRes] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        supabase.from("ghost_users").select("id", { count: "exact", head: true }),
+      ]);
+      setQueueCount((profilesRes.count || 0) + (ghostsRes.count || 0));
+    };
+    fetchCount();
+  }, []);
+
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-24 pb-12 overflow-hidden">
       {/* Soft ambient orbs */}
@@ -42,7 +59,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           </span>
         </motion.div>
 
-        {/* Headline */}
+        {/* Headline with typewriter */}
         <motion.h1
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -50,7 +67,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           className="font-display text-3xl sm:text-5xl font-bold leading-[1.1] mb-3"
         >
           <span className="text-foreground">Stop </span>
-          <span className="gradient-text">Losing</span>
+          <TypewriterText text="Losing" delay={800} speed={120} className="gradient-text" />
           <br />
           <span className="text-foreground">Your Money</span>
         </motion.h1>
@@ -64,7 +81,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           Calculate your annual utility spend and claim it back toward your life goals.
         </motion.p>
 
-        {/* Wallet Animation - contained size */}
+        {/* Wallet Animation */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -89,23 +106,27 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           </GlassButton>
         </motion.div>
 
-        {/* Stats row */}
+        {/* Stats row with live count */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1, duration: 0.7 }}
           className="flex justify-center gap-3 mt-8"
         >
-          {[
-            { value: "2,000+", label: "In Queue" },
-            { value: "₦0", label: "To Join" },
-            { value: "5x", label: "Skip / Referral" },
-          ].map((stat) => (
-            <div key={stat.label} className="glass-stat rounded-2xl px-4 py-2.5 text-center min-w-[80px]">
-              <p className="font-display text-base font-bold text-primary glow-text">{stat.value}</p>
-              <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">{stat.label}</p>
-            </div>
-          ))}
+          <div className="glass-stat rounded-2xl px-4 py-2.5 text-center min-w-[80px]">
+            <p className="font-display text-base font-bold text-primary glow-text">
+              <CountUpAnimation end={queueCount} duration={2} suffix="+" />
+            </p>
+            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">In Queue</p>
+          </div>
+          <div className="glass-stat rounded-2xl px-4 py-2.5 text-center min-w-[80px]">
+            <p className="font-display text-base font-bold text-primary glow-text">₦0</p>
+            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">To Join</p>
+          </div>
+          <div className="glass-stat rounded-2xl px-4 py-2.5 text-center min-w-[80px]">
+            <p className="font-display text-base font-bold text-primary glow-text">5x</p>
+            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">Skip / Referral</p>
+          </div>
         </motion.div>
       </motion.div>
     </section>

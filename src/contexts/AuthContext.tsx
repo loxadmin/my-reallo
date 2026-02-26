@@ -15,6 +15,7 @@ interface Profile {
   referred_by: string | null;
   last_active: string;
   created_at: string;
+  points_balance: number;
 }
 
 interface AuthContextType {

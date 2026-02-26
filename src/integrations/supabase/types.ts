@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       ghost_users: {
         Row: {
           created_at: string | null
@@ -67,6 +85,7 @@ export type Database = {
           email: string
           id: string
           last_active: string | null
+          points_balance: number
           queue_position: number | null
           referral_code: string | null
           referred_by: string | null
@@ -81,6 +100,7 @@ export type Database = {
           email: string
           id: string
           last_active?: string | null
+          points_balance?: number
           queue_position?: number | null
           referral_code?: string | null
           referred_by?: string | null
@@ -95,6 +115,7 @@ export type Database = {
           email?: string
           id?: string
           last_active?: string | null
+          points_balance?: number
           queue_position?: number | null
           referral_code?: string | null
           referred_by?: string | null
@@ -111,6 +132,111 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      questionnaire_responses: {
+        Row: {
+          completed_at: string
+          current_bank: string | null
+          id: string
+          points_awarded: number
+          questionnaire_id: string
+          switch_completed: boolean
+          switch_reason: string | null
+          switch_reason_freetext: string | null
+          switch_timer_start: string | null
+          user_id: string
+          would_switch: boolean
+        }
+        Insert: {
+          completed_at?: string
+          current_bank?: string | null
+          id?: string
+          points_awarded?: number
+          questionnaire_id: string
+          switch_completed?: boolean
+          switch_reason?: string | null
+          switch_reason_freetext?: string | null
+          switch_timer_start?: string | null
+          user_id: string
+          would_switch?: boolean
+        }
+        Update: {
+          completed_at?: string
+          current_bank?: string | null
+          id?: string
+          points_awarded?: number
+          questionnaire_id?: string
+          switch_completed?: boolean
+          switch_reason?: string | null
+          switch_reason_freetext?: string | null
+          switch_timer_start?: string | null
+          user_id?: string
+          would_switch?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaire_responses_questionnaire_id_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionnaire_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionnaires: {
+        Row: {
+          created_at: string
+          current_bank_question: string
+          id: string
+          is_active: boolean
+          points_reward: number
+          preferred_bank: string
+          switch_enabled: boolean
+          switch_link: string
+          switch_question_template: string
+          switch_timer_days: number
+          title: string
+          updated_at: string
+          why_switch_options: Json
+        }
+        Insert: {
+          created_at?: string
+          current_bank_question?: string
+          id?: string
+          is_active?: boolean
+          points_reward?: number
+          preferred_bank?: string
+          switch_enabled?: boolean
+          switch_link?: string
+          switch_question_template?: string
+          switch_timer_days?: number
+          title: string
+          updated_at?: string
+          why_switch_options?: Json
+        }
+        Update: {
+          created_at?: string
+          current_bank_question?: string
+          id?: string
+          is_active?: boolean
+          points_reward?: number
+          preferred_bank?: string
+          switch_enabled?: boolean
+          switch_link?: string
+          switch_question_template?: string
+          switch_timer_days?: number
+          title?: string
+          updated_at?: string
+          why_switch_options?: Json
+        }
+        Relationships: []
       }
       referrals: {
         Row: {
@@ -166,6 +292,44 @@ export type Database = {
         }
         Relationships: []
       }
+      vouchers: {
+        Row: {
+          amount_naira: number
+          created_at: string
+          id: string
+          points_used: number
+          status: string
+          user_id: string
+          voucher_code: string
+        }
+        Insert: {
+          amount_naira: number
+          created_at?: string
+          id?: string
+          points_used: number
+          status?: string
+          user_id: string
+          voucher_code: string
+        }
+        Update: {
+          amount_naira?: number
+          created_at?: string
+          id?: string
+          points_used?: number
+          status?: string
+          user_id?: string
+          voucher_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouchers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       waitlist_activity: {
         Row: {
           action_type: string
@@ -204,6 +368,7 @@ export type Database = {
     }
     Functions: {
       generate_referral_code: { Args: never; Returns: string }
+      generate_voucher_code: { Args: never; Returns: string }
       get_next_queue_position: { Args: never; Returns: number }
       has_role: {
         Args: {
