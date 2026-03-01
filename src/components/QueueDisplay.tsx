@@ -6,8 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import QuestionnaireFlow from "./QuestionnaireFlow";
-import { Users, Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award } from "lucide-react";
+import VerifySpendFlow from "./VerifySpendFlow";
+import { Users, Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface QueueDisplayProps {
   totalAnnualSpend: number;
@@ -32,11 +34,18 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
   const [todaySkipped, setTodaySkipped] = useState(0);
   const [verifyLink, setVerifyLink] = useState("");
   const [nextUnlock, setNextUnlock] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [claimedTotal, setClaimedTotal] = useState(0);
 
   const position = profile?.queue_position ?? 201;
   const referralLink = profile?.referral_code
     ? `${window.location.origin}/auth?ref=${profile.referral_code}`
     : "";
+
+  const isNext = position <= 1;
+  const isOffQueue = position <= 0;
+  const pointsBalance = profile?.points_balance ?? 0;
+  const claimableAmount = Math.max(0, totalAnnualSpend - claimedTotal);
+  const canClaim = isOffQueue && pointsBalance >= 100000 && claimableAmount >= 50000;
 
   useEffect(() => {
     const calcTimeLeft = () => {
@@ -56,18 +65,20 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
 
   useEffect(() => {
     const fetchStats = async () => {
-      if (!profile) return;
-      const [refRes, actRes, settingsRes] = await Promise.all([
+      if (!profile || !user) return;
+      const [refRes, actRes, settingsRes, voucherRes] = await Promise.all([
         supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", profile.id),
         supabase.from("waitlist_activity").select("positions_moved").eq("user_id", profile.id).gte("created_at", new Date().toISOString().split("T")[0]),
         supabase.from("admin_settings").select("value").eq("key", "verify_expense_link").single(),
+        supabase.from("vouchers").select("amount_naira").eq("user_id", user.id),
       ]);
       setReferralCount(refRes.count || 0);
       setTodaySkipped((actRes.data || []).reduce((sum, a) => sum + (a.positions_moved || 0), 0));
       setVerifyLink(settingsRes.data?.value || "");
+      setClaimedTotal((voucherRes.data || []).reduce((sum, v) => sum + Number(v.amount_naira || 0), 0));
     };
     fetchStats();
-  }, [profile]);
+  }, [profile, user]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
@@ -82,15 +93,6 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
       handleCopy();
     }
   };
-
-  // Award post-queue referral points
-  const handlePostQueueReferralClaim = async () => {
-    // This is handled automatically when referrals happen post-queue
-  };
-
-  const isNext = position <= 1;
-  const isOffQueue = position <= 0;
-  const pointsBalance = profile?.points_balance ?? 0;
 
   return (
     <section className="min-h-screen flex items-center justify-center px-6 py-20">
@@ -107,7 +109,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
                   {isOffQueue ? "You're Off the Queue!" : "You're Next!"}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {isOffQueue ? "Start earning points to claim your money." : "Activate your reclaim now."}
+                  {isOffQueue ? "Earn points, verify spend & claim your money." : "Activate your reclaim now."}
                 </p>
               </>
             ) : (
@@ -125,50 +127,94 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
           </motion.div>
         </GlassCard>
 
-        {/* Points balance (always visible) */}
-        <GlassCard variant="strong" className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <Award className="w-4 h-4 text-primary" />
-            <p className="text-xs text-muted-foreground font-display uppercase tracking-widest">Points Balance</p>
-          </div>
-          <p className="font-display text-3xl font-bold gradient-text">{pointsBalance.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-1">= {formatNaira(Math.floor(pointsBalance * 0.5))} claimable</p>
-          {pointsBalance > 0 && (
-            <GlassButton variant="primary" onClick={() => navigate("/vouchers")} className="mt-3 px-4 py-2 text-xs">
-              <Wallet className="inline w-3 h-3 mr-1" /> Create Voucher
+        {/* Main tabs */}
+        <Tabs defaultValue="earn" className="w-full">
+          <TabsList className="w-full grid grid-cols-3 bg-muted/30 backdrop-blur-sm rounded-xl">
+            <TabsTrigger value="earn" className="font-display text-xs data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-lg">
+              <Award className="w-3 h-3 mr-1" /> Earn
+            </TabsTrigger>
+            <TabsTrigger value="goal" className="font-display text-xs data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-lg">
+              <Gift className="w-3 h-3 mr-1" /> Goal
+            </TabsTrigger>
+            {isOffQueue && (
+              <TabsTrigger value="verify" className="font-display text-xs data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-lg">
+                <ExternalLink className="w-3 h-3 mr-1" /> Verify
+              </TabsTrigger>
+            )}
+          </TabsList>
+
+          {/* Earn Points Tab */}
+          <TabsContent value="earn" className="space-y-4 mt-4">
+            {/* Points balance */}
+            <GlassCard variant="strong" className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Award className="w-4 h-4 text-primary" />
+                <p className="text-xs text-muted-foreground font-display uppercase tracking-widest">Points Balance</p>
+              </div>
+              <p className="font-display text-3xl font-bold gradient-text">{pointsBalance.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground mt-1">= {formatNaira(Math.floor(pointsBalance * 0.5))} value</p>
+            </GlassCard>
+
+            {/* Questionnaires */}
+            <QuestionnaireFlow />
+          </TabsContent>
+
+          {/* Goal / Claim Tab */}
+          <TabsContent value="goal" className="space-y-4 mt-4">
+            {/* Goal summary */}
+            <GlassCard>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground font-display">Your Goal</p>
+                  <p className="font-display font-semibold text-foreground">{goalLabels[goal] || goal}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground font-display">Claimable</p>
+                  <p className="font-display font-semibold text-primary">{formatNaira(claimableAmount)}</p>
+                </div>
+              </div>
+              <div className="mt-3 w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min((claimableAmount / targetAmount) * 100, 100)}%` }} transition={{ duration: 1, delay: 0.3 }} />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">{formatNaira(claimableAmount)} / {formatNaira(targetAmount)}</p>
+              {claimedTotal > 0 && (
+                <p className="text-[10px] text-muted-foreground mt-1">Already claimed: {formatNaira(claimedTotal)}</p>
+              )}
+            </GlassCard>
+
+            {/* Claim button */}
+            <GlassButton
+              variant="primary"
+              onClick={() => navigate("/vouchers")}
+              className="w-full"
+              disabled={!canClaim}
+            >
+              {!isOffQueue ? (
+                <><Lock className="inline w-4 h-4 mr-2" /> Complete Queue to Claim</>
+              ) : claimableAmount < 50000 ? (
+                <><Lock className="inline w-4 h-4 mr-2" /> Min ₦50,000 to Claim</>
+              ) : pointsBalance < 100000 ? (
+                <><Lock className="inline w-4 h-4 mr-2" /> Need 100,000 pts to Claim</>
+              ) : (
+                <><Wallet className="inline w-4 h-4 mr-2" /> Claim Amount — Create Voucher</>
+              )}
             </GlassButton>
+          </TabsContent>
+
+          {/* Verify Spend Tab (off-queue only) */}
+          {isOffQueue && (
+            <TabsContent value="verify" className="space-y-4 mt-4">
+              <VerifySpendFlow />
+              {verifyLink && (
+                <a href={verifyLink} target="_blank" rel="noopener noreferrer">
+                  <GlassButton variant="outline" className="w-full">
+                    <ExternalLink className="inline w-4 h-4 mr-2" /> Verify Expense
+                  </GlassButton>
+                </a>
+              )}
+            </TabsContent>
           )}
-        </GlassCard>
-
-        {/* Verify expense button (shown when off queue) */}
-        {isOffQueue && verifyLink && (
-          <a href={verifyLink} target="_blank" rel="noopener noreferrer">
-            <GlassButton variant="primary" className="w-full">
-              <ExternalLink className="inline w-4 h-4 mr-2" /> Verify Expense
-            </GlassButton>
-          </a>
-        )}
-
-        {/* Questionnaire section */}
-        <QuestionnaireFlow />
-
-        {/* Goal summary */}
-        <GlassCard>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground font-display">Your Goal</p>
-              <p className="font-display font-semibold text-foreground">{goalLabels[goal] || goal}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground font-display">Claimable</p>
-              <p className="font-display font-semibold text-primary">{formatNaira(totalAnnualSpend)}</p>
-            </div>
-          </div>
-          <div className="mt-3 w-full h-1.5 bg-muted rounded-full overflow-hidden">
-            <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min((totalAnnualSpend / targetAmount) * 100, 100)}%` }} transition={{ duration: 1, delay: 0.3 }} />
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">{formatNaira(totalAnnualSpend)} / {formatNaira(targetAmount)}</p>
-        </GlassCard>
+        </Tabs>
 
         {/* Timer (only when still in queue) */}
         {!isOffQueue && (
@@ -212,57 +258,37 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount }: QueueDisplayProp
           </GlassCard>
           <GlassCard className="text-center p-4">
             <Users className="w-4 h-4 text-primary mx-auto mb-1" />
-            <p className="font-display font-bold text-foreground">{position}</p>
+            <p className="font-display font-bold text-foreground">{position <= 0 ? "✓" : position}</p>
             <p className="text-[10px] text-muted-foreground">Position</p>
           </GlassCard>
         </div>
 
         {/* Referral */}
-        {!isOffQueue && (
-          <GlassCard variant="strong">
-            <h3 className="font-display font-semibold text-foreground mb-3">Refer & Skip the Queue</h3>
-            <p className="text-sm text-muted-foreground mb-4">For every friend you refer, skip 5 positions.</p>
-            {profile?.referral_code && (
-              <>
-                <p className="text-xs text-muted-foreground mb-1 font-display">Your referral code</p>
-                <p className="font-display font-bold text-primary text-lg mb-3">{profile.referral_code}</p>
-                <div className="flex gap-2">
-                  <div className="flex-1 glass-input rounded-xl px-3 py-2.5 text-xs text-muted-foreground truncate">{referralLink}</div>
-                  <GlassButton variant="outline" onClick={handleCopy} className="px-3">
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </GlassButton>
-                </div>
-                <GlassButton variant="primary" className="w-full mt-4" onClick={handleShare}>
-                  <Share2 className="inline w-4 h-4 mr-2" /> Share Referral Link
+        <GlassCard variant="strong">
+          <h3 className="font-display font-semibold text-foreground mb-3">
+            {isOffQueue ? "Refer & Earn Points" : "Refer & Skip the Queue"}
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            {isOffQueue
+              ? "Each referral earns you 1,000 points (₦500). Share your link!"
+              : "For every friend you refer, skip 5 positions."}
+          </p>
+          {profile?.referral_code && (
+            <>
+              <p className="text-xs text-muted-foreground mb-1 font-display">Your referral code</p>
+              <p className="font-display font-bold text-primary text-lg mb-3">{profile.referral_code}</p>
+              <div className="flex gap-2">
+                <div className="flex-1 glass-input rounded-xl px-3 py-2.5 text-xs text-muted-foreground truncate">{referralLink}</div>
+                <GlassButton variant="outline" onClick={handleCopy} className="px-3">
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 </GlassButton>
-              </>
-            )}
-          </GlassCard>
-        )}
-
-        {/* Post-queue referrals earn points */}
-        {isOffQueue && (
-          <GlassCard variant="strong">
-            <h3 className="font-display font-semibold text-foreground mb-3">Refer & Earn Points</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Each referral earns you 1,000 points (₦500). Share your link!
-            </p>
-            {profile?.referral_code && (
-              <>
-                <p className="font-display font-bold text-primary text-lg mb-3">{profile.referral_code}</p>
-                <div className="flex gap-2">
-                  <div className="flex-1 glass-input rounded-xl px-3 py-2.5 text-xs text-muted-foreground truncate">{referralLink}</div>
-                  <GlassButton variant="outline" onClick={handleCopy} className="px-3">
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </GlassButton>
-                </div>
-                <GlassButton variant="primary" className="w-full mt-4" onClick={handleShare}>
-                  <Share2 className="inline w-4 h-4 mr-2" /> Share & Earn
-                </GlassButton>
-              </>
-            )}
-          </GlassCard>
-        )}
+              </div>
+              <GlassButton variant="primary" className="w-full mt-4" onClick={handleShare}>
+                <Share2 className="inline w-4 h-4 mr-2" /> {isOffQueue ? "Share & Earn" : "Share Referral Link"}
+              </GlassButton>
+            </>
+          )}
+        </GlassCard>
       </div>
     </section>
   );
