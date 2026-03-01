@@ -1,11 +1,13 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Shield, LayoutDashboard } from "lucide-react";
+import { LogOut, Shield, LayoutDashboard, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import RealloEyeLogo from "./RealloEyeLogo";
 
 const Navbar = () => {
   const { user, isAdmin, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   return (
@@ -21,12 +23,24 @@ const Navbar = () => {
           Reallo
         </button>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="p-1.5 rounded-lg glass-button mr-2"
+            title="Toggle Theme"
+          >
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4 text-primary" />
+            ) : (
+              <Moon className="w-4 h-4 text-primary" />
+            )}
+          </button>
           {user ? (
             <>
               {isAdmin && (
                 <button
                   onClick={() => navigate("/admin")}
                   className="p-1.5 rounded-lg glass-button"
+                  id="admin-panel-icon"
                   title="Admin"
                 >
                   <Shield className="w-4 h-4 text-primary" />
