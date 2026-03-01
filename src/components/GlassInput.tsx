@@ -8,21 +8,21 @@ interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 const GlassInput = ({ label, prefix, className, ...props }: GlassInputProps) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {label && (
-        <label className="text-sm font-display text-muted-foreground tracking-wide">
+        <label className="text-xs font-display font-bold text-muted-foreground uppercase tracking-widest px-1">
           {label}
         </label>
       )}
-      <div className="relative">
+      <div className="relative group">
         {prefix && (
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-display font-semibold">
+          <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-display font-bold">
             {prefix}
           </span>
         )}
         <input
           className={cn(
-            "w-full glass-input rounded-xl px-4 py-3.5 text-foreground font-body placeholder:text-muted-foreground/50",
+            "w-full glass-input rounded-2xl px-5 py-4 text-foreground font-body font-medium placeholder:text-muted-foreground/30 focus:ring-2 ring-primary/20",
             prefix && "pl-10",
             className
           )}
