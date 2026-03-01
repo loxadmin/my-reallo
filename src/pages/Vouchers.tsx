@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
-import { Gift, Wallet, Copy, Check, Lock, AlertCircle, Sparkles } from "lucide-react";
+import { Gift, Wallet, Copy, Check, Lock, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface Voucher {
@@ -47,8 +47,6 @@ const Vouchers = () => {
 
   const pointsBalance = profile?.points_balance ?? 0;
   const totalAnnualSpend = profile?.total_annual_spend ?? 0;
-
-  // Actually calculate claimed total from the fetched vouchers
   const claimedTotal = vouchers.reduce((sum, v) => sum + Number(v.amount_naira || 0), 0);
   const claimableAmount = Math.max(0, totalAnnualSpend - claimedTotal);
   const isOffQueue = (profile?.queue_position ?? 999) <= 0;
@@ -102,180 +100,117 @@ const Vouchers = () => {
   if (loading || !user) return null;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden pb-24">
-      {/* Background Orbs */}
+    <div className="relative min-h-screen overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-primary/3 rounded-full blur-[120px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/3 rounded-full blur-[200px]" />
       </div>
-
       <Navbar />
 
-      <section className="relative z-10 min-h-screen flex flex-col items-center px-6 py-24">
-        <div className="w-full max-w-md space-y-6">
-
-          <div className="text-center mb-4">
-            <h2 className="font-display text-3xl font-bold gradient-text">Wallet & Vouchers</h2>
-            <p className="text-sm text-muted-foreground">Manage your reclaimed funds</p>
-          </div>
-
-          {/* Balance + Claimable with aggressive glassmorphism */}
-          <GlassCard variant="glow" className="text-center p-8 backdrop-blur-3xl border-white/10 shadow-2xl">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Wallet className="w-8 h-8 text-primary" />
-            </div>
-            <p className="text-xs text-muted-foreground font-display uppercase tracking-widest font-bold">Available Points</p>
-            <motion.p key={pointsBalance} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="font-display text-5xl font-bold gradient-text mb-6">
+      <section className="min-h-screen flex items-start justify-center px-6 py-24">
+        <div className="w-full max-w-md space-y-4">
+          {/* Balance + Claimable */}
+          <GlassCard variant="glow" className="text-center">
+            <Wallet className="w-8 h-8 text-primary mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground font-display uppercase tracking-widest">Points Balance</p>
+            <motion.p key={pointsBalance} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="font-display text-4xl font-bold gradient-text">
               {pointsBalance.toLocaleString()}
             </motion.p>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="glass rounded-2xl p-4 border-white/5">
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Claimable</p>
-                <p className="text-lg font-display font-bold text-primary">{formatNaira(claimableAmount)}</p>
+            <div className="flex items-center justify-center gap-4 mt-2">
+              <div>
+                <p className="text-[10px] text-muted-foreground">Claimable</p>
+                <p className="text-sm font-display font-semibold text-primary">{formatNaira(claimableAmount)}</p>
               </div>
-              <div className="glass rounded-2xl p-4 border-white/5">
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Claimed</p>
-                <p className="text-lg font-display font-bold text-foreground">{formatNaira(claimedTotal)}</p>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Already Claimed</p>
+                <p className="text-sm font-display font-semibold text-foreground">{formatNaira(claimedTotal)}</p>
               </div>
             </div>
           </GlassCard>
 
           {/* Restrictions info */}
           {!isOffQueue && (
-            <GlassCard className="text-center border-dashed border-primary/30">
-              <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-              <p className="text-sm text-muted-foreground font-medium">Wait until you complete the queue to start claiming vouchers.</p>
+            <GlassCard className="text-center">
+              <Lock className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">You must complete the queue before claiming vouchers.</p>
             </GlassCard>
           )}
 
           {claimableAmount < 50000 && isOffQueue && (
-            <GlassCard className="text-center border-dashed border-primary/30">
-              <AlertCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-              <p className="text-sm text-muted-foreground font-medium">The minimum claimable threshold is ₦50,000.</p>
+            <GlassCard className="text-center">
+              <AlertCircle className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Minimum claimable amount is ₦50,000. Current: {formatNaira(claimableAmount)}</p>
             </GlassCard>
           )}
 
-          {/* Create voucher - modernized */}
+          {/* Create voucher */}
           {isOffQueue && claimableAmount >= 50000 && (
-            <GlassCard variant="strong" className="backdrop-blur-3xl border-white/10 shadow-2xl">
-              <h3 className="font-display font-bold text-foreground mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                Generate New Voucher
+            <GlassCard variant="strong">
+              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Gift className="w-5 h-5 text-primary" />
+                Create Voucher
               </h3>
-              <p className="text-xs text-muted-foreground mb-4 leading-relaxed font-medium">
-                Deduct points to create a cashable voucher.
-                <br />
-                <span className="text-primary/80 font-bold">1 Point = ₦0.5</span>
+              <p className="text-xs text-muted-foreground mb-3">
+                Minimum 100,000 points (₦50,000). Max claimable: {formatNaira(claimableAmount)}.
               </p>
-
-              <div className="space-y-4">
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={pointsToUse}
-                    onChange={(e) => setPointsToUse(e.target.value)}
-                    placeholder="Points (min 100,000)"
-                    max={Math.min(pointsBalance, claimableAmount * 2)}
-                    className="w-full glass-input rounded-2xl px-6 py-4 text-foreground text-lg font-display placeholder:text-muted-foreground/30 focus:ring-2 ring-primary/20 transition-all"
-                  />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-primary uppercase tracking-widest bg-primary/10 px-2 py-1 rounded-lg">
-                    PTS
-                  </div>
-                </div>
-
-                {Number(pointsToUse) > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-4 glass rounded-2xl border-primary/20 flex justify-between items-center"
-                  >
-                    <p className="text-xs text-muted-foreground font-bold uppercase">Estimated Value</p>
-                    <p className="text-xl font-display font-bold text-primary">
-                      {formatNaira(nairaValue)}
-                      {nairaValue > claimableAmount && (
-                        <span className="block text-[10px] text-destructive uppercase tracking-widest mt-1">Exceeds limit</span>
-                      )}
-                    </p>
-                  </motion.div>
-                )}
-
-                <GlassButton
-                  variant="primary"
-                  onClick={handleCreate}
-                  className="w-full py-4 text-base font-bold shadow-xl"
-                  disabled={creating || !canCreate()}
-                >
-                  {creating ? "Processing..." : "Create Voucher"}
-                </GlassButton>
-              </div>
+              <input
+                type="number"
+                value={pointsToUse}
+                onChange={(e) => setPointsToUse(e.target.value)}
+                placeholder="Points to use (min 100,000)"
+                max={Math.min(pointsBalance, claimableAmount * 2)}
+                className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mb-2"
+              />
+              {Number(pointsToUse) > 0 && (
+                <p className="text-sm text-primary font-display font-semibold mb-3">
+                  Voucher value: {formatNaira(nairaValue)}
+                  {nairaValue > claimableAmount && <span className="text-destructive text-xs ml-2">(exceeds claimable)</span>}
+                </p>
+              )}
+              <GlassButton
+                variant="primary"
+                onClick={handleCreate}
+                className="w-full"
+                disabled={creating || !canCreate()}
+              >
+                {creating ? "Creating..." : "Generate Voucher"}
+              </GlassButton>
             </GlassCard>
           )}
 
-          {/* Voucher list - overhauled look */}
+          {/* Voucher list */}
           {vouchers.length > 0 && (
-            <div className="space-y-4 pt-4">
-              <h3 className="font-display text-xl font-bold text-foreground px-1 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-primary" />
-                Your Reallo Vouchers
-              </h3>
-              <div className="space-y-4">
+            <GlassCard>
+              <h3 className="font-display font-semibold text-foreground mb-3">Your Vouchers</h3>
+              <div className="space-y-3">
                 {vouchers.map((v) => (
-                  <motion.div
-                    key={v.id}
-                    layout
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="glass rounded-3xl p-1 border-white/5 shadow-xl overflow-hidden group hover:scale-[1.02] transition-transform duration-300"
-                  >
-                    <div className="relative overflow-hidden rounded-[22px] p-6"
+                  <div key={v.id} className="glass rounded-xl p-4">
+                    <div className="relative overflow-hidden rounded-xl p-4 mb-2"
                       style={{
-                        background: "linear-gradient(135deg, hsla(var(--primary), 0.15), hsla(var(--primary), 0.05))",
+                        background: "linear-gradient(135deg, hsl(48 96% 53% / 0.2), hsl(40 90% 30% / 0.3))",
+                        border: "1px solid hsl(48 96% 53% / 0.2)",
                       }}
                     >
-                      {/* Decorative elements */}
-                      <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-colors" />
-
-                      <div className="flex items-center justify-between relative z-10">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-[10px] text-primary/70 uppercase font-black tracking-[0.2em] mb-1">Reallo Reclaim</p>
-                          <p className="font-display text-3xl font-bold gradient-text">{formatNaira(v.amount_naira)}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Reallo Voucher</p>
+                          <p className="font-display text-2xl font-bold gradient-text">{formatNaira(v.amount_naira)}</p>
                         </div>
-                        <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
-                          <Gift className="w-6 h-6 text-primary" />
-                        </div>
+                        <Gift className="w-8 h-8 text-primary/30" />
                       </div>
-
-                      <div className="mt-8 flex items-end justify-between relative z-10">
-                        <div>
-                          <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Voucher Code</p>
-                          <p className="font-mono text-sm text-foreground font-black tracking-[0.3em]">{v.voucher_code}</p>
-                        </div>
-                        <GlassButton
-                          variant="outline"
-                          onClick={() => handleCopy(v.voucher_code, v.id)}
-                          className="px-4 py-2 text-xs rounded-xl backdrop-blur-2xl border-white/10"
-                        >
-                          {copiedId === v.id ? (
-                            <Check className="w-4 h-4" />
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Copy className="w-3.5 h-3.5" />
-                              Copy
-                            </div>
-                          )}
-                        </GlassButton>
-                      </div>
+                      <p className="font-mono text-xs text-primary mt-2 tracking-widest">{v.voucher_code}</p>
                     </div>
-
-                    <div className="px-6 py-3 flex items-center justify-between text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-                      <span>{new Date(v.created_at).toLocaleDateString()}</span>
-                      <span>{v.points_used.toLocaleString()} Points Redemed</span>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(v.created_at).toLocaleDateString()} • {v.points_used.toLocaleString()} pts
+                      </p>
+                      <button onClick={() => handleCopy(v.voucher_code, v.id)} className="text-primary">
+                        {copiedId === v.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </button>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </div>
+            </GlassCard>
           )}
         </div>
       </section>

@@ -26,17 +26,17 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-24 pb-12 overflow-hidden">
-      {/* Dynamic ambient orbs */}
-      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[180px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-[10%] right-[-5%] w-[400px] h-[400px] rounded-full bg-primary/8 blur-[140px] pointer-events-none" />
-      <div className="absolute top-[40%] left-[-5%] w-[300px] h-[300px] rounded-full bg-accent/8 blur-[100px] pointer-events-none" />
+      {/* Soft ambient orbs */}
+      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/6 blur-[180px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[-5%] w-[300px] h-[300px] rounded-full bg-primary/4 blur-[140px] pointer-events-none" />
+      <div className="absolute top-[40%] left-[-5%] w-[200px] h-[200px] rounded-full bg-accent/6 blur-[100px] pointer-events-none" />
 
-      {/* Subtle overlay grid */}
+      {/* Subtle dot grid */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.05]"
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
         style={{
-          backgroundImage: `radial-gradient(hsla(var(--primary), 0.4) 1.5px, transparent 1.5px)`,
-          backgroundSize: "40px 40px",
+          backgroundImage: `radial-gradient(hsl(48 96% 53% / 0.4) 1px, transparent 1px)`,
+          backgroundSize: "32px 32px",
         }}
       />
 
@@ -44,87 +44,89 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="text-center max-w-lg mx-auto z-10 flex flex-col items-center"
+        className="text-center max-w-md mx-auto z-10 flex flex-col items-center"
       >
-        {/* Modern status pill */}
+        {/* Status pill */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="inline-flex items-center gap-2.5 glass-pill rounded-full px-5 py-2 mb-8 shadow-xl border-white/5"
+          className="inline-flex items-center gap-2.5 glass-pill rounded-full px-4 py-1.5 mb-6"
         >
-          <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
-          <span className="text-[12px] font-display text-primary font-bold tracking-[0.2em] uppercase">
-            Reclaim Your Spending
+          <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-glow" />
+          <span className="text-[11px] font-display text-primary/70 tracking-[0.2em] uppercase">
+            Reclaim What's Yours
           </span>
         </motion.div>
 
-        {/* Overhauled Headline */}
+        {/* Headline with typewriter */}
         <motion.h1
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
-          className="font-display text-4xl sm:text-6xl font-bold leading-[1.05] mb-4 tracking-tighter"
+          className="font-display text-3xl sm:text-5xl font-bold leading-[1.1] mb-3"
         >
           <span className="text-foreground">Stop </span>
-          <TypewriterText text="Losing" delay={800} speed={120} className="gradient-text glow-text" />
+          <TypewriterText text="Losing" delay={800} speed={120} className="gradient-text" />
           <br />
-          <span className="text-foreground">Your Future</span>
+          <span className="text-foreground">Your Money</span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.7 }}
-          className="text-muted-foreground text-sm sm:text-lg mb-10 leading-relaxed max-w-sm mx-auto font-medium"
+          className="text-muted-foreground text-sm sm:text-base mb-6 leading-relaxed max-w-xs mx-auto"
         >
-          Your utility bills could be funding your life goals. Calculate your reclaim amount today.
+          Calculate your annual utility spend and claim it back toward your life goals.
         </motion.p>
 
-        {/* Wallet Animation with float */}
+        {/* Wallet Animation */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.6, duration: 0.7 }}
-          className="mb-10 w-full max-w-[220px] float-animation"
+          className="mb-6 w-full max-w-[180px]"
         >
           <WalletAnimation />
         </motion.div>
 
-        {/* High-impact CTAs */}
+        {/* CTA Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.5 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center w-full max-w-sm"
+          className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-xs"
         >
-          <GlassButton variant="primary" onClick={onGetStarted} className="text-base px-8 py-4 flex-1 shadow-2xl">
-            Get Started
+          <GlassButton variant="primary" onClick={onGetStarted} className="text-sm px-6 py-3 flex-1">
+            Calculate & Claim
           </GlassButton>
-          <GlassButton variant="outline" className="text-base px-8 py-4 flex-1 backdrop-blur-xl">
+          <GlassButton variant="outline" className="text-sm px-6 py-3 flex-1">
             How It Works
           </GlassButton>
         </motion.div>
 
-        {/* Modernized Stats row */}
+        {/* Stats row with live count */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1, duration: 0.7 }}
-          className="flex justify-center gap-4 mt-12 w-full"
+          className="flex justify-center gap-3 mt-8"
         >
-          {[
-            { value: <CountUpAnimation end={queueCount} duration={2} suffix="+" />, label: "In Queue" },
-            { value: "₦0", label: "Fee" },
-            { value: "5x", label: "Boost" },
-          ].map((stat, i) => (
-            <div key={i} className="glass-stat rounded-3xl px-6 py-4 text-center flex-1 max-w-[110px] border-white/5 shadow-2xl transition-transform hover:scale-110">
-              <p className="font-display text-xl font-bold text-primary glow-text">
-                {stat.value}
-              </p>
-              <p className="text-[10px] text-muted-foreground mt-1 tracking-widest uppercase font-bold">{stat.label}</p>
-            </div>
-          ))}
+          <div className="glass-stat rounded-2xl px-4 py-2.5 text-center min-w-[80px]">
+            <p className="font-display text-base font-bold text-primary glow-text">
+              <CountUpAnimation end={queueCount} duration={2} suffix="+" />
+            </p>
+            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">In Queue</p>
+          </div>
+          <div className="glass-stat rounded-2xl px-4 py-2.5 text-center min-w-[80px]">
+            <p className="font-display text-base font-bold text-primary glow-text">₦0</p>
+            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">To Join</p>
+          </div>
+          <div className="glass-stat rounded-2xl px-4 py-2.5 text-center min-w-[80px]">
+            <p className="font-display text-base font-bold text-primary glow-text">5x</p>
+            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">Skip / Referral</p>
+          </div>
         </motion.div>
       </motion.div>
     </section>
