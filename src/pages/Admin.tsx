@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
-import GlassInput from "@/components/GlassInput";
-import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, BarChart3, Plus, Trash2, ExternalLink, Link } from "lucide-react";
+import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ProfileRow {
@@ -48,6 +47,7 @@ interface QuestionnaireRow {
   why_switch_options: string[];
   current_bank_question: string;
   switch_question_template: string;
+  category: string;
 }
 
 interface QResponseRow {
@@ -62,9 +62,26 @@ interface QResponseRow {
   completed_at: string;
 }
 
+interface VerificationTx {
+  id: string;
+  verification_id: string;
+  user_id: string;
+  transaction_id: string;
+  is_verified: boolean;
+  verified_amount: number | null;
+  submitted_at: string;
+}
+
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 
-type AdminTab = "users" | "ghosts" | "activity" | "goals" | "questionnaires" | "analytics" | "settings";
+const SURVEY_CATEGORIES = [
+  { value: "bank_switch", label: "Bank Switch" },
+  { value: "transport_switch", label: "Transport Switch" },
+  { value: "food_purchase_switch", label: "Food Purchase Switch" },
+  { value: "general_app_switch", label: "General App Switch" },
+];
+
+type AdminTab = "users" | "ghosts" | "activity" | "goals" | "questionnaires" | "analytics" | "settings" | "verification";
 
 const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
@@ -80,10 +97,15 @@ const Admin = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [referralCounts, setReferralCounts] = useState<Record<string, number>>({});
+  const [verificationTxs, setVerificationTxs] = useState<VerificationTx[]>([]);
+  const [csvUploading, setCsvUploading] = useState(false);
+  const csvInputRef = useRef<HTMLInputElement>(null);
 
   // Admin settings
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [postQueueReferralPoints, setPostQueueReferralPoints] = useState("1000");
+  const [verifySpendLink, setVerifySpendLink] = useState("");
+  const [verifySpendDescription, setVerifySpendDescription] = useState("");
 
   // New questionnaire form
   const [newQ, setNewQ] = useState({
@@ -94,6 +116,7 @@ const Admin = () => {
     switch_enabled: false,
     switch_link: "",
     why_switch_options: [""] as string[],
+    category: "bank_switch",
   });
 
   useEffect(() => {
@@ -102,7 +125,7 @@ const Admin = () => {
 
   const fetchData = async () => {
     setRefreshing(true);
-    const [profilesRes, ghostsRes, activityRes, goalsRes, qRes, qrRes, settingsRes] = await Promise.all([
+    const [profilesRes, ghostsRes, activityRes, goalsRes, qRes, qrRes, settingsRes, vtRes] = await Promise.all([
       supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
       supabase.from("ghost_users").select("id", { count: "exact", head: true }),
       supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
@@ -110,6 +133,7 @@ const Admin = () => {
       supabase.from("questionnaires").select("*").order("created_at", { ascending: false }),
       supabase.from("questionnaire_responses").select("*").order("completed_at", { ascending: false }),
       supabase.from("admin_settings").select("*"),
+      supabase.from("verification_transactions").select("*").order("submitted_at", { ascending: false }).limit(200),
     ]);
 
     const profs = (profilesRes.data as ProfileRow[]) || [];
@@ -119,21 +143,21 @@ const Admin = () => {
     setGoalCategories((goalsRes.data as GoalCategoryRow[]) || []);
     setQuestionnaires((qRes.data as QuestionnaireRow[]) || []);
     setQResponses((qrRes.data as QResponseRow[]) || []);
+    setVerificationTxs((vtRes.data as VerificationTx[]) || []);
     setEditedPrices({});
 
-    // Load settings
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
     setPostQueueReferralPoints(settings.find(s => s.key === "post_queue_referral_points")?.value || "1000");
+    setVerifySpendLink(settings.find(s => s.key === "verify_spend_link")?.value || "");
+    setVerifySpendDescription(settings.find(s => s.key === "verify_spend_description")?.value || "");
 
-    // Fetch referral counts per user
     const counts: Record<string, number> = {};
     for (const p of profs) {
       const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", p.id);
       counts[p.id] = count || 0;
     }
     setReferralCounts(counts);
-
     setRefreshing(false);
   };
 
@@ -158,8 +182,12 @@ const Admin = () => {
 
   const handleSaveSettings = async () => {
     setSaving(true);
-    await supabase.from("admin_settings").upsert({ key: "verify_expense_link", value: verifyExpenseLink, updated_at: new Date().toISOString() });
-    await supabase.from("admin_settings").upsert({ key: "post_queue_referral_points", value: postQueueReferralPoints, updated_at: new Date().toISOString() });
+    await Promise.all([
+      supabase.from("admin_settings").upsert({ key: "verify_expense_link", value: verifyExpenseLink, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "post_queue_referral_points", value: postQueueReferralPoints, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "verify_spend_link", value: verifySpendLink, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "verify_spend_description", value: verifySpendDescription, updated_at: new Date().toISOString() }),
+    ]);
     toast({ title: "Settings saved" });
     setSaving(false);
   };
@@ -174,9 +202,10 @@ const Admin = () => {
       switch_enabled: newQ.switch_enabled,
       switch_link: newQ.switch_link,
       why_switch_options: newQ.why_switch_options.filter(o => o.trim()),
+      category: newQ.category,
     });
     toast({ title: "Questionnaire created" });
-    setNewQ({ title: "", points_reward: 100, preferred_bank: "", switch_timer_days: 30, switch_enabled: false, switch_link: "", why_switch_options: [""] });
+    setNewQ({ title: "", points_reward: 100, preferred_bank: "", switch_timer_days: 30, switch_enabled: false, switch_link: "", why_switch_options: [""], category: "bank_switch" });
     await fetchData();
   };
 
@@ -192,9 +221,75 @@ const Admin = () => {
     await fetchData();
   };
 
-  const handleUpdateQuestionnaire = async (id: string, updates: Partial<QuestionnaireRow>) => {
-    await supabase.from("questionnaires").update(updates).eq("id", id);
-    await fetchData();
+  // CSV upload and auto-match
+  const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCsvUploading(true);
+
+    try {
+      const text = await file.text();
+      const lines = text.split("\n").filter(l => l.trim());
+      // Skip header row
+      const rows = lines.slice(1).map(line => {
+        const parts = line.split(",").map(s => s.trim().replace(/^"|"$/g, ""));
+        return { transaction_id: parts[0], amount: parseFloat(parts[1]) || 0 };
+      }).filter(r => r.transaction_id);
+
+      let matchCount = 0;
+      for (const row of rows) {
+        // Find matching unverified transactions
+        const { data: matches } = await supabase
+          .from("verification_transactions")
+          .select("id, user_id, verification_id")
+          .eq("transaction_id", row.transaction_id)
+          .eq("is_verified", false);
+
+        if (matches && matches.length > 0) {
+          for (const match of matches) {
+            await supabase.from("verification_transactions")
+              .update({ is_verified: true, verified_amount: row.amount })
+              .eq("id", match.id);
+            matchCount++;
+
+            // Check if all transactions for this verification are now verified
+            const { data: allTxs } = await supabase
+              .from("verification_transactions")
+              .select("is_verified, verified_amount")
+              .eq("verification_id", match.verification_id);
+
+            if (allTxs && allTxs.every(t => t.is_verified)) {
+              // Sum amounts and recalculate
+              const totalMonthly = allTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
+              const annualAmount = Math.round(totalMonthly * 12);
+
+              // Get verification to check days
+              const { data: vData } = await supabase
+                .from("spend_verifications")
+                .select("started_at, ends_at")
+                .eq("id", match.verification_id)
+                .single();
+
+              await supabase.from("spend_verifications")
+                .update({ status: "verified", recalculated_amount: annualAmount })
+                .eq("id", match.verification_id);
+
+              // Update user's total_annual_spend
+              await supabase.from("profiles")
+                .update({ total_annual_spend: annualAmount })
+                .eq("id", match.user_id);
+            }
+          }
+        }
+      }
+
+      toast({ title: `CSV processed`, description: `${matchCount} transactions matched and verified from ${rows.length} rows.` });
+      await fetchData();
+    } catch (err) {
+      toast({ title: "CSV error", description: "Failed to process CSV file." });
+    }
+    setCsvUploading(false);
+    if (csvInputRef.current) csvInputRef.current.value = "";
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground font-display">Loading...</p></div>;
@@ -207,6 +302,7 @@ const Admin = () => {
     { id: "goals", label: "Goals", icon: Settings, count: goalCategories.length },
     { id: "questionnaires", label: "Surveys", icon: MessageSquare, count: questionnaires.length },
     { id: "analytics", label: "Analytics", icon: BarChart3, count: qResponses.length },
+    { id: "verification", label: "Verify", icon: CheckCircle2, count: verificationTxs.length },
     { id: "settings", label: "Settings", icon: Link, count: 0 },
   ];
 
@@ -237,7 +333,7 @@ const Admin = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* Tabs - scrollable */}
+        {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-2">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -356,15 +452,29 @@ const Admin = () => {
         {/* Questionnaires tab */}
         {activeTab === "questionnaires" && (
           <div className="space-y-4">
-            {/* Create new */}
             <GlassCard animate={false}>
               <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-primary" /> Create Questionnaire
               </h3>
               <div className="space-y-3">
                 <input value={newQ.title} onChange={e => setNewQ(p => ({ ...p, title: e.target.value }))} placeholder="Title (e.g. Bank Switch Q1)" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm" />
+                
+                {/* Category dropdown */}
+                <div>
+                  <p className="text-xs text-muted-foreground font-display mb-1">Category:</p>
+                  <select
+                    value={newQ.category}
+                    onChange={e => setNewQ(p => ({ ...p, category: e.target.value }))}
+                    className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm bg-transparent"
+                  >
+                    {SURVEY_CATEGORIES.map(c => (
+                      <option key={c.value} value={c.value} className="bg-background">{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
-                  <input value={newQ.preferred_bank} onChange={e => setNewQ(p => ({ ...p, preferred_bank: e.target.value }))} placeholder="Preferred bank name" className="glass-input rounded-xl px-4 py-3 text-foreground text-sm" />
+                  <input value={newQ.preferred_bank} onChange={e => setNewQ(p => ({ ...p, preferred_bank: e.target.value }))} placeholder="Preferred bank/app name" className="glass-input rounded-xl px-4 py-3 text-foreground text-sm" />
                   <input type="number" value={newQ.points_reward} onChange={e => setNewQ(p => ({ ...p, points_reward: parseInt(e.target.value) || 0 }))} placeholder="Points reward" className="glass-input rounded-xl px-4 py-3 text-foreground text-sm" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -412,6 +522,9 @@ const Admin = () => {
                       {q.points_reward} pts • {q.preferred_bank} • {q.switch_timer_days}d timer
                       {q.switch_enabled && " • Switch ON"}
                     </p>
+                    <p className="text-[10px] text-primary mt-0.5 capitalize">
+                      {SURVEY_CATEGORIES.find(c => c.value === q.category)?.label || q.category}
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <GlassButton variant="outline" onClick={() => handleToggleQuestionnaire(q.id, q.is_active)} className="px-3 py-1 text-xs">
@@ -451,19 +564,19 @@ const Admin = () => {
               </div>
             </div>
 
-            {/* Per-questionnaire breakdown */}
             {questionnaires.map(q => {
               const qr = qResponses.filter(r => r.questionnaire_id === q.id);
               const yesCount = qr.filter(r => r.would_switch).length;
+              const catLabel = SURVEY_CATEGORIES.find(c => c.value === q.category)?.label || q.category;
               return (
                 <div key={q.id} className="glass rounded-xl p-4 mb-3">
                   <p className="font-display font-semibold text-foreground text-sm">{q.title}</p>
+                  <p className="text-[10px] text-primary capitalize">{catLabel}</p>
                   <div className="flex gap-4 mt-2">
                     <p className="text-xs text-primary">{yesCount} yes</p>
                     <p className="text-xs text-muted-foreground">{qr.length - yesCount} no</p>
                     <p className="text-xs text-muted-foreground">{qr.length} total</p>
                   </div>
-                  {/* Top reasons */}
                   {yesCount > 0 && (
                     <div className="mt-2">
                       <p className="text-[10px] text-muted-foreground uppercase">Top reasons:</p>
@@ -481,6 +594,74 @@ const Admin = () => {
           </GlassCard>
         )}
 
+        {/* Verification tab */}
+        {activeTab === "verification" && (
+          <div className="space-y-4">
+            <GlassCard animate={false}>
+              <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Upload className="w-4 h-4 text-primary" /> Upload Transaction CSV
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                Upload a CSV with columns: <span className="font-mono">transaction_id, amount</span>. Matching IDs will be auto-verified.
+              </p>
+              <input
+                ref={csvInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleCsvUpload}
+                className="hidden"
+              />
+              <GlassButton
+                variant="primary"
+                onClick={() => csvInputRef.current?.click()}
+                className="w-full"
+                disabled={csvUploading}
+              >
+                <FileSpreadsheet className="inline w-4 h-4 mr-2" />
+                {csvUploading ? "Processing..." : "Upload CSV"}
+              </GlassButton>
+            </GlassCard>
+
+            <GlassCard animate={false}>
+              <h3 className="font-display font-semibold text-foreground mb-4">User Transactions</h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="glass rounded-xl p-3 text-center">
+                  <p className="font-display text-xl font-bold text-primary">{verificationTxs.filter(t => t.is_verified).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Verified</p>
+                </div>
+                <div className="glass rounded-xl p-3 text-center">
+                  <p className="font-display text-xl font-bold text-foreground">{verificationTxs.filter(t => !t.is_verified).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Pending</p>
+                </div>
+              </div>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                {verificationTxs.map(tx => {
+                  const userEmail = profiles.find(p => p.id === tx.user_id)?.email || tx.user_id.slice(0, 8);
+                  return (
+                    <div key={tx.id} className="flex items-center justify-between glass rounded-xl p-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">{userEmail}</p>
+                        <p className="text-sm font-mono text-foreground">{tx.transaction_id}</p>
+                      </div>
+                      <div className="text-right">
+                        {tx.is_verified ? (
+                          <div className="flex items-center gap-1 text-primary">
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span className="text-xs">₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Pending</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                {verificationTxs.length === 0 && <p className="text-center py-8 text-muted-foreground">No transactions submitted yet</p>}
+              </div>
+            </GlassCard>
+          </div>
+        )}
+
         {/* Settings tab */}
         {activeTab === "settings" && (
           <GlassCard animate={false}>
@@ -488,22 +669,21 @@ const Admin = () => {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-display text-muted-foreground">Verify Expense Button Link</label>
-                <input
-                  value={verifyExpenseLink}
-                  onChange={e => setVerifyExpenseLink(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1"
-                />
+                <input value={verifyExpenseLink} onChange={e => setVerifyExpenseLink(e.target.value)} placeholder="https://..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1" />
               </div>
               <div>
                 <label className="text-sm font-display text-muted-foreground">Post-Queue Referral Points</label>
-                <input
-                  type="number"
-                  value={postQueueReferralPoints}
-                  onChange={e => setPostQueueReferralPoints(e.target.value)}
-                  className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1"
-                />
+                <input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1" />
                 <p className="text-xs text-muted-foreground mt-1">Points awarded per referral after user is off the queue</p>
+              </div>
+              <div>
+                <label className="text-sm font-display text-muted-foreground">Verify Spend Link</label>
+                <input value={verifySpendLink} onChange={e => setVerifySpendLink(e.target.value)} placeholder="https://..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1" />
+                <p className="text-xs text-muted-foreground mt-1">Link where users go to perform verification action</p>
+              </div>
+              <div>
+                <label className="text-sm font-display text-muted-foreground">Verify Spend Description</label>
+                <textarea value={verifySpendDescription} onChange={e => setVerifySpendDescription(e.target.value)} placeholder="Describe the verification action..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1 min-h-[80px] resize-none" />
               </div>
               <GlassButton variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full">
                 <Save className="inline w-4 h-4 mr-1" /> {saving ? "Saving..." : "Save Settings"}

@@ -192,6 +192,7 @@ export type Database = {
       }
       questionnaires: {
         Row: {
+          category: string
           created_at: string
           current_bank_question: string
           id: string
@@ -207,6 +208,7 @@ export type Database = {
           why_switch_options: Json
         }
         Insert: {
+          category?: string
           created_at?: string
           current_bank_question?: string
           id?: string
@@ -222,6 +224,7 @@ export type Database = {
           why_switch_options?: Json
         }
         Update: {
+          category?: string
           created_at?: string
           current_bank_question?: string
           id?: string
@@ -274,6 +277,53 @@ export type Database = {
           },
         ]
       }
+      spend_verifications: {
+        Row: {
+          created_at: string
+          ends_at: string
+          frequency: string
+          id: string
+          recalculated_amount: number | null
+          started_at: string
+          status: string
+          user_id: string
+          verification_description: string | null
+          verification_link: string | null
+        }
+        Insert: {
+          created_at?: string
+          ends_at?: string
+          frequency?: string
+          id?: string
+          recalculated_amount?: number | null
+          started_at?: string
+          status?: string
+          user_id: string
+          verification_description?: string | null
+          verification_link?: string | null
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          frequency?: string
+          id?: string
+          recalculated_amount?: number | null
+          started_at?: string
+          status?: string
+          user_id?: string
+          verification_description?: string | null
+          verification_link?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spend_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -291,6 +341,51 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      verification_transactions: {
+        Row: {
+          id: string
+          is_verified: boolean
+          submitted_at: string
+          transaction_id: string
+          user_id: string
+          verification_id: string
+          verified_amount: number | null
+        }
+        Insert: {
+          id?: string
+          is_verified?: boolean
+          submitted_at?: string
+          transaction_id: string
+          user_id: string
+          verification_id: string
+          verified_amount?: number | null
+        }
+        Update: {
+          id?: string
+          is_verified?: boolean
+          submitted_at?: string
+          transaction_id?: string
+          user_id?: string
+          verification_id?: string
+          verified_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verification_transactions_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "spend_verifications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vouchers: {
         Row: {
