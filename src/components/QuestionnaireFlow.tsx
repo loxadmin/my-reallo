@@ -184,31 +184,17 @@ const QuestionnaireFlow = () => {
               <p className="text-sm text-muted-foreground mb-3">
                 Why would you switch to {activeQ.preferred_bank}?
               </p>
-              <div className="space-y-2 mb-4">
+              <select
+                value={selectedReason}
+                onChange={(e) => setSelectedReason(e.target.value)}
+                className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mb-3 bg-transparent"
+              >
+                <option value="" className="bg-background">Select a reason...</option>
                 {(activeQ.why_switch_options || []).map((opt, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedReason(opt)}
-                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
-                      selectedReason === opt
-                        ? "bg-primary/20 border-primary text-primary"
-                        : "glass border-transparent text-muted-foreground hover:border-primary/30"
-                    }`}
-                  >
-                    {opt}
-                  </button>
+                  <option key={i} value={opt} className="bg-background">{opt}</option>
                 ))}
-                <button
-                  onClick={() => setSelectedReason("__freetext__")}
-                  className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
-                    selectedReason === "__freetext__"
-                      ? "bg-primary/20 border-primary text-primary"
-                      : "glass border-transparent text-muted-foreground hover:border-primary/30"
-                  }`}
-                >
-                  Other (type your own)
-                </button>
-              </div>
+                <option value="__freetext__" className="bg-background">Other (type your own)</option>
+              </select>
 
               {selectedReason === "__freetext__" && (
                 <textarea

@@ -12,8 +12,8 @@ interface GlassCardProps {
 const GlassCard = ({ children, className, variant = "default", animate = true }: GlassCardProps) => {
   const variantClasses = {
     default: "glass-card",
-    strong: "glass-strong shadow-xl",
-    glow: "glass-card ring-2 ring-primary/20 shadow-primary/10 shadow-2xl",
+    strong: "glass-strong",
+    glow: "glass-card glow-border",
   };
 
   const Wrapper = animate ? motion.div : "div";
