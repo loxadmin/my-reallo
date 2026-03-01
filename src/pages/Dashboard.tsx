@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWelcomeVoice } from "@/hooks/useWelcomeVoice";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import SpendCalculator from "@/components/SpendCalculator";
@@ -20,6 +21,7 @@ interface SpendResult {
 
 const Dashboard = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
+  const { playWelcomeMessage } = useWelcomeVoice();
   const navigate = useNavigate();
   const [step, setStep] = useState<DashStep>("calculator");
   const [spendResult, setSpendResult] = useState<SpendResult | null>(null);
@@ -29,6 +31,17 @@ const Dashboard = () => {
       navigate("/auth");
     }
   }, [loading, user, navigate]);
+
+  // Welcome voice message
+  useEffect(() => {
+    if (!loading && user && profile) {
+      const hasPlayed = sessionStorage.getItem("welcome_played");
+      if (!hasPlayed) {
+        playWelcomeMessage();
+        sessionStorage.setItem("welcome_played", "true");
+      }
+    }
+  }, [loading, user, profile, playWelcomeMessage]);
 
   // Determine starting step from profile
   useEffect(() => {
