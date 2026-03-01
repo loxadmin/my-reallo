@@ -19,16 +19,16 @@ const GlassCard = ({ children, className, variant = "default", animate = true }:
   const Wrapper = animate ? motion.div : "div";
   const animateProps = animate
     ? {
-        initial: { opacity: 0, y: 20 },
+        initial: { opacity: 0, y: 15 },
         whileInView: { opacity: 1, y: 0 },
         viewport: { once: true },
-        transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+        transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
       }
     : {};
 
   return (
     <Wrapper
-      className={cn("rounded-2xl p-6", variantClasses[variant], className)}
+      className={cn("rounded-[2rem] p-6", variantClasses[variant], className)}
       {...animateProps}
     >
       {children}
