@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import GlassInput from "./GlassInput";
-import { ArrowRight, Zap, Wifi, Calculator, ChevronRight } from "lucide-react";
+import { ArrowRight, Zap, Wifi } from "lucide-react";
 
 interface SpendResult {
   weeklyData: number;
@@ -45,31 +45,22 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
   };
 
   return (
-    <section className="flex flex-col items-center justify-center py-10">
-      <div className="w-full max-w-md space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl glass border-primary/20 bg-primary/5 flex items-center justify-center mx-auto mb-4">
-            <Calculator className="w-6 h-6 text-primary" />
-          </div>
-          <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">Spend Calculator</h1>
-          <p className="text-sm text-muted-foreground font-medium">Let's see how much you can reclaim</p>
-        </div>
-
+    <section className="min-h-screen flex items-center justify-center px-6 py-20">
+      <div className="w-full max-w-md">
         {/* Progress */}
-        <div className="flex gap-3 px-4">
+        <div className="flex gap-2 mb-8">
           {[0, 1, 2].map((i) => (
-            <div
+            <motion.div
               key={i}
-              className="h-1.5 flex-1 rounded-full bg-muted/30 overflow-hidden"
+              className="h-1 flex-1 rounded-full overflow-hidden bg-muted"
             >
               <motion.div
-                className="h-full bg-primary shadow-[0_0_10px_hsla(var(--primary)/0.5)]"
+                className="h-full bg-primary rounded-full"
                 initial={{ width: "0%" }}
                 animate={{ width: step >= i ? "100%" : "0%" }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
               />
-            </div>
+            </motion.div>
           ))}
         </div>
 
@@ -77,49 +68,47 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
           {step === 0 && (
             <motion.div
               key="step0"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="px-2"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -30 }}
+              transition={{ duration: 0.4 }}
             >
-              <GlassCard variant="glow" className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-                    <Wifi className="w-6 h-6 text-primary" />
+              <GlassCard variant="glow">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Wifi className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="font-display font-bold text-foreground">Data Expenses</h2>
-                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Weekly Average</p>
+                    <h2 className="font-display text-xl font-bold text-foreground">Data Spend</h2>
+                    <p className="text-sm text-muted-foreground">How much per week?</p>
                   </div>
                 </div>
-
                 <GlassInput
-                  label="Average weekly data spend"
+                  label="Weekly data spend"
+                  prefix="₦"
                   type="number"
-                  placeholder="e.g. 5,000"
+                  placeholder="e.g. 5000"
                   value={weeklyData}
                   onChange={(e) => setWeeklyData(e.target.value)}
                   min="0"
-                  icon={<span className="font-display font-bold text-primary/60">₦</span>}
                 />
-
-                <div className="space-y-4">
-                  {weeklyData && (
-                    <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground font-display font-bold uppercase tracking-wider">Estimated Annual</span>
-                      <span className="font-display font-bold text-primary text-lg">{formatNaira(Number(weeklyData) * 52)}</span>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={handleNext}
-                    disabled={!weeklyData}
-                    className="clay-primary w-full py-5 rounded-2xl flex items-center justify-center gap-2 group text-base"
+                {weeklyData && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-sm text-primary/70 mt-3 font-display"
                   >
-                    Continue to Electricity
-                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
+                    Annual: {formatNaira(Number(weeklyData) * 52)}
+                  </motion.p>
+                )}
+                <GlassButton
+                  variant="primary"
+                  className="w-full mt-6"
+                  onClick={handleNext}
+                  disabled={!weeklyData}
+                >
+                  Next <ArrowRight className="inline w-4 h-4 ml-2" />
+                </GlassButton>
               </GlassCard>
             </motion.div>
           )}
@@ -127,49 +116,47 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
           {step === 1 && (
             <motion.div
               key="step1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="px-2"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -30 }}
+              transition={{ duration: 0.4 }}
             >
-              <GlassCard variant="glow" className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-                    <Zap className="w-6 h-6 text-primary" />
+              <GlassCard variant="glow">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="font-display font-bold text-foreground">Electricity Bill</h2>
-                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Monthly Average</p>
+                    <h2 className="font-display text-xl font-bold text-foreground">Electricity Spend</h2>
+                    <p className="text-sm text-muted-foreground">How much per month?</p>
                   </div>
                 </div>
-
                 <GlassInput
-                  label="Average monthly electricity bill"
+                  label="Monthly electricity spend"
+                  prefix="₦"
                   type="number"
-                  placeholder="e.g. 15,000"
+                  placeholder="e.g. 15000"
                   value={monthlyElectricity}
                   onChange={(e) => setMonthlyElectricity(e.target.value)}
                   min="0"
-                  icon={<span className="font-display font-bold text-primary/60">₦</span>}
                 />
-
-                <div className="space-y-4">
-                  {monthlyElectricity && (
-                    <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground font-display font-bold uppercase tracking-wider">Estimated Annual</span>
-                      <span className="font-display font-bold text-primary text-lg">{formatNaira(Number(monthlyElectricity) * 12)}</span>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={handleNext}
-                    disabled={!monthlyElectricity}
-                    className="clay-primary w-full py-5 rounded-2xl flex items-center justify-center gap-2 group text-base"
+                {monthlyElectricity && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-sm text-primary/70 mt-3 font-display"
                   >
-                    Calculate My Reclaim
-                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
+                    Annual: {formatNaira(Number(monthlyElectricity) * 12)}
+                  </motion.p>
+                )}
+                <GlassButton
+                  variant="primary"
+                  className="w-full mt-6"
+                  onClick={handleNext}
+                  disabled={!monthlyElectricity}
+                >
+                  See My Total <ArrowRight className="inline w-4 h-4 ml-2" />
+                </GlassButton>
               </GlassCard>
             </motion.div>
           )}
@@ -179,50 +166,51 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
               key="step2"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="px-2"
+              transition={{ duration: 0.5 }}
             >
-              <GlassCard variant="glow" className="text-center space-y-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-5">
-                  <Calculator size={160} />
-                </div>
+              <GlassCard variant="glow" className="text-center">
+                <motion.p
+                  className="text-sm text-muted-foreground font-display uppercase tracking-widest mb-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  Your Annual Spend
+                </motion.p>
+                <motion.h2
+                  className="font-display text-4xl sm:text-5xl font-bold gradient-text mb-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  {formatNaira(totalAnnual)}
+                </motion.h2>
 
-                <div className="space-y-2 relative z-10">
-                  <p className="text-xs text-muted-foreground font-display font-bold uppercase tracking-[0.2em]">Total Reclaimable Spend</p>
-                  <motion.h2
-                    className="font-display text-5xl font-bold gradient-text tracking-tighter"
-                    initial={{ scale: 0.9 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200 }}
-                  >
-                    {formatNaira(totalAnnual)}
-                  </motion.h2>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 relative z-10">
-                  <div className="glass rounded-2xl p-4 space-y-1">
-                    <Wifi className="w-5 h-5 text-primary mx-auto opacity-60" />
-                    <p className="text-[10px] text-muted-foreground font-display font-bold uppercase">Annual Data</p>
-                    <p className="font-display font-bold text-foreground">{formatNaira(annualData)}</p>
+                <div className="flex gap-4 mb-8">
+                  <div className="flex-1 glass rounded-xl p-4">
+                    <Wifi className="w-4 h-4 text-primary mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">Data</p>
+                    <p className="font-display font-semibold text-foreground">{formatNaira(annualData)}</p>
                   </div>
-                  <div className="glass rounded-2xl p-4 space-y-1">
-                    <Zap className="w-5 h-5 text-primary mx-auto opacity-60" />
-                    <p className="text-[10px] text-muted-foreground font-display font-bold uppercase">Annual Power</p>
-                    <p className="font-display font-bold text-foreground">{formatNaira(annualElectricity)}</p>
+                  <div className="flex-1 glass rounded-xl p-4">
+                    <Zap className="w-4 h-4 text-primary mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">Electricity</p>
+                    <p className="font-display font-semibold text-foreground">{formatNaira(annualElectricity)}</p>
                   </div>
                 </div>
 
-                <div className="space-y-4 relative z-10 pt-4">
-                  <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                    That's money you're guaranteed to spend every year. Let's help you put it toward something meaningful.
-                  </p>
-                  <button
-                    className="clay-primary w-full py-5 rounded-2xl font-display font-bold text-base flex items-center justify-center gap-2 group"
-                    onClick={handleComplete}
-                  >
-                    Choose My Goal
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
+                <motion.p
+                  className="text-sm text-muted-foreground mb-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  That's money you could put toward your goals. Let's help you reclaim it.
+                </motion.p>
+
+                <GlassButton variant="primary" className="w-full text-base py-4" onClick={handleComplete}>
+                  Choose My Goal
+                </GlassButton>
               </GlassCard>
             </motion.div>
           )}

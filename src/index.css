@@ -6,52 +6,6 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 45 10% 6%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 45 10% 6%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 45 10% 6%;
-
-    --primary: 48 96% 53%;
-    --primary-foreground: 45 10% 6%;
-
-    --secondary: 45 5% 92%;
-    --secondary-foreground: 45 10% 10%;
-
-    --muted: 45 5% 90%;
-    --muted-foreground: 45 10% 40%;
-
-    --accent: 48 80% 60%;
-    --accent-foreground: 45 10% 6%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 45 10% 85%;
-    --input: 45 10% 90%;
-    --ring: 48 96% 53%;
-
-    --radius: 1.25rem;
-
-    /* Custom glassmorphic tokens - Light Mode */
-    --glass-bg: 0 0% 100% / 0.6;
-    --glass-border: 0 0% 0% / 0.1;
-    --glass-highlight: 48 96% 53% / 0.15;
-    --glass-blur: 16px;
-    --glow-primary: 48 96% 53% / 0.3;
-    --glow-soft: 48 96% 53% / 0.1;
-
-    /* Gradient tokens */
-    --gradient-hero: linear-gradient(135deg, hsl(48 96% 53% / 0.1), hsl(0 0% 98%));
-    --gradient-gold: linear-gradient(135deg, hsl(48 96% 53%), hsl(40 90% 45%));
-    --gradient-glass: linear-gradient(135deg, hsla(0, 0%, 100%, 0.4), hsla(0, 0%, 100%, 0.1));
-    --gradient-dark: linear-gradient(180deg, hsl(0 0% 98%), hsl(0 0% 95%));
-  }
-
-  .dark {
     --background: 45 10% 6%;
     --foreground: 45 20% 95%;
 
@@ -80,16 +34,28 @@
     --input: 45 10% 15%;
     --ring: 48 96% 53%;
 
-    /* Custom glassmorphic tokens - Dark Mode */
+    --radius: 1rem;
+
+    --sidebar-background: 45 10% 8%;
+    --sidebar-foreground: 45 20% 90%;
+    --sidebar-primary: 48 96% 53%;
+    --sidebar-primary-foreground: 45 10% 6%;
+    --sidebar-accent: 45 5% 15%;
+    --sidebar-accent-foreground: 45 20% 90%;
+    --sidebar-border: 45 10% 20%;
+    --sidebar-ring: 48 96% 53%;
+
+    /* Custom glassmorphic tokens */
     --glass-bg: 48 30% 95% / 0.08;
     --glass-border: 48 30% 95% / 0.15;
     --glass-highlight: 48 96% 53% / 0.2;
-    --glass-blur: 24px;
+    --glass-blur: 20px;
     --glow-primary: 48 96% 53% / 0.4;
     --glow-soft: 48 96% 53% / 0.15;
 
     /* Gradient tokens */
     --gradient-hero: linear-gradient(135deg, hsl(48 96% 53% / 0.15), hsl(45 10% 6% / 0.8));
+    --gradient-gold: linear-gradient(135deg, hsl(48 96% 53%), hsl(40 90% 45%));
     --gradient-glass: linear-gradient(135deg, hsl(48 30% 95% / 0.12), hsl(48 30% 95% / 0.04));
     --gradient-dark: linear-gradient(180deg, hsl(45 10% 8%), hsl(45 10% 4%));
   }
@@ -104,122 +70,141 @@
     @apply bg-background text-foreground font-body antialiased;
     background: var(--gradient-dark);
     min-height: 100vh;
-    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
 @layer components {
   .glass {
-    background: hsla(var(--glass-bg));
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid hsla(var(--glass-border));
+    background: hsl(48 30% 95% / 0.06);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid hsl(48 30% 95% / 0.1);
   }
 
   .glass-strong {
-    background: hsla(var(--glass-bg));
-    backdrop-filter: blur(calc(var(--glass-blur) * 1.5));
-    -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.5));
-    border: 1px solid hsla(var(--glass-border));
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    background: hsl(48 30% 95% / 0.1);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid hsl(48 30% 95% / 0.15);
   }
 
   .glass-card {
-    background: hsla(var(--glass-bg));
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid hsla(var(--glass-border));
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 hsla(var(--glass-border));
+    background: hsl(48 30% 95% / 0.05);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid hsl(48 30% 95% / 0.08);
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(48 30% 95% / 0.08);
   }
 
   .glass-pill {
-    background: hsla(var(--glass-bg));
-    backdrop-filter: blur(calc(var(--glass-blur) / 2));
-    -webkit-backdrop-filter: blur(calc(var(--glass-blur) / 2));
-    border: 1px solid hsla(var(--glass-border));
+    background: hsl(48 30% 95% / 0.04);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(48 30% 95% / 0.08);
   }
 
   .glass-stat {
-    background: hsla(var(--glass-bg));
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid hsla(var(--glass-border));
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    background: hsl(48 30% 95% / 0.04);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(48 30% 95% / 0.06);
+    box-shadow: 0 4px 16px hsl(0 0% 0% / 0.15);
   }
 
   .glass-button {
-    background: hsla(var(--glass-bg));
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsla(var(--glass-border));
+    background: hsl(48 30% 95% / 0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(48 30% 95% / 0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-button:hover {
-    background: hsla(var(--glass-highlight));
-    border-color: hsla(var(--primary) / 0.4);
-    box-shadow: 0 0 24px hsla(var(--glow-soft));
+    background: hsl(48 96% 53% / 0.1);
+    border-color: hsl(48 96% 53% / 0.2);
+    box-shadow: 0 0 24px hsl(var(--glow-soft));
   }
 
   /* Claymorphic primary button — transparent yellow with 3D depth */
   .clay-primary {
-    @apply bg-primary/90 text-primary-foreground font-semibold;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid hsl(var(--primary) / 0.5);
+    background: hsl(48 96% 53% / 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(48 96% 70% / 0.5);
     box-shadow:
-      0 6px 20px hsla(var(--primary) / 0.3),
-      0 2px 4px hsla(var(--primary) / 0.15),
-      inset 0 2px 4px hsla(0, 0%, 100%, 0.5),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+      0 6px 20px hsl(48 96% 53% / 0.3),
+      0 2px 4px hsl(48 96% 53% / 0.15),
+      inset 0 2px 4px hsl(48 96% 85% / 0.5),
+      inset 0 -2px 4px hsl(40 90% 30% / 0.25);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .clay-primary:hover {
-    @apply bg-primary;
+    background: hsl(48 96% 53% / 0.8);
     box-shadow:
-      0 8px 28px hsla(var(--primary) / 0.4),
-      0 3px 6px hsla(var(--primary) / 0.2),
-      inset 0 2px 6px hsla(0, 0%, 100%, 0.6),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+      0 8px 28px hsl(48 96% 53% / 0.4),
+      0 3px 6px hsl(48 96% 53% / 0.2),
+      inset 0 2px 6px hsl(48 96% 85% / 0.6),
+      inset 0 -2px 4px hsl(40 90% 30% / 0.3);
     transform: translateY(-1px);
   }
 
   /* Glass outline button */
   .glass-outline {
-    @apply bg-transparent text-foreground;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--primary) / 0.5);
+    background: hsl(48 96% 53% / 0.05);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(48 96% 53% / 0.25);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-outline:hover {
-    background: hsla(var(--glass-highlight));
-    border-color: hsla(var(--primary));
-    box-shadow: 0 0 20px hsla(var(--glow-soft));
+    background: hsl(48 96% 53% / 0.12);
+    border-color: hsl(48 96% 53% / 0.4);
+    box-shadow: 0 0 20px hsl(var(--glow-soft));
+  }
+
+  /* Legacy compat */
+  .clay-button-primary {
+    background: hsl(48 96% 53% / 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(48 96% 70% / 0.5);
+    box-shadow:
+      0 6px 20px hsl(48 96% 53% / 0.3),
+      inset 0 2px 4px hsl(48 96% 85% / 0.5),
+      inset 0 -2px 4px hsl(40 90% 30% / 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .clay-button-primary:hover {
+    background: hsl(48 96% 53% / 0.8);
+    box-shadow:
+      0 8px 28px hsl(48 96% 53% / 0.4),
+      inset 0 2px 6px hsl(48 96% 85% / 0.6),
+      inset 0 -2px 4px hsl(40 90% 30% / 0.3);
   }
 
   .glass-input {
-    background: hsla(var(--glass-bg));
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsla(var(--glass-border));
+    background: hsl(48 30% 95% / 0.05);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(48 30% 95% / 0.12);
     transition: all 0.3s ease;
   }
 
   .glass-input:focus {
-    border-color: hsla(var(--primary) / 0.5);
-    box-shadow: 0 0 20px hsla(var(--glow-soft));
+    border-color: hsl(48 96% 53% / 0.4);
+    box-shadow: 0 0 20px hsl(var(--glow-soft));
     outline: none;
   }
 
   .glow-text {
-    text-shadow: 0 0 30px hsla(var(--glow-primary));
+    text-shadow: 0 0 40px hsl(var(--glow-primary)), 0 0 80px hsl(var(--glow-soft));
   }
 
   .glow-border {
-    box-shadow: 0 0 15px hsla(var(--glow-soft)), inset 0 0 15px hsla(var(--primary) / 0.05);
+    box-shadow: 0 0 15px hsl(var(--glow-soft)), inset 0 0 15px hsl(48 96% 53% / 0.05);
   }
 
   .gradient-text {
@@ -227,16 +212,6 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-  }
-
-  /* Layout grid item - for dashboard action cards */
-  .layout-grid-item {
-    @apply flex flex-col items-center justify-center p-4 rounded-2xl aspect-square glass transition-all duration-300;
-  }
-
-  .layout-grid-item:hover {
-    @apply scale-[1.02] shadow-xl;
-    background: hsla(var(--glass-highlight));
   }
 
   .float-animation {
@@ -254,8 +229,8 @@
 }
 
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 20px hsla(var(--primary) / 0.1); }
-  50% { box-shadow: 0 0 40px hsla(var(--primary) / 0.3); }
+  0%, 100% { box-shadow: 0 0 20px hsl(48 96% 53% / 0.1); }
+  50% { box-shadow: 0 0 40px hsl(48 96% 53% / 0.3); }
 }
 
 @keyframes shimmer {
@@ -264,7 +239,7 @@
 }
 
 .shimmer {
-  background: linear-gradient(90deg, transparent, hsla(var(--primary) / 0.1), transparent);
+  background: linear-gradient(90deg, transparent, hsl(48 96% 53% / 0.1), transparent);
   background-size: 200% 100%;
   animation: shimmer 3s linear infinite;
 }

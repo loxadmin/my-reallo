@@ -1,29 +1,29 @@
-import { InputHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { InputHTMLAttributes } from "react";
 
 interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
-  icon?: ReactNode;
+  prefix?: string;
 }
 
-const GlassInput = ({ label, icon, className, ...props }: GlassInputProps) => {
+const GlassInput = ({ label, prefix, className, ...props }: GlassInputProps) => {
   return (
-    <div className="space-y-1.5 group">
+    <div className="space-y-2">
       {label && (
-        <label className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-widest ml-1 transition-colors group-focus-within:text-primary">
+        <label className="text-sm font-display text-muted-foreground tracking-wide">
           {label}
         </label>
       )}
       <div className="relative">
-        {icon && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2">
-            {icon}
-          </div>
+        {prefix && (
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-display font-semibold">
+            {prefix}
+          </span>
         )}
         <input
           className={cn(
-            "w-full glass-input rounded-2xl py-4 transition-all duration-300 text-foreground placeholder:text-muted-foreground/50 font-medium text-sm",
-            icon ? "pl-11 pr-4" : "px-4",
+            "w-full glass-input rounded-xl px-4 py-3.5 text-foreground font-body placeholder:text-muted-foreground/50",
+            prefix && "pl-10",
             className
           )}
           {...props}

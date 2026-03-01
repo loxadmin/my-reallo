@@ -1,42 +1,43 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { ButtonHTMLAttributes } from "react";
+import { ReactNode } from "react";
 
-interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg";
+interface GlassButtonProps {
+  children: ReactNode;
+  className?: string;
+  variant?: "default" | "primary" | "outline";
+  onClick?: () => void;
+  disabled?: boolean;
+  type?: "button" | "submit";
 }
 
 const GlassButton = ({
   children,
   className,
-  variant = "primary",
-  size = "md",
-  ...props
+  variant = "default",
+  onClick,
+  disabled,
+  type = "button",
 }: GlassButtonProps) => {
   const variants = {
-    primary: "clay-primary",
-    outline: "glass-outline",
-    ghost: "glass-button",
-  };
-
-  const sizes = {
-    sm: "px-4 py-2 text-xs",
-    md: "px-6 py-3 text-sm",
-    lg: "px-8 py-4 text-base",
+    default: "glass-button text-foreground",
+    primary: "clay-primary text-primary-foreground font-semibold",
+    outline: "glass-outline text-primary",
   };
 
   return (
     <motion.button
-      whileHover={{ scale: 1.02, y: -2 }}
-      whileTap={{ scale: 0.98, y: 0 }}
+      type={type}
+      whileHover={{ scale: 1.03, y: -2 }}
+      whileTap={{ scale: 0.97, y: 1 }}
       className={cn(
-        "font-display font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
+        "px-6 py-3 rounded-2xl font-display text-sm tracking-wide transition-all duration-300",
         variants[variant],
-        sizes[size],
+        disabled && "opacity-50 cursor-not-allowed",
         className
       )}
-      {...props}
+      onClick={onClick}
+      disabled={disabled}
     >
       {children}
     </motion.button>

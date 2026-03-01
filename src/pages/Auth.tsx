@@ -5,7 +5,7 @@ import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import GlassInput from "@/components/GlassInput";
 import { useAuth } from "@/contexts/AuthContext";
-import { Mail, Lock, UserPlus, LogIn, Gift, ChevronRight, ShieldCheck, Zap } from "lucide-react";
+import { Mail, Lock, UserPlus, LogIn, Gift } from "lucide-react";
 import RealloEyeLogo from "@/components/RealloEyeLogo";
 
 const Auth = () => {
@@ -36,7 +36,7 @@ const Auth = () => {
     if (mode === "login") {
       const { error } = await signIn(email, password);
       if (error) setError(error.message);
-      else navigate("/dashboard");
+      else navigate("/");
     } else {
       const { error } = await signUp(email, password, referralCode || undefined);
       if (error) setError(error.message);
@@ -48,76 +48,81 @@ const Auth = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
-      {/* Dynamic background elements */}
+      {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[180px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[180px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/3 rounded-full blur-[200px]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[150px]" />
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md z-10 space-y-8"
+        className="w-full max-w-md z-10"
       >
-        {/* Logo and Greeting */}
-        <div className="text-center space-y-4">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col items-center gap-2"
-          >
-            <div className="p-3 rounded-2xl glass border-primary/20 bg-primary/5">
-              <RealloEyeLogo size={48} />
-            </div>
-            <h1 className="font-display text-4xl font-bold gradient-text tracking-tighter">
-              Reallo
-            </h1>
-          </motion.div>
-          <div className="space-y-1">
-            <h2 className="text-2xl font-display font-bold text-foreground">
-              {mode === "login" ? "Welcome Back" : "Join the Queue"}
-            </h2>
-            <p className="text-sm text-muted-foreground font-medium">
-              {mode === "login"
-                ? "Enter your details to manage your reclaims"
-                : "Create an account to start reclaiming your spend"}
-            </p>
-          </div>
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <h1 className="font-display text-3xl font-bold gradient-text mb-2 flex items-center justify-center gap-2">
+            <RealloEyeLogo size={36} />
+            Reallo
+          </h1>
+          <p className="text-sm text-muted-foreground">Reclaim what's yours</p>
         </div>
 
         {signupSuccess ? (
-          <GlassCard variant="glow" className="text-center space-y-6 py-10">
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto pulse-glow">
-              <Mail className="w-8 h-8 text-primary" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="font-display text-2xl font-bold text-foreground">Verify Your Email</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed px-4">
-                We've sent a link to <strong className="text-foreground">{email}</strong>.
-                Confirm your email to activate your account.
-              </p>
-            </div>
-            <GlassButton
-              variant="primary"
-              onClick={() => { setSignupSuccess(false); setMode("login"); }}
-              className="w-full"
-            >
+          <GlassCard variant="glow" className="text-center">
+            <Mail className="w-12 h-12 text-primary mx-auto mb-4" />
+            <h2 className="font-display text-xl font-bold text-foreground mb-2">Check Your Email</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              We've sent a confirmation link to <strong className="text-foreground">{email}</strong>.
+              Click the link to activate your account.
+            </p>
+            <GlassButton variant="outline" onClick={() => { setSignupSuccess(false); setMode("login"); }}>
               Back to Login
             </GlassButton>
           </GlassCard>
         ) : (
-          <div className="space-y-6">
-            <GlassCard variant="glow" className="space-y-6 p-8">
-              {/* Form Fields */}
-              <div className="space-y-4">
+          <GlassCard variant="glow">
+            {/* Tabs */}
+            <div className="flex gap-2 mb-6">
+              <button
+                onClick={() => setMode("login")}
+                className={`flex-1 py-2.5 rounded-xl font-display text-sm font-medium transition-all duration-300 ${
+                  mode === "login"
+                    ? "bg-primary text-primary-foreground"
+                    : "glass-button text-muted-foreground"
+                }`}
+              >
+                <LogIn className="inline w-4 h-4 mr-1.5" />
+                Login
+              </button>
+              <button
+                onClick={() => setMode("signup")}
+                className={`flex-1 py-2.5 rounded-xl font-display text-sm font-medium transition-all duration-300 ${
+                  mode === "signup"
+                    ? "bg-primary text-primary-foreground"
+                    : "glass-button text-muted-foreground"
+                }`}
+              >
+                <UserPlus className="inline w-4 h-4 mr-1.5" />
+                Sign Up
+              </button>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={mode}
+                initial={{ opacity: 0, x: mode === "login" ? -20 : 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: mode === "login" ? 20 : -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
                 <GlassInput
-                  label="Email Address"
+                  label="Email"
                   type="email"
-                  placeholder="name@example.com"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  icon={<Mail className="w-4 h-4 text-primary/60" />}
                 />
                 <GlassInput
                   label="Password"
@@ -125,77 +130,47 @@ const Auth = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  icon={<Lock className="w-4 h-4 text-primary/60" />}
                 />
 
                 {mode === "signup" && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    className="space-y-2"
+                    exit={{ opacity: 0, height: 0 }}
                   >
                     <GlassInput
-                      label="Referral Code (Optional)"
-                      placeholder="e.g. ABC-123"
+                      label="Referral Code (optional)"
+                      placeholder="e.g. AB12CD34"
                       value={referralCode}
                       onChange={(e) => setReferralCode(e.target.value)}
-                      icon={<Gift className="w-4 h-4 text-primary/60" />}
                     />
-                    <div className="flex items-center gap-2 px-1">
-                      <Zap className="w-3 h-3 text-primary" />
-                      <span className="text-[10px] font-display font-bold text-primary uppercase tracking-widest">
-                        Instantly skip 5 spots
-                      </span>
-                    </div>
+                    <p className="text-xs text-primary/60 mt-1 flex items-center gap-1">
+                      <Gift className="w-3 h-3" /> You and your referrer both benefit
+                    </p>
                   </motion.div>
                 )}
-              </div>
 
-              {error && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-xs text-destructive font-display font-bold text-center"
+                {error && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-sm text-destructive font-display"
+                  >
+                    {error}
+                  </motion.p>
+                )}
+
+                <GlassButton
+                  variant="primary"
+                  className="w-full mt-4 text-base py-3.5"
+                  onClick={handleSubmit}
+                  disabled={loading || !email || !password}
                 >
-                  {error}
-                </motion.p>
-              )}
-
-              <button
-                onClick={handleSubmit}
-                disabled={loading || !email || !password}
-                className="clay-primary w-full py-5 rounded-2xl flex items-center justify-center gap-2 group text-base"
-              >
-                {loading ? "Processing..." : mode === "login" ? "Sign In" : "Start Reclaiming"}
-                {!loading && <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
-              </button>
-            </GlassCard>
-
-            {/* Toggle Mode */}
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground font-medium">
-                {mode === "login" ? "New to Reallo?" : "Already have an account?"}{" "}
-                <button
-                  onClick={() => setMode(mode === "login" ? "signup" : "login")}
-                  className="text-primary font-display font-bold hover:underline underline-offset-4"
-                >
-                  {mode === "login" ? "Join the Queue" : "Sign In"}
-                </button>
-              </p>
-            </div>
-
-            {/* Footer Trust */}
-            <div className="flex items-center justify-center gap-6 pt-4 border-t border-primary/10">
-              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-display font-bold uppercase tracking-widest">
-                <ShieldCheck className="w-3.5 h-3.5 text-primary/60" />
-                SSL Encrypted
-              </div>
-              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-display font-bold uppercase tracking-widest">
-                <Zap className="w-3.5 h-3.5 text-primary/60" />
-                Live Tracking
-              </div>
-            </div>
-          </div>
+                  {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
+                </GlassButton>
+              </motion.div>
+            </AnimatePresence>
+          </GlassCard>
         )}
       </motion.div>
     </div>
