@@ -5,16 +5,15 @@ import { ReactNode } from "react";
 interface GlassCardProps {
   children: ReactNode;
   className?: string;
-  variant?: "default" | "strong" | "glow" | "blue";
+  variant?: "default" | "strong" | "glow";
   animate?: boolean;
 }
 
 const GlassCard = ({ children, className, variant = "default", animate = true }: GlassCardProps) => {
   const variantClasses = {
     default: "glass-card",
-    strong: "glass-card bg-white/10 dark:bg-white/5 border-white/30 dark:border-white/20",
-    glow: "glass-card border-primary/30 shadow-[0_0_20px_rgba(42,172,196,0.1)]",
-    blue: "bg-blue-600 text-white rounded-[2.5rem] p-8 shadow-xl border-none",
+    strong: "glass-strong",
+    glow: "glass-card glow-border",
   };
 
   const Wrapper = animate ? motion.div : "div";
@@ -29,7 +28,7 @@ const GlassCard = ({ children, className, variant = "default", animate = true }:
 
   return (
     <Wrapper
-      className={cn("rounded-[2rem] p-6 transition-all duration-300", variantClasses[variant], className)}
+      className={cn("rounded-2xl p-6", variantClasses[variant], className)}
       {...animateProps}
     >
       {children}

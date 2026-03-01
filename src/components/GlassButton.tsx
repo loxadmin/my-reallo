@@ -1,46 +1,45 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { ButtonHTMLAttributes, ReactNode } from "react";
+import { ReactNode } from "react";
 
-interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface GlassButtonProps {
   children: ReactNode;
-  variant?: "primary" | "outline" | "secondary" | "ghost";
   className?: string;
-  loading?: boolean;
+  variant?: "default" | "primary" | "outline";
+  onClick?: () => void;
+  disabled?: boolean;
+  type?: "button" | "submit";
 }
 
 const GlassButton = ({
   children,
-  variant = "primary",
   className,
-  loading,
+  variant = "default",
+  onClick,
   disabled,
-  ...props
+  type = "button",
 }: GlassButtonProps) => {
   const variants = {
-    primary: "clay-primary",
-    outline: "glass-button border-primary/20 text-primary hover:bg-primary/5",
-    secondary: "glass-button border-white/20 text-foreground hover:bg-white/5",
-    ghost: "bg-transparent hover:bg-muted text-muted-foreground",
+    default: "glass-button text-foreground",
+    primary: "clay-primary text-primary-foreground font-semibold",
+    outline: "glass-outline text-primary",
   };
 
   return (
     <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      type={type}
+      whileHover={{ scale: 1.03, y: -2 }}
+      whileTap={{ scale: 0.97, y: 1 }}
       className={cn(
-        "px-6 py-3 rounded-2xl font-display font-semibold text-sm transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none",
+        "px-6 py-3 rounded-2xl font-display text-sm tracking-wide transition-all duration-300",
         variants[variant],
+        disabled && "opacity-50 cursor-not-allowed",
         className
       )}
-      disabled={disabled || loading}
-      {...props}
+      onClick={onClick}
+      disabled={disabled}
     >
-      {loading ? (
-        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-      ) : (
-        children
-      )}
+      {children}
     </motion.button>
   );
 };

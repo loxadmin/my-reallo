@@ -1,10 +1,12 @@
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import DashboardHeader from "@/components/DashboardHeader";
+import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
@@ -16,29 +18,26 @@ const Index = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background">
+    <div className="relative min-h-screen overflow-x-hidden">
       {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-lg bg-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/3 rounded-full blur-[200px]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[150px]" />
       </div>
 
-      {user && <DashboardHeader />}
+      <Navbar />
 
-      <main className={user ? "pt-10" : ""}>
-        <HeroSection onGetStarted={handleGetStarted} />
-      </main>
-
-      {!user && (
-        <div className="fixed top-0 left-0 right-0 p-6 flex justify-between items-center z-50">
-          <h1 className="text-2xl font-display font-bold text-foreground">Reallo</h1>
-          <button
-            onClick={() => navigate("/auth")}
-            className="text-sm font-bold text-primary px-5 py-2.5 glass-button rounded-2xl"
-          >
-            Login
-          </button>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="hero"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <HeroSection onGetStarted={handleGetStarted} />
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
