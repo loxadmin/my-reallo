@@ -243,3 +243,8 @@
   background-size: 200% 100%;
   animation: shimmer 3s linear infinite;
 }
+
+/* Redesign layout utilities */
+.layout-grid-item {
+  @apply flex flex-col justify-between aspect-square p-5 rounded-3xl transition-all duration-300;
+}
