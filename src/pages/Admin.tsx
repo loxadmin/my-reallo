@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
-import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet } from "lucide-react";
+import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet, ChevronRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ProfileRow {
@@ -101,13 +101,11 @@ const Admin = () => {
   const [csvUploading, setCsvUploading] = useState(false);
   const csvInputRef = useRef<HTMLInputElement>(null);
 
-  // Admin settings
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [postQueueReferralPoints, setPostQueueReferralPoints] = useState("1000");
   const [verifySpendLink, setVerifySpendLink] = useState("");
   const [verifySpendDescription, setVerifySpendDescription] = useState("");
 
-  // New questionnaire form
   const [newQ, setNewQ] = useState({
     title: "",
     points_reward: 100,
@@ -221,7 +219,6 @@ const Admin = () => {
     await fetchData();
   };
 
-  // CSV upload and auto-match
   const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -230,7 +227,6 @@ const Admin = () => {
     try {
       const text = await file.text();
       const lines = text.split("\n").filter(l => l.trim());
-      // Skip header row
       const rows = lines.slice(1).map(line => {
         const parts = line.split(",").map(s => s.trim().replace(/^"|"$/g, ""));
         return { transaction_id: parts[0], amount: parseFloat(parts[1]) || 0 };
@@ -238,7 +234,6 @@ const Admin = () => {
 
       let matchCount = 0;
       for (const row of rows) {
-        // Find matching unverified transactions
         const { data: matches } = await supabase
           .from("verification_transactions")
           .select("id, user_id, verification_id")
@@ -252,29 +247,19 @@ const Admin = () => {
               .eq("id", match.id);
             matchCount++;
 
-            // Check if all transactions for this verification are now verified
             const { data: allTxs } = await supabase
               .from("verification_transactions")
               .select("is_verified, verified_amount")
               .eq("verification_id", match.verification_id);
 
             if (allTxs && allTxs.every(t => t.is_verified)) {
-              // Sum amounts and recalculate
               const totalMonthly = allTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
               const annualAmount = Math.round(totalMonthly * 12);
-
-              // Get verification to check days
-              const { data: vData } = await supabase
-                .from("spend_verifications")
-                .select("started_at, ends_at")
-                .eq("id", match.verification_id)
-                .single();
 
               await supabase.from("spend_verifications")
                 .update({ status: "verified", recalculated_amount: annualAmount })
                 .eq("id", match.verification_id);
 
-              // Update user's total_annual_spend
               await supabase.from("profiles")
                 .update({ total_annual_spend: annualAmount })
                 .eq("id", match.user_id);
@@ -283,17 +268,16 @@ const Admin = () => {
         }
       }
 
-      toast({ title: `CSV processed`, description: `${matchCount} transactions matched and verified from ${rows.length} rows.` });
+      toast({ title: `CSV processed`, description: `${matchCount} transactions matched.` });
       await fetchData();
     } catch (err) {
-      toast({ title: "CSV error", description: "Failed to process CSV file." });
+      toast({ title: "CSV error" });
     }
     setCsvUploading(false);
     if (csvInputRef.current) csvInputRef.current.value = "";
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground font-display">Loading...</p></div>;
-  if (!isAdmin) return null;
+  if (loading || !isAdmin) return null;
 
   const tabs: { id: AdminTab; label: string; icon: any; count: number }[] = [
     { id: "users", label: "Users", icon: Users, count: profiles.length },
@@ -310,46 +294,53 @@ const Admin = () => {
   const noSwitchCount = qResponses.filter(r => !r.would_switch).length;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/3 rounded-full blur-[200px]" />
+    <div className="pt-24 pb-32 px-4 max-w-4xl mx-auto space-y-6">
+      {/* Admin Nav Card */}
+      <GlassCard className="p-3">
+        <div className="flex items-center justify-between gap-4">
+           <div className="flex items-center gap-2 pl-2">
+             <Shield className="w-5 h-5 text-primary" />
+             <h1 className="font-display font-bold text-lg gradient-text">Admin</h1>
+           </div>
+           <div className="flex gap-2">
+             <button onClick={fetchData} className="p-1.5 rounded-lg glass-button">
+               <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+             </button>
+             <button onClick={() => navigate("/")} className="p-1.5 rounded-lg glass-button text-xs font-display">Home</button>
+             <button onClick={signOut} className="p-1.5 rounded-lg glass-button">
+               <LogOut className="w-4 h-4" />
+             </button>
+           </div>
+        </div>
+      </GlassCard>
+
+      {/* Dynamic Tabs Grid */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex-shrink-0"
+            >
+              <GlassCard
+                animate={false}
+                variant={isActive ? "glow" : "default"}
+                className="text-center p-3 cursor-pointer min-w-[70px]"
+              >
+                <Icon className="w-4 h-4 text-primary mx-auto mb-1" />
+                <p className="font-display text-lg font-bold text-foreground">{tab.count}</p>
+                <p className="text-[10px] text-muted-foreground">{tab.label}</p>
+              </GlassCard>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Header */}
-      <div className="sticky top-0 z-50 px-4 py-3">
-        <div className="max-w-4xl mx-auto glass rounded-2xl px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-primary" />
-            <span className="font-display text-lg font-bold gradient-text">Admin</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <GlassButton variant="outline" onClick={fetchData} disabled={refreshing} className="px-3 py-2">
-              <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-            </GlassButton>
-            <GlassButton variant="outline" onClick={() => navigate("/")} className="px-3 py-2 text-xs">Home</GlassButton>
-            <GlassButton variant="outline" onClick={signOut} className="px-3 py-2"><LogOut className="w-4 h-4" /></GlassButton>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className="flex-shrink-0">
-                <GlassCard animate={false} variant={activeTab === tab.id ? "glow" : "default"} className="text-center p-3 cursor-pointer min-w-[70px]">
-                  <Icon className="w-4 h-4 text-primary mx-auto mb-1" />
-                  <p className="font-display text-lg font-bold text-foreground">{tab.count}</p>
-                  <p className="text-[10px] text-muted-foreground">{tab.label}</p>
-                </GlassCard>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Users tab */}
+      {/* Content Area */}
+      <div className="space-y-6">
         {activeTab === "users" && (
           <GlassCard animate={false}>
             <h3 className="font-display font-semibold text-foreground mb-4">Registered Users</h3>
@@ -383,19 +374,17 @@ const Admin = () => {
           </GlassCard>
         )}
 
-        {/* Ghosts tab */}
         {activeTab === "ghosts" && (
           <GlassCard animate={false}>
             <h3 className="font-display font-semibold text-foreground mb-4">Ghost Users</h3>
             <div className="text-center py-8">
               <Ghost className="w-12 h-12 text-primary/30 mx-auto mb-3" />
               <p className="font-display text-4xl font-bold gradient-text">{ghostCount}</p>
-              <p className="text-sm text-muted-foreground mt-2">Ghost users seeded in the waitlist queue</p>
+              <p className="text-sm text-muted-foreground mt-2 font-body font-normal">Ghost users seeded in the waitlist queue</p>
             </div>
           </GlassCard>
         )}
 
-        {/* Activity tab */}
         {activeTab === "activity" && (
           <GlassCard animate={false}>
             <h3 className="font-display font-semibold text-foreground mb-4">Recent Activity</h3>
@@ -417,7 +406,6 @@ const Admin = () => {
           </GlassCard>
         )}
 
-        {/* Goals tab */}
         {activeTab === "goals" && (
           <GlassCard animate={false}>
             <div className="flex items-center justify-between mb-4">
@@ -449,7 +437,6 @@ const Admin = () => {
           </GlassCard>
         )}
 
-        {/* Questionnaires tab */}
         {activeTab === "questionnaires" && (
           <div className="space-y-4">
             <GlassCard animate={false}>
@@ -483,7 +470,7 @@ const Admin = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <input type="checkbox" checked={newQ.switch_enabled} onChange={e => setNewQ(p => ({ ...p, switch_enabled: e.target.checked }))} className="accent-primary" />
-                  <span className="text-sm text-muted-foreground">Enable switch button</span>
+                  <span className="text-sm text-muted-foreground font-body font-normal">Enable switch button</span>
                 </div>
 
                 <p className="text-xs text-muted-foreground font-display">Why-switch dropdown options:</p>
@@ -541,7 +528,7 @@ const Admin = () => {
                 </p>
                 {q.why_switch_options && (q.why_switch_options as string[]).length > 0 && (
                   <div className="mt-2">
-                    <p className="text-xs text-muted-foreground">Dropdown options: {(q.why_switch_options as string[]).join(", ")}</p>
+                    <p className="text-xs text-muted-foreground font-body font-normal">Dropdown options: {(q.why_switch_options as string[]).join(", ")}</p>
                   </div>
                 )}
               </GlassCard>
@@ -549,18 +536,17 @@ const Admin = () => {
           </div>
         )}
 
-        {/* Analytics tab */}
         {activeTab === "analytics" && (
           <GlassCard animate={false}>
             <h3 className="font-display font-semibold text-foreground mb-4">Questionnaire Analytics</h3>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="glass rounded-xl p-4 text-center">
                 <p className="font-display text-2xl font-bold text-primary">{switchCount}</p>
-                <p className="text-xs text-muted-foreground">Would Switch</p>
+                <p className="text-xs text-muted-foreground font-body font-normal">Would Switch</p>
               </div>
               <div className="glass rounded-xl p-4 text-center">
                 <p className="font-display text-2xl font-bold text-foreground">{noSwitchCount}</p>
-                <p className="text-xs text-muted-foreground">Declined</p>
+                <p className="text-xs text-muted-foreground font-body font-normal">Declined</p>
               </div>
             </div>
 
@@ -572,19 +558,19 @@ const Admin = () => {
                 <div key={q.id} className="glass rounded-xl p-4 mb-3">
                   <p className="font-display font-semibold text-foreground text-sm">{q.title}</p>
                   <p className="text-[10px] text-primary capitalize">{catLabel}</p>
-                  <div className="flex gap-4 mt-2">
+                  <div className="flex gap-4 mt-2 font-body font-normal">
                     <p className="text-xs text-primary">{yesCount} yes</p>
                     <p className="text-xs text-muted-foreground">{qr.length - yesCount} no</p>
                     <p className="text-xs text-muted-foreground">{qr.length} total</p>
                   </div>
                   {yesCount > 0 && (
                     <div className="mt-2">
-                      <p className="text-[10px] text-muted-foreground uppercase">Top reasons:</p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-display">Top reasons:</p>
                       {Array.from(new Set(qr.filter(r => r.would_switch && r.switch_reason).map(r => r.switch_reason))).map(reason => (
-                        <p key={reason} className="text-xs text-foreground">• {reason} ({qr.filter(r => r.switch_reason === reason).length})</p>
+                        <p key={reason} className="text-xs text-foreground font-body font-normal">• {reason} ({qr.filter(r => r.switch_reason === reason).length})</p>
                       ))}
                       {qr.filter(r => r.would_switch && r.switch_reason_freetext).map(r => (
-                        <p key={r.id} className="text-xs text-muted-foreground italic">"{r.switch_reason_freetext}"</p>
+                        <p key={r.id} className="text-xs text-muted-foreground italic font-body font-normal">"{r.switch_reason_freetext}"</p>
                       ))}
                     </div>
                   )}
@@ -594,14 +580,13 @@ const Admin = () => {
           </GlassCard>
         )}
 
-        {/* Verification tab */}
         {activeTab === "verification" && (
           <div className="space-y-4">
             <GlassCard animate={false}>
               <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Upload className="w-4 h-4 text-primary" /> Upload Transaction CSV
               </h3>
-              <p className="text-xs text-muted-foreground mb-3">
+              <p className="text-xs text-muted-foreground mb-3 font-body font-normal">
                 Upload a CSV with columns: <span className="font-mono">transaction_id, amount</span>. Matching IDs will be auto-verified.
               </p>
               <input
@@ -627,18 +612,18 @@ const Admin = () => {
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="glass rounded-xl p-3 text-center">
                   <p className="font-display text-xl font-bold text-primary">{verificationTxs.filter(t => t.is_verified).length}</p>
-                  <p className="text-[10px] text-muted-foreground">Verified</p>
+                  <p className="text-[10px] text-muted-foreground font-body font-normal">Verified</p>
                 </div>
                 <div className="glass rounded-xl p-3 text-center">
                   <p className="font-display text-xl font-bold text-foreground">{verificationTxs.filter(t => !t.is_verified).length}</p>
-                  <p className="text-[10px] text-muted-foreground">Pending</p>
+                  <p className="text-[10px] text-muted-foreground font-body font-normal">Pending</p>
                 </div>
               </div>
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              <div className="space-y-2 max-h-[400px] overflow-y-auto scrollbar-hide">
                 {verificationTxs.map(tx => {
                   const userEmail = profiles.find(p => p.id === tx.user_id)?.email || tx.user_id.slice(0, 8);
                   return (
-                    <div key={tx.id} className="flex items-center justify-between glass rounded-xl p-3">
+                    <div key={tx.id} className="flex items-center justify-between glass rounded-xl p-3 font-body font-normal">
                       <div>
                         <p className="text-xs text-muted-foreground">{userEmail}</p>
                         <p className="text-sm font-mono text-foreground">{tx.transaction_id}</p>
@@ -656,16 +641,17 @@ const Admin = () => {
                     </div>
                   );
                 })}
-                {verificationTxs.length === 0 && <p className="text-center py-8 text-muted-foreground">No transactions submitted yet</p>}
+                {verificationTxs.length === 0 && <p className="text-center py-8 text-muted-foreground font-body font-normal">No transactions submitted yet</p>}
               </div>
             </GlassCard>
           </div>
         )}
 
-        {/* Settings tab */}
         {activeTab === "settings" && (
           <GlassCard animate={false}>
-            <h3 className="font-display font-semibold text-foreground mb-4">App Settings</h3>
+            <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+               <Settings className="w-5 h-5 text-primary" /> App Settings
+            </h3>
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-display text-muted-foreground">Verify Expense Button Link</label>
@@ -673,17 +659,17 @@ const Admin = () => {
               </div>
               <div>
                 <label className="text-sm font-display text-muted-foreground">Post-Queue Referral Points</label>
-                <input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1" />
-                <p className="text-xs text-muted-foreground mt-1">Points awarded per referral after user is off the queue</p>
+                <input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1 font-body" />
+                <p className="text-xs text-muted-foreground mt-1 font-body font-normal">Points awarded per referral after user is off the queue</p>
               </div>
               <div>
                 <label className="text-sm font-display text-muted-foreground">Verify Spend Link</label>
-                <input value={verifySpendLink} onChange={e => setVerifySpendLink(e.target.value)} placeholder="https://..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1" />
-                <p className="text-xs text-muted-foreground mt-1">Link where users go to perform verification action</p>
+                <input value={verifySpendLink} onChange={e => setVerifySpendLink(e.target.value)} placeholder="https://..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1 font-body" />
+                <p className="text-xs text-muted-foreground mt-1 font-body font-normal">Link where users go to perform verification action</p>
               </div>
               <div>
                 <label className="text-sm font-display text-muted-foreground">Verify Spend Description</label>
-                <textarea value={verifySpendDescription} onChange={e => setVerifySpendDescription(e.target.value)} placeholder="Describe the verification action..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1 min-h-[80px] resize-none" />
+                <textarea value={verifySpendDescription} onChange={e => setVerifySpendDescription(e.target.value)} placeholder="Describe the verification action..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1 min-h-[80px] resize-none font-body font-normal" />
               </div>
               <GlassButton variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full">
                 <Save className="inline w-4 h-4 mr-1" /> {saving ? "Saving..." : "Save Settings"}
