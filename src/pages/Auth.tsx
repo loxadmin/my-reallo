@@ -5,9 +5,8 @@ import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import GlassInput from "@/components/GlassInput";
 import { useAuth } from "@/contexts/AuthContext";
-import { Mail, UserPlus, LogIn, Gift } from "lucide-react";
+import { Mail, Lock, UserPlus, LogIn, Gift } from "lucide-react";
 import RealloEyeLogo from "@/components/RealloEyeLogo";
-import Layout from "@/components/Layout";
 
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -48,7 +47,13 @@ const Auth = () => {
   };
 
   return (
-    <Layout showNav={false}>
+    <div className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
+      {/* Ambient background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/3 rounded-full blur-[200px]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[150px]" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -168,7 +173,7 @@ const Auth = () => {
           </GlassCard>
         )}
       </motion.div>
-    </Layout>
+    </div>
   );
 };
 
