@@ -108,6 +108,8 @@ const QuestionnaireFlow = () => {
       switch_timer_start: new Date().toISOString(),
     });
 
+    // Award points
+    await supabase.rpc("generate_referral_code"); // just to use rpc pattern
     const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
     const newBalance = (profile?.points_balance || 0) + activeQ.points_reward;
     await supabase.from("profiles").update({ points_balance: newBalance }).eq("id", user.id);
@@ -134,6 +136,7 @@ const QuestionnaireFlow = () => {
 
   if (!user) return null;
 
+  // If actively doing a questionnaire
   if (activeQ) {
     const switchQ = activeQ.switch_question_template
       .replace("{current_bank}", currentBank)
@@ -217,6 +220,7 @@ const QuestionnaireFlow = () => {
     );
   }
 
+  // List available questionnaires
   const availableQs = questionnaires.filter((q) => !getResponse(q.id));
   const completedQs = questionnaires.filter((q) => getResponse(q.id));
 

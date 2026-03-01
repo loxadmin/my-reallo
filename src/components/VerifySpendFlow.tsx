@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
-import { ShieldCheck, Clock, ExternalLink, Plus, CheckCircle2, AlertCircle, History } from "lucide-react";
+import { ShieldCheck, Clock, ExternalLink, Plus, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface Verification {
@@ -26,8 +26,6 @@ interface Transaction {
   is_verified: boolean;
   verified_amount: number | null;
 }
-
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 
 const VerifySpendFlow = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -111,6 +109,7 @@ const VerifySpendFlow = () => {
   const isComplete = verification?.status === "completed" || verification?.status === "verified";
   const allVerified = transactions.length > 0 && transactions.every(t => t.is_verified);
 
+  // Determine if user can submit today based on frequency
   const canSubmitToday = () => {
     if (!verification || transactions.length === 0) return true;
     const lastSubmission = new Date(transactions[0].submitted_at);
@@ -121,6 +120,7 @@ const VerifySpendFlow = () => {
     return true;
   };
 
+  // No verification started yet
   if (!verification) {
     return (
       <GlassCard variant="strong" className="space-y-4">
@@ -168,57 +168,56 @@ const VerifySpendFlow = () => {
   }
 
   return (
-    <div className="space-y-4">
-      <GlassCard variant="strong" className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-primary" />
-            <h3 className="font-display font-semibold text-foreground">Spend Verification</h3>
+    <GlassCard variant="strong" className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-primary" />
+          <h3 className="font-display font-semibold text-foreground">Spend Verification</h3>
+        </div>
+        {!isComplete && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock className="w-3 h-3" />
+            <span>{daysLeft}d left</span>
           </div>
-          {!isComplete && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock className="w-3 h-3" />
-              <span>{daysLeft}d left</span>
+        )}
+      </div>
+
+      {allVerified && (
+        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="glass rounded-xl p-4 text-center border border-primary/20">
+          <CheckCircle2 className="w-8 h-8 text-primary mx-auto mb-2" />
+          <p className="font-display font-semibold text-foreground">All Transactions Verified!</p>
+          {verification.recalculated_amount !== null && (
+            <p className="text-sm text-primary mt-1">
+              Recalculated claimable: ₦{verification.recalculated_amount?.toLocaleString("en-NG")}
+            </p>
+          )}
+        </motion.div>
+      )}
+
+      {/* Submit new transaction ID */}
+      {!isComplete && daysLeft > 0 && (
+        <div>
+          {canSubmitToday() ? (
+            <div className="flex gap-2">
+              <input
+                value={newTxId}
+                onChange={e => setNewTxId(e.target.value)}
+                placeholder="Enter transaction ID"
+                className="flex-1 glass-input rounded-xl px-4 py-3 text-foreground text-sm"
+              />
+              <GlassButton variant="primary" onClick={handleSubmitTx} disabled={submitting || !newTxId.trim()} className="px-4">
+                <Plus className="w-4 h-4" />
+              </GlassButton>
+            </div>
+          ) : (
+            <div className="glass rounded-xl p-3 text-center">
+              <p className="text-xs text-muted-foreground">
+                Next submission: {verification.frequency === "daily" ? "tomorrow" : verification.frequency === "weekly" ? "in a few days" : "end of period"}
+              </p>
             </div>
           )}
         </div>
-
-        {allVerified && (
-          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="glass rounded-xl p-4 text-center border border-primary/20">
-            <CheckCircle2 className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="font-display font-semibold text-foreground">All Transactions Verified!</p>
-            {verification.recalculated_amount !== null && (
-              <p className="text-sm text-primary mt-1">
-                Recalculated claimable: ₦{verification.recalculated_amount?.toLocaleString("en-NG")}
-              </p>
-            )}
-          </motion.div>
-        )}
-
-        {!isComplete && daysLeft > 0 && (
-          <div>
-            {canSubmitToday() ? (
-              <div className="flex gap-2">
-                <input
-                  value={newTxId}
-                  onChange={e => setNewTxId(e.target.value)}
-                  placeholder="Enter transaction ID"
-                  className="flex-1 glass-input rounded-xl px-4 py-3 text-foreground text-sm"
-                />
-                <GlassButton variant="primary" onClick={handleSubmitTx} disabled={submitting || !newTxId.trim()} className="px-4">
-                  <Plus className="w-4 h-4" />
-                </GlassButton>
-              </div>
-            ) : (
-              <div className="glass rounded-xl p-3 text-center">
-                <p className="text-xs text-muted-foreground">
-                  Next submission: {verification.frequency === "daily" ? "tomorrow" : verification.frequency === "weekly" ? "in a few days" : "end of period"}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </GlassCard>
+      )}
 
       {/* Transaction list */}
       {transactions.length > 0 && (
@@ -249,7 +248,7 @@ const VerifySpendFlow = () => {
       <p className="text-[10px] text-muted-foreground">
         Frequency: {verification.frequency} • {transactions.filter(t => t.is_verified).length}/{transactions.length} verified
       </p>
-    </div>
+    </GlassCard>
   );
 };
 

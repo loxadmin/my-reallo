@@ -62,6 +62,7 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
     const hasSubs = subs.length > 1 || subs.some((c) => c.subcategory);
 
     if (!hasSubs && subs.length === 1) {
+      // No subcategories — go directly to confirmation
       setSelectedType(type);
       setSelectedCategory(subs[0]);
     } else {
@@ -79,27 +80,28 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
   }
 
   return (
-    <section className="min-h-screen flex items-center justify-center px-6 py-20 relative overflow-hidden">
-      <div className="w-full max-w-md z-10">
+    <section className="min-h-screen flex items-center justify-center px-6 py-20">
+      <div className="w-full max-w-md">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
           <h2 className="font-display text-2xl font-bold text-foreground mb-2">Choose Your Goal</h2>
-          <p className="text-sm text-muted-foreground font-medium">
-            Where should your <span className="text-primary font-bold">{formatNaira(totalAnnualSpend)}</span> go?
+          <p className="text-sm text-muted-foreground">
+            Where should your {formatNaira(totalAnnualSpend)} go?
           </p>
         </motion.div>
 
         <AnimatePresence mode="wait">
+          {/* Step 1: Goal type selection */}
           {!selectedType && (
             <motion.div
               key="types"
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -30 }}
-              className="grid grid-cols-2 gap-4"
+              className="grid grid-cols-2 gap-3"
             >
               {goalTypes.map((type, i) => {
                 const meta = goalMeta[type] || { label: type, icon: GraduationCap, description: "" };
@@ -111,33 +113,33 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
                     onClick={() => handleGoalTypeClick(type)}
-                    className="glass-card rounded-3xl p-5 text-left transition-all duration-500 hover:bg-white/[0.04] hover:border-primary/30 group"
+                    className="glass-card rounded-2xl p-4 text-left transition-all duration-300 hover:border-primary/20 group"
                   >
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-4 bg-muted/20 group-hover:bg-primary/20 transition-colors">
-                      <Icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3 bg-muted group-hover:bg-primary/20 transition-colors">
+                      <Icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
-                    <p className="font-display font-bold text-sm text-foreground flex items-center gap-1 group-hover:text-primary transition-colors">
+                    <p className="font-display font-semibold text-sm text-foreground flex items-center gap-1">
                       {meta.label}
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      <ChevronRight className="w-3 h-3 text-muted-foreground" />
                     </p>
-                    <p className="text-[11px] text-muted-foreground mt-1 leading-tight">{meta.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{meta.description}</p>
                   </motion.button>
                 );
               })}
             </motion.div>
           )}
 
+          {/* Step 2: Subcategory selection (if applicable) */}
           {selectedType && hasSubcategories && !selectedCategory && (
             <motion.div
               key="subcategories"
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -30 }}
-              className="space-y-4"
             >
               <button
                 onClick={() => setSelectedType(null)}
-                className="flex items-center gap-1 text-sm text-muted-foreground mb-4 hover:text-primary transition-colors font-display font-semibold"
+                className="flex items-center gap-1 text-sm text-muted-foreground mb-4 hover:text-primary transition-colors font-display"
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
@@ -150,18 +152,18 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
                     onClick={() => setSelectedCategory(cat)}
-                    className="w-full glass-card rounded-2xl p-5 text-left transition-all duration-500 hover:bg-white/[0.04] hover:border-primary/30 group"
+                    className="w-full glass-card rounded-2xl p-4 text-left transition-all duration-300 hover:border-primary/30 hover:shadow-[0_0_30px_hsl(48_96%_53%/0.1)] group"
                   >
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-display font-bold text-foreground">{cat.label}</p>
+                        <p className="font-display font-semibold text-foreground">{cat.label}</p>
                         <p className="text-xs text-muted-foreground mt-1">
                           Max: {formatNaira(cat.max_price)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">You can claim</p>
-                        <p className="font-display font-bold text-primary text-lg">
+                        <p className="text-xs text-muted-foreground">You can claim</p>
+                        <p className="font-display font-bold text-primary">
                           {formatNaira(Math.min(totalAnnualSpend, cat.max_price))}
                         </p>
                       </div>
@@ -172,6 +174,7 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
             </motion.div>
           )}
 
+          {/* Step 3: Confirmation */}
           {selectedCategory && (
             <motion.div
               key="confirm"
@@ -188,54 +191,49 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
                     setSelectedCategory(null);
                   }
                 }}
-                className="flex items-center gap-1 text-sm text-muted-foreground mb-4 hover:text-primary transition-colors font-display font-semibold"
+                className="flex items-center gap-1 text-sm text-muted-foreground mb-4 hover:text-primary transition-colors font-display"
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
 
-              <GlassCard variant="glow" className="p-8">
-                <div className="text-center space-y-6">
-                  <div>
-                    <p className="text-xs text-primary uppercase tracking-[0.2em] font-bold mb-1">
-                      {goalMeta[selectedType!]?.label || selectedType}
-                    </p>
-                    <h3 className="font-display text-2xl font-bold text-foreground">
-                      {selectedCategory.label}
-                    </h3>
-                  </div>
+              <GlassCard variant="glow">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-display mb-1">
+                    {goalMeta[selectedType!]?.label || selectedType}
+                  </p>
+                  <h3 className="font-display text-xl font-bold text-foreground mb-1">
+                    {selectedCategory.label}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-6">
+                    Max price set: {formatNaira(selectedCategory.max_price)}
+                  </p>
 
-                  <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-4">
-                     <div>
-                        <p className="text-sm text-muted-foreground font-medium">Your Claimable Amount</p>
-                        <p className="font-display text-4xl font-bold gradient-text">
-                          {formatNaira(claimableAmount)}
-                        </p>
-                     </div>
-
-                     <div className="space-y-2">
-                        <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden">
-                          <motion.div
-                            className="h-full rounded-full bg-primary shadow-[0_0_10px_rgba(234,179,8,0.5)]"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            transition={{ duration: 0.8, ease: "easeOut" }}
-                          />
-                        </div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-                          {progress.toFixed(1)}% of goal target reached
-                        </p>
-                     </div>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+                  <p className="text-sm text-muted-foreground">Your Claimable Amount</p>
+                  <p className="font-display text-3xl font-bold gradient-text mb-1">
+                    {formatNaira(claimableAmount)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-4">
                     {totalAnnualSpend >= selectedCategory.max_price
                       ? "You qualify for the full amount!"
                       : `Limited to your annual spend of ${formatNaira(totalAnnualSpend)}`}
                   </p>
 
+                  {/* Progress */}
+                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden mb-2">
+                    <motion.div
+                      className="h-full rounded-full bg-primary"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {formatNaira(claimableAmount)} / {formatNaira(selectedCategory.max_price)} ({progress.toFixed(1)}%)
+                  </p>
+
                   <GlassButton
                     variant="primary"
-                    className="w-full py-5 clay-primary text-base"
+                    className="w-full mt-6 text-base py-4"
                     onClick={() =>
                       onSelect(
                         selectedCategory.subcategory
