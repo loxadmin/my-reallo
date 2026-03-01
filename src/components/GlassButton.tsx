@@ -1,45 +1,46 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { ReactNode } from "react";
+import { ButtonHTMLAttributes, ReactNode } from "react";
 
-interface GlassButtonProps {
+interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
+  variant?: "primary" | "outline" | "secondary" | "ghost";
   className?: string;
-  variant?: "default" | "primary" | "outline";
-  onClick?: () => void;
-  disabled?: boolean;
-  type?: "button" | "submit";
+  loading?: boolean;
 }
 
 const GlassButton = ({
   children,
+  variant = "primary",
   className,
-  variant = "default",
-  onClick,
+  loading,
   disabled,
-  type = "button",
+  ...props
 }: GlassButtonProps) => {
   const variants = {
-    default: "glass-button text-foreground",
-    primary: "clay-primary text-primary-foreground font-semibold",
-    outline: "glass-outline text-primary",
+    primary: "clay-primary",
+    outline: "glass-button border-primary/20 text-primary hover:bg-primary/5",
+    secondary: "glass-button border-white/20 text-foreground hover:bg-white/5",
+    ghost: "bg-transparent hover:bg-muted text-muted-foreground",
   };
 
   return (
     <motion.button
-      type={type}
-      whileHover={{ scale: 1.03, y: -2 }}
-      whileTap={{ scale: 0.97, y: 1 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       className={cn(
-        "px-6 py-3 rounded-2xl font-display text-sm tracking-wide transition-all duration-300",
+        "px-6 py-3 rounded-2xl font-display font-semibold text-sm transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none",
         variants[variant],
-        disabled && "opacity-50 cursor-not-allowed",
         className
       )}
-      onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || loading}
+      {...props}
     >
-      {children}
+      {loading ? (
+        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+      ) : (
+        children
+      )}
     </motion.button>
   );
 };
