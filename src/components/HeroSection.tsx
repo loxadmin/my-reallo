@@ -5,6 +5,7 @@ import WalletAnimation from "./WalletAnimation";
 import CountUpAnimation from "./CountUpAnimation";
 import TypewriterText from "./TypewriterText";
 import { supabase } from "@/integrations/supabase/client";
+import { ArrowRight, Sparkles, TrendingUp, Users, Zap } from "lucide-react";
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -25,110 +26,110 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-24 pb-12 overflow-hidden">
-      {/* Soft ambient orbs */}
-      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/6 blur-[180px] pointer-events-none" />
-      <div className="absolute bottom-[10%] right-[-5%] w-[300px] h-[300px] rounded-full bg-primary/4 blur-[140px] pointer-events-none" />
-      <div className="absolute top-[40%] left-[-5%] w-[200px] h-[200px] rounded-full bg-accent/6 blur-[100px] pointer-events-none" />
-
-      {/* Subtle dot grid */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage: `radial-gradient(hsl(48 96% 53% / 0.4) 1px, transparent 1px)`,
-          backgroundSize: "32px 32px",
-        }}
-      />
-
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="text-center max-w-md mx-auto z-10 flex flex-col items-center"
-      >
-        {/* Status pill */}
+    <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 pt-28 pb-20">
+      <div className="max-w-2xl mx-auto text-center flex flex-col items-center">
+        {/* Modern status pill */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="inline-flex items-center gap-2.5 glass-pill rounded-full px-4 py-1.5 mb-6"
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="inline-flex items-center gap-2.5 px-5 py-2 glass-pill rounded-full mb-10 border border-primary/20 shadow-sm"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-glow" />
-          <span className="text-[11px] font-display text-primary/70 tracking-[0.2em] uppercase">
-            Reclaim What's Yours
+          <div className="flex -space-x-1.5">
+             {[1,2,3].map(i => (
+               <div key={i} className="w-5 h-5 rounded-full border-2 border-background bg-muted-foreground/20 overflow-hidden">
+                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=user${i}`} alt="user" />
+               </div>
+             ))}
+          </div>
+          <span className="text-[11px] font-bold font-display text-primary tracking-widest uppercase flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-glow" />
+            {queueCount.toLocaleString()}+ Users Already Reclaiming
           </span>
         </motion.div>
 
-        {/* Headline with typewriter */}
+        {/* Original Headline */}
         <motion.h1
-          initial={{ opacity: 0, y: 15 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="font-display text-3xl sm:text-5xl font-bold leading-[1.1] mb-3"
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="text-4xl sm:text-7xl font-bold font-display leading-[1] mb-6 tracking-tight"
         >
-          <span className="text-foreground">Stop </span>
-          <TypewriterText text="Losing" delay={800} speed={120} className="gradient-text" />
-          <br />
-          <span className="text-foreground">Your Money</span>
+          <span className="text-foreground">Stop Losing </span>
+          <br className="hidden sm:block" />
+          <TypewriterText text="Your Money" delay={800} speed={120} className="gradient-text" />
+          <span className="text-foreground italic font-light ml-1">.</span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.7 }}
-          className="text-muted-foreground text-sm sm:text-base mb-6 leading-relaxed max-w-xs mx-auto"
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="text-muted-foreground text-base sm:text-xl mb-12 leading-relaxed max-w-lg mx-auto font-medium"
         >
-          Calculate your annual utility spend and claim it back toward your life goals.
+          Calculate your annual data & electricity spend and claim it back as business funding, vacation, or education.
         </motion.p>
 
-        {/* Wallet Animation */}
+        {/* Enhanced Visual Area */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.6, duration: 0.7 }}
-          className="mb-6 w-full max-w-[180px]"
+          transition={{ delay: 0.4, duration: 1, type: "spring" }}
+          className="mb-14 relative group"
         >
-          <WalletAnimation />
+          <div className="absolute inset-0 bg-primary/20 blur-[60px] rounded-full scale-75 group-hover:scale-100 transition-transform duration-700" />
+          <div className="w-48 sm:w-64 aspect-square relative z-10">
+            <WalletAnimation />
+          </div>
+          <motion.div
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="absolute -top-4 -right-4 p-4 glass-card rounded-2xl border-primary/20"
+          >
+            <Sparkles className="w-6 h-6 text-primary" />
+          </motion.div>
         </motion.div>
 
-        {/* CTA Buttons */}
+        {/* Direct Action Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.5 }}
-          className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-xs"
+          className="flex flex-col sm:flex-row gap-4 justify-center w-full max-w-sm mb-16"
         >
-          <GlassButton variant="primary" onClick={onGetStarted} className="text-sm px-6 py-3 flex-1">
+          <GlassButton variant="primary" onClick={onGetStarted} className="px-8 py-5 rounded-2xl flex-1 text-lg group">
             Calculate & Claim
+            <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </GlassButton>
-          <GlassButton variant="outline" className="text-sm px-6 py-3 flex-1">
-            How It Works
+          <GlassButton variant="outline" className="px-8 py-5 rounded-2xl flex-1 text-lg">
+            Learn More
           </GlassButton>
         </motion.div>
 
-        {/* Stats row with live count */}
+        {/* Modern Stats Grid */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.7 }}
-          className="flex justify-center gap-3 mt-8"
+          transition={{ delay: 1, duration: 0.8 }}
+          className="grid grid-cols-3 gap-3 sm:gap-6 w-full max-w-lg"
         >
-          <div className="glass-stat rounded-2xl px-4 py-2.5 text-center min-w-[80px]">
-            <p className="font-display text-base font-bold text-primary glow-text">
-              <CountUpAnimation end={queueCount} duration={2} suffix="+" />
-            </p>
-            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">In Queue</p>
-          </div>
-          <div className="glass-stat rounded-2xl px-4 py-2.5 text-center min-w-[80px]">
-            <p className="font-display text-base font-bold text-primary glow-text">₦0</p>
-            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">To Join</p>
-          </div>
-          <div className="glass-stat rounded-2xl px-4 py-2.5 text-center min-w-[80px]">
-            <p className="font-display text-base font-bold text-primary glow-text">5x</p>
-            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">Skip / Referral</p>
-          </div>
+          {[
+            { icon: Users, val: queueCount, suffix: "+", label: "Waitlist" },
+            { icon: TrendingUp, val: 5, suffix: "x", label: "Faster" },
+            { icon: Zap, val: 0, suffix: " Cost", label: "To Join" }
+          ].map((stat, idx) => (
+            <div key={idx} className="glass-stat rounded-3xl px-4 py-5 flex flex-col items-center gap-1.5 border-primary/10 hover:border-primary/30 transition-colors">
+              <stat.icon className="w-5 h-5 text-primary/60" />
+              <p className="font-display text-xl font-bold text-foreground">
+                {typeof stat.val === 'number' ? <CountUpAnimation end={stat.val} duration={2} suffix={stat.suffix} /> : stat.val}
+              </p>
+              <p className="text-[10px] sm:text-[11px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+                {stat.label}
+              </p>
+            </div>
+          ))}
         </motion.div>
-      </motion.div>
+      </div>
     </section>
   );
 };
