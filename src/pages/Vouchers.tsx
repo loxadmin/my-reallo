@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
+import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import { Gift, Wallet, Copy, Check, Lock, AlertCircle } from "lucide-react";
@@ -100,14 +100,14 @@ const Vouchers = () => {
   if (loading || !user) return null;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/3 rounded-full blur-[200px]" />
-      </div>
-      <Navbar />
+    <DashboardLayout>
+      <div className="max-w-md mx-auto space-y-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold font-display tracking-tight">Vouchers</h1>
+          <p className="text-muted-foreground text-sm font-medium">Claim your rewards.</p>
+        </div>
 
-      <section className="min-h-screen flex items-start justify-center px-6 py-24">
-        <div className="w-full max-w-md space-y-4">
+        <div className="w-full space-y-4">
           {/* Balance + Claimable */}
           <GlassCard variant="glow" className="text-center">
             <Wallet className="w-8 h-8 text-primary mx-auto mb-2" />
@@ -213,8 +213,8 @@ const Vouchers = () => {
             </GlassCard>
           )}
         </div>
-      </section>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
