@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, Shield, LayoutDashboard } from "lucide-react";
 import RealloEyeLogo from "./RealloEyeLogo";
+import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const { user, isAdmin, signOut } = useAuth();
@@ -21,6 +22,7 @@ const Navbar = () => {
           Reallo
         </button>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           {user ? (
             <>
               {isAdmin && (

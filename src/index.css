@@ -6,6 +6,52 @@
 
 @layer base {
   :root {
+    --background: 0 0% 98%;
+    --foreground: 45 10% 6%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 45 10% 6%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 45 10% 6%;
+
+    --primary: 48 96% 53%;
+    --primary-foreground: 45 10% 6%;
+
+    --secondary: 45 5% 95%;
+    --secondary-foreground: 45 10% 15%;
+
+    --muted: 45 5% 92%;
+    --muted-foreground: 45 10% 45%;
+
+    --accent: 48 80% 60%;
+    --accent-foreground: 45 10% 6%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 45 10% 90%;
+    --input: 45 10% 95%;
+    --ring: 48 96% 53%;
+
+    --radius: 1.5rem;
+
+    /* Custom glassmorphic tokens */
+    --glass-bg: 48 30% 10% / 0.04;
+    --glass-border: 48 30% 10% / 0.08;
+    --glass-highlight: 48 96% 53% / 0.15;
+    --glass-blur: 16px;
+    --glow-primary: 48 96% 53% / 0.2;
+    --glow-soft: 48 96% 53% / 0.1;
+
+    /* Gradient tokens */
+    --gradient-hero: linear-gradient(135deg, hsl(48 96% 53% / 0.1), hsl(0 0% 98%));
+    --gradient-gold: linear-gradient(135deg, hsl(48 96% 53%), hsl(40 90% 45%));
+    --gradient-glass: linear-gradient(135deg, hsl(48 30% 10% / 0.05), hsl(48 30% 10% / 0.02));
+    --gradient-main: linear-gradient(180deg, hsl(0 0% 98%), hsl(45 10% 95%));
+  }
+
+  .dark {
     --background: 45 10% 6%;
     --foreground: 45 20% 95%;
 
@@ -34,30 +80,17 @@
     --input: 45 10% 15%;
     --ring: 48 96% 53%;
 
-    --radius: 1rem;
-
-    --sidebar-background: 45 10% 8%;
-    --sidebar-foreground: 45 20% 90%;
-    --sidebar-primary: 48 96% 53%;
-    --sidebar-primary-foreground: 45 10% 6%;
-    --sidebar-accent: 45 5% 15%;
-    --sidebar-accent-foreground: 45 20% 90%;
-    --sidebar-border: 45 10% 20%;
-    --sidebar-ring: 48 96% 53%;
-
     /* Custom glassmorphic tokens */
     --glass-bg: 48 30% 95% / 0.08;
     --glass-border: 48 30% 95% / 0.15;
     --glass-highlight: 48 96% 53% / 0.2;
-    --glass-blur: 20px;
+    --glass-blur: 24px;
     --glow-primary: 48 96% 53% / 0.4;
     --glow-soft: 48 96% 53% / 0.15;
 
     /* Gradient tokens */
     --gradient-hero: linear-gradient(135deg, hsl(48 96% 53% / 0.15), hsl(45 10% 6% / 0.8));
-    --gradient-gold: linear-gradient(135deg, hsl(48 96% 53%), hsl(40 90% 45%));
-    --gradient-glass: linear-gradient(135deg, hsl(48 30% 95% / 0.12), hsl(48 30% 95% / 0.04));
-    --gradient-dark: linear-gradient(180deg, hsl(45 10% 8%), hsl(45 10% 4%));
+    --gradient-main: linear-gradient(180deg, hsl(45 10% 8%), hsl(45 10% 4%));
   }
 }
 
@@ -67,40 +100,41 @@
   }
 
   body {
-    @apply bg-background text-foreground font-body antialiased;
-    background: var(--gradient-dark);
+    @apply bg-background text-foreground font-body antialiased transition-colors duration-300;
+    background: var(--gradient-main);
     min-height: 100vh;
   }
 }
 
 @layer components {
   .glass {
-    background: hsl(48 30% 95% / 0.06);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid hsl(48 30% 95% / 0.1);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
   }
 
   .glass-strong {
-    background: hsl(48 30% 95% / 0.1);
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
-    border: 1px solid hsl(48 30% 95% / 0.15);
+    background: hsl(var(--glass-bg) / 1.5);
+    backdrop-filter: blur(calc(var(--glass-blur) * 1.5));
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.5));
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.1);
   }
 
   .glass-card {
-    background: hsl(48 30% 95% / 0.05);
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
-    border: 1px solid hsl(48 30% 95% / 0.08);
-    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(48 30% 95% / 0.08);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.05), inset 0 1px 0 hsl(0 0% 100% / 0.05);
   }
 
   .glass-pill {
-    background: hsl(48 30% 95% / 0.04);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsl(48 30% 95% / 0.08);
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
   }
 
   .glass-stat {
@@ -127,26 +161,31 @@
 
   /* Claymorphic primary button — transparent yellow with 3D depth */
   .clay-primary {
-    background: hsl(48 96% 53% / 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: hsl(48 96% 53% / 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid hsl(48 96% 70% / 0.5);
     box-shadow:
-      0 6px 20px hsl(48 96% 53% / 0.3),
-      0 2px 4px hsl(48 96% 53% / 0.15),
-      inset 0 2px 4px hsl(48 96% 85% / 0.5),
-      inset 0 -2px 4px hsl(40 90% 30% / 0.25);
+      0 12px 24px -8px hsl(48 96% 53% / 0.5),
+      inset 0 2px 4px hsl(48 96% 95% / 0.6),
+      inset 0 -4px 6px hsl(40 90% 30% / 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .clay-primary:hover {
-    background: hsl(48 96% 53% / 0.8);
+    background: hsl(48 96% 53% / 0.95);
     box-shadow:
-      0 8px 28px hsl(48 96% 53% / 0.4),
-      0 3px 6px hsl(48 96% 53% / 0.2),
-      inset 0 2px 6px hsl(48 96% 85% / 0.6),
-      inset 0 -2px 4px hsl(40 90% 30% / 0.3);
-    transform: translateY(-1px);
+      0 16px 32px -8px hsl(48 96% 53% / 0.6),
+      inset 0 2px 6px hsl(48 96% 95% / 0.8),
+      inset 0 -4px 8px hsl(40 90% 30% / 0.3);
+    transform: translateY(-2px);
+  }
+
+  .clay-primary:active {
+    transform: translateY(0px);
+    box-shadow:
+      0 4px 8px -2px hsl(48 96% 53% / 0.4),
+      inset 0 2px 4px hsl(48 96% 95% / 0.4);
   }
 
   /* Glass outline button */
