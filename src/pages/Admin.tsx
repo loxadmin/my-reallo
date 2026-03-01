@@ -7,6 +7,7 @@ import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import Layout from "@/components/Layout";
 
 interface ProfileRow {
   id: string;
@@ -310,29 +311,24 @@ const Admin = () => {
   const noSwitchCount = qResponses.filter(r => !r.would_switch).length;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/3 rounded-full blur-[200px]" />
-      </div>
-
-      {/* Header */}
-      <div className="sticky top-0 z-50 px-4 py-3">
-        <div className="max-w-4xl mx-auto glass rounded-2xl px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-primary" />
-            <span className="font-display text-lg font-bold gradient-text">Admin</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <GlassButton variant="outline" onClick={fetchData} disabled={refreshing} className="px-3 py-2">
-              <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-            </GlassButton>
-            <GlassButton variant="outline" onClick={() => navigate("/")} className="px-3 py-2 text-xs">Home</GlassButton>
-            <GlassButton variant="outline" onClick={signOut} className="px-3 py-2"><LogOut className="w-4 h-4" /></GlassButton>
+    <Layout showNav={false}>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="sticky top-0 z-50 py-3 bg-background/80 backdrop-blur-md -mx-4 px-4">
+          <div className="glass-strong rounded-2xl px-5 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-primary" />
+              <span className="font-display text-lg font-bold gradient-text">Admin Hub</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <GlassButton variant="outline" onClick={fetchData} disabled={refreshing} className="px-3 py-2 h-9 w-9 flex items-center justify-center">
+                <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+              </GlassButton>
+              <GlassButton variant="outline" onClick={() => navigate("/")} className="px-4 py-2 h-9 text-xs font-display font-bold">Portal</GlassButton>
+              <GlassButton variant="outline" onClick={signOut} className="px-3 py-2 h-9 w-9 flex items-center justify-center"><LogOut className="w-4 h-4 text-destructive" /></GlassButton>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-2">
           {tabs.map((tab) => {
@@ -692,7 +688,7 @@ const Admin = () => {
           </GlassCard>
         )}
       </div>
-    </div>
+    </Layout>
   );
 };
 
