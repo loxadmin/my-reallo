@@ -1,21 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import GlassButton from "./GlassButton";
 import WalletAnimation from "./WalletAnimation";
 import CountUpAnimation from "./CountUpAnimation";
 import TypewriterText from "./TypewriterText";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, ShieldCheck, Zap, TrendingUp, Users } from "lucide-react";
 
 interface HeroSectionProps {
   onGetStarted: () => void;
 }
 
 const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const [queueCount, setQueueCount] = useState(0);
 
   useEffect(() => {
@@ -29,100 +24,114 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
     fetchCount();
   }, []);
 
-  const handleCTA = () => {
-    if (user) navigate("/dashboard");
-    else navigate("/auth");
-  };
-
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20 pb-12 overflow-hidden">
-      <div className="z-10 w-full max-w-4xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-24 pb-12 overflow-hidden">
+      {/* Ambient orbs */}
+      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/6 blur-[180px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[-5%] w-[300px] h-[300px] rounded-full bg-primary/4 blur-[140px] pointer-events-none" />
+      <div className="absolute top-[40%] left-[-5%] w-[200px] h-[200px] rounded-full bg-accent/6 blur-[100px] pointer-events-none" />
 
-        {/* Left side: Content */}
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="space-y-8 text-center lg:text-left"
-        >
-          <div className="inline-flex items-center gap-2.5 glass-pill rounded-full px-4 py-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[10px] font-bold text-primary tracking-[0.2em] uppercase">
-              Financial Freedom Reclaimed
+      {/* Dot grid */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: `radial-gradient(hsl(48 96% 53% / 0.4) 1px, transparent 1px)`,
+          backgroundSize: "32px 32px",
+        }}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        className="z-10 w-full max-w-md mx-auto"
+      >
+        {/* Main card */}
+        <div className="glass-card rounded-3xl p-8 text-center">
+          {/* Status pill */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="inline-flex items-center gap-2.5 glass-pill rounded-full px-4 py-1.5 mb-6"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-glow" />
+            <span className="text-[11px] font-display text-primary/70 tracking-[0.2em] uppercase">
+              Reclaim What's Yours
             </span>
-          </div>
+          </motion.div>
 
-          <h1 className="font-display text-5xl sm:text-7xl font-bold leading-[1.05] tracking-tight">
-            Stop <span className="gradient-text">Losing</span><br />
-            Your Money
-          </h1>
+          {/* Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="font-display text-4xl sm:text-5xl font-bold leading-[1.1] mb-3"
+          >
+            <span className="text-foreground">Stop </span>
+            <TypewriterText text="Losing" delay={800} speed={120} className="gradient-text" />
+            <br />
+            <span className="text-foreground">Your Money</span>
+          </motion.h1>
 
-          <p className="text-muted-foreground text-lg leading-relaxed max-w-md mx-auto lg:mx-0">
-            Calculate your annual utility spend and claim it back toward your life goals with Reallo.
-          </p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.7 }}
+            className="text-muted-foreground text-sm sm:text-base mb-6 leading-relaxed max-w-xs mx-auto"
+          >
+            Calculate your annual utility spend and claim it back toward your life goals.
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-            <GlassButton
-              variant="primary"
-              onClick={handleCTA}
-              className="text-base px-10 py-4 shadow-xl shadow-primary/20"
-            >
-              Get Started <ArrowRight className="ml-2 w-5 h-5" />
-            </GlassButton>
-            <GlassButton
-              variant="outline"
-              className="text-base px-10 py-4"
-            >
-              Learn More
-            </GlassButton>
-          </div>
-
-          {/* Mini stats */}
-          <div className="grid grid-cols-3 gap-6 pt-4">
-            <div className="space-y-1">
-              <p className="text-2xl font-bold font-display"><CountUpAnimation end={queueCount} duration={2} suffix="+" /></p>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">In Queue</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold font-display">₦0</p>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Fee</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold font-display">5x</p>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Skip</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Right side: Visual */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          className="relative hidden lg:block"
-        >
-          <div className="relative z-10 glass-card rounded-[3rem] p-12 aspect-square flex items-center justify-center shadow-2xl">
+          {/* Wallet Animation */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6, duration: 0.7 }}
+            className="mb-6 w-full max-w-[200px] mx-auto"
+          >
             <WalletAnimation />
+          </motion.div>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+            className="flex flex-col sm:flex-row gap-3 justify-center"
+          >
+            <GlassButton variant="primary" onClick={onGetStarted} className="text-sm px-6 py-3.5 flex-1">
+              Calculate & Claim
+            </GlassButton>
+            <GlassButton variant="outline" className="text-sm px-6 py-3.5 flex-1">
+              How It Works
+            </GlassButton>
+          </motion.div>
+        </div>
+
+        {/* Stats row */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 0.7 }}
+          className="grid grid-cols-3 gap-3 mt-4"
+        >
+          <div className="glass-stat rounded-2xl px-3 py-3 text-center">
+            <p className="font-display text-base font-bold text-primary glow-text">
+              <CountUpAnimation end={queueCount} duration={2} suffix="+" />
+            </p>
+            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">In Queue</p>
           </div>
-
-          {/* Decorative floating elements */}
-          <motion.div
-            animate={{ y: [0, -20, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -top-6 -right-6 glass-strong rounded-3xl p-6 shadow-xl z-20"
-          >
-            <Zap className="w-8 h-8 text-primary" />
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, 20, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -bottom-10 -left-10 glass-strong rounded-3xl p-6 shadow-xl z-20"
-          >
-            <TrendingUp className="w-8 h-8 text-green-500" />
-          </motion.div>
+          <div className="glass-stat rounded-2xl px-3 py-3 text-center">
+            <p className="font-display text-base font-bold text-primary glow-text">₦0</p>
+            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">To Join</p>
+          </div>
+          <div className="glass-stat rounded-2xl px-3 py-3 text-center">
+            <p className="font-display text-base font-bold text-primary glow-text">5x</p>
+            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wide">Skip / Referral</p>
+          </div>
         </motion.div>
-
-      </div>
+      </motion.div>
     </section>
   );
 };

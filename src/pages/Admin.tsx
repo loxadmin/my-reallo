@@ -5,13 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
-import Navbar from "@/components/Navbar";
-import {
-  Users, Ghost, Activity, LogOut, RefreshCw, Shield,
-  Settings, Save, MessageSquare, BarChart3, Plus,
-  Trash2, Link, Upload, CheckCircle2, FileSpreadsheet,
-  ChevronRight, Search, Filter, ArrowUpRight
-} from "lucide-react";
+import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ProfileRow {
@@ -51,6 +45,8 @@ interface QuestionnaireRow {
   switch_enabled: boolean;
   switch_link: string;
   why_switch_options: string[];
+  current_bank_question: string;
+  switch_question_template: string;
   category: string;
 }
 
@@ -85,7 +81,7 @@ const SURVEY_CATEGORIES = [
   { value: "general_app_switch", label: "General App Switch" },
 ];
 
-type AdminTab = "users" | "ghosts" | "activity" | "goals" | "questionnaires" | "analytics" | "verification" | "settings";
+type AdminTab = "users" | "ghosts" | "activity" | "goals" | "questionnaires" | "analytics" | "settings" | "verification";
 
 const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
@@ -225,6 +221,7 @@ const Admin = () => {
     await fetchData();
   };
 
+  // CSV upload and auto-match
   const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -233,6 +230,7 @@ const Admin = () => {
     try {
       const text = await file.text();
       const lines = text.split("\n").filter(l => l.trim());
+      // Skip header row
       const rows = lines.slice(1).map(line => {
         const parts = line.split(",").map(s => s.trim().replace(/^"|"$/g, ""));
         return { transaction_id: parts[0], amount: parseFloat(parts[1]) || 0 };
@@ -240,6 +238,7 @@ const Admin = () => {
 
       let matchCount = 0;
       for (const row of rows) {
+        // Find matching unverified transactions
         const { data: matches } = await supabase
           .from("verification_transactions")
           .select("id, user_id, verification_id")
@@ -253,19 +252,29 @@ const Admin = () => {
               .eq("id", match.id);
             matchCount++;
 
+            // Check if all transactions for this verification are now verified
             const { data: allTxs } = await supabase
               .from("verification_transactions")
               .select("is_verified, verified_amount")
               .eq("verification_id", match.verification_id);
 
             if (allTxs && allTxs.every(t => t.is_verified)) {
+              // Sum amounts and recalculate
               const totalMonthly = allTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
               const annualAmount = Math.round(totalMonthly * 12);
+
+              // Get verification to check days
+              const { data: vData } = await supabase
+                .from("spend_verifications")
+                .select("started_at, ends_at")
+                .eq("id", match.verification_id)
+                .single();
 
               await supabase.from("spend_verifications")
                 .update({ status: "verified", recalculated_amount: annualAmount })
                 .eq("id", match.verification_id);
 
+              // Update user's total_annual_spend
               await supabase.from("profiles")
                 .update({ total_annual_spend: annualAmount })
                 .eq("id", match.user_id);
@@ -274,16 +283,16 @@ const Admin = () => {
         }
       }
 
-      toast({ title: `CSV processed`, description: `${matchCount} transactions matched.` });
+      toast({ title: `CSV processed`, description: `${matchCount} transactions matched and verified from ${rows.length} rows.` });
       await fetchData();
     } catch (err) {
-      toast({ title: "CSV error" });
+      toast({ title: "CSV error", description: "Failed to process CSV file." });
     }
     setCsvUploading(false);
     if (csvInputRef.current) csvInputRef.current.value = "";
   };
 
-  if (loading) return null;
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground font-display">Loading...</p></div>;
   if (!isAdmin) return null;
 
   const tabs: { id: AdminTab; label: string; icon: any; count: number }[] = [
@@ -301,49 +310,40 @@ const Admin = () => {
   const noSwitchCount = qResponses.filter(r => !r.would_switch).length;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden pb-12">
-      <Navbar />
+    <div className="relative min-h-screen overflow-x-hidden">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/3 rounded-full blur-[200px]" />
+      </div>
 
-      <main className="max-w-4xl mx-auto px-6 pt-24 space-y-8">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold font-display flex items-center gap-2">
-              <Shield className="w-6 h-6 text-primary" /> Admin Panel
-            </h1>
-            <p className="text-sm text-muted-foreground">Manage users, goals, and system settings</p>
+      {/* Header */}
+      <div className="sticky top-0 z-50 px-4 py-3">
+        <div className="max-w-4xl mx-auto glass rounded-2xl px-5 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
+            <span className="font-display text-lg font-bold gradient-text">Admin</span>
           </div>
-          <div className="flex gap-2">
-            <GlassButton variant="outline" onClick={fetchData} disabled={refreshing} className="p-2.5">
+          <div className="flex items-center gap-2">
+            <GlassButton variant="outline" onClick={fetchData} disabled={refreshing} className="px-3 py-2">
               <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
             </GlassButton>
+            <GlassButton variant="outline" onClick={() => navigate("/")} className="px-3 py-2 text-xs">Home</GlassButton>
+            <GlassButton variant="outline" onClick={signOut} className="px-3 py-2"><LogOut className="w-4 h-4" /></GlassButton>
           </div>
         </div>
+      </div>
 
-        {/* Horizontal Scrollable Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar -mx-6 px-6">
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-2">
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const active = activeTab === tab.id;
             return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="flex-shrink-0"
-              >
-                <div className={`
-                  px-5 py-3 rounded-2xl border transition-all duration-300 flex items-center gap-3
-                  ${active
-                    ? "bg-primary/20 border-primary shadow-lg shadow-primary/10 text-foreground"
-                    : "glass border-border/50 text-muted-foreground hover:border-primary/50"}
-                `}>
-                  <Icon className={`w-4 h-4 ${active ? "text-primary" : ""}`} />
-                  <span className="text-xs font-bold whitespace-nowrap">{tab.label}</span>
-                  {tab.count > 0 && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${active ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                      {tab.count}
-                    </span>
-                  )}
-                </div>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className="flex-shrink-0">
+                <GlassCard animate={false} variant={activeTab === tab.id ? "glow" : "default"} className="text-center p-3 cursor-pointer min-w-[70px]">
+                  <Icon className="w-4 h-4 text-primary mx-auto mb-1" />
+                  <p className="font-display text-lg font-bold text-foreground">{tab.count}</p>
+                  <p className="text-[10px] text-muted-foreground">{tab.label}</p>
+                </GlassCard>
               </button>
             );
           })}
@@ -351,45 +351,32 @@ const Admin = () => {
 
         {/* Users tab */}
         {activeTab === "users" && (
-          <GlassCard className="p-0 overflow-hidden">
-            <div className="p-6 border-b border-border/50 flex items-center justify-between bg-muted/20">
-              <h3 className="font-bold font-display">Registered Users</h3>
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input placeholder="Search users..." className="glass-input rounded-xl pl-9 pr-4 py-1.5 text-xs w-48" />
-              </div>
-            </div>
+          <GlassCard animate={false}>
+            <h3 className="font-display font-semibold text-foreground mb-4">Registered Users</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border bg-muted/10">
-                    <th className="text-left py-4 px-6 text-muted-foreground font-bold text-[10px] uppercase tracking-widest">User</th>
-                    <th className="text-right py-4 px-6 text-muted-foreground font-bold text-[10px] uppercase tracking-widest">Spend</th>
-                    <th className="text-right py-4 px-6 text-muted-foreground font-bold text-[10px] uppercase tracking-widest">Queue</th>
-                    <th className="text-right py-4 px-6 text-muted-foreground font-bold text-[10px] uppercase tracking-widest">Points</th>
-                    <th className="text-right py-4 px-6 text-muted-foreground font-bold text-[10px] uppercase tracking-widest">Refs</th>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-2 text-muted-foreground font-display text-xs">Email</th>
+                    <th className="text-right py-2 px-2 text-muted-foreground font-display text-xs">Spend</th>
+                    <th className="text-right py-2 px-2 text-muted-foreground font-display text-xs">Queue #</th>
+                    <th className="text-right py-2 px-2 text-muted-foreground font-display text-xs">Points</th>
+                    <th className="text-right py-2 px-2 text-muted-foreground font-display text-xs">Referrals</th>
                   </tr>
                 </thead>
                 <tbody>
                   {profiles.map((p) => (
-                    <tr key={p.id} className="border-b border-border/30 hover:bg-primary/5 transition-colors cursor-pointer group">
-                      <td className="py-4 px-6">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-foreground">{p.email.split('@')[0]}</span>
-                          <span className="text-[10px] text-muted-foreground">{p.email}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-right font-display font-bold text-primary">{formatNaira(p.total_annual_spend || 0)}</td>
-                      <td className="py-4 px-6 text-right font-display font-bold">#{p.queue_position}</td>
-                      <td className="py-4 px-6 text-right font-display text-primary">{p.points_balance?.toLocaleString() || 0}</td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Users className="w-3 h-3 text-muted-foreground" />
-                          <span className="font-bold">{referralCounts[p.id] || 0}</span>
-                        </div>
-                      </td>
+                    <tr key={p.id} className="border-b border-border/50">
+                      <td className="py-2 px-2 text-foreground truncate max-w-[120px]">{p.email}</td>
+                      <td className="py-2 px-2 text-right text-primary font-display">{formatNaira(p.total_annual_spend || 0)}</td>
+                      <td className="py-2 px-2 text-right font-display font-bold text-foreground">{p.queue_position}</td>
+                      <td className="py-2 px-2 text-right font-display text-primary">{p.points_balance || 0}</td>
+                      <td className="py-2 px-2 text-right font-display text-foreground">{referralCounts[p.id] || 0}</td>
                     </tr>
                   ))}
+                  {profiles.length === 0 && (
+                    <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">No users yet</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -398,315 +385,313 @@ const Admin = () => {
 
         {/* Ghosts tab */}
         {activeTab === "ghosts" && (
-          <GlassCard className="py-12 flex flex-col items-center justify-center text-center space-y-4">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20 shadow-xl">
-              <Ghost className="w-10 h-10 text-primary" />
+          <GlassCard animate={false}>
+            <h3 className="font-display font-semibold text-foreground mb-4">Ghost Users</h3>
+            <div className="text-center py-8">
+              <Ghost className="w-12 h-12 text-primary/30 mx-auto mb-3" />
+              <p className="font-display text-4xl font-bold gradient-text">{ghostCount}</p>
+              <p className="text-sm text-muted-foreground mt-2">Ghost users seeded in the waitlist queue</p>
             </div>
-            <div className="space-y-1">
-              <h3 className="text-4xl font-bold font-display gradient-text">{ghostCount}</h3>
-              <p className="text-sm font-medium text-muted-foreground">Waitlist Ghost Users</p>
-            </div>
-            <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
-              These are synthetic users added to the queue to maintain waitlist momentum and social proof.
-            </p>
-            <GlassButton variant="outline" className="px-6 py-2.5 text-xs">Manage Ghosts</GlassButton>
           </GlassCard>
         )}
 
         {/* Activity tab */}
         {activeTab === "activity" && (
-          <div className="space-y-4">
-            <h3 className="font-bold px-1">Recent Queue Movements</h3>
-            <div className="space-y-3">
+          <GlassCard animate={false}>
+            <h3 className="font-display font-semibold text-foreground mb-4">Recent Activity</h3>
+            <div className="space-y-2">
               {activities.map((a) => (
-                <GlassCard key={a.id} className="p-4 flex items-center justify-between group hover:border-primary/50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <Activity className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold capitalize">{a.action_type.replace('_', ' ')}</p>
-                      <p className="text-[10px] text-muted-foreground font-mono">{a.user_id}</p>
-                    </div>
+                <div key={a.id} className="flex items-center justify-between glass rounded-xl p-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-mono">{a.user_id.slice(0, 8)}...</p>
+                    <p className="text-sm font-display capitalize text-foreground">{a.action_type}</p>
                   </div>
                   <div className="text-right">
-                    <div className="flex items-center justify-end gap-1 text-green-500 font-bold">
-                      <ArrowUpRight className="w-3 h-3" />
-                      <span>{a.positions_moved} spots</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground font-medium">{new Date(a.created_at).toLocaleString()}</p>
+                    <p className="text-sm font-display font-bold text-primary">+{a.positions_moved} skip</p>
+                    <p className="text-xs text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</p>
                   </div>
-                </GlassCard>
+                </div>
               ))}
+              {activities.length === 0 && <p className="text-center py-8 text-muted-foreground">No activity yet</p>}
             </div>
-          </div>
+          </GlassCard>
         )}
 
         {/* Goals tab */}
         {activeTab === "goals" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between px-1">
-              <h3 className="font-bold">Goal Categories & Pricing</h3>
+          <GlassCard animate={false}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-semibold text-foreground">Goal Pricing</h3>
               {Object.keys(editedPrices).length > 0 && (
                 <GlassButton variant="primary" onClick={handleSavePrices} disabled={saving} className="px-4 py-2 text-xs">
-                  <Save className="w-3 h-3 mr-2" /> {saving ? "Saving..." : "Save Changes"}
+                  <Save className="w-3 h-3 mr-1 inline" /> {saving ? "Saving..." : "Save"}
                 </GlassButton>
               )}
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-3">
               {goalCategories.map((cat) => (
-                <GlassCard key={cat.id} className="p-5 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{cat.goal_type}</span>
-                    <Settings className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <h4 className="font-bold">{cat.label}</h4>
-                  <div className="space-y-2">
-                    <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Max Price (₦)</label>
+                <div key={cat.id} className="glass rounded-xl p-4">
+                  <p className="font-display font-semibold text-foreground text-sm capitalize mb-2">
+                    {cat.goal_type}{cat.subcategory ? ` → ${cat.label}` : ` — ${cat.label}`}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground font-display">Max ₦</span>
                     <input
                       type="number"
                       value={editedPrices[cat.id] !== undefined ? editedPrices[cat.id] : String(cat.max_price)}
                       onChange={(e) => handlePriceChange(cat.id, e.target.value)}
-                      className="w-full glass-input rounded-xl px-4 py-3 text-sm font-bold"
+                      className="flex-1 glass-input rounded-lg px-3 py-2 text-sm text-foreground font-display"
                     />
                   </div>
-                </GlassCard>
+                </div>
               ))}
             </div>
-          </div>
+          </GlassCard>
         )}
 
         {/* Questionnaires tab */}
         {activeTab === "questionnaires" && (
-          <div className="space-y-8">
-            <GlassCard className="space-y-6">
-              <h3 className="font-bold flex items-center gap-2">
-                <Plus className="w-5 h-5 text-primary" /> Create Survey
+          <div className="space-y-4">
+            <GlassCard animate={false}>
+              <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Plus className="w-4 h-4 text-primary" /> Create Questionnaire
               </h3>
-              <div className="grid sm:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Survey Title</label>
-                    <input value={newQ.title} onChange={e => setNewQ(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Bank Switch Campaign" className="w-full glass-input rounded-xl px-4 py-3 text-sm" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Category</label>
-                    <select
-                      value={newQ.category}
-                      onChange={e => setNewQ(p => ({ ...p, category: e.target.value }))}
-                      className="w-full glass-input rounded-xl px-4 py-3 text-sm bg-transparent"
-                    >
-                      {SURVEY_CATEGORIES.map(c => (
-                        <option key={c.value} value={c.value} className="bg-background">{c.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Target App</label>
-                      <input value={newQ.preferred_bank} onChange={e => setNewQ(p => ({ ...p, preferred_bank: e.target.value }))} placeholder="e.g. OPay" className="w-full glass-input rounded-xl px-4 py-3 text-sm" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Points</label>
-                      <input type="number" value={newQ.points_reward} onChange={e => setNewQ(p => ({ ...p, points_reward: parseInt(e.target.value) || 0 }))} className="w-full glass-input rounded-xl px-4 py-3 text-sm" />
-                    </div>
-                  </div>
+              <div className="space-y-3">
+                <input value={newQ.title} onChange={e => setNewQ(p => ({ ...p, title: e.target.value }))} placeholder="Title (e.g. Bank Switch Q1)" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm" />
+                
+                {/* Category dropdown */}
+                <div>
+                  <p className="text-xs text-muted-foreground font-display mb-1">Category:</p>
+                  <select
+                    value={newQ.category}
+                    onChange={e => setNewQ(p => ({ ...p, category: e.target.value }))}
+                    className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm bg-transparent"
+                  >
+                    {SURVEY_CATEGORIES.map(c => (
+                      <option key={c.value} value={c.value} className="bg-background">{c.label}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Reasons for switching (dropdown)</label>
-                    <div className="space-y-2 max-h-[140px] overflow-y-auto pr-2 custom-scrollbar">
-                      {newQ.why_switch_options.map((opt, i) => (
-                        <div key={i} className="flex gap-2">
-                          <input
-                            value={opt}
-                            onChange={e => {
-                              const opts = [...newQ.why_switch_options];
-                              opts[i] = e.target.value;
-                              setNewQ(p => ({ ...p, why_switch_options: opts }));
-                            }}
-                            className="flex-1 glass-input rounded-xl px-4 py-2 text-xs"
-                          />
-                          <button onClick={() => setNewQ(p => ({ ...p, why_switch_options: p.why_switch_options.filter((_, j) => j !== i) }))} className="text-destructive p-1">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={() => setNewQ(p => ({ ...p, why_switch_options: [...p.why_switch_options, ""] }))} className="text-[10px] text-primary font-bold uppercase tracking-widest">+ Add Option</button>
-                  </div>
-                  <div className="flex items-center gap-2 pt-2">
-                    <input type="checkbox" checked={newQ.switch_enabled} onChange={e => setNewQ(p => ({ ...p, switch_enabled: e.target.checked }))} className="accent-primary" />
-                    <span className="text-xs font-medium">Enable 'Switch Now' Button</span>
-                  </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <input value={newQ.preferred_bank} onChange={e => setNewQ(p => ({ ...p, preferred_bank: e.target.value }))} placeholder="Preferred bank/app name" className="glass-input rounded-xl px-4 py-3 text-foreground text-sm" />
+                  <input type="number" value={newQ.points_reward} onChange={e => setNewQ(p => ({ ...p, points_reward: parseInt(e.target.value) || 0 }))} placeholder="Points reward" className="glass-input rounded-xl px-4 py-3 text-foreground text-sm" />
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <input type="number" value={newQ.switch_timer_days} onChange={e => setNewQ(p => ({ ...p, switch_timer_days: parseInt(e.target.value) || 30 }))} placeholder="Timer days" className="glass-input rounded-xl px-4 py-3 text-foreground text-sm" />
+                  <input value={newQ.switch_link} onChange={e => setNewQ(p => ({ ...p, switch_link: e.target.value }))} placeholder="Switch link URL" className="glass-input rounded-xl px-4 py-3 text-foreground text-sm" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" checked={newQ.switch_enabled} onChange={e => setNewQ(p => ({ ...p, switch_enabled: e.target.checked }))} className="accent-primary" />
+                  <span className="text-sm text-muted-foreground">Enable switch button</span>
+                </div>
+
+                <p className="text-xs text-muted-foreground font-display">Why-switch dropdown options:</p>
+                {newQ.why_switch_options.map((opt, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      value={opt}
+                      onChange={e => {
+                        const opts = [...newQ.why_switch_options];
+                        opts[i] = e.target.value;
+                        setNewQ(p => ({ ...p, why_switch_options: opts }));
+                      }}
+                      placeholder={`Option ${i + 1}`}
+                      className="flex-1 glass-input rounded-xl px-4 py-2 text-foreground text-sm"
+                    />
+                    {newQ.why_switch_options.length > 1 && (
+                      <button onClick={() => setNewQ(p => ({ ...p, why_switch_options: p.why_switch_options.filter((_, j) => j !== i) }))} className="text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button onClick={() => setNewQ(p => ({ ...p, why_switch_options: [...p.why_switch_options, ""] }))} className="text-xs text-primary font-display">+ Add option</button>
+
+                <GlassButton variant="primary" onClick={handleCreateQuestionnaire} className="w-full">Create Questionnaire</GlassButton>
               </div>
-              <GlassButton variant="primary" onClick={handleCreateQuestionnaire} className="w-full py-4 font-bold">Create Questionnaire</GlassButton>
             </GlassCard>
 
-            <div className="space-y-4">
-              <h3 className="font-bold px-1">Active Surveys</h3>
-              <div className="grid gap-4">
-                {questionnaires.map(q => (
-                  <GlassCard key={q.id} className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold">{q.title}</h4>
-                          <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-md ${q.is_active ? "bg-green-500/20 text-green-500" : "bg-muted text-muted-foreground"}`}>
-                            {q.is_active ? "Active" : "Inactive"}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{q.preferred_bank} • {q.points_reward} Points Reward</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <GlassButton variant="outline" onClick={() => handleToggleQuestionnaire(q.id, q.is_active)} className="p-2">
-                          <RefreshCw className="w-3.5 h-3.5" />
-                        </GlassButton>
-                        <GlassButton variant="outline" onClick={() => handleDeleteQuestionnaire(q.id)} className="p-2 text-destructive border-destructive/20">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </GlassButton>
-                      </div>
-                    </div>
-                  </GlassCard>
-                ))}
-              </div>
-            </div>
+            {/* Existing questionnaires */}
+            {questionnaires.map(q => (
+              <GlassCard key={q.id} animate={false}>
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <h4 className="font-display font-semibold text-foreground">{q.title}</h4>
+                    <p className="text-xs text-muted-foreground">
+                      {q.points_reward} pts • {q.preferred_bank} • {q.switch_timer_days}d timer
+                      {q.switch_enabled && " • Switch ON"}
+                    </p>
+                    <p className="text-[10px] text-primary mt-0.5 capitalize">
+                      {SURVEY_CATEGORIES.find(c => c.value === q.category)?.label || q.category}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <GlassButton variant="outline" onClick={() => handleToggleQuestionnaire(q.id, q.is_active)} className="px-3 py-1 text-xs">
+                      {q.is_active ? "Deactivate" : "Activate"}
+                    </GlassButton>
+                    <button onClick={() => handleDeleteQuestionnaire(q.id)} className="text-destructive">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Responses: {qResponses.filter(r => r.questionnaire_id === q.id).length} |
+                  Would switch: {qResponses.filter(r => r.questionnaire_id === q.id && r.would_switch).length}
+                </p>
+                {q.why_switch_options && (q.why_switch_options as string[]).length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-muted-foreground">Dropdown options: {(q.why_switch_options as string[]).join(", ")}</p>
+                  </div>
+                )}
+              </GlassCard>
+            ))}
           </div>
         )}
 
         {/* Analytics tab */}
         {activeTab === "analytics" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <GlassCard className="text-center p-8 space-y-2">
-                <p className="text-5xl font-bold font-display text-primary">{switchCount}</p>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Would Switch</p>
-              </GlassCard>
-              <GlassCard className="text-center p-8 space-y-2">
-                <p className="text-5xl font-bold font-display">{noSwitchCount}</p>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Declined</p>
-              </GlassCard>
+          <GlassCard animate={false}>
+            <h3 className="font-display font-semibold text-foreground mb-4">Questionnaire Analytics</h3>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="glass rounded-xl p-4 text-center">
+                <p className="font-display text-2xl font-bold text-primary">{switchCount}</p>
+                <p className="text-xs text-muted-foreground">Would Switch</p>
+              </div>
+              <div className="glass rounded-xl p-4 text-center">
+                <p className="font-display text-2xl font-bold text-foreground">{noSwitchCount}</p>
+                <p className="text-xs text-muted-foreground">Declined</p>
+              </div>
             </div>
 
-            <h3 className="font-bold px-1">Campaign Breakdown</h3>
-            <div className="space-y-4">
-              {questionnaires.map(q => {
-                const qr = qResponses.filter(r => r.questionnaire_id === q.id);
-                const yesCount = qr.filter(r => r.would_switch).length;
-                const percent = qr.length > 0 ? Math.round((yesCount / qr.length) * 100) : 0;
-                return (
-                  <GlassCard key={q.id} className="p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-bold">{q.title}</h4>
-                        <p className="text-[10px] text-primary font-bold uppercase tracking-widest">
-                          {SURVEY_CATEGORIES.find(c => c.value === q.category)?.label || q.category}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold">{percent}%</p>
-                        <p className="text-[10px] text-muted-foreground">Conversion</p>
-                      </div>
+            {questionnaires.map(q => {
+              const qr = qResponses.filter(r => r.questionnaire_id === q.id);
+              const yesCount = qr.filter(r => r.would_switch).length;
+              const catLabel = SURVEY_CATEGORIES.find(c => c.value === q.category)?.label || q.category;
+              return (
+                <div key={q.id} className="glass rounded-xl p-4 mb-3">
+                  <p className="font-display font-semibold text-foreground text-sm">{q.title}</p>
+                  <p className="text-[10px] text-primary capitalize">{catLabel}</p>
+                  <div className="flex gap-4 mt-2">
+                    <p className="text-xs text-primary">{yesCount} yes</p>
+                    <p className="text-xs text-muted-foreground">{qr.length - yesCount} no</p>
+                    <p className="text-xs text-muted-foreground">{qr.length} total</p>
+                  </div>
+                  {yesCount > 0 && (
+                    <div className="mt-2">
+                      <p className="text-[10px] text-muted-foreground uppercase">Top reasons:</p>
+                      {Array.from(new Set(qr.filter(r => r.would_switch && r.switch_reason).map(r => r.switch_reason))).map(reason => (
+                        <p key={reason} className="text-xs text-foreground">• {reason} ({qr.filter(r => r.switch_reason === reason).length})</p>
+                      ))}
+                      {qr.filter(r => r.would_switch && r.switch_reason_freetext).map(r => (
+                        <p key={r.id} className="text-xs text-muted-foreground italic">"{r.switch_reason_freetext}"</p>
+                      ))}
                     </div>
-                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${percent}%` }} />
-                    </div>
-                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                      <span>{yesCount} Accepted</span>
-                      <span>{qr.length} Total Responses</span>
-                    </div>
-                  </GlassCard>
-                );
-              })}
-            </div>
-          </div>
+                  )}
+                </div>
+              );
+            })}
+          </GlassCard>
         )}
 
         {/* Verification tab */}
         {activeTab === "verification" && (
-          <div className="space-y-8">
-            <GlassCard className="p-8 text-center space-y-6">
-              <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto border border-primary/20">
-                <FileSpreadsheet className="w-8 h-8 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold">Transaction Reconciliation</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Upload your bank statement CSV to auto-match and verify user-submitted transaction IDs.
-                </p>
-              </div>
-              <input ref={csvInputRef} type="file" accept=".csv" onChange={handleCsvUpload} className="hidden" />
+          <div className="space-y-4">
+            <GlassCard animate={false}>
+              <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Upload className="w-4 h-4 text-primary" /> Upload Transaction CSV
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                Upload a CSV with columns: <span className="font-mono">transaction_id, amount</span>. Matching IDs will be auto-verified.
+              </p>
+              <input
+                ref={csvInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleCsvUpload}
+                className="hidden"
+              />
               <GlassButton
                 variant="primary"
                 onClick={() => csvInputRef.current?.click()}
-                className="w-full py-4 font-bold shadow-lg shadow-primary/20"
+                className="w-full"
                 disabled={csvUploading}
               >
-                {csvUploading ? "Processing Statements..." : "Select CSV File"}
+                <FileSpreadsheet className="inline w-4 h-4 mr-2" />
+                {csvUploading ? "Processing..." : "Upload CSV"}
               </GlassButton>
             </GlassCard>
 
-            <div className="space-y-4">
-              <h3 className="font-bold px-1">Pending Verifications</h3>
-              <div className="space-y-3">
-                {verificationTxs.map(tx => (
-                  <GlassCard key={tx.id} className="p-4 flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold font-mono text-primary">{tx.transaction_id}</p>
-                      <p className="text-[10px] text-muted-foreground">User: {tx.user_id.slice(0, 8)}...</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {tx.is_verified ? (
-                        <div className="flex items-center gap-1.5 text-green-500 font-bold text-sm">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>{formatNaira(tx.verified_amount || 0)}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs font-bold text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-lg border border-border/50">
-                          Pending
-                        </span>
-                      )}
-                    </div>
-                  </GlassCard>
-                ))}
+            <GlassCard animate={false}>
+              <h3 className="font-display font-semibold text-foreground mb-4">User Transactions</h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="glass rounded-xl p-3 text-center">
+                  <p className="font-display text-xl font-bold text-primary">{verificationTxs.filter(t => t.is_verified).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Verified</p>
+                </div>
+                <div className="glass rounded-xl p-3 text-center">
+                  <p className="font-display text-xl font-bold text-foreground">{verificationTxs.filter(t => !t.is_verified).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Pending</p>
+                </div>
               </div>
-            </div>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                {verificationTxs.map(tx => {
+                  const userEmail = profiles.find(p => p.id === tx.user_id)?.email || tx.user_id.slice(0, 8);
+                  return (
+                    <div key={tx.id} className="flex items-center justify-between glass rounded-xl p-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">{userEmail}</p>
+                        <p className="text-sm font-mono text-foreground">{tx.transaction_id}</p>
+                      </div>
+                      <div className="text-right">
+                        {tx.is_verified ? (
+                          <div className="flex items-center gap-1 text-primary">
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span className="text-xs">₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Pending</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                {verificationTxs.length === 0 && <p className="text-center py-8 text-muted-foreground">No transactions submitted yet</p>}
+              </div>
+            </GlassCard>
           </div>
         )}
 
         {/* Settings tab */}
         {activeTab === "settings" && (
-          <GlassCard className="p-8 space-y-8">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <Link className="w-5 h-5 text-primary" /> System Configuration
-            </h3>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Verification Portal Link</label>
-                <input value={verifyExpenseLink} onChange={e => setVerifyExpenseLink(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm" />
+          <GlassCard animate={false}>
+            <h3 className="font-display font-semibold text-foreground mb-4">App Settings</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-display text-muted-foreground">Verify Expense Button Link</label>
+                <input value={verifyExpenseLink} onChange={e => setVerifyExpenseLink(e.target.value)} placeholder="https://..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1" />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Post-Queue Referral Bonus (PTS)</label>
-                <input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm" />
+              <div>
+                <label className="text-sm font-display text-muted-foreground">Post-Queue Referral Points</label>
+                <input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1" />
+                <p className="text-xs text-muted-foreground mt-1">Points awarded per referral after user is off the queue</p>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Verify Spend Link</label>
-                <input value={verifySpendLink} onChange={e => setVerifySpendLink(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm" />
+              <div>
+                <label className="text-sm font-display text-muted-foreground">Verify Spend Link</label>
+                <input value={verifySpendLink} onChange={e => setVerifySpendLink(e.target.value)} placeholder="https://..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1" />
+                <p className="text-xs text-muted-foreground mt-1">Link where users go to perform verification action</p>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Verify Spend Instructions</label>
-                <textarea value={verifySpendDescription} onChange={e => setVerifySpendDescription(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-sm min-h-[100px]" />
+              <div>
+                <label className="text-sm font-display text-muted-foreground">Verify Spend Description</label>
+                <textarea value={verifySpendDescription} onChange={e => setVerifySpendDescription(e.target.value)} placeholder="Describe the verification action..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mt-1 min-h-[80px] resize-none" />
               </div>
-
-              <GlassButton variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full py-4 font-bold">
-                <Save className="w-5 h-5 mr-2" /> {saving ? "Saving Configuration..." : "Apply Global Settings"}
+              <GlassButton variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full">
+                <Save className="inline w-4 h-4 mr-1" /> {saving ? "Saving..." : "Save Settings"}
               </GlassButton>
             </div>
           </GlassCard>
         )}
-      </main>
+      </div>
     </div>
   );
 };
