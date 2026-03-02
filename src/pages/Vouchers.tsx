@@ -56,7 +56,7 @@ const Vouchers = () => {
     const pts = parseInt(pointsToUse, 10);
     if (!pts || pts <= 0 || pts > pointsBalance) return false;
     if (!isOffQueue) return false;
-    if (pts < 100000) return false; // min 100k points = 50k naira
+    if (pts < 100000) return false;
     const claimNaira = Math.floor(pts * 0.5);
     if (claimNaira > claimableAmount) return false;
     return true;
@@ -78,7 +78,6 @@ const Vouchers = () => {
       points_used: pts,
     });
 
-    // Deduct points
     await supabase
       .from("profiles")
       .update({ points_balance: pointsBalance - pts })
@@ -102,20 +101,20 @@ const Vouchers = () => {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/3 rounded-full blur-[200px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[200px]" />
       </div>
       <Navbar />
 
-      <section className="min-h-screen flex items-start justify-center px-6 py-24">
+      <section className="min-h-screen flex items-start justify-center px-4 pt-20 pb-8">
         <div className="w-full max-w-md space-y-4">
           {/* Balance + Claimable */}
           <GlassCard variant="glow" className="text-center">
             <Wallet className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground font-display uppercase tracking-widest">Points Balance</p>
+            <p className="text-[10px] text-muted-foreground font-display uppercase tracking-[0.2em]">Points Balance</p>
             <motion.p key={pointsBalance} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="font-display text-4xl font-bold gradient-text">
               {pointsBalance.toLocaleString()}
             </motion.p>
-            <div className="flex items-center justify-center gap-4 mt-2">
+            <div className="flex items-center justify-center gap-6 mt-3">
               <div>
                 <p className="text-[10px] text-muted-foreground">Claimable</p>
                 <p className="text-sm font-display font-semibold text-primary">{formatNaira(claimableAmount)}</p>
@@ -183,7 +182,7 @@ const Vouchers = () => {
               <h3 className="font-display font-semibold text-foreground mb-3">Your Vouchers</h3>
               <div className="space-y-3">
                 {vouchers.map((v) => (
-                  <div key={v.id} className="glass rounded-xl p-4">
+                  <div key={v.id} className="glass rounded-xl p-3">
                     <div className="relative overflow-hidden rounded-xl p-4 mb-2"
                       style={{
                         background: "linear-gradient(135deg, hsl(48 96% 53% / 0.2), hsl(40 90% 30% / 0.3))",

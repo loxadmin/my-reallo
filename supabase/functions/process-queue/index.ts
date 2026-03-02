@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
 
     if (profiles && profiles.length > 0) {
       for (const profile of profiles) {
-        const newPos = Math.max(1, profile.queue_position - 10);
+        const newPos = Math.max(0, profile.queue_position - 10);
         await supabase
           .from("profiles")
           .update({ queue_position: newPos })
