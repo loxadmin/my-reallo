@@ -7,6 +7,7 @@ import GlassInput from "@/components/GlassInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { Mail, Lock, UserPlus, LogIn, Gift } from "lucide-react";
 import RealloEyeLogo from "@/components/RealloEyeLogo";
+import Navbar from "@/components/Navbar";
 
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -20,7 +21,6 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Auto-fill referral code from URL and switch to signup mode
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (ref) {
@@ -47,12 +47,13 @@ const Auth = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
-      {/* Ambient background */}
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/3 rounded-full blur-[200px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[150px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[200px]" />
+        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-primary/3 rounded-full blur-[150px]" />
       </div>
+
+      <Navbar />
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -88,7 +89,7 @@ const Auth = () => {
                 onClick={() => setMode("login")}
                 className={`flex-1 py-2.5 rounded-xl font-display text-sm font-medium transition-all duration-300 ${
                   mode === "login"
-                    ? "bg-primary text-primary-foreground"
+                    ? "clay-primary text-primary-foreground"
                     : "glass-button text-muted-foreground"
                 }`}
               >
@@ -99,7 +100,7 @@ const Auth = () => {
                 onClick={() => setMode("signup")}
                 className={`flex-1 py-2.5 rounded-xl font-display text-sm font-medium transition-all duration-300 ${
                   mode === "signup"
-                    ? "bg-primary text-primary-foreground"
+                    ? "clay-primary text-primary-foreground"
                     : "glass-button text-muted-foreground"
                 }`}
               >
