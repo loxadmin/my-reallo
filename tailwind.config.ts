@@ -24,7 +24,7 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
+          DEFAULT: "#7C3AED",
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
@@ -40,7 +40,7 @@ export default {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
+          DEFAULT: "#06B6D4",
           foreground: "hsl(var(--accent-foreground))",
         },
         popover: {
@@ -51,6 +51,7 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        surface: "#111827",
         navy: {
           50: "hsl(220 60% 95%)",
           100: "hsl(220 50% 85%)",
@@ -78,6 +79,8 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "14px",
+        "2xl": "20px",
       },
       keyframes: {
         "accordion-down": {
@@ -92,6 +95,10 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "gradient-move": "gradientMove 12s ease infinite",
+      },
+      boxShadow: {
+        glow: "0 0 40px rgba(124,58,237,0.25)",
       },
     },
   },
