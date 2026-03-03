@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
-import AnimatedWaterLayer from "./AnimatedWaterLayer";
 
 interface GlassCardProps {
   children: ReactNode;
@@ -29,13 +28,10 @@ const GlassCard = ({ children, className, variant = "default", animate = true }:
 
   return (
     <Wrapper
-      className={cn("relative overflow-hidden", variantClasses[variant], className)}
+      className={cn("rounded-2xl p-6", variantClasses[variant], className)}
       {...animateProps}
     >
-      <AnimatedWaterLayer />
-      <div className="relative z-10 h-full w-full">
-        {children}
-      </div>
+      {children}
     </Wrapper>
   );
 };

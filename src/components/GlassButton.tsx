@@ -16,19 +16,19 @@ const GlassButton = ({
 }: GlassButtonProps) => {
   const variants = {
     default: "glass-button text-foreground",
-    primary: "clay-primary text-white",
+    primary: "clay-primary text-primary-foreground font-semibold",
     outline: "glass-outline text-primary",
   };
 
   return (
     <motion.button
       type={type}
-      whileHover={!disabled ? { scale: 1.02, y: -2 } : {}}
-      whileTap={!disabled ? { scale: 0.98, y: 1 } : {}}
+      whileHover={{ scale: 1.02, y: -1 }}
+      whileTap={{ scale: 0.98, y: 1 }}
       className={cn(
-        "px-8 py-4 rounded-[18px] font-display text-sm font-bold tracking-tight transition-all duration-300 flex items-center justify-center gap-2",
+        "px-6 py-3 rounded-2xl font-display text-sm tracking-wide transition-all duration-300",
         variants[variant],
-        disabled && "opacity-50 cursor-not-allowed grayscale",
+        disabled && "opacity-50 cursor-not-allowed",
         className
       )}
       onClick={onClick}

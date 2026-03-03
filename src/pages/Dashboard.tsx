@@ -8,7 +8,6 @@ import SpendCalculator from "@/components/SpendCalculator";
 import GoalSelector from "@/components/GoalSelector";
 import QueueDisplay from "@/components/QueueDisplay";
 import BottomNav, { type DashView } from "@/components/BottomNav";
-import Sidebar from "@/components/Sidebar";
 
 type DashStep = "calculator" | "goal" | "queue";
 
@@ -80,10 +79,10 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <GlassCard variant="strong" className="px-12 py-8 rounded-3xl">
-          <p className="text-muted-foreground font-black uppercase tracking-[0.5em] text-[10px] animate-pulse">Initializing System...</p>
-        </GlassCard>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="glass-card rounded-2xl px-8 py-6">
+          <p className="text-muted-foreground font-display">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -91,48 +90,32 @@ const Dashboard = () => {
   if (!user) return null;
 
   return (
-    <div className="relative min-h-screen bg-background overflow-x-hidden">
-      {/* Background system */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-primary/2 opacity-50 blur-[200px]" />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-primary/3 blur-[160px] rounded-full" />
+    <div className="relative min-h-screen overflow-x-hidden">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/4 rounded-full blur-[220px]" />
+        <div className="absolute bottom-0 right-[-5%] w-[400px] h-[400px] bg-accent/3 rounded-full blur-[160px]" />
       </div>
+      <Navbar />
 
-      <div className="flex relative z-10">
-        {/* Sidebar - Desktop Only */}
-        <Sidebar active={activeView} onChange={setActiveView} />
-
-        <main className="flex-1 min-h-screen">
-          <Navbar />
-
-          <div className="pt-32 pb-40">
-            <AnimatePresence mode="wait">
-              <motion.div key={step} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
-                {step === "calculator" && <SpendCalculator onComplete={handleSpendComplete} />}
-                {step === "goal" && spendResult && (
-                  <GoalSelector totalAnnualSpend={spendResult.totalAnnual} onSelect={handleGoalSelect} />
-                )}
-                {step === "queue" && spendResult && profile && (
-                  <QueueDisplay
-                    totalAnnualSpend={spendResult.totalAnnual}
-                    goal={profile.selected_goal || ""}
-                    targetAmount={profile.target_amount}
-                    view={activeView}
-                    onChangeView={setActiveView}
-                  />
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </main>
-      </div>
-
-      {/* Mobile Bottom Nav */}
-      {step === "queue" && (
-        <div className="lg:hidden">
-           <BottomNav active={activeView} onChange={setActiveView} showVerify={isOffQueue} />
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+          {step === "calculator" && <SpendCalculator onComplete={handleSpendComplete} />}
+          {step === "goal" && spendResult && (
+            <GoalSelector totalAnnualSpend={spendResult.totalAnnual} onSelect={handleGoalSelect} />
+          )}
+          {step === "queue" && spendResult && profile && (
+            <>
+              <QueueDisplay
+                totalAnnualSpend={spendResult.totalAnnual}
+                goal={profile.selected_goal || ""}
+                targetAmount={profile.target_amount}
+                view={activeView}
+              />
+              <BottomNav active={activeView} onChange={setActiveView} showVerify={isOffQueue} />
+            </>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
