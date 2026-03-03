@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import GlassButton from "./GlassButton";
 import CountUpAnimation from "./CountUpAnimation";
 import { supabase } from "@/integrations/supabase/client";
-import { MoveRight, TrendingUp, Users, Shield, Zap, Lock, Globe } from "lucide-react";
-import GlassCard from "./GlassCard";
+import { MoveRight, TrendingUp, Users, Shield } from "lucide-react";
+import RealloEyeLogo from "./RealloEyeLogo";
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -35,125 +35,122 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
   }, []);
 
   return (
-    <div className="w-full flex flex-col">
-      {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 pt-24 pb-16">
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-24 pb-16 overflow-hidden">
+      {/* Ambient background */}
+      <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-primary/8 blur-[200px] pointer-events-none" />
+      <div className="absolute bottom-[5%] right-[-10%] w-[400px] h-[400px] rounded-full bg-accent/6 blur-[160px] pointer-events-none" />
+      <div className="absolute top-[30%] left-[-8%] w-[300px] h-[300px] rounded-full bg-primary/4 blur-[120px] pointer-events-none" />
+
+      {/* Dot grid */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: `radial-gradient(hsl(217 91% 60% / 0.5) 1px, transparent 1px)`,
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        className="z-10 w-full max-w-lg mx-auto text-center"
+      >
+        {/* Status pill */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="z-10 w-full max-w-4xl mx-auto text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="inline-flex items-center gap-2.5 glass-pill rounded-full px-5 py-2 mb-8"
         >
-          {/* Status pill */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="inline-flex items-center gap-2.5 glass-pill rounded-full px-5 py-2 mb-8"
-          >
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-[11px] font-bold text-primary tracking-widest uppercase">
-              Reclaim What's Yours
-            </span>
-          </motion.div>
+          <span className="w-2 h-2 rounded-full bg-accent pulse-glow" />
+          <span className="text-xs font-display text-accent/80 tracking-[0.15em] uppercase">
+            Reclaim What's Yours
+          </span>
+        </motion.div>
 
-          <h1 className="font-bold leading-[1.1] mb-6 tracking-tight">
-            <span className="text-foreground">Stop </span>
-            <span className="relative inline-flex flex-col h-[1.15em] overflow-hidden min-w-[120px] sm:min-w-[180px]">
-              <AnimatePresence mode="wait">
-                {titles.map(
-                  (title, index) =>
-                    index === titleNumber && (
-                      <motion.span
-                        key={title}
-                        className="text-primary absolute left-0 right-0"
-                        initial={{ opacity: 0, y: 40 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -40 }}
-                        transition={{ duration: 0.4, ease: "easeInOut" }}
-                      >
-                        {title}
-                      </motion.span>
-                    )
-                )}
-              </AnimatePresence>
-            </span>
-            <br />
-            <span className="text-foreground">Your Money</span>
-          </h1>
+        {/* Headline with animated word */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.7 }}
+          className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] mb-4"
+        >
+          <span className="text-foreground">Stop </span>
+          <span className="relative inline-flex flex-col h-[1.15em] overflow-hidden">
+            <AnimatePresence mode="wait">
+              {titles.map(
+                (title, index) =>
+                  index === titleNumber && (
+                    <motion.span
+                      key={title}
+                      className="gradient-text absolute"
+                      initial={{ opacity: 0, y: 40 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -40 }}
+                      transition={{ duration: 0.4, ease: "easeInOut" }}
+                    >
+                      {title}
+                    </motion.span>
+                  )
+              )}
+            </AnimatePresence>
+          </span>
+          <br />
+          <span className="text-foreground">Your Money</span>
+        </motion.h1>
 
-          <p className="text-muted-foreground mb-10 max-w-xl mx-auto leading-relaxed">
-            Calculate your annual utility spend and claim it back toward your life goals.
-          </p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.7 }}
+          className="text-muted-foreground text-sm sm:text-base lg:text-lg mb-8 leading-relaxed max-w-md mx-auto"
+        >
+          Calculate your annual utility spend and claim it back toward your life goals.
+        </motion.p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto mb-16">
-            <GlassButton variant="primary" onClick={onGetStarted} className="px-10 py-4 flex-1">
-              Calculate & Claim <MoveRight className="inline w-4 h-4 ml-2" />
-            </GlassButton>
-            <GlassButton variant="default" className="px-10 py-4 flex-1">
-              How It Works
-            </GlassButton>
+        {/* CTA Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+          className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto"
+        >
+          <GlassButton variant="primary" onClick={onGetStarted} className="text-sm px-8 py-4 flex-1">
+            Calculate & Claim <MoveRight className="inline w-4 h-4 ml-2" />
+          </GlassButton>
+          <GlassButton variant="outline" className="text-sm px-8 py-4 flex-1">
+            How It Works
+          </GlassButton>
+        </motion.div>
+
+        {/* Stats row */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9, duration: 0.7 }}
+          className="grid grid-cols-3 gap-3 sm:gap-4 mt-10 max-w-md mx-auto"
+        >
+          <div className="glass-stat rounded-2xl px-3 py-4 text-center">
+            <Users className="w-4 h-4 text-primary mx-auto mb-1.5" />
+            <p className="font-display text-lg sm:text-xl font-bold text-primary glow-text">
+              <CountUpAnimation end={queueCount} duration={2} suffix="+" />
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-0.5 tracking-wide">In Queue</p>
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
-            <div className="glass-card rounded-[20px] p-4 text-center">
-              <Users className="w-5 h-5 text-primary mx-auto mb-2" />
-              <p className="font-bold text-xl text-foreground">
-                <CountUpAnimation end={queueCount} duration={2} suffix="+" />
-              </p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">In Queue</p>
-            </div>
-            <div className="glass-card rounded-[20px] p-4 text-center">
-              <Zap className="w-5 h-5 text-primary mx-auto mb-2" />
-              <p className="font-bold text-xl text-foreground">₦0</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">To Join</p>
-            </div>
-            <div className="glass-card rounded-[20px] p-4 text-center">
-              <Shield className="w-5 h-5 text-primary mx-auto mb-2" />
-              <p className="font-bold text-xl text-foreground">5x</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Skip / Referral</p>
-            </div>
-            <div className="glass-card rounded-[20px] p-4 text-center">
-              <Lock className="w-5 h-5 text-primary mx-auto mb-2" />
-              <p className="font-bold text-xl text-foreground">Secure</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Encryption</p>
-            </div>
+          <div className="glass-stat rounded-2xl px-3 py-4 text-center">
+            <TrendingUp className="w-4 h-4 text-accent mx-auto mb-1.5" />
+            <p className="font-display text-lg sm:text-xl font-bold text-accent">₦0</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5 tracking-wide">To Join</p>
+          </div>
+          <div className="glass-stat rounded-2xl px-3 py-4 text-center">
+            <Shield className="w-4 h-4 text-primary mx-auto mb-1.5" />
+            <p className="font-display text-lg sm:text-xl font-bold text-primary glow-text">5x</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5 tracking-wide">Skip / Referral</p>
           </div>
         </motion.div>
-      </section>
-
-      {/* Feature Highlights */}
-      <section className="py-24 px-4 max-w-6xl mx-auto w-full">
-        <div className="text-center mb-16">
-          <h2 className="mb-4">Feature Highlights</h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">Calculate your annual utility spend and claim it back toward your life goals.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <GlassCard className="flex flex-col gap-4">
-            <div className="w-12 h-12 rounded-[16px] bg-primary/10 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-bold">Metrics Section</h3>
-            <p className="text-muted-foreground leading-relaxed">Calculate your annual utility spend and claim it back toward your life goals.</p>
-          </GlassCard>
-          <GlassCard className="flex flex-col gap-4">
-            <div className="w-12 h-12 rounded-[16px] bg-primary/10 flex items-center justify-center">
-              <Users className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-bold">Workflow Explanation</h3>
-            <p className="text-muted-foreground leading-relaxed">Calculate your annual utility spend and claim it back toward your life goals.</p>
-          </GlassCard>
-          <GlassCard className="flex flex-col gap-4">
-            <div className="w-12 h-12 rounded-[16px] bg-primary/10 flex items-center justify-center">
-              <Shield className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-bold">Trust Indicators</h3>
-            <p className="text-muted-foreground leading-relaxed">Calculate your annual utility spend and claim it back toward your life goals.</p>
-          </GlassCard>
-        </div>
-      </section>
-    </div>
+      </motion.div>
+    </section>
   );
 };
 
