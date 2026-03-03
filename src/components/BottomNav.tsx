@@ -19,10 +19,10 @@ const BottomNav = ({ active, onChange, showVerify }: BottomNavProps) => {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4"
+      className="fixed bottom-0 left-0 right-0 z-[60] px-4 pb-4 lg:hidden"
       style={{ paddingBottom: `max(1rem, env(safe-area-inset-bottom))` }}
     >
-      <div className="max-w-md mx-auto glass-strong rounded-2xl px-2 py-1.5 flex items-center justify-around">
+      <div className="max-w-md mx-auto glass-strong rounded-[24px] px-2 py-2 flex items-center justify-around shadow-2xl border-primary/10">
         {items.map((item) => {
           const Icon = item.icon;
           return (
@@ -30,14 +30,14 @@ const BottomNav = ({ active, onChange, showVerify }: BottomNavProps) => {
               key={item.id}
               onClick={() => onChange(item.id)}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-all duration-200",
+                "flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all duration-300",
                 active === item.id
-                  ? "text-primary bg-primary/10"
+                  ? "text-primary bg-primary/10 scale-105"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-[10px] font-display font-medium">{item.label}</span>
+              <Icon className={cn("w-5 h-5", active === item.id && "stroke-[2.5px]")} />
+              <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
             </button>
           );
         })}

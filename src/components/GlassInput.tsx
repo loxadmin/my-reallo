@@ -1,28 +1,26 @@
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { InputHTMLAttributes } from "react";
+import { Label } from "./ui/label";
 
-interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface GlassInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   prefix?: string;
 }
 
-const GlassInput = ({ label, prefix, className, ...props }: GlassInputProps) => {
+const GlassInput = ({ className, label, prefix, ...props }: GlassInputProps) => {
   return (
-    <div className="space-y-2">
-      {label && (
-        <label className="text-sm font-display text-muted-foreground tracking-wide">
-          {label}
-        </label>
-      )}
-      <div className="relative">
+    <div className="space-y-2 w-full">
+      {label && <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">{label}</Label>}
+      <div className="relative flex items-center">
         {prefix && (
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-display font-semibold">
+          <span className="absolute left-4 font-bold text-muted-foreground pointer-events-none">
             {prefix}
           </span>
         )}
-        <input
+        <motion.input
+          whileFocus={{ scale: 1.005 }}
           className={cn(
-            "w-full glass-input rounded-xl px-4 py-3.5 text-foreground font-body placeholder:text-muted-foreground/50",
+            "w-full px-5 py-3 rounded-[18px] glass-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all",
             prefix && "pl-10",
             className
           )}

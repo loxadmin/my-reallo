@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Space Grotesk"', 'sans-serif'],
+        display: ['"Inter"', 'sans-serif'],
         body: ['"Inter"', 'sans-serif'],
       },
       colors: {
@@ -51,18 +51,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        navy: {
-          50: "hsl(220 60% 95%)",
-          100: "hsl(220 50% 85%)",
-          200: "hsl(220 50% 75%)",
-          300: "hsl(220 50% 65%)",
-          400: "hsl(220 50% 55%)",
-          500: "hsl(217 91% 50%)",
-          600: "hsl(220 80% 40%)",
-          700: "hsl(222 70% 30%)",
-          800: "hsl(222 60% 20%)",
-          900: "hsl(222 47% 11%)",
-        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -88,10 +76,16 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        waterFlow: {
+          "0%": { transform: "translateY(0) scale(1.1)" },
+          "50%": { transform: "translateY(-15px) scale(1.05)" },
+          "100%": { transform: "translateY(0) scale(1.1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "water-flow": "waterFlow 12s ease-in-out infinite",
       },
     },
   },
