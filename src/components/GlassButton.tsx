@@ -16,8 +16,8 @@ const GlassButton = ({
 }: GlassButtonProps) => {
   const variants = {
     default: "glass-button text-foreground",
-    primary: "gradient-button",
-    outline: "glass-button font-semibold text-foreground",
+    primary: "clay-primary text-primary-foreground font-semibold",
+    outline: "glass-outline text-primary",
   };
 
   return (

@@ -19,10 +19,10 @@ const BottomNav = ({ active, onChange, showVerify }: BottomNavProps) => {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4 lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4"
       style={{ paddingBottom: `max(1rem, env(safe-area-inset-bottom))` }}
     >
-      <div className="max-w-md mx-auto bg-surface/80 backdrop-blur-xl border border-white/10 rounded-2xl px-2 py-1.5 flex items-center justify-around shadow-[0_-10px_40px_rgba(0,0,0,0.3)]">
+      <div className="max-w-md mx-auto glass-strong rounded-2xl px-2 py-1.5 flex items-center justify-around">
         {items.map((item) => {
           const Icon = item.icon;
           return (

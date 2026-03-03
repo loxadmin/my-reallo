@@ -83,9 +83,7 @@ const Auth = () => {
               <button
                 onClick={() => setMode("login")}
                 className={`flex-1 py-2.5 rounded-xl font-display text-sm font-medium transition-all duration-300 ${
-                  mode === "login"
-                    ? "bg-gradient-to-r from-primary to-accent text-white shadow-[0_0_20px_rgba(124,58,237,0.3)]"
-                    : "bg-white/5 border border-white/10 text-muted-foreground"
+                  mode === "login" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"
                 }`}
               >
                 <LogIn className="inline w-4 h-4 mr-1.5" /> Login
@@ -93,9 +91,7 @@ const Auth = () => {
               <button
                 onClick={() => setMode("signup")}
                 className={`flex-1 py-2.5 rounded-xl font-display text-sm font-medium transition-all duration-300 ${
-                  mode === "signup"
-                    ? "bg-gradient-to-r from-primary to-accent text-white shadow-[0_0_20px_rgba(124,58,237,0.3)]"
-                    : "bg-white/5 border border-white/10 text-muted-foreground"
+                  mode === "signup" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"
                 }`}
               >
                 <UserPlus className="inline w-4 h-4 mr-1.5" /> Sign Up

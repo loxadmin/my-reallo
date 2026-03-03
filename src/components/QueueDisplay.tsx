@@ -7,7 +7,7 @@ import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import QuestionnaireFlow from "./QuestionnaireFlow";
 import VerifySpendFlow from "./VerifySpendFlow";
-import { Users, Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, Target, ShieldCheck } from "lucide-react";
+import { Users, Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "./BottomNav";
 
@@ -96,193 +96,124 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
   };
 
   return (
-    <section className="w-full space-y-8">
-      {/* ═══ HOME VIEW ═══ */}
-      {view === "home" && (
-        <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-          {/* Wallet Hero */}
-          <div className="glass-card bg-white/5 backdrop-blur-3xl border border-white/10 rounded-3xl p-6 md:p-12 shadow-[0_0_60px_rgba(37,99,235,0.1)] relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-[80px] -mr-32 -mt-32 transition-all duration-500 group-hover:bg-accent/20" />
-
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-6 md:mb-8">
-                <div>
-                  <p className="text-muted-foreground text-xs md:text-sm font-medium mb-1">Total Balance</p>
-                  <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground truncate max-w-[200px] md:max-w-none">
-                    {formatNaira(totalAnnualSpend)}
-                  </h1>
-                </div>
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 shrink-0">
-                   <Wallet className="w-5 h-5 md:w-6 md:h-6 text-accent" />
-                </div>
-              </div>
-
-              {/* Goal Progress Card integrated into Hero */}
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-6 mb-6 md:mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-                       <Target className="w-4 h-4 md:w-5 md:h-5 text-accent" />
+    <section className="min-h-screen flex items-start justify-center px-4 pt-20 pb-28">
+      <div className="w-full max-w-md lg:max-w-lg space-y-4">
+        {/* ═══ HOME VIEW ═══ */}
+        {view === "home" && (
+          <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            {/* Queue position */}
+            <GlassCard variant="glow" className="text-center">
+              <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }}>
+                {isNext || isOffQueue ? (
+                  <>
+                    <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3 pulse-glow">
+                      <Check className="w-7 h-7 text-primary" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-widest font-bold truncate">Active Goal</p>
-                      <p className="font-semibold text-foreground text-sm md:text-base truncate">{goalLabels[goal] || goal}</p>
+                    <h2 className="font-display text-2xl font-bold gradient-text mb-1">
+                      {isOffQueue ? "You're Off the Queue!" : "You're Next!"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {isOffQueue ? "Earn points, verify spend & claim your money." : "Activate your reclaim now."}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                      <Users className="w-6 h-6 text-primary" />
                     </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Progress</p>
-                    <p className="font-bold text-accent text-sm md:text-base">{Math.round(Math.min((claimableAmount / targetAmount) * 100, 100))}%</p>
-                  </div>
-                </div>
-                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-blue-600 to-accent"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min((claimableAmount / targetAmount) * 100, 100)}%` }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                  />
-                </div>
-                <div className="flex justify-between mt-3 text-[10px] md:text-xs">
-                  <span className="text-muted-foreground truncate mr-2">{formatNaira(claimableAmount)} reached</span>
-                  <span className="text-muted-foreground shrink-0">Target: {formatNaira(targetAmount)}</span>
-                </div>
-              </div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-display mb-1">People ahead of you</p>
+                    <motion.h2 key={position} initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="font-display text-5xl font-bold gradient-text">
+                      {position}
+                    </motion.h2>
+                    <p className="text-sm text-muted-foreground mt-2">Skip the queue — refer a friend and move up 5 spots.</p>
+                  </>
+                )}
+              </motion.div>
+            </GlassCard>
 
-              <div className="grid grid-cols-2 gap-3 md:flex md:gap-4">
-                <button className="px-4 md:px-8 py-3 rounded-xl bg-white/10 border border-white/10 font-semibold text-foreground text-sm md:text-base hover:bg-white/20 transition-all duration-300">
-                  Withdraw
-                </button>
-                <button className="px-4 md:px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-accent font-semibold text-white text-sm md:text-base shadow-[0_0_30px_rgba(37,99,235,0.4)] hover:scale-105 transition-all duration-300">
-                  Deposit
-                </button>
-              </div>
+            {/* Timer (only when still in queue) */}
+            {!isOffQueue && (
+              <GlassCard variant="strong" className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Clock className="w-4 h-4 text-accent" />
+                  <p className="text-[10px] text-muted-foreground font-display uppercase tracking-[0.2em]">Next Queue Unlock</p>
+                </div>
+                <div className="flex items-center justify-center gap-4">
+                  {[
+                    { val: nextUnlock.hours, label: "Hours" },
+                    { val: nextUnlock.minutes, label: "Min" },
+                    { val: nextUnlock.seconds, label: "Sec" },
+                  ].map((t, i) => (
+                    <div key={t.label} className="flex items-center gap-4">
+                      {i > 0 && <span className="font-display text-xl text-primary/40 font-bold">:</span>}
+                      <div className="text-center min-w-[40px]">
+                        <p className="font-display text-2xl font-bold text-foreground tabular-nums">{String(t.val).padStart(2, "0")}</p>
+                        <p className="text-[9px] text-muted-foreground">{t.label}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2 flex items-center justify-center gap-1">
+                  <Zap className="w-3 h-3 text-accent" /> 10 users unlock & move up every day
+                </p>
+              </GlassCard>
+            )}
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-3">
+              <GlassCard className="text-center p-3" animate={false}>
+                <TrendingUp className="w-4 h-4 text-accent mx-auto mb-1" />
+                <p className="font-display font-bold text-foreground text-lg">{todaySkipped}</p>
+                <p className="text-[9px] text-muted-foreground">Skipped Today</p>
+              </GlassCard>
+              <GlassCard className="text-center p-3" animate={false}>
+                <Share2 className="w-4 h-4 text-primary mx-auto mb-1" />
+                <p className="font-display font-bold text-foreground text-lg">{referralCount}</p>
+                <p className="text-[9px] text-muted-foreground">Referrals</p>
+              </GlassCard>
+              <GlassCard className="text-center p-3" animate={false}>
+                <Users className="w-4 h-4 text-primary mx-auto mb-1" />
+                <p className="font-display font-bold text-foreground text-lg">{position <= 0 ? "✓" : position}</p>
+                <p className="text-[9px] text-muted-foreground">Position</p>
+              </GlassCard>
             </div>
-          </div>
 
-          {/* Services Grid */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl md:text-2xl font-bold font-display text-foreground">Our Services</h2>
-              <button className="text-sm text-accent font-semibold hover:underline">View All</button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              <div
-                onClick={() => navigate("/dashboard")}
-                className="layout-grid-item cursor-pointer group hover:border-accent/40 hover:shadow-[0_0_25px_rgba(37,99,235,0.2)]"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/10 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
-                  <Award className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground group-hover:text-accent" />
-                </div>
-                <h3 className="font-bold text-base md:text-lg mb-1 md:mb-2 text-foreground">Earn Points</h3>
-                <p className="text-[11px] md:text-sm text-muted-foreground leading-relaxed line-clamp-2 md:line-clamp-none">
-                  Complete tasks and answer questions to earn points.
-                </p>
-              </div>
-
-              <div
-                onClick={() => navigate("/dashboard")}
-                className="layout-grid-item cursor-pointer group hover:border-accent/40 hover:shadow-[0_0_25px_rgba(37,99,235,0.2)]"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/10 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
-                  <ShieldCheck className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground group-hover:text-accent" />
-                </div>
-                <h3 className="font-bold text-base md:text-lg mb-1 md:mb-2 text-foreground">Verify Spend</h3>
-                <p className="text-[11px] md:text-sm text-muted-foreground leading-relaxed line-clamp-2 md:line-clamp-none">
-                  Securely verify your utility expenses to qualify.
-                </p>
-              </div>
-
-              <div
-                onClick={() => navigate("/vouchers")}
-                className="layout-grid-item cursor-pointer group hover:border-accent/40 hover:shadow-[0_0_25px_rgba(37,99,235,0.2)]"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/10 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
-                  <Gift className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground group-hover:text-accent" />
-                </div>
-                <h3 className="font-bold text-base md:text-lg mb-1 md:mb-2 text-foreground">Claim Goal</h3>
-                <p className="text-[11px] md:text-sm text-muted-foreground leading-relaxed line-clamp-2 md:line-clamp-none">
-                  Redeem your accumulated value towards your life goals.
-                </p>
-              </div>
-
-              <div className="layout-grid-item group opacity-50 cursor-not-allowed">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/5 flex items-center justify-center mb-4 md:mb-6">
-                  <Lock className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground" />
-                </div>
-                <h3 className="font-bold text-base md:text-lg mb-1 md:mb-2 text-foreground">History</h3>
-                <p className="text-[11px] md:text-sm text-muted-foreground leading-relaxed line-clamp-2 md:line-clamp-none">
-                  Track all your past reclaims and activity.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Referral Section */}
-          <div className="bg-gradient-to-r from-blue-600/10 to-accent/10 border border-blue-500/20 rounded-3xl p-6 md:p-12 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8 overflow-hidden relative group">
-            <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-600/20 rounded-full blur-[60px] pointer-events-none" />
-
-            <div className="relative z-10 text-center md:text-left">
-              <h3 className="text-xl md:text-3xl font-bold text-foreground mb-2 md:mb-4">
-                {isOffQueue ? "Refer & Earn Rewards" : "Refer & Skip the Queue"}
+            {/* Referral */}
+            <GlassCard variant="strong">
+              <h3 className="font-display font-semibold text-foreground mb-2">
+                {isOffQueue ? "Refer & Earn Points" : "Refer & Skip the Queue"}
               </h3>
-              <p className="text-muted-foreground text-sm md:text-lg max-w-md">
-                Invite friends to Reallo and earn 1,000 points or move up 5 spots in the queue.
+              <p className="text-sm text-muted-foreground mb-4">
+                {isOffQueue ? "Each referral earns you 1,000 points (₦500). Share your link!" : "For every friend you refer, skip 5 positions."}
               </p>
-            </div>
-
-            <button
-              onClick={handleShare}
-              className="relative z-10 w-full md:w-auto px-10 py-4 bg-gradient-to-r from-blue-600 to-accent rounded-xl font-bold text-white shadow-[0_0_30px_rgba(37,99,235,0.4)] hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
-            >
-              <Share2 className="w-5 h-5" />
-              Get Referral Link
-            </button>
-          </div>
-
-          {/* Stats and Queue Position (Small cards) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-             <div className="glass-card flex items-center gap-4 p-6">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-                   <Users className="w-6 h-6 text-blue-500" />
-                </div>
-                <div>
-                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Queue Position</p>
-                   <p className="text-2xl font-bold text-foreground">{position <= 0 ? "Off Queue" : `#${position}`}</p>
-                </div>
-             </div>
-
-             <div className="glass-card flex items-center gap-4 p-6">
-                <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
-                   <Clock className="w-6 h-6 text-accent" />
-                </div>
-                <div>
-                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Next Unlock</p>
-                   <p className="text-2xl font-bold text-foreground">{String(nextUnlock.hours).padStart(2, '0')}:{String(nextUnlock.minutes).padStart(2, '0')}</p>
-                </div>
-             </div>
-
-             <div className="glass-card flex items-center gap-4 p-6">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-                   <Award className="w-6 h-6 text-blue-500" />
-                </div>
-                <div>
-                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Total Points</p>
-                   <p className="text-2xl font-bold text-foreground">{pointsBalance.toLocaleString()}</p>
-                </div>
-             </div>
-          </div>
-        </motion.div>
-      )}
+              {profile?.referral_code && (
+                <>
+                  <p className="text-[10px] text-muted-foreground mb-1 font-display uppercase tracking-widest">Your referral code</p>
+                  <p className="font-display font-bold text-primary text-lg mb-3">{profile.referral_code}</p>
+                  <div className="flex gap-2">
+                    <div className="flex-1 glass-input rounded-xl px-3 py-2.5 text-xs text-muted-foreground truncate">{referralLink}</div>
+                    <GlassButton variant="outline" onClick={handleCopy} className="px-3">
+                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    </GlassButton>
+                  </div>
+                  <GlassButton variant="primary" className="w-full mt-3" onClick={handleShare}>
+                    <Share2 className="inline w-4 h-4 mr-2" /> {isOffQueue ? "Share & Earn" : "Share Referral Link"}
+                  </GlassButton>
+                </>
+              )}
+            </GlassCard>
+          </motion.div>
+        )}
 
         {/* ═══ EARN VIEW ═══ */}
         {view === "earn" && (
           <motion.div key="earn" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <GlassCard variant="strong" className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <Award className="w-4 h-4 text-blue-500" />
+                <Award className="w-4 h-4 text-primary" />
                 <p className="text-[10px] text-muted-foreground font-display uppercase tracking-[0.2em]">Points Balance</p>
               </div>
-              <p className="font-display text-3xl font-bold text-blue-500">{pointsBalance.toLocaleString()}</p>
+              <p className="font-display text-3xl font-bold gradient-text">{pointsBalance.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground mt-1">= {formatNaira(Math.floor(pointsBalance * 0.5))} value</p>
             </GlassCard>
             <QuestionnaireFlow />
@@ -337,6 +268,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
             )}
           </motion.div>
         )}
+      </div>
     </section>
   );
 };

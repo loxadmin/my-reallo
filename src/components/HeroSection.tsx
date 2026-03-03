@@ -35,7 +35,21 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-32 pb-16 overflow-hidden">
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-24 pb-16 overflow-hidden">
+      {/* Ambient background */}
+      <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-primary/8 blur-[200px] pointer-events-none" />
+      <div className="absolute bottom-[5%] right-[-10%] w-[400px] h-[400px] rounded-full bg-accent/6 blur-[160px] pointer-events-none" />
+      <div className="absolute top-[30%] left-[-8%] w-[300px] h-[300px] rounded-full bg-primary/4 blur-[120px] pointer-events-none" />
+
+      {/* Dot grid */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: `radial-gradient(hsl(217 91% 60% / 0.5) 1px, transparent 1px)`,
+          backgroundSize: "40px 40px",
+        }}
+      />
+
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -60,20 +74,39 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.7 }}
-          className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] mb-6 tracking-tight"
+          className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] mb-4"
         >
-          <span className="text-foreground">The Future of </span>
+          <span className="text-foreground">Stop </span>
+          <span className="relative inline-flex flex-col h-[1.15em] overflow-hidden">
+            <AnimatePresence mode="wait">
+              {titles.map(
+                (title, index) =>
+                  index === titleNumber && (
+                    <motion.span
+                      key={title}
+                      className="gradient-text absolute"
+                      initial={{ opacity: 0, y: 40 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -40 }}
+                      transition={{ duration: 0.4, ease: "easeInOut" }}
+                    >
+                      {title}
+                    </motion.span>
+                  )
+              )}
+            </AnimatePresence>
+          </span>
           <br />
-          <span className="gradient-text">Smart Commerce</span>
+          <span className="text-foreground">Your Money</span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.7 }}
-          className="text-muted-foreground text-base sm:text-lg lg:text-xl mb-10 leading-relaxed max-w-xl mx-auto"
+          className="text-muted-foreground text-sm sm:text-base lg:text-lg mb-8 leading-relaxed max-w-md mx-auto"
         >
-          Unlock powerful experiences with gamified shopping. Calculate your annual utility spend and reclaim it toward your life goals.
+          Calculate your annual utility spend and claim it back toward your life goals.
         </motion.p>
 
         {/* CTA Buttons */}
@@ -81,17 +114,14 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.5 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto"
+          className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto"
         >
-          <button
-            onClick={onGetStarted}
-            className="gradient-button text-base px-10 py-4 flex-1 flex items-center justify-center"
-          >
-            Get Started <MoveRight className="w-5 h-5 ml-2" />
-          </button>
-          <button className="glass-button text-base px-10 py-4 flex-1 font-semibold text-foreground">
+          <GlassButton variant="primary" onClick={onGetStarted} className="text-sm px-8 py-4 flex-1">
+            Calculate & Claim <MoveRight className="inline w-4 h-4 ml-2" />
+          </GlassButton>
+          <GlassButton variant="outline" className="text-sm px-8 py-4 flex-1">
             How It Works
-          </button>
+          </GlassButton>
         </motion.div>
 
         {/* Stats row */}

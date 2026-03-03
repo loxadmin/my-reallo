@@ -8,7 +8,6 @@ import SpendCalculator from "@/components/SpendCalculator";
 import GoalSelector from "@/components/GoalSelector";
 import QueueDisplay from "@/components/QueueDisplay";
 import BottomNav, { type DashView } from "@/components/BottomNav";
-import DashboardLayout from "@/components/DashboardLayout";
 
 type DashStep = "calculator" | "goal" | "queue";
 
@@ -90,41 +89,34 @@ const Dashboard = () => {
 
   if (!user) return null;
 
-  if (step !== "queue") {
-    return (
-      <div className="relative min-h-screen overflow-x-hidden">
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/4 rounded-full blur-[220px]" />
-          <div className="absolute bottom-0 right-[-5%] w-[400px] h-[400px] bg-accent/3 rounded-full blur-[160px]" />
-        </div>
-        <Navbar />
-
-        <AnimatePresence mode="wait">
-          <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="pt-24 px-4">
-            {step === "calculator" && <SpendCalculator onComplete={handleSpendComplete} />}
-            {step === "goal" && spendResult && (
-              <GoalSelector totalAnnualSpend={spendResult.totalAnnual} onSelect={handleGoalSelect} />
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    );
-  }
-
   return (
-    <DashboardLayout activeView={activeView} onViewChange={setActiveView}>
+    <div className="relative min-h-screen overflow-x-hidden">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/4 rounded-full blur-[220px]" />
+        <div className="absolute bottom-0 right-[-5%] w-[400px] h-[400px] bg-accent/3 rounded-full blur-[160px]" />
+      </div>
+      <Navbar />
+
       <AnimatePresence mode="wait">
-        <motion.div key={activeView} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
-          <QueueDisplay
-            totalAnnualSpend={profile?.total_annual_spend || 0}
-            goal={profile?.selected_goal || ""}
-            targetAmount={profile?.target_amount || 0}
-            view={activeView}
-          />
+        <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+          {step === "calculator" && <SpendCalculator onComplete={handleSpendComplete} />}
+          {step === "goal" && spendResult && (
+            <GoalSelector totalAnnualSpend={spendResult.totalAnnual} onSelect={handleGoalSelect} />
+          )}
+          {step === "queue" && spendResult && profile && (
+            <>
+              <QueueDisplay
+                totalAnnualSpend={spendResult.totalAnnual}
+                goal={profile.selected_goal || ""}
+                targetAmount={profile.target_amount}
+                view={activeView}
+              />
+              <BottomNav active={activeView} onChange={setActiveView} showVerify={isOffQueue} />
+            </>
+          )}
         </motion.div>
       </AnimatePresence>
-      <BottomNav active={activeView} onChange={setActiveView} showVerify={isOffQueue} />
-    </DashboardLayout>
+    </div>
   );
 };
 
