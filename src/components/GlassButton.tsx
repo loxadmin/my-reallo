@@ -23,16 +23,17 @@ const GlassButton = ({
   return (
     <motion.button
       type={type}
-      whileHover={{ scale: 1.02, y: -1 }}
-      whileTap={{ scale: 0.98, y: 1 }}
+      whileHover={{ scale: 1.01, y: -0.5 }}
+      whileTap={{ scale: 0.99, y: 0.5 }}
       className={cn(
-        "px-6 py-3 rounded-2xl font-display text-sm tracking-wide transition-all duration-300",
+        "px-6 py-2.5 rounded-[16px] font-display tracking-wide transition-all duration-300",
         variants[variant],
         disabled && "opacity-50 cursor-not-allowed",
         className
       )}
       onClick={onClick}
       disabled={disabled}
+      style={{ fontSize: '13px' }}
     >
       {children}
     </motion.button>
