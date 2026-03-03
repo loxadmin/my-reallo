@@ -22,7 +22,7 @@ const BottomNav = ({ active, onChange, showVerify }: BottomNavProps) => {
       className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4"
       style={{ paddingBottom: `max(1rem, env(safe-area-inset-bottom))` }}
     >
-      <div className="max-w-md mx-auto glass-strong rounded-2xl px-2 py-1.5 flex items-center justify-around">
+      <div className="max-w-md mx-auto glass-strong rounded-[2rem] px-2 py-2 flex items-center justify-around shadow-2xl border-white/20">
         {items.map((item) => {
           const Icon = item.icon;
           return (
