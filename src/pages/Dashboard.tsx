@@ -8,7 +8,6 @@ import SpendCalculator from "@/components/SpendCalculator";
 import GoalSelector from "@/components/GoalSelector";
 import QueueDisplay from "@/components/QueueDisplay";
 import BottomNav, { type DashView } from "@/components/BottomNav";
-import WaterBackground from "@/components/WaterBackground";
 
 type DashStep = "calculator" | "goal" | "queue";
 
@@ -23,7 +22,6 @@ interface SpendResult {
 const Dashboard = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
-
   const [step, setStep] = useState<DashStep>("calculator");
   const [spendResult, setSpendResult] = useState<SpendResult | null>(null);
   const [activeView, setActiveView] = useState<DashView>("home");
@@ -77,6 +75,8 @@ const Dashboard = () => {
     setStep("queue");
   };
 
+  const isOffQueue = (profile?.queue_position ?? 999) <= 0;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -91,7 +91,10 @@ const Dashboard = () => {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
-      <WaterBackground />
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/4 rounded-full blur-[220px]" />
+        <div className="absolute bottom-0 right-[-5%] w-[400px] h-[400px] bg-accent/3 rounded-full blur-[160px]" />
+      </div>
       <Navbar />
 
       <AnimatePresence mode="wait">
@@ -107,9 +110,8 @@ const Dashboard = () => {
                 goal={profile.selected_goal || ""}
                 targetAmount={profile.target_amount}
                 view={activeView}
-                onViewChange={setActiveView}
               />
-              <BottomNav active={activeView} onChange={setActiveView} showVerify={(profile?.queue_position ?? 999) <= 0} />
+              <BottomNav active={activeView} onChange={setActiveView} showVerify={isOffQueue} />
             </>
           )}
         </motion.div>
