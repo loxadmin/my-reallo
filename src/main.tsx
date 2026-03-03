@@ -4,8 +4,11 @@ import "./index.css";
 
 // Initialize theme from localStorage
 const savedTheme = localStorage.getItem("reallo-theme");
-if (savedTheme === "light") {
-  document.documentElement.classList.add("light");
+if (savedTheme === "dark") {
+  document.documentElement.classList.add("dark");
+} else {
+  // Default to light mode (or if savedTheme is 'light')
+  document.documentElement.classList.remove("dark");
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
