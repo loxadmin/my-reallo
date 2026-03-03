@@ -7,7 +7,7 @@ import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import QuestionnaireFlow from "./QuestionnaireFlow";
 import VerifySpendFlow from "./VerifySpendFlow";
-import { Users, Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock } from "lucide-react";
+import { Users, Share2, Copy, Check, TrendingUp, Clock, Wallet, Award, Gift, Lock, Target, ShieldCheck } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "./BottomNav";
 
@@ -16,6 +16,7 @@ interface QueueDisplayProps {
   goal: string;
   targetAmount: number;
   view: DashView;
+  onViewChange: (view: DashView) => void;
 }
 
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
@@ -27,9 +28,10 @@ const goalLabels: Record<string, string> = {
   rent: "Rent Support",
 };
 
-const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDisplayProps) => {
+const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange }: QueueDisplayProps) => {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
+
   const [copied, setCopied] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
   const [todaySkipped, setTodaySkipped] = useState(0);
@@ -42,7 +44,6 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
     ? `${window.location.origin}/auth?ref=${profile.referral_code}`
     : "";
 
-  const isNext = position <= 1;
   const isOffQueue = position <= 0;
   const pointsBalance = profile?.points_balance ?? 0;
   const claimableAmount = Math.max(0, totalAnnualSpend - claimedTotal);
@@ -84,137 +85,197 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
+    toast({ title: "Copied!", description: "Referral link copied to clipboard." });
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleShare = async () => {
     if (navigator.share) {
-      await navigator.share({ title: "Join Reallo", text: "Reclaim your utility spend!", url: referralLink });
+      try {
+        await navigator.share({ title: "Join Reallo", text: "Reclaim your utility spend!", url: referralLink });
+      } catch (err) {
+        handleCopy();
+      }
     } else {
       handleCopy();
     }
   };
 
+  if (!profile) return null;
+
   return (
-    <section className="min-h-screen flex items-start justify-center px-4 pt-20 pb-28">
-      <div className="w-full max-w-md lg:max-w-lg space-y-4">
+    <section className="min-h-screen flex items-start justify-center px-4 pt-24 pb-28">
+      <div className="w-full max-w-md lg:max-w-4xl space-y-6">
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
-          <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            {/* Queue position */}
-            <GlassCard variant="glow" className="text-center">
-              <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }}>
-                {isNext || isOffQueue ? (
-                  <>
-                    <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3 pulse-glow">
-                      <Check className="w-7 h-7 text-primary" />
-                    </div>
-                    <h2 className="font-display text-2xl font-bold gradient-text mb-1">
-                      {isOffQueue ? "You're Off the Queue!" : "You're Next!"}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {isOffQueue ? "Earn points, verify spend & claim your money." : "Activate your reclaim now."}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                      <Users className="w-6 h-6 text-primary" />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-display mb-1">People ahead of you</p>
-                    <motion.h2 key={position} initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="font-display text-5xl font-bold gradient-text">
-                      {position}
-                    </motion.h2>
-                    <p className="text-sm text-muted-foreground mt-2">Skip the queue — refer a friend and move up 5 spots.</p>
-                  </>
-                )}
-              </motion.div>
-            </GlassCard>
-
-            {/* Timer (only when still in queue) */}
-            {!isOffQueue && (
-              <GlassCard variant="strong" className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-accent" />
-                  <p className="text-[10px] text-muted-foreground font-display uppercase tracking-[0.2em]">Next Queue Unlock</p>
-                </div>
-                <div className="flex items-center justify-center gap-4">
-                  {[
-                    { val: nextUnlock.hours, label: "Hours" },
-                    { val: nextUnlock.minutes, label: "Min" },
-                    { val: nextUnlock.seconds, label: "Sec" },
-                  ].map((t, i) => (
-                    <div key={t.label} className="flex items-center gap-4">
-                      {i > 0 && <span className="font-display text-xl text-primary/40 font-bold">:</span>}
-                      <div className="text-center min-w-[40px]">
-                        <p className="font-display text-2xl font-bold text-foreground tabular-nums">{String(t.val).padStart(2, "0")}</p>
-                        <p className="text-[9px] text-muted-foreground">{t.label}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-2 flex items-center justify-center gap-1">
-                  <Zap className="w-3 h-3 text-accent" /> 10 users unlock & move up every day
-                </p>
-              </GlassCard>
-            )}
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-3">
-              <GlassCard className="text-center p-3" animate={false}>
-                <TrendingUp className="w-4 h-4 text-accent mx-auto mb-1" />
-                <p className="font-display font-bold text-foreground text-lg">{todaySkipped}</p>
-                <p className="text-[9px] text-muted-foreground">Skipped Today</p>
-              </GlassCard>
-              <GlassCard className="text-center p-3" animate={false}>
-                <Share2 className="w-4 h-4 text-primary mx-auto mb-1" />
-                <p className="font-display font-bold text-foreground text-lg">{referralCount}</p>
-                <p className="text-[9px] text-muted-foreground">Referrals</p>
-              </GlassCard>
-              <GlassCard className="text-center p-3" animate={false}>
-                <Users className="w-4 h-4 text-primary mx-auto mb-1" />
-                <p className="font-display font-bold text-foreground text-lg">{position <= 0 ? "✓" : position}</p>
-                <p className="text-[9px] text-muted-foreground">Position</p>
-              </GlassCard>
+          <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            {/* Fintech Header */}
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Good morning,</p>
+                <h2 className="text-xl md:text-2xl font-bold text-foreground">{profile.full_name || "User"}</h2>
+              </div>
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                <Users className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+              </div>
             </div>
 
-            {/* Referral */}
-            <GlassCard variant="strong">
-              <h3 className="font-display font-semibold text-foreground mb-2">
-                {isOffQueue ? "Refer & Earn Points" : "Refer & Skip the Queue"}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {isOffQueue ? "Each referral earns you 1,000 points (₦500). Share your link!" : "For every friend you refer, skip 5 positions."}
-              </p>
-              {profile?.referral_code && (
-                <>
-                  <p className="text-[10px] text-muted-foreground mb-1 font-display uppercase tracking-widest">Your referral code</p>
-                  <p className="font-display font-bold text-primary text-lg mb-3">{profile.referral_code}</p>
-                  <div className="flex gap-2">
-                    <div className="flex-1 glass-input rounded-xl px-3 py-2.5 text-xs text-muted-foreground truncate">{referralLink}</div>
-                    <GlassButton variant="outline" onClick={handleCopy} className="px-3">
-                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    </GlassButton>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Total Balance Card */}
+              <GlassCard variant="glow" className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border-primary/30 flex flex-col justify-center min-h-[200px]">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <Wallet className="w-24 h-24 md:w-32 md:h-32" />
+                </div>
+                <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Total Claimable Balance</p>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <h1 className="text-4xl md:text-5xl font-bold text-foreground tabular-nums">
+                    {formatNaira(claimableAmount)}
+                  </h1>
+                  <div className="p-1 rounded-full bg-primary/10">
+                    <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-primary" />
                   </div>
-                  <GlassButton variant="primary" className="w-full mt-3" onClick={handleShare}>
-                    <Share2 className="inline w-4 h-4 mr-2" /> {isOffQueue ? "Share & Earn" : "Share Referral Link"}
+                </div>
+                <div className="flex gap-3">
+                  <GlassButton variant="primary" className="flex-1 py-2.5 text-xs font-bold" onClick={() => navigate("/vouchers")} disabled={!canClaim}>
+                    <Wallet className="w-3.5 h-3.5 mr-2" /> Claim
                   </GlassButton>
-                </>
+                  <GlassButton variant="outline" className="flex-1 py-2.5 text-xs font-semibold" onClick={() => onViewChange("verify")}>
+                    <ShieldCheck className="w-3.5 h-3.5 mr-2" /> Verify Amount
+                  </GlassButton>
+                </div>
+              </GlassCard>
+
+              {/* Goal Progress Section */}
+              <div className="space-y-3 flex flex-col justify-end">
+                <div className="flex items-center justify-between px-1">
+                  <h3 className="text-sm font-bold text-foreground">Active Goal</h3>
+                  <button onClick={() => onViewChange("goal")} className="text-[10px] font-bold text-primary uppercase tracking-wider hover:underline">View Details</button>
+                </div>
+                <GlassCard className="p-6 flex-1 flex flex-col justify-center">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center border border-gold/20 shadow-sm">
+                        <Target className="w-6 h-6 text-gold" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-foreground">{goalLabels[goal] || goal}</p>
+                        <p className="text-xs text-muted-foreground">Target: {formatNaira(targetAmount)}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-black text-primary">{Math.round((claimableAmount / targetAmount) * 100)}%</p>
+                    </div>
+                  </div>
+                  <div className="w-full h-2.5 bg-secondary rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min((claimableAmount / targetAmount) * 100, 100)}%` }}
+                      transition={{ duration: 1 }}
+                    />
+                  </div>
+                </GlassCard>
+              </div>
+            </div>
+
+            {/* Services Grid (Tab Switchers) */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold text-foreground px-1">Our Services</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button onClick={() => onViewChange("earn")} className="flex flex-col items-start p-4 rounded-2xl glass-card hover:bg-primary/5 transition-all text-left group border border-transparent hover:border-primary/20">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Award className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <p className="text-xs font-bold text-foreground">Earn Points</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">Complete tasks to earn points.</p>
+                </button>
+                <button onClick={() => onViewChange("verify")} className="flex flex-col items-start p-4 rounded-2xl glass-card hover:bg-primary/5 transition-all text-left group border border-transparent hover:border-primary/20">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <ShieldCheck className="w-5 h-5 text-green-500" />
+                  </div>
+                  <p className="text-xs font-bold text-foreground">Verify Spend</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">Upload receipts to verify.</p>
+                </button>
+                <button onClick={() => navigate("/vouchers")} className="flex flex-col items-start p-4 rounded-2xl glass-card hover:bg-primary/5 transition-all text-left group border border-transparent hover:border-primary/20">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Gift className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <p className="text-xs font-bold text-foreground">Vouchers</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">Convert balance to vouchers.</p>
+                </button>
+                <button onClick={() => onViewChange("home")} className="flex flex-col items-start p-4 rounded-2xl glass-card hover:bg-primary/5 transition-all text-left group border border-transparent hover:border-primary/20 opacity-60">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Clock className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <p className="text-xs font-bold text-foreground">Activity</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">View history and stats.</p>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Refer & Earn Banner */}
+              <GlassCard className="relative overflow-hidden bg-primary p-6 border-none flex flex-col justify-center min-h-[160px]">
+                <div className="absolute -right-6 -bottom-6 opacity-20 rotate-12">
+                  <Share2 className="w-32 h-32 text-white" />
+                </div>
+                <div className="relative z-10 flex flex-col gap-1">
+                  <h3 className="text-xl font-bold text-white">Refer & Earn</h3>
+                  <p className="text-xs text-white/80 mb-4 max-w-[240px]">
+                    Invite your friends and move {isOffQueue ? "up" : "5 spots up"} in the queue!
+                  </p>
+                  <div className="flex gap-2">
+                    <GlassButton variant="default" className="bg-white/20 hover:bg-white/30 border-none text-white text-[10px] py-2 px-6" onClick={handleShare}>
+                      Invite Now
+                    </GlassButton>
+                    <button onClick={handleCopy} className="p-2.5 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors">
+                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </GlassCard>
+
+              {/* Original Queue Info (Smaller) */}
+              {!isOffQueue && (
+                <div className="flex flex-col justify-center gap-4">
+                  <GlassCard variant="strong" className="flex items-center justify-between py-4 px-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Users className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Queue Position</p>
+                        <p className="text-lg font-bold text-foreground">{position}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Next Unlock</p>
+                      <p className="text-lg font-bold text-primary tabular-nums">
+                        {String(nextUnlock.hours).padStart(2, "0")}:{String(nextUnlock.minutes).padStart(2, "0")}:{String(nextUnlock.seconds).padStart(2, "0")}
+                      </p>
+                    </div>
+                  </GlassCard>
+                  <div className="px-2">
+                    <p className="text-[10px] text-muted-foreground text-center italic">
+                      "Patience is the companion of wisdom." Keep earning points to move up!
+                    </p>
+                  </div>
+                </div>
               )}
-            </GlassCard>
+            </div>
           </motion.div>
         )}
 
         {/* ═══ EARN VIEW ═══ */}
         {view === "earn" && (
           <motion.div key="earn" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <GlassCard variant="strong" className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Award className="w-4 h-4 text-primary" />
-                <p className="text-[10px] text-muted-foreground font-display uppercase tracking-[0.2em]">Points Balance</p>
+            <GlassCard variant="strong" className="text-center py-8">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Award className="w-5 h-5 text-primary" />
+                <p className="text-xs text-muted-foreground font-display uppercase tracking-[0.2em] font-bold">Points Balance</p>
               </div>
-              <p className="font-display text-3xl font-bold gradient-text">{pointsBalance.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">= {formatNaira(Math.floor(pointsBalance * 0.5))} value</p>
+              <p className="font-display text-5xl font-bold gradient-text">{pointsBalance.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground mt-2">= {formatNaira(Math.floor(pointsBalance * 0.5))} estimated value</p>
             </GlassCard>
             <QuestionnaireFlow />
           </motion.div>
@@ -222,34 +283,44 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
 
         {/* ═══ GOAL VIEW ═══ */}
         {view === "goal" && (
-          <motion.div key="goal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <GlassCard>
-              <div className="flex items-center justify-between">
+          <motion.div key="goal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <GlassCard className="p-8">
+              <div className="flex items-center justify-between mb-8">
                 <div>
-                  <p className="text-[10px] text-muted-foreground font-display uppercase tracking-widest">Your Goal</p>
-                  <p className="font-display font-semibold text-foreground">{goalLabels[goal] || goal}</p>
+                  <p className="text-xs text-muted-foreground font-display uppercase tracking-widest font-bold mb-1">Your Selected Goal</p>
+                  <h2 className="font-display text-2xl font-bold text-foreground">{goalLabels[goal] || goal}</h2>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-muted-foreground font-display uppercase tracking-widest">Claimable</p>
-                  <p className="font-display font-semibold text-primary">{formatNaira(claimableAmount)}</p>
+                <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">
+                  <Target className="w-8 h-8 text-accent" />
                 </div>
               </div>
-              <div className="mt-3 w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min((claimableAmount / targetAmount) * 100, 100)}%` }} transition={{ duration: 1, delay: 0.3 }} />
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <p className="text-sm text-muted-foreground">Progress to Target</p>
+                  <p className="text-lg font-bold text-primary">{formatNaira(claimableAmount)} / {formatNaira(targetAmount)}</p>
+                </div>
+                <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
+                  <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min((claimableAmount / targetAmount) * 100, 100)}%` }} transition={{ duration: 1, delay: 0.3 }} />
+                </div>
+                {claimedTotal > 0 && (
+                  <div className="flex justify-between text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
+                    <span>Already claimed</span>
+                    <span>{formatNaira(claimedTotal)}</span>
+                  </div>
+                )}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">{formatNaira(claimableAmount)} / {formatNaira(targetAmount)}</p>
-              {claimedTotal > 0 && <p className="text-[10px] text-muted-foreground mt-1">Already claimed: {formatNaira(claimedTotal)}</p>}
             </GlassCard>
 
-            <GlassButton variant="primary" onClick={() => navigate("/vouchers")} className="w-full" disabled={!canClaim}>
+            <GlassButton variant="primary" onClick={() => navigate("/vouchers")} className="w-full py-6 text-lg font-bold" disabled={!canClaim}>
               {!isOffQueue ? (
-                <><Lock className="inline w-4 h-4 mr-2" /> Complete Queue to Claim</>
+                <><Lock className="inline w-5 h-5 mr-2" /> Complete Queue to Claim</>
               ) : claimableAmount < 50000 ? (
-                <><Lock className="inline w-4 h-4 mr-2" /> Min ₦50,000 to Claim</>
+                <><Lock className="inline w-5 h-5 mr-2" /> Min ₦50,000 to Claim</>
               ) : pointsBalance < 100000 ? (
-                <><Lock className="inline w-4 h-4 mr-2" /> Need 100,000 pts to Claim</>
+                <><Lock className="inline w-5 h-5 mr-2" /> Need 100,000 pts to Claim</>
               ) : (
-                <><Wallet className="inline w-4 h-4 mr-2" /> Claim Amount — Create Voucher</>
+                <><Wallet className="inline w-5 h-5 mr-2" /> Claim Amount — Create Voucher</>
               )}
             </GlassButton>
           </motion.div>
