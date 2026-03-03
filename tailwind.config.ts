@@ -7,15 +7,22 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "1rem",
+      padding: "2rem",
       screens: {
         "2xl": "1400px",
       },
     },
     extend: {
       fontFamily: {
-        display: ['"Space Grotesk"', 'sans-serif'],
-        body: ['"Inter"', 'sans-serif'],
+        display: ['"Inter"', '"Satoshi"', 'sans-serif'],
+        body: ['"Inter"', '"Satoshi"', 'sans-serif'],
+      },
+      fontSize: {
+        'h1': ['64px', { lineHeight: '1.1', fontWeight: '800' }],
+        'h2': ['44px', { lineHeight: '1.2', fontWeight: '800' }],
+        'h3': ['24px', { lineHeight: '1.3', fontWeight: '700' }],
+        'body': ['16px', { lineHeight: '1.5', fontWeight: '500' }],
+        'caption': ['12px', { lineHeight: '1.4', fontWeight: '400' }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -24,12 +31,12 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#0F3D2E", // Dark Green Day
+          foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "#145A41", // Secondary Dark Green Day
+          foreground: "#FFFFFF",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -40,8 +47,8 @@ export default {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "#0F3D2E",
+          foreground: "#FFFFFF",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -51,33 +58,21 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        navy: {
-          50: "hsl(220 60% 95%)",
-          100: "hsl(220 50% 85%)",
-          200: "hsl(220 50% 75%)",
-          300: "hsl(220 50% 65%)",
-          400: "hsl(220 50% 55%)",
-          500: "hsl(217 91% 50%)",
-          600: "hsl(220 80% 40%)",
-          700: "hsl(222 70% 30%)",
-          800: "hsl(222 60% 20%)",
-          900: "hsl(222 47% 11%)",
-        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+          primary: "#0F3D2E",
+          "primary-foreground": "#FFFFFF",
+          accent: "rgba(15, 61, 46, 0.1)",
+          "accent-foreground": "#0F3D2E",
+          border: "rgba(0, 0, 0, 0.06)",
+          ring: "#0F3D2E",
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "28px",
+        md: "20px",
+        sm: "12px",
       },
       keyframes: {
         "accordion-down": {
@@ -88,10 +83,16 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "water-flow": {
+          "0%": { transform: "translate(0, 0) rotate(0deg)" },
+          "50%": { transform: "translate(5%, 5%) rotate(2deg)" },
+          "100%": { transform: "translate(0, 0) rotate(0deg)" },
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "water-flow": "water-flow 15s ease-in-out infinite",
       },
     },
   },
