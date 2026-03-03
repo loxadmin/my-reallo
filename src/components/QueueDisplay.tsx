@@ -97,15 +97,10 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
 
   return (
     <section className="min-h-screen flex items-start justify-center px-4 pt-20 pb-28">
-      <div className="w-full max-w-md space-y-4">
+      <div className="w-full max-w-md lg:max-w-lg space-y-4">
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
-          <motion.div
-            key="home"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
+          <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             {/* Queue position */}
             <GlassCard variant="glow" className="text-center">
               <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }}>
@@ -140,7 +135,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
             {!isOffQueue && (
               <GlassCard variant="strong" className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-primary" />
+                  <Clock className="w-4 h-4 text-accent" />
                   <p className="text-[10px] text-muted-foreground font-display uppercase tracking-[0.2em]">Next Queue Unlock</p>
                 </div>
                 <div className="flex items-center justify-center gap-4">
@@ -159,7 +154,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
                   ))}
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-2 flex items-center justify-center gap-1">
-                  <Zap className="w-3 h-3 text-primary" /> 10 users unlock & move up every day
+                  <Zap className="w-3 h-3 text-accent" /> 10 users unlock & move up every day
                 </p>
               </GlassCard>
             )}
@@ -167,7 +162,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               <GlassCard className="text-center p-3" animate={false}>
-                <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
+                <TrendingUp className="w-4 h-4 text-accent mx-auto mb-1" />
                 <p className="font-display font-bold text-foreground text-lg">{todaySkipped}</p>
                 <p className="text-[9px] text-muted-foreground">Skipped Today</p>
               </GlassCard>
@@ -189,9 +184,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
                 {isOffQueue ? "Refer & Earn Points" : "Refer & Skip the Queue"}
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                {isOffQueue
-                  ? "Each referral earns you 1,000 points (₦500). Share your link!"
-                  : "For every friend you refer, skip 5 positions."}
+                {isOffQueue ? "Each referral earns you 1,000 points (₦500). Share your link!" : "For every friend you refer, skip 5 positions."}
               </p>
               {profile?.referral_code && (
                 <>
@@ -214,12 +207,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
 
         {/* ═══ EARN VIEW ═══ */}
         {view === "earn" && (
-          <motion.div
-            key="earn"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
+          <motion.div key="earn" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <GlassCard variant="strong" className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Award className="w-4 h-4 text-primary" />
@@ -228,19 +216,13 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
               <p className="font-display text-3xl font-bold gradient-text">{pointsBalance.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground mt-1">= {formatNaira(Math.floor(pointsBalance * 0.5))} value</p>
             </GlassCard>
-
             <QuestionnaireFlow />
           </motion.div>
         )}
 
         {/* ═══ GOAL VIEW ═══ */}
         {view === "goal" && (
-          <motion.div
-            key="goal"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
+          <motion.div key="goal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <GlassCard>
               <div className="flex items-center justify-between">
                 <div>
@@ -256,17 +238,10 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
                 <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min((claimableAmount / targetAmount) * 100, 100)}%` }} transition={{ duration: 1, delay: 0.3 }} />
               </div>
               <p className="text-xs text-muted-foreground mt-2">{formatNaira(claimableAmount)} / {formatNaira(targetAmount)}</p>
-              {claimedTotal > 0 && (
-                <p className="text-[10px] text-muted-foreground mt-1">Already claimed: {formatNaira(claimedTotal)}</p>
-              )}
+              {claimedTotal > 0 && <p className="text-[10px] text-muted-foreground mt-1">Already claimed: {formatNaira(claimedTotal)}</p>}
             </GlassCard>
 
-            <GlassButton
-              variant="primary"
-              onClick={() => navigate("/vouchers")}
-              className="w-full"
-              disabled={!canClaim}
-            >
+            <GlassButton variant="primary" onClick={() => navigate("/vouchers")} className="w-full" disabled={!canClaim}>
               {!isOffQueue ? (
                 <><Lock className="inline w-4 h-4 mr-2" /> Complete Queue to Claim</>
               ) : claimableAmount < 50000 ? (
@@ -282,12 +257,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view }: QueueDispl
 
         {/* ═══ VERIFY VIEW ═══ */}
         {view === "verify" && isOffQueue && (
-          <motion.div
-            key="verify"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
+          <motion.div key="verify" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <VerifySpendFlow />
             {verifyLink && (
               <a href={verifyLink} target="_blank" rel="noopener noreferrer">

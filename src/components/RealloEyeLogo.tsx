@@ -8,7 +8,6 @@ const RealloEyeLogo = ({ size = 32 }: { size?: number }) => {
   const irisR = h * 0.4;
   const pupilR = irisR * 0.45;
 
-  // Blink animation: eyelids close and open
   const blinkVariants = {
     open: {
       d: `M ${w * 0.05} ${cy} Q ${cx} ${cy - h * 0.55} ${w * 0.95} ${cy} Q ${cx} ${cy + h * 0.55} ${w * 0.05} ${cy} Z`,
@@ -33,37 +32,26 @@ const RealloEyeLogo = ({ size = 32 }: { size?: number }) => {
 
   const eyelashVariants = {
     open: {
-      opacity: 1,
-      y: 0,
-      rotate: 0,
+      opacity: 1, y: 0, rotate: 0,
       transition: { duration: 0.15, ease: "easeOut" as const },
     },
     closed: {
-      opacity: 0,
-      y: h * 0.1,
-      rotate: 5,
+      opacity: 0, y: h * 0.1, rotate: 5,
       transition: { duration: 0.1, ease: "easeIn" as const },
     },
   };
 
   return (
-    <motion.svg
-      width={w}
-      height={h}
-      viewBox={`0 0 ${w} ${h}`}
-      className="inline-block mr-1.5"
-      style={{ verticalAlign: "middle", marginBottom: 2 }}
-    >
-      {/* Glow filter */}
+    <motion.svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="inline-block mr-1.5" style={{ verticalAlign: "middle", marginBottom: 2 }}>
       <defs>
         <radialGradient id="irisGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="hsl(50, 100%, 60%)" />
-          <stop offset="70%" stopColor="hsl(45, 100%, 50%)" />
-          <stop offset="100%" stopColor="hsl(40, 100%, 30%)" />
+          <stop offset="0%" stopColor="hsl(199, 89%, 58%)" />
+          <stop offset="70%" stopColor="hsl(217, 91%, 50%)" />
+          <stop offset="100%" stopColor="hsl(222, 47%, 25%)" />
         </radialGradient>
         <radialGradient id="pupilGrad" cx="40%" cy="40%" r="50%">
-          <stop offset="0%" stopColor="hsl(0, 0%, 15%)" />
-          <stop offset="100%" stopColor="hsl(0, 0%, 0%)" />
+          <stop offset="0%" stopColor="hsl(222, 47%, 15%)" />
+          <stop offset="100%" stopColor="hsl(222, 47%, 5%)" />
         </radialGradient>
         <filter id="eyeGlow">
           <feGaussianBlur stdDeviation="1.5" result="blur" />
@@ -85,133 +73,44 @@ const RealloEyeLogo = ({ size = 32 }: { size?: number }) => {
             initial="open"
             animate={["open", "closed", "open"]}
             variants={blinkVariants}
-            transition={{
-              times: [0, 0.4, 1],
-              duration: 0.25,
-              repeat: Infinity,
-              repeatDelay: 3,
-            }}
+            transition={{ times: [0, 0.4, 1], duration: 0.25, repeat: Infinity, repeatDelay: 3 }}
           />
         </clipPath>
       </defs>
 
-      {/* Eye shape outline */}
       <motion.path
-        initial="open"
-        animate={["open", "closed", "open"]}
-        variants={blinkVariants}
-        transition={{
-          times: [0, 0.4, 1],
-          duration: 0.25,
-          repeat: Infinity,
-          repeatDelay: 3,
-        }}
-        fill="none"
-        stroke="hsl(45, 100%, 50%)"
-        strokeWidth="2"
-        filter="url(#eyeGlow)"
+        initial="open" animate={["open", "closed", "open"]} variants={blinkVariants}
+        transition={{ times: [0, 0.4, 1], duration: 0.25, repeat: Infinity, repeatDelay: 3 }}
+        fill="none" stroke="hsl(217, 91%, 50%)" strokeWidth="2" filter="url(#eyeGlow)"
       />
 
-      {/* Clipped contents (iris + pupil) */}
       <g clipPath="url(#eyeClip)" filter="url(#innerShadow)">
-        {/* Sclera */}
-        <rect x="0" y="0" width={w} height={h} fill="hsl(45, 20%, 92%)" opacity="0.2" />
-
-        {/* Iris shadow for depth */}
-        <motion.circle
-          cx={cx + 1}
-          cy={cy + 1}
-          r={irisR}
-          fill="black"
-          opacity="0.2"
-          animate={{
-            cx: [cx + 1, cx + 2.5, cx, cx + 1],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
+        <rect x="0" y="0" width={w} height={h} fill="hsl(210, 20%, 92%)" opacity="0.2" />
+        <motion.circle cx={cx + 1} cy={cy + 1} r={irisR} fill="black" opacity="0.2"
+          animate={{ cx: [cx + 1, cx + 2.5, cx, cx + 1] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         />
-
-        {/* Iris */}
-        <motion.circle
-          cx={cx}
-          cy={cy}
-          r={irisR}
-          fill="url(#irisGrad)"
-          filter="url(#eyeGlow)"
-          animate={{
-            cx: [cx, cx + 1.5, cx - 1, cx],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
+        <motion.circle cx={cx} cy={cy} r={irisR} fill="url(#irisGrad)" filter="url(#eyeGlow)"
+          animate={{ cx: [cx, cx + 1.5, cx - 1, cx] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         />
-
-        {/* Pupil */}
-        <motion.circle
-          cx={cx}
-          cy={cy}
-          r={pupilR}
-          fill="url(#pupilGrad)"
-          animate={{
-            r: [pupilR, pupilR * 0.75, pupilR],
-            cx: [cx, cx + 1.5, cx - 1, cx],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
+        <motion.circle cx={cx} cy={cy} r={pupilR} fill="url(#pupilGrad)"
+          animate={{ r: [pupilR, pupilR * 0.75, pupilR], cx: [cx, cx + 1.5, cx - 1, cx] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         />
-
-        {/* Specular highlight */}
-        <motion.circle
-          cx={cx - irisR * 0.25}
-          cy={cy - irisR * 0.25}
-          r={pupilR * 0.3}
-          fill="white"
-          opacity="0.8"
-          animate={{
-            cx: [cx - irisR * 0.25, cx - irisR * 0.25 + 1, cx - irisR * 0.25 - 0.5, cx - irisR * 0.25],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
+        <motion.circle cx={cx - irisR * 0.25} cy={cy - irisR * 0.25} r={pupilR * 0.3} fill="white" opacity="0.8"
+          animate={{ cx: [cx - irisR * 0.25, cx - irisR * 0.25 + 1, cx - irisR * 0.25 - 0.5, cx - irisR * 0.25] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.circle
-          cx={cx + irisR * 0.35}
-          cy={cy + irisR * 0.15}
-          r={pupilR * 0.15}
-          fill="white"
-          opacity="0.4"
-          animate={{
-            cx: [cx + irisR * 0.35, cx + irisR * 0.35 + 1, cx + irisR * 0.35 - 0.5, cx + irisR * 0.35],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
+        <motion.circle cx={cx + irisR * 0.35} cy={cy + irisR * 0.15} r={pupilR * 0.15} fill="white" opacity="0.4"
+          animate={{ cx: [cx + irisR * 0.35, cx + irisR * 0.35 + 1, cx + irisR * 0.35 - 0.5, cx + irisR * 0.35] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         />
       </g>
 
-      {/* Eyelashes */}
       <motion.g
-        initial="open"
-        animate={["open", "closed", "open"]}
-        variants={eyelashVariants}
-        transition={{
-          times: [0, 0.4, 1],
-          duration: 0.25,
-          repeat: Infinity,
-          repeatDelay: 3,
-        }}
+        initial="open" animate={["open", "closed", "open"]} variants={eyelashVariants}
+        transition={{ times: [0, 0.4, 1], duration: 0.25, repeat: Infinity, repeatDelay: 3 }}
       >
         <path
           d={`M ${w * 0.25} ${cy - h * 0.25} L ${w * 0.2} ${cy - h * 0.45}
@@ -219,29 +118,14 @@ const RealloEyeLogo = ({ size = 32 }: { size?: number }) => {
              M ${w * 0.5} ${cy - h * 0.42} L ${w * 0.5} ${cy - h * 0.65}
              M ${w * 0.62} ${cy - h * 0.38} L ${w * 0.65} ${cy - h * 0.6}
              M ${w * 0.75} ${cy - h * 0.25} L ${w * 0.8} ${cy - h * 0.45}`}
-          fill="none"
-          stroke="hsl(45, 100%, 50%)"
-          strokeWidth="1.2"
-          strokeLinecap="round"
+          fill="none" stroke="hsl(217, 91%, 50%)" strokeWidth="1.2" strokeLinecap="round"
         />
       </motion.g>
 
-      {/* Upper eyelid line for depth */}
       <motion.path
-        initial="open"
-        animate={["open", "closed", "open"]}
-        variants={upperLidVariants}
-        transition={{
-          times: [0, 0.4, 1],
-          duration: 0.25,
-          repeat: Infinity,
-          repeatDelay: 3,
-        }}
-        fill="none"
-        stroke="hsl(45, 100%, 50%)"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        filter="url(#eyeGlow)"
+        initial="open" animate={["open", "closed", "open"]} variants={upperLidVariants}
+        transition={{ times: [0, 0.4, 1], duration: 0.25, repeat: Infinity, repeatDelay: 3 }}
+        fill="none" stroke="hsl(217, 91%, 50%)" strokeWidth="2.5" strokeLinecap="round" filter="url(#eyeGlow)"
       />
     </motion.svg>
   );

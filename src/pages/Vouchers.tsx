@@ -28,20 +28,11 @@ const Vouchers = () => {
   const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!loading && !user) navigate("/auth");
-  }, [loading, user, navigate]);
-
-  useEffect(() => {
-    if (user) fetchVouchers();
-  }, [user]);
+  useEffect(() => { if (!loading && !user) navigate("/auth"); }, [loading, user, navigate]);
+  useEffect(() => { if (user) fetchVouchers(); }, [user]);
 
   const fetchVouchers = async () => {
-    const { data } = await supabase
-      .from("vouchers")
-      .select("*")
-      .eq("user_id", user!.id)
-      .order("created_at", { ascending: false });
+    const { data } = await supabase.from("vouchers").select("*").eq("user_id", user!.id).order("created_at", { ascending: false });
     setVouchers((data || []) as Voucher[]);
   };
 
@@ -66,23 +57,11 @@ const Vouchers = () => {
     const pts = parseInt(pointsToUse, 10);
     if (!canCreate() || !user) return;
     setCreating(true);
-
     const { data: codeData } = await supabase.rpc("generate_voucher_code");
     const code = codeData || `RLO-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
     const claimNaira = Math.floor(pts * 0.5);
-
-    await supabase.from("vouchers").insert({
-      user_id: user.id,
-      voucher_code: code,
-      amount_naira: claimNaira,
-      points_used: pts,
-    });
-
-    await supabase
-      .from("profiles")
-      .update({ points_balance: pointsBalance - pts })
-      .eq("id", user.id);
-
+    await supabase.from("vouchers").insert({ user_id: user.id, voucher_code: code, amount_naira: claimNaira, points_used: pts });
+    await supabase.from("profiles").update({ points_balance: pointsBalance - pts }).eq("id", user.id);
     toast({ title: "Voucher created!", description: `${code} — ${formatNaira(claimNaira)}` });
     setPointsToUse("");
     await fetchVouchers();
@@ -101,13 +80,13 @@ const Vouchers = () => {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[200px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/4 rounded-full blur-[220px]" />
+        <div className="absolute bottom-0 right-[-5%] w-[400px] h-[400px] bg-accent/3 rounded-full blur-[160px]" />
       </div>
       <Navbar />
 
       <section className="min-h-screen flex items-start justify-center px-4 pt-20 pb-8">
         <div className="w-full max-w-md space-y-4">
-          {/* Balance + Claimable */}
           <GlassCard variant="glow" className="text-center">
             <Wallet className="w-8 h-8 text-primary mx-auto mb-2" />
             <p className="text-[10px] text-muted-foreground font-display uppercase tracking-[0.2em]">Points Balance</p>
@@ -126,7 +105,6 @@ const Vouchers = () => {
             </div>
           </GlassCard>
 
-          {/* Restrictions info */}
           {!isOffQueue && (
             <GlassCard className="text-center">
               <Lock className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
@@ -141,42 +119,25 @@ const Vouchers = () => {
             </GlassCard>
           )}
 
-          {/* Create voucher */}
           {isOffQueue && claimableAmount >= 50000 && (
             <GlassCard variant="strong">
               <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-primary" />
-                Create Voucher
+                <Gift className="w-5 h-5 text-primary" /> Create Voucher
               </h3>
-              <p className="text-xs text-muted-foreground mb-3">
-                Minimum 100,000 points (₦50,000). Max claimable: {formatNaira(claimableAmount)}.
-              </p>
-              <input
-                type="number"
-                value={pointsToUse}
-                onChange={(e) => setPointsToUse(e.target.value)}
-                placeholder="Points to use (min 100,000)"
-                max={Math.min(pointsBalance, claimableAmount * 2)}
-                className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mb-2"
-              />
+              <p className="text-xs text-muted-foreground mb-3">Minimum 100,000 points (₦50,000). Max claimable: {formatNaira(claimableAmount)}.</p>
+              <input type="number" value={pointsToUse} onChange={(e) => setPointsToUse(e.target.value)} placeholder="Points to use (min 100,000)" max={Math.min(pointsBalance, claimableAmount * 2)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mb-2" />
               {Number(pointsToUse) > 0 && (
                 <p className="text-sm text-primary font-display font-semibold mb-3">
                   Voucher value: {formatNaira(nairaValue)}
                   {nairaValue > claimableAmount && <span className="text-destructive text-xs ml-2">(exceeds claimable)</span>}
                 </p>
               )}
-              <GlassButton
-                variant="primary"
-                onClick={handleCreate}
-                className="w-full"
-                disabled={creating || !canCreate()}
-              >
+              <GlassButton variant="primary" onClick={handleCreate} className="w-full" disabled={creating || !canCreate()}>
                 {creating ? "Creating..." : "Generate Voucher"}
               </GlassButton>
             </GlassCard>
           )}
 
-          {/* Voucher list */}
           {vouchers.length > 0 && (
             <GlassCard>
               <h3 className="font-display font-semibold text-foreground mb-3">Your Vouchers</h3>
@@ -184,10 +145,7 @@ const Vouchers = () => {
                 {vouchers.map((v) => (
                   <div key={v.id} className="glass rounded-xl p-3">
                     <div className="relative overflow-hidden rounded-xl p-4 mb-2"
-                      style={{
-                        background: "linear-gradient(135deg, hsl(48 96% 53% / 0.2), hsl(40 90% 30% / 0.3))",
-                        border: "1px solid hsl(48 96% 53% / 0.2)",
-                      }}
+                      style={{ background: "linear-gradient(135deg, hsl(217 91% 50% / 0.2), hsl(222 47% 20% / 0.3))", border: "1px solid hsl(217 91% 50% / 0.2)" }}
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -199,9 +157,7 @@ const Vouchers = () => {
                       <p className="font-mono text-xs text-primary mt-2 tracking-widest">{v.voucher_code}</p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(v.created_at).toLocaleDateString()} • {v.points_used.toLocaleString()} pts
-                      </p>
+                      <p className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()} • {v.points_used.toLocaleString()} pts</p>
                       <button onClick={() => handleCopy(v.voucher_code, v.id)} className="text-primary">
                         {copiedId === v.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                       </button>

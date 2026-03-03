@@ -16,7 +16,7 @@ const Navbar = () => {
       transition={{ duration: 0.6 }}
       className="fixed top-0 left-0 right-0 z-50 px-4 pt-3"
     >
-      <div className="max-w-lg mx-auto glass-strong rounded-2xl px-4 py-2.5 flex items-center justify-between">
+      <div className="max-w-2xl mx-auto glass-strong rounded-2xl px-4 py-2.5 flex items-center justify-between">
         <button
           onClick={() => navigate("/")}
           className="font-display text-lg font-bold gradient-text tracking-tight flex items-center"
@@ -29,32 +29,20 @@ const Navbar = () => {
           {user ? (
             <>
               {isAdmin && (
-                <button
-                  onClick={() => navigate("/admin")}
-                  className="p-2 rounded-xl glass-button"
-                  title="Admin"
-                >
+                <button onClick={() => navigate("/admin")} className="p-2 rounded-xl glass-button" title="Admin">
                   <Shield className="w-4 h-4 text-primary" />
                 </button>
               )}
-              <button
-                onClick={() => navigate("/dashboard")}
-                className="p-2 rounded-xl glass-button"
-                title="Dashboard"
-              >
+              <button onClick={() => navigate("/dashboard")} className="p-2 rounded-xl glass-button" title="Dashboard">
                 <LayoutDashboard className="w-4 h-4 text-primary" />
               </button>
-              <button
-                onClick={async () => { await signOut(); navigate("/"); }}
-                className="p-2 rounded-xl glass-button"
-                title="Sign Out"
-              >
+              <button onClick={async () => { await signOut(); navigate("/"); }} className="p-2 rounded-xl glass-button" title="Sign Out">
                 <LogOut className="w-4 h-4 text-muted-foreground" />
               </button>
             </>
           ) : (
             <>
-              <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
+              <span className="w-2 h-2 rounded-full bg-accent pulse-glow" />
               <span className="text-xs text-muted-foreground font-display">Live</span>
             </>
           )}

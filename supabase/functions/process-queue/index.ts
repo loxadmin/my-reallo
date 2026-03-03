@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, queue_position")
-      .gt("queue_position", 1)
+      .gt("queue_position", 0)
       .order("queue_position", { ascending: true });
 
     if (profiles && profiles.length > 0) {
