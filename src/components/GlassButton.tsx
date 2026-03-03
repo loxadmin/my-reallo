@@ -12,12 +12,7 @@ interface GlassButtonProps {
 }
 
 const GlassButton = ({
-  children,
-  className,
-  variant = "default",
-  onClick,
-  disabled,
-  type = "button",
+  children, className, variant = "default", onClick, disabled, type = "button",
 }: GlassButtonProps) => {
   const variants = {
     default: "glass-button text-foreground",
@@ -28,8 +23,8 @@ const GlassButton = ({
   return (
     <motion.button
       type={type}
-      whileHover={{ scale: 1.03, y: -2 }}
-      whileTap={{ scale: 0.97, y: 1 }}
+      whileHover={{ scale: 1.02, y: -1 }}
+      whileTap={{ scale: 0.98, y: 1 }}
       className={cn(
         "px-6 py-3 rounded-2xl font-display text-sm tracking-wide transition-all duration-300",
         variants[variant],

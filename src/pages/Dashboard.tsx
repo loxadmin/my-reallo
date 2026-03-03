@@ -27,18 +27,14 @@ const Dashboard = () => {
   const [activeView, setActiveView] = useState<DashView>("home");
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
+    if (!loading && !user) navigate("/auth");
   }, [loading, user, navigate]);
 
-  // Determine starting step from profile
   useEffect(() => {
     if (profile) {
       if (profile.selected_goal && profile.total_annual_spend > 0) {
         setSpendResult({
-          weeklyData: 0,
-          monthlyElectricity: 0,
+          weeklyData: 0, monthlyElectricity: 0,
           annualData: profile.annual_data_spend,
           annualElectricity: profile.annual_electricity_spend,
           totalAnnual: profile.total_annual_spend,
@@ -46,8 +42,7 @@ const Dashboard = () => {
         setStep("queue");
       } else if (profile.total_annual_spend > 0) {
         setSpendResult({
-          weeklyData: 0,
-          monthlyElectricity: 0,
+          weeklyData: 0, monthlyElectricity: 0,
           annualData: profile.annual_data_spend,
           annualElectricity: profile.annual_electricity_spend,
           totalAnnual: profile.total_annual_spend,
@@ -60,14 +55,11 @@ const Dashboard = () => {
   const handleSpendComplete = async (result: SpendResult) => {
     setSpendResult(result);
     if (user) {
-      await supabase
-        .from("profiles")
-        .update({
-          annual_data_spend: result.annualData,
-          annual_electricity_spend: result.annualElectricity,
-          total_annual_spend: result.totalAnnual,
-        })
-        .eq("id", user.id);
+      await supabase.from("profiles").update({
+        annual_data_spend: result.annualData,
+        annual_electricity_spend: result.annualElectricity,
+        total_annual_spend: result.totalAnnual,
+      }).eq("id", user.id);
       await refreshProfile();
     }
     setStep("goal");
@@ -75,13 +67,9 @@ const Dashboard = () => {
 
   const handleGoalSelect = async (goal: string, target: number) => {
     if (user) {
-      await supabase
-        .from("profiles")
-        .update({
-          selected_goal: goal,
-          target_amount: target,
-        })
-        .eq("id", user.id);
+      await supabase.from("profiles").update({
+        selected_goal: goal, target_amount: target,
+      }).eq("id", user.id);
       await refreshProfile();
     }
     setStep("queue");
@@ -104,20 +92,13 @@ const Dashboard = () => {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[200px]" />
-        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-primary/3 rounded-full blur-[150px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/4 rounded-full blur-[220px]" />
+        <div className="absolute bottom-0 right-[-5%] w-[400px] h-[400px] bg-accent/3 rounded-full blur-[160px]" />
       </div>
-
       <Navbar />
 
       <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
+        <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
           {step === "calculator" && <SpendCalculator onComplete={handleSpendComplete} />}
           {step === "goal" && spendResult && (
             <GoalSelector totalAnnualSpend={spendResult.totalAnnual} onSelect={handleGoalSelect} />
@@ -130,11 +111,7 @@ const Dashboard = () => {
                 targetAmount={profile.target_amount}
                 view={activeView}
               />
-              <BottomNav
-                active={activeView}
-                onChange={setActiveView}
-                showVerify={isOffQueue}
-              />
+              <BottomNav active={activeView} onChange={setActiveView} showVerify={isOffQueue} />
             </>
           )}
         </motion.div>
