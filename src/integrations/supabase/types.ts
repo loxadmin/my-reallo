@@ -191,7 +191,6 @@ export type Database = {
           annual_electricity_spend: number | null
           created_at: string | null
           email: string
-          full_name: string | null
           id: string
           last_active: string | null
           points_balance: number
@@ -207,7 +206,6 @@ export type Database = {
           annual_electricity_spend?: number | null
           created_at?: string | null
           email: string
-          full_name?: string | null
           id: string
           last_active?: string | null
           points_balance?: number
@@ -223,7 +221,6 @@ export type Database = {
           annual_electricity_spend?: number | null
           created_at?: string | null
           email?: string
-          full_name?: string | null
           id?: string
           last_active?: string | null
           points_balance?: number
