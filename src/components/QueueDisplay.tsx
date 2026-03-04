@@ -99,19 +99,19 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
 
   return (
     <section className="min-h-screen flex items-start justify-center px-4 pt-20 pb-28 lg:pt-8 lg:pb-8">
-      <div className="w-full max-w-md lg:max-w-2xl space-y-6">
+      <div className="w-full max-w-md lg:max-w-2xl space-y-4">
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             {/* Header Greeting */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <LayoutGrid className="w-6 h-6 text-primary" />
                 </div>
                 <div>
                   <h3 className="text-foreground uppercase tracking-tight leading-none">
-                    HI {profile?.full_name?.split(' ')[0]?.toUpperCase() || user?.email?.split('@')[0]?.toUpperCase() || "USER"},
+                    HI {user?.email?.split('@')[0]?.toUpperCase() || "USER"},
                   </h3>
                   <p className="text-muted-foreground font-medium mt-1">Welcome back to your dashboard</p>
                 </div>
@@ -122,7 +122,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             </div>
 
             {/* Goal Balance Hero Card */}
-            <GlassCard variant="glow" className="relative overflow-hidden pt-8 pb-8 px-6 mt-0 mb-0">
+            <GlassCard variant="glow" className="relative overflow-hidden pt-8 pb-8 px-6">
               <div className="absolute -top-6 -right-6 p-4 opacity-5 rotate-12">
                 <Target className="w-32 h-32 text-primary" />
               </div>
@@ -174,7 +174,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             </GlassCard>
 
             {/* Our Services Section */}
-            <div className="space-y-4 mt-0 mb-0">
+            <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-foreground">Our Services</h3>
                 <button className="text-primary font-medium hover:underline">View All</button>
@@ -240,7 +240,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             </div>
 
             {/* Referral Banner Section */}
-            <div className="mt-0">
+            <div className="pt-2">
               <button
                 onClick={handleShare}
                 className="w-full flex items-center justify-between p-5 rounded-3xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-all text-left group overflow-hidden relative"

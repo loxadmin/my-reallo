@@ -45,9 +45,9 @@ const RealloEyeLogo = ({ size = 32 }: { size?: number }) => {
     <motion.svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="inline-block mr-1.5" style={{ verticalAlign: "middle", marginBottom: 2 }}>
       <defs>
         <radialGradient id="irisGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#1F6F54" />
-          <stop offset="70%" stopColor="#0F3D2E" />
-          <stop offset="100%" stopColor="#0B2920" />
+          <stop offset="0%" stopColor="hsl(160, 60%, 45%)" />
+          <stop offset="70%" stopColor="hsl(160, 60%, 18%)" />
+          <stop offset="100%" stopColor="hsl(160, 60%, 10%)" />
         </radialGradient>
         <radialGradient id="pupilGrad" cx="40%" cy="40%" r="50%">
           <stop offset="0%" stopColor="hsl(222, 47%, 15%)" />
@@ -81,7 +81,7 @@ const RealloEyeLogo = ({ size = 32 }: { size?: number }) => {
       <motion.path
         initial="open" animate={["open", "closed", "open"]} variants={blinkVariants}
         transition={{ times: [0, 0.4, 1], duration: 0.25, repeat: Infinity, repeatDelay: 3 }}
-        fill="none" stroke="#0F3D2E" strokeWidth="2" filter="url(#eyeGlow)"
+        fill="none" stroke="hsl(160, 60%, 18%)" strokeWidth="2" filter="url(#eyeGlow)"
       />
 
       <g clipPath="url(#eyeClip)" filter="url(#innerShadow)">
@@ -118,14 +118,14 @@ const RealloEyeLogo = ({ size = 32 }: { size?: number }) => {
              M ${w * 0.5} ${cy - h * 0.42} L ${w * 0.5} ${cy - h * 0.65}
              M ${w * 0.62} ${cy - h * 0.38} L ${w * 0.65} ${cy - h * 0.6}
              M ${w * 0.75} ${cy - h * 0.25} L ${w * 0.8} ${cy - h * 0.45}`}
-          fill="none" stroke="#0F3D2E" strokeWidth="1.2" strokeLinecap="round"
+          fill="none" stroke="hsl(160, 60%, 18%)" strokeWidth="1.2" strokeLinecap="round"
         />
       </motion.g>
 
       <motion.path
         initial="open" animate={["open", "closed", "open"]} variants={upperLidVariants}
         transition={{ times: [0, 0.4, 1], duration: 0.25, repeat: Infinity, repeatDelay: 3 }}
-        fill="none" stroke="#0F3D2E" strokeWidth="2.5" strokeLinecap="round" filter="url(#eyeGlow)"
+        fill="none" stroke="hsl(160, 60%, 18%)" strokeWidth="2.5" strokeLinecap="round" filter="url(#eyeGlow)"
       />
     </motion.svg>
   );
