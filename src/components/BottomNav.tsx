@@ -13,7 +13,6 @@ const BottomNav = ({ active, onChange, showVerify }: BottomNavProps) => {
   const items: { id: DashView; label: string; icon: typeof LayoutDashboard }[] = [
     { id: "home", label: "Home", icon: LayoutDashboard },
     { id: "earn", label: "Earn", icon: Award },
-    { id: "goal", label: "Goal", icon: Target },
     ...(showVerify ? [{ id: "verify" as DashView, label: "Verify", icon: ShieldCheck }] : []),
   ];
 
