@@ -12,7 +12,6 @@ import WaterBackground from "@/components/WaterBackground";
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [error, setError] = useState("");
@@ -38,7 +37,7 @@ const Auth = () => {
       if (error) setError(error.message);
       else navigate("/");
     } else {
-      const { error } = await signUp(email, password, fullName, referralCode || undefined);
+      const { error } = await signUp(email, password, referralCode || undefined);
       if (error) setError(error.message);
       else setSignupSuccess(true);
     }
@@ -105,13 +104,6 @@ const Auth = () => {
                 className="space-y-4"
               >
                 <GlassInput label="Email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-
-                {mode === "signup" && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-                    <GlassInput label="Full Name" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-                  </motion.div>
-                )}
-
                 <GlassInput label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
 
                 {mode === "signup" && (
@@ -129,7 +121,7 @@ const Auth = () => {
                   </motion.p>
                 )}
 
-                <GlassButton variant="primary" className="w-full mt-4 text-[13px] py-3.5" onClick={handleSubmit} disabled={loading || !email || !password || (mode === 'signup' && !fullName)}>
+                <GlassButton variant="primary" className="w-full mt-4 text-[13px] py-3.5" onClick={handleSubmit} disabled={loading || !email || !password}>
                   {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
                 </GlassButton>
               </motion.div>

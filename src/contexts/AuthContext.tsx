@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 interface Profile {
   id: string;
   email: string;
-  full_name: string | null;
   annual_data_spend: number;
   annual_electricity_spend: number;
   total_annual_spend: number;
@@ -25,7 +24,7 @@ interface AuthContextType {
   profile: Profile | null;
   isAdmin: boolean;
   loading: boolean;
-  signUp: (email: string, password: string, fullName?: string, referralCode?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, referralCode?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -98,16 +97,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName?: string, referralCode?: string) => {
+  const signUp = async (email: string, password: string, referralCode?: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: {
-          ...(fullName ? { full_name: fullName } : {}),
-          ...(referralCode ? { referral_code: referralCode.toUpperCase() } : {}),
-        },
+        data: referralCode ? { referral_code: referralCode.toUpperCase() } : {},
       },
     });
 
