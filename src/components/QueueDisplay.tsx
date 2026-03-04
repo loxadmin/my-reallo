@@ -104,14 +104,14 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {view === "home" && (
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             {/* Header Greeting */}
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <LayoutGrid className="w-6 h-6 text-primary" />
                 </div>
                 <div>
                   <h3 className="text-foreground uppercase tracking-tight leading-none">
-                    HI {user?.email?.split('@')[0]?.toUpperCase() || "USER"},
+                    Welcome, {profile?.full_name || user?.email?.split('@')[0] || "User"}
                   </h3>
                   <p className="text-muted-foreground font-medium mt-1">Welcome back to your dashboard</p>
                 </div>
@@ -240,7 +240,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             </div>
 
             {/* Referral Banner Section */}
-            <div className="pt-2">
+            <div>
               <button
                 onClick={handleShare}
                 className="w-full flex items-center justify-between p-5 rounded-3xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-all text-left group overflow-hidden relative"
