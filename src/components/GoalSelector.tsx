@@ -64,7 +64,7 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
   if (loading) {
     return (
       <section className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-20">
-        <p className="text-muted-foreground font-display">Loading goals...</p>
+        <p className="text-muted-foreground text-[13px]">Loading goals...</p>
       </section>
     );
   }
@@ -73,8 +73,8 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
     <section className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-20">
       <div className="w-full max-w-md">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <h2 className="font-display text-2xl font-bold text-foreground mb-2">Choose Your Goal</h2>
-          <p className="text-sm text-muted-foreground">Where should your {formatNaira(totalAnnualSpend)} go?</p>
+          <h2 className="text-xl font-bold text-foreground mb-2">Choose Your Goal</h2>
+          <p className="text-[13px] text-muted-foreground">Where should your {formatNaira(totalAnnualSpend)} go?</p>
         </motion.div>
 
         <AnimatePresence mode="wait">
@@ -95,10 +95,10 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3 bg-primary/10 group-hover:bg-primary/20 transition-colors">
                       <Icon className="w-4 h-4 text-primary" />
                     </div>
-                    <p className="font-display font-semibold text-sm text-foreground flex items-center gap-1">
+                    <p className="font-semibold text-[13px] text-foreground flex items-center gap-1">
                       {meta.label} <ChevronRight className="w-3 h-3 text-muted-foreground" />
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">{meta.description}</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">{meta.description}</p>
                   </motion.button>
                 );
               })}
@@ -107,7 +107,7 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
 
           {selectedType && hasSubcategories && !selectedCategory && (
             <motion.div key="subcategories" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-              <button onClick={() => setSelectedType(null)} className="flex items-center gap-1 text-sm text-muted-foreground mb-4 hover:text-primary transition-colors font-display">
+              <button onClick={() => setSelectedType(null)} className="flex items-center gap-1 text-[13px] text-muted-foreground mb-4 hover:text-primary transition-colors">
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
               <div className="space-y-3">
@@ -122,12 +122,12 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-display font-semibold text-foreground">{cat.label}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Max: {formatNaira(cat.max_price)}</p>
+                        <p className="font-semibold text-foreground text-[13px]">{cat.label}</p>
+                        <p className="text-[11px] text-muted-foreground mt-1">Max: {formatNaira(cat.max_price)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-muted-foreground">You can claim</p>
-                        <p className="font-display font-bold text-primary">{formatNaira(Math.min(totalAnnualSpend, cat.max_price))}</p>
+                        <p className="text-[11px] text-muted-foreground">You can claim</p>
+                        <p className="font-bold text-primary text-[13px]">{formatNaira(Math.min(totalAnnualSpend, cat.max_price))}</p>
                       </div>
                     </div>
                   </motion.button>
@@ -140,25 +140,25 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
             <motion.div key="confirm" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
               <button
                 onClick={() => { if (hasSubcategories) setSelectedCategory(null); else { setSelectedType(null); setSelectedCategory(null); } }}
-                className="flex items-center gap-1 text-sm text-muted-foreground mb-4 hover:text-primary transition-colors font-display"
+                className="flex items-center gap-1 text-[13px] text-muted-foreground mb-4 hover:text-primary transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
               <GlassCard variant="glow">
                 <div className="text-center">
-                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-display mb-1">{goalMeta[selectedType!]?.label || selectedType}</p>
-                  <h3 className="font-display text-xl font-bold text-foreground mb-1">{selectedCategory.label}</h3>
-                  <p className="text-xs text-muted-foreground mb-6">Max price set: {formatNaira(selectedCategory.max_price)}</p>
-                  <p className="text-sm text-muted-foreground">Your Claimable Amount</p>
-                  <p className="font-display text-3xl font-bold gradient-text mb-1">{formatNaira(claimableAmount)}</p>
-                  <p className="text-xs text-muted-foreground mb-4">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-widest mb-1">{goalMeta[selectedType!]?.label || selectedType}</p>
+                  <h3 className="text-lg font-bold text-foreground mb-1">{selectedCategory.label}</h3>
+                  <p className="text-[11px] text-muted-foreground mb-6">Max price set: {formatNaira(selectedCategory.max_price)}</p>
+                  <p className="text-[12px] text-muted-foreground">Your Claimable Amount</p>
+                  <p className="font-display text-2xl font-bold gradient-text mb-1">{formatNaira(claimableAmount)}</p>
+                  <p className="text-[11px] text-muted-foreground mb-4">
                     {totalAnnualSpend >= selectedCategory.max_price ? "You qualify for the full amount!" : `Limited to your annual spend of ${formatNaira(totalAnnualSpend)}`}
                   </p>
                   <div className="w-full h-2 bg-muted rounded-full overflow-hidden mb-2">
                     <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 0.8, ease: "easeOut" }} />
                   </div>
-                  <p className="text-xs text-muted-foreground">{formatNaira(claimableAmount)} / {formatNaira(selectedCategory.max_price)} ({progress.toFixed(1)}%)</p>
-                  <GlassButton variant="primary" className="w-full mt-6 text-base py-4" onClick={() => onSelect(selectedCategory.subcategory ? `${selectedType}:${selectedCategory.subcategory}` : selectedType!, claimableAmount)}>
+                  <p className="text-[11px] text-muted-foreground">{formatNaira(claimableAmount)} / {formatNaira(selectedCategory.max_price)} ({progress.toFixed(1)}%)</p>
+                  <GlassButton variant="primary" className="w-full mt-6 text-[13px] py-3.5" onClick={() => onSelect(selectedCategory.subcategory ? `${selectedType}:${selectedCategory.subcategory}` : selectedType!, claimableAmount)}>
                     Claim Now
                   </GlassButton>
                 </div>

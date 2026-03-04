@@ -8,6 +8,9 @@ import SpendCalculator from "@/components/SpendCalculator";
 import GoalSelector from "@/components/GoalSelector";
 import QueueDisplay from "@/components/QueueDisplay";
 import BottomNav, { type DashView } from "@/components/BottomNav";
+import WaterBackground from "@/components/WaterBackground";
+import { LayoutDashboard, Award, Target, ShieldCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type DashStep = "calculator" | "goal" | "queue";
 
@@ -81,7 +84,7 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="glass-card rounded-2xl px-8 py-6">
-          <p className="text-muted-foreground font-display">Loading...</p>
+          <p className="text-muted-foreground text-[13px]">Loading...</p>
         </div>
       </div>
     );
@@ -89,33 +92,69 @@ const Dashboard = () => {
 
   if (!user) return null;
 
+  // Desktop sidebar nav items
+  const sidebarItems: { id: DashView; label: string; icon: typeof LayoutDashboard }[] = [
+    { id: "home", label: "Home", icon: LayoutDashboard },
+    { id: "earn", label: "Earn", icon: Award },
+    { id: "goal", label: "Goal", icon: Target },
+    ...(isOffQueue ? [{ id: "verify" as DashView, label: "Verify", icon: ShieldCheck }] : []),
+  ];
+
   return (
     <div className="relative min-h-screen overflow-x-hidden">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/4 rounded-full blur-[220px]" />
-        <div className="absolute bottom-0 right-[-5%] w-[400px] h-[400px] bg-accent/3 rounded-full blur-[160px]" />
-      </div>
+      <WaterBackground />
       <Navbar />
 
-      <AnimatePresence mode="wait">
-        <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-          {step === "calculator" && <SpendCalculator onComplete={handleSpendComplete} />}
-          {step === "goal" && spendResult && (
-            <GoalSelector totalAnnualSpend={spendResult.totalAnnual} onSelect={handleGoalSelect} />
-          )}
-          {step === "queue" && spendResult && profile && (
-            <>
-              <QueueDisplay
-                totalAnnualSpend={spendResult.totalAnnual}
-                goal={profile.selected_goal || ""}
-                targetAmount={profile.target_amount}
-                view={activeView}
-              />
-              <BottomNav active={activeView} onChange={setActiveView} showVerify={isOffQueue} />
-            </>
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <div className="flex pt-16">
+        {/* Desktop sidebar */}
+        {step === "queue" && (
+          <aside className="hidden lg:flex flex-col w-56 fixed top-16 left-0 bottom-0 z-30 p-4">
+            <div className="glass-strong rounded-2xl p-3 space-y-1 mt-2">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveView(item.id)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200",
+                      activeView === item.id
+                        ? "text-primary bg-primary/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+        )}
+
+        {/* Main content */}
+        <main className={cn("flex-1 w-full", step === "queue" && "lg:ml-56")}>
+          <AnimatePresence mode="wait">
+            <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              {step === "calculator" && <SpendCalculator onComplete={handleSpendComplete} />}
+              {step === "goal" && spendResult && (
+                <GoalSelector totalAnnualSpend={spendResult.totalAnnual} onSelect={handleGoalSelect} />
+              )}
+              {step === "queue" && spendResult && profile && (
+                <>
+                  <QueueDisplay
+                    totalAnnualSpend={spendResult.totalAnnual}
+                    goal={profile.selected_goal || ""}
+                    targetAmount={profile.target_amount}
+                    view={activeView}
+                  />
+                  <BottomNav active={activeView} onChange={setActiveView} showVerify={isOffQueue} />
+                </>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
     </div>
   );
 };

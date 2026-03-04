@@ -109,7 +109,6 @@ const VerifySpendFlow = () => {
   const isComplete = verification?.status === "completed" || verification?.status === "verified";
   const allVerified = transactions.length > 0 && transactions.every(t => t.is_verified);
 
-  // Determine if user can submit today based on frequency
   const canSubmitToday = () => {
     if (!verification || transactions.length === 0) return true;
     const lastSubmission = new Date(transactions[0].submitted_at);
@@ -120,35 +119,34 @@ const VerifySpendFlow = () => {
     return true;
   };
 
-  // No verification started yet
   if (!verification) {
     return (
       <GlassCard variant="strong" className="space-y-4">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-primary" />
-          <h3 className="font-display font-semibold text-foreground">Verify Your Spend</h3>
+          <ShieldCheck className="w-4 h-4 text-primary" />
+          <h3 className="font-semibold text-foreground text-[13px]">Verify Your Spend</h3>
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[12px] text-muted-foreground">
           Before claiming your amount, verify your yearly data spend over 30 days.
         </p>
         {verifySettings.description && (
-          <p className="text-xs text-muted-foreground">{verifySettings.description}</p>
+          <p className="text-[11px] text-muted-foreground">{verifySettings.description}</p>
         )}
         {verifySettings.link && (
           <a href={verifySettings.link} target="_blank" rel="noopener noreferrer">
-            <GlassButton variant="outline" className="w-full text-xs">
+            <GlassButton variant="outline" className="w-full text-[12px]">
               <ExternalLink className="w-3 h-3 mr-1 inline" /> Go to verification link
             </GlassButton>
           </a>
         )}
         <div>
-          <p className="text-xs text-muted-foreground font-display mb-2">Select submission frequency:</p>
+          <p className="text-[11px] text-muted-foreground mb-2">Select submission frequency:</p>
           <div className="flex gap-2">
             {(["daily", "weekly", "monthly"] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFrequency(f)}
-                className={`flex-1 glass rounded-xl py-2 text-xs font-display capitalize transition-all ${frequency === f ? "border border-primary text-primary" : "text-muted-foreground"}`}
+                className={`flex-1 glass rounded-xl py-2 text-[11px] capitalize transition-all ${frequency === f ? "border border-primary text-primary" : "text-muted-foreground"}`}
               >
                 {f}
               </button>
@@ -160,7 +158,7 @@ const VerifySpendFlow = () => {
             {frequency === "monthly" && "Submit transaction IDs once in 30 days"}
           </p>
         </div>
-        <GlassButton variant="primary" className="w-full" onClick={handleStartVerification} disabled={starting}>
+        <GlassButton variant="primary" className="w-full text-[13px]" onClick={handleStartVerification} disabled={starting}>
           {starting ? "Starting..." : "Start 30-Day Verification"}
         </GlassButton>
       </GlassCard>
@@ -171,11 +169,11 @@ const VerifySpendFlow = () => {
     <GlassCard variant="strong" className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-primary" />
-          <h3 className="font-display font-semibold text-foreground">Spend Verification</h3>
+          <ShieldCheck className="w-4 h-4 text-primary" />
+          <h3 className="font-semibold text-foreground text-[13px]">Spend Verification</h3>
         </div>
         {!isComplete && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
             <Clock className="w-3 h-3" />
             <span>{daysLeft}d left</span>
           </div>
@@ -184,17 +182,16 @@ const VerifySpendFlow = () => {
 
       {allVerified && (
         <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="glass rounded-xl p-4 text-center border border-primary/20">
-          <CheckCircle2 className="w-8 h-8 text-primary mx-auto mb-2" />
-          <p className="font-display font-semibold text-foreground">All Transactions Verified!</p>
+          <CheckCircle2 className="w-7 h-7 text-primary mx-auto mb-2" />
+          <p className="font-semibold text-foreground text-[13px]">All Transactions Verified!</p>
           {verification.recalculated_amount !== null && (
-            <p className="text-sm text-primary mt-1">
+            <p className="text-[12px] text-primary mt-1">
               Recalculated claimable: ₦{verification.recalculated_amount?.toLocaleString("en-NG")}
             </p>
           )}
         </motion.div>
       )}
 
-      {/* Submit new transaction ID */}
       {!isComplete && daysLeft > 0 && (
         <div>
           {canSubmitToday() ? (
@@ -203,7 +200,7 @@ const VerifySpendFlow = () => {
                 value={newTxId}
                 onChange={e => setNewTxId(e.target.value)}
                 placeholder="Enter transaction ID"
-                className="flex-1 glass-input rounded-xl px-4 py-3 text-foreground text-sm"
+                className="flex-1 glass-input rounded-xl px-4 py-3 text-foreground text-[13px]"
               />
               <GlassButton variant="primary" onClick={handleSubmitTx} disabled={submitting || !newTxId.trim()} className="px-4">
                 <Plus className="w-4 h-4" />
@@ -211,7 +208,7 @@ const VerifySpendFlow = () => {
             </div>
           ) : (
             <div className="glass rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 Next submission: {verification.frequency === "daily" ? "tomorrow" : verification.frequency === "weekly" ? "in a few days" : "end of period"}
               </p>
             </div>
@@ -219,25 +216,24 @@ const VerifySpendFlow = () => {
         </div>
       )}
 
-      {/* Transaction list */}
       {transactions.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground font-display">Submitted Transactions ({transactions.length})</p>
+          <p className="text-[11px] text-muted-foreground">Submitted Transactions ({transactions.length})</p>
           {transactions.map(tx => (
             <div key={tx.id} className="flex items-center justify-between glass rounded-xl p-3">
               <div>
-                <p className="text-sm font-mono text-foreground">{tx.transaction_id}</p>
+                <p className="text-[13px] font-mono text-foreground">{tx.transaction_id}</p>
                 <p className="text-[10px] text-muted-foreground">{new Date(tx.submitted_at).toLocaleDateString()}</p>
               </div>
               {tx.is_verified ? (
                 <div className="flex items-center gap-1 text-primary">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span className="text-xs">₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span className="text-[11px]">₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1 text-muted-foreground">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-xs">Pending</span>
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span className="text-[11px]">Pending</span>
                 </div>
               )}
             </div>

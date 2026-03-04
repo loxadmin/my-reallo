@@ -32,6 +32,114 @@ export type Database = {
         }
         Relationships: []
       }
+      decision_apps: {
+        Row: {
+          app_logo_url: string | null
+          app_name: string
+          category: string
+          created_at: string
+          id: string
+          is_active: boolean
+          points_select: number
+          points_switch_complete: number
+          points_switch_intent: number
+          referral_link: string | null
+          referral_message: string | null
+          referral_points: number
+          switch_link: string | null
+        }
+        Insert: {
+          app_logo_url?: string | null
+          app_name: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          points_select?: number
+          points_switch_complete?: number
+          points_switch_intent?: number
+          referral_link?: string | null
+          referral_message?: string | null
+          referral_points?: number
+          switch_link?: string | null
+        }
+        Update: {
+          app_logo_url?: string | null
+          app_name?: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          points_select?: number
+          points_switch_complete?: number
+          points_switch_intent?: number
+          referral_link?: string | null
+          referral_message?: string | null
+          referral_points?: number
+          switch_link?: string | null
+        }
+        Relationships: []
+      }
+      decision_responses: {
+        Row: {
+          app_id: string
+          created_at: string
+          has_app: boolean
+          id: string
+          points_awarded: number
+          referral_approved: boolean
+          referral_clicked: boolean
+          referral_screenshot_url: string | null
+          switch_available_at: string | null
+          switch_completed: boolean
+          user_id: string
+          would_switch: boolean | null
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          has_app?: boolean
+          id?: string
+          points_awarded?: number
+          referral_approved?: boolean
+          referral_clicked?: boolean
+          referral_screenshot_url?: string | null
+          switch_available_at?: string | null
+          switch_completed?: boolean
+          user_id: string
+          would_switch?: boolean | null
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          has_app?: boolean
+          id?: string
+          points_awarded?: number
+          referral_approved?: boolean
+          referral_clicked?: boolean
+          referral_screenshot_url?: string | null
+          switch_available_at?: string | null
+          switch_completed?: boolean
+          user_id?: string
+          would_switch?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_responses_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "decision_apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decision_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ghost_users: {
         Row: {
           created_at: string | null

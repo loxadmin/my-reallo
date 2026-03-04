@@ -19,7 +19,7 @@ const BottomNav = ({ active, onChange, showVerify }: BottomNavProps) => {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4"
+      className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4 lg:hidden"
       style={{ paddingBottom: `max(1rem, env(safe-area-inset-bottom))` }}
     >
       <div className="max-w-md mx-auto glass-strong rounded-2xl px-2 py-1.5 flex items-center justify-around">
@@ -37,7 +37,7 @@ const BottomNav = ({ active, onChange, showVerify }: BottomNavProps) => {
               )}
             >
               <Icon className="w-5 h-5" />
-              <span className="text-[10px] font-display font-medium">{item.label}</span>
+              <span className="text-[10px] font-medium">{item.label}</span>
             </button>
           );
         })}

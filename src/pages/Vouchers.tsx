@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
+import WaterBackground from "@/components/WaterBackground";
 import { Gift, Wallet, Copy, Check, Lock, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -79,60 +80,57 @@ const Vouchers = () => {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/4 rounded-full blur-[220px]" />
-        <div className="absolute bottom-0 right-[-5%] w-[400px] h-[400px] bg-accent/3 rounded-full blur-[160px]" />
-      </div>
+      <WaterBackground />
       <Navbar />
 
       <section className="min-h-screen flex items-start justify-center px-4 pt-20 pb-8">
         <div className="w-full max-w-md space-y-4">
           <GlassCard variant="glow" className="text-center">
-            <Wallet className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-[10px] text-muted-foreground font-display uppercase tracking-[0.2em]">Points Balance</p>
-            <motion.p key={pointsBalance} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="font-display text-4xl font-bold gradient-text">
+            <Wallet className="w-7 h-7 text-primary mx-auto mb-2" />
+            <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Points Balance</p>
+            <motion.p key={pointsBalance} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="font-display text-3xl font-bold gradient-text">
               {pointsBalance.toLocaleString()}
             </motion.p>
             <div className="flex items-center justify-center gap-6 mt-3">
               <div>
                 <p className="text-[10px] text-muted-foreground">Claimable</p>
-                <p className="text-sm font-display font-semibold text-primary">{formatNaira(claimableAmount)}</p>
+                <p className="text-[13px] font-semibold text-primary">{formatNaira(claimableAmount)}</p>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground">Already Claimed</p>
-                <p className="text-sm font-display font-semibold text-foreground">{formatNaira(claimedTotal)}</p>
+                <p className="text-[13px] font-semibold text-foreground">{formatNaira(claimedTotal)}</p>
               </div>
             </div>
           </GlassCard>
 
           {!isOffQueue && (
             <GlassCard className="text-center">
-              <Lock className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">You must complete the queue before claiming vouchers.</p>
+              <Lock className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
+              <p className="text-[13px] text-muted-foreground">You must complete the queue before claiming vouchers.</p>
             </GlassCard>
           )}
 
           {claimableAmount < 50000 && isOffQueue && (
             <GlassCard className="text-center">
-              <AlertCircle className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Minimum claimable amount is ₦50,000. Current: {formatNaira(claimableAmount)}</p>
+              <AlertCircle className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
+              <p className="text-[13px] text-muted-foreground">Minimum claimable amount is ₦50,000. Current: {formatNaira(claimableAmount)}</p>
             </GlassCard>
           )}
 
           {isOffQueue && claimableAmount >= 50000 && (
             <GlassCard variant="strong">
-              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-primary" /> Create Voucher
+              <h3 className="font-semibold text-foreground text-[13px] mb-3 flex items-center gap-2">
+                <Gift className="w-4 h-4 text-primary" /> Create Voucher
               </h3>
-              <p className="text-xs text-muted-foreground mb-3">Minimum 100,000 points (₦50,000). Max claimable: {formatNaira(claimableAmount)}.</p>
-              <input type="number" value={pointsToUse} onChange={(e) => setPointsToUse(e.target.value)} placeholder="Points to use (min 100,000)" max={Math.min(pointsBalance, claimableAmount * 2)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mb-2" />
+              <p className="text-[11px] text-muted-foreground mb-3">Minimum 100,000 points (₦50,000). Max claimable: {formatNaira(claimableAmount)}.</p>
+              <input type="number" value={pointsToUse} onChange={(e) => setPointsToUse(e.target.value)} placeholder="Points to use (min 100,000)" max={Math.min(pointsBalance, claimableAmount * 2)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] mb-2" />
               {Number(pointsToUse) > 0 && (
-                <p className="text-sm text-primary font-display font-semibold mb-3">
+                <p className="text-[13px] text-primary font-semibold mb-3">
                   Voucher value: {formatNaira(nairaValue)}
-                  {nairaValue > claimableAmount && <span className="text-destructive text-xs ml-2">(exceeds claimable)</span>}
+                  {nairaValue > claimableAmount && <span className="text-destructive text-[11px] ml-2">(exceeds claimable)</span>}
                 </p>
               )}
-              <GlassButton variant="primary" onClick={handleCreate} className="w-full" disabled={creating || !canCreate()}>
+              <GlassButton variant="primary" onClick={handleCreate} className="w-full text-[13px]" disabled={creating || !canCreate()}>
                 {creating ? "Creating..." : "Generate Voucher"}
               </GlassButton>
             </GlassCard>
@@ -140,24 +138,22 @@ const Vouchers = () => {
 
           {vouchers.length > 0 && (
             <GlassCard>
-              <h3 className="font-display font-semibold text-foreground mb-3">Your Vouchers</h3>
+              <h3 className="font-semibold text-foreground text-[13px] mb-3">Your Vouchers</h3>
               <div className="space-y-3">
                 {vouchers.map((v) => (
                   <div key={v.id} className="glass rounded-xl p-3">
-                    <div className="relative overflow-hidden rounded-xl p-4 mb-2"
-                      style={{ background: "linear-gradient(135deg, hsl(217 91% 50% / 0.2), hsl(222 47% 20% / 0.3))", border: "1px solid hsl(217 91% 50% / 0.2)" }}
-                    >
+                    <div className="relative overflow-hidden rounded-xl p-4 mb-2" style={{ background: "linear-gradient(135deg, hsl(160 60% 18% / 0.15), hsl(160 50% 25% / 0.1))", border: "1px solid hsl(160 60% 18% / 0.15)" }}>
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Reallo Voucher</p>
-                          <p className="font-display text-2xl font-bold gradient-text">{formatNaira(v.amount_naira)}</p>
+                          <p className="font-display text-xl font-bold gradient-text">{formatNaira(v.amount_naira)}</p>
                         </div>
-                        <Gift className="w-8 h-8 text-primary/30" />
+                        <Gift className="w-7 h-7 text-primary/20" />
                       </div>
-                      <p className="font-mono text-xs text-primary mt-2 tracking-widest">{v.voucher_code}</p>
+                      <p className="font-mono text-[11px] text-primary mt-2 tracking-widest">{v.voucher_code}</p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()} • {v.points_used.toLocaleString()} pts</p>
+                      <p className="text-[11px] text-muted-foreground">{new Date(v.created_at).toLocaleDateString()} • {v.points_used.toLocaleString()} pts</p>
                       <button onClick={() => handleCopy(v.voucher_code, v.id)} className="text-primary">
                         {copiedId === v.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                       </button>

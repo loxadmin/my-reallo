@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Space Grotesk"', 'sans-serif'],
+        display: ['"Inter"', 'sans-serif'],
         body: ['"Inter"', 'sans-serif'],
       },
       colors: {
@@ -50,18 +50,6 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
-        },
-        navy: {
-          50: "hsl(220 60% 95%)",
-          100: "hsl(220 50% 85%)",
-          200: "hsl(220 50% 75%)",
-          300: "hsl(220 50% 65%)",
-          400: "hsl(220 50% 55%)",
-          500: "hsl(217 91% 50%)",
-          600: "hsl(220 80% 40%)",
-          700: "hsl(222 70% 30%)",
-          800: "hsl(222 60% 20%)",
-          900: "hsl(222 47% 11%)",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
