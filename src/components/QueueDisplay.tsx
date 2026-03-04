@@ -104,18 +104,20 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {view === "home" && (
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             {/* Header Greeting */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <LayoutGrid className="w-5 h-5 text-primary" />
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <LayoutGrid className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Good morning,</p>
-                  <p className="text-[13px] font-bold text-foreground">{user?.email?.split('@')[0] || "Tech guy"}</p>
+                  <h3 className="text-foreground uppercase tracking-tight leading-none">
+                    HI {user?.email?.split('@')[0]?.toUpperCase() || "USER"},
+                  </h3>
+                  <p className="text-muted-foreground font-medium mt-1">Welcome back to your dashboard</p>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-full bg-foreground/5 border border-foreground/10 flex items-center justify-center">
-                <div className="w-6 h-6 rounded-full bg-primary/20" />
+              <div className="w-12 h-12 rounded-full bg-foreground/5 border border-foreground/10 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-primary/20" />
               </div>
             </div>
 
@@ -125,9 +127,9 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 <Target className="w-32 h-32 text-primary" />
               </div>
 
-              <p className="text-[11px] text-muted-foreground uppercase tracking-[0.2em] font-medium mb-1">Total Balance</p>
+              <p className="text-muted-foreground uppercase tracking-[0.2em] font-medium mb-1">Goal Balance</p>
               <div className="flex items-center gap-2 mb-6">
-                <h2 className="font-display text-4xl font-bold gradient-text tabular-nums">
+                <h2 className="font-display font-bold gradient-text tabular-nums leading-none">
                   {formatNaira(claimableAmount)}
                 </h2>
                 <button className="p-1 hover:bg-foreground/5 rounded-full transition-colors">
@@ -138,8 +140,8 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               {/* Goal Progress */}
               <div className="space-y-2 mb-8">
                 <div className="flex justify-between items-end">
-                  <p className="text-[11px] font-semibold text-foreground">{goalLabels[goal] || goal}</p>
-                  <p className="text-[10px] text-muted-foreground font-medium">{Math.round((claimableAmount / targetAmount) * 100)}%</p>
+                  <p className="font-semibold text-foreground">{goalLabels[goal] || goal}</p>
+                  <p className="text-muted-foreground font-medium">{Math.round((claimableAmount / targetAmount) * 100)}%</p>
                 </div>
                 <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden backdrop-blur-sm">
                   <motion.div
@@ -156,17 +158,17 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 <GlassButton
                   variant="primary"
                   onClick={() => navigate("/vouchers")}
-                  className="flex-1 text-[12px] h-11 rounded-2xl shadow-lg"
+                  className="flex-1 h-12 rounded-2xl shadow-lg"
                   disabled={!canClaim}
                 >
-                  {canClaim ? <><Wallet className="w-4 h-4 mr-2" /> Claim Voucher</> : <><Lock className="w-4 h-4 mr-2" /> Claim Voucher</>}
+                  {canClaim ? <><Wallet className="w-4 h-4" /> Claim Voucher</> : <><Lock className="w-4 h-4" /> Claim Voucher</>}
                 </GlassButton>
                 <GlassButton
                   variant="outline"
                   onClick={() => onViewChange?.("earn")}
-                  className="flex-1 text-[12px] h-11 rounded-2xl bg-white/40 backdrop-blur-md"
+                  className="flex-1 h-12 rounded-2xl bg-white/40 backdrop-blur-md"
                 >
-                  <Award className="w-4 h-4 mr-2" /> Earn Points
+                  <Award className="w-4 h-4" /> Earn Points
                 </GlassButton>
               </div>
             </GlassCard>
@@ -174,21 +176,21 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             {/* Our Services Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
-                <h3 className="text-[14px] font-bold text-foreground">Our Services</h3>
-                <button className="text-[11px] text-primary font-medium hover:underline">View All</button>
+                <h3 className="text-foreground">Our Services</h3>
+                <button className="text-primary font-medium hover:underline">View All</button>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 {/* Major Service 1: Earn */}
                 <button
                   onClick={() => onViewChange?.("earn")}
-                  className="flex flex-col items-start p-4 rounded-3xl bg-white/50 border border-foreground/5 hover:bg-white/70 transition-all group text-left h-36 relative overflow-hidden"
+                  className="layout-grid-item group"
                 >
                   <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <Award className="w-5 h-5 text-orange-600" />
                   </div>
-                  <p className="text-[13px] font-bold text-foreground mb-1">Earn Points</p>
-                  <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">Complete tasks to increase balance</p>
+                  <p className="font-bold text-foreground mb-1">Earn Points</p>
+                  <p className="text-muted-foreground line-clamp-2 leading-relaxed">Complete tasks to increase balance</p>
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </div>
@@ -197,13 +199,13 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 {/* Major Service 2: Verify */}
                 <button
                   onClick={() => isOffQueue ? onViewChange?.("verify") : toast({ title: "Queue Locked", description: "Complete the queue to unlock verification." })}
-                  className="flex flex-col items-start p-4 rounded-3xl bg-white/50 border border-foreground/5 hover:bg-white/70 transition-all group text-left h-36 relative overflow-hidden"
+                  className="layout-grid-item group"
                 >
                   <div className="w-10 h-10 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <Check className="w-5 h-5 text-blue-600" />
                   </div>
-                  <p className="text-[13px] font-bold text-foreground mb-1">Verify Spend</p>
-                  <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">Submit receipts for verification</p>
+                  <p className="font-bold text-foreground mb-1">Verify Spend</p>
+                  <p className="text-muted-foreground line-clamp-2 leading-relaxed">Submit receipts for verification</p>
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </div>
@@ -226,7 +228,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                     <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm", item.bg)}>
                       <item.icon className={cn("w-5 h-5", item.color)} />
                     </div>
-                    <span className="text-[10px] font-medium text-muted-foreground">{item.label}</span>
+                    <span className="font-medium text-muted-foreground">{item.label}</span>
                     {item.info && (
                       <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] px-1.5 py-0.5 rounded-full border border-white min-w-[16px] text-center shadow-sm">
                         {item.info}
@@ -244,11 +246,11 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 className="w-full flex items-center justify-between p-5 rounded-3xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-all text-left group overflow-hidden relative"
               >
                 <div className="flex-1 relative z-10">
-                  <h3 className="text-[14px] font-bold text-foreground mb-1">Refer & Earn</h3>
-                  <p className="text-[11px] text-muted-foreground max-w-[180px] leading-relaxed">
+                  <h3 className="text-foreground mb-1">Refer & Earn</h3>
+                  <p className="text-muted-foreground max-w-[180px] leading-relaxed">
                     Share a referral link to your friend and get rewarded
                   </p>
-                  <div className="mt-4 inline-flex items-center justify-center px-6 py-2 rounded-full bg-primary/10 text-primary text-[11px] font-bold group-hover:bg-primary group-hover:text-white transition-colors">
+                  <div className="mt-4 inline-flex items-center justify-center px-6 py-2 rounded-full bg-primary/10 text-primary font-bold group-hover:bg-primary group-hover:text-white transition-colors">
                     Learn More
                   </div>
                 </div>
@@ -274,10 +276,10 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             <GlassCard variant="strong" className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Award className="w-4 h-4 text-primary" />
-                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Points Balance</p>
+                <p className="text-muted-foreground uppercase tracking-[0.2em]">Points Balance</p>
               </div>
-              <p className="font-display text-2xl font-bold gradient-text">{pointsBalance.toLocaleString()}</p>
-              <p className="text-[11px] text-muted-foreground mt-1">= {formatNaira(Math.floor(pointsBalance * 0.5))} value</p>
+              <h2 className="font-display font-bold gradient-text">{pointsBalance.toLocaleString()}</h2>
+              <p className="text-muted-foreground mt-1">= {formatNaira(Math.floor(pointsBalance * 0.5))} value</p>
             </GlassCard>
             <DecisionFlow />
           </motion.div>
@@ -289,30 +291,30 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             <GlassCard>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Your Goal</p>
-                  <p className="font-semibold text-foreground text-[13px]">{goalLabels[goal] || goal}</p>
+                  <p className="text-muted-foreground uppercase tracking-widest">Your Goal</p>
+                  <p className="font-semibold text-foreground">{goalLabels[goal] || goal}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Claimable</p>
-                  <p className="font-semibold text-primary text-[13px]">{formatNaira(claimableAmount)}</p>
+                  <p className="text-muted-foreground uppercase tracking-widest">Claimable</p>
+                  <p className="font-semibold text-primary">{formatNaira(claimableAmount)}</p>
                 </div>
               </div>
               <div className="mt-3 w-full h-1.5 bg-muted rounded-full overflow-hidden">
                 <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min((claimableAmount / targetAmount) * 100, 100)}%` }} transition={{ duration: 1, delay: 0.3 }} />
               </div>
-              <p className="text-[11px] text-muted-foreground mt-2">{formatNaira(claimableAmount)} / {formatNaira(targetAmount)}</p>
-              {claimedTotal > 0 && <p className="text-[10px] text-muted-foreground mt-1">Already claimed: {formatNaira(claimedTotal)}</p>}
+              <p className="text-muted-foreground mt-2">{formatNaira(claimableAmount)} / {formatNaira(targetAmount)}</p>
+              {claimedTotal > 0 && <p className="text-muted-foreground mt-1 text-[10px]">Already claimed: {formatNaira(claimedTotal)}</p>}
             </GlassCard>
 
-            <GlassButton variant="primary" onClick={() => navigate("/vouchers")} className="w-full text-[13px]" disabled={!canClaim}>
+            <GlassButton variant="primary" onClick={() => navigate("/vouchers")} className="w-full" disabled={!canClaim}>
               {!isOffQueue ? (
-                <><Lock className="inline w-4 h-4 mr-2" /> Complete Queue to Claim</>
+                <><Lock className="inline w-4 h-4" /> Complete Queue to Claim</>
               ) : claimableAmount < 50000 ? (
-                <><Lock className="inline w-4 h-4 mr-2" /> Min ₦50,000 to Claim</>
+                <><Lock className="inline w-4 h-4" /> Min ₦50,000 to Claim</>
               ) : pointsBalance < 100000 ? (
-                <><Lock className="inline w-4 h-4 mr-2" /> Need 100,000 pts to Claim</>
+                <><Lock className="inline w-4 h-4" /> Need 100,000 pts to Claim</>
               ) : (
-                <><Wallet className="inline w-4 h-4 mr-2" /> Claim Amount — Create Voucher</>
+                <><Wallet className="inline w-4 h-4" /> Claim Amount — Create Voucher</>
               )}
             </GlassButton>
           </motion.div>
@@ -324,8 +326,8 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             <VerifySpendFlow />
             {verifyLink && (
               <a href={verifyLink} target="_blank" rel="noopener noreferrer">
-                <GlassButton variant="outline" className="w-full text-[13px]">
-                  <ExternalLink className="inline w-4 h-4 mr-2" /> Verify Expense
+                <GlassButton variant="outline" className="w-full">
+                  <ExternalLink className="inline w-4 h-4" /> Verify Expense
                 </GlassButton>
               </a>
             )}
