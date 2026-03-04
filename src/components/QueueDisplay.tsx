@@ -166,7 +166,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 <GlassButton
                   variant="outline"
                   onClick={() => onViewChange?.("earn")}
-                  className="flex-1 h-12 rounded-2xl bg-white/40 backdrop-blur-md"
+                  className="flex-1 h-12 rounded-2xl"
                 >
                   <Award className="w-4 h-4" /> Earn Points
                 </GlassButton>
@@ -186,8 +186,8 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                   onClick={() => onViewChange?.("earn")}
                   className="layout-grid-item group"
                 >
-                  <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Award className="w-5 h-5 text-orange-600" />
+                  <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Award className="w-5 h-5 text-primary" />
                   </div>
                   <p className="font-bold text-foreground mb-1">Earn Points</p>
                   <p className="text-muted-foreground line-clamp-2 leading-relaxed">Complete tasks to increase balance</p>
@@ -201,8 +201,8 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                   onClick={() => isOffQueue ? onViewChange?.("verify") : toast({ title: "Queue Locked", description: "Complete the queue to unlock verification." })}
                   className="layout-grid-item group"
                 >
-                  <div className="w-10 h-10 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Check className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Check className="w-5 h-5 text-primary" />
                   </div>
                   <p className="font-bold text-foreground mb-1">Verify Spend</p>
                   <p className="text-muted-foreground line-clamp-2 leading-relaxed">Submit receipts for verification</p>
@@ -215,18 +215,18 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               {/* Minor Services Row */}
               <div className="grid grid-cols-4 gap-3">
                 {[
-                  { icon: Gift, label: "Vouchers", action: () => navigate("/vouchers"), color: "text-purple-600", bg: "bg-purple-50" },
-                  { icon: Zap, label: "Queue", action: () => {}, color: "text-amber-600", bg: "bg-amber-50", info: position <= 0 ? "✓" : position.toString() },
-                  { icon: TrendingUp, label: "Stats", action: () => {}, color: "text-emerald-600", bg: "bg-emerald-50", info: todaySkipped.toString() },
-                  { icon: Clock, label: "Timer", action: () => {}, color: "text-rose-600", bg: "bg-rose-50", info: `${nextUnlock.hours}h` },
+                  { icon: Gift, label: "Vouchers", action: () => navigate("/vouchers") },
+                  { icon: Zap, label: "Queue", action: () => {}, info: position <= 0 ? "✓" : position.toString() },
+                  { icon: TrendingUp, label: "Stats", action: () => {}, info: todaySkipped.toString() },
+                  { icon: Clock, label: "Timer", action: () => {}, info: `${nextUnlock.hours}h` },
                 ].map((item, idx) => (
                   <button
                     key={idx}
                     onClick={item.action}
                     className="flex flex-col items-center gap-2 group relative"
                   >
-                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm", item.bg)}>
-                      <item.icon className={cn("w-5 h-5", item.color)} />
+                    <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm dark:bg-white/5">
+                      <item.icon className="w-5 h-5 text-primary" />
                     </div>
                     <span className="font-medium text-muted-foreground">{item.label}</span>
                     {item.info && (

@@ -195,14 +195,15 @@ const VerifySpendFlow = () => {
       {!isComplete && daysLeft > 0 && (
         <div>
           {canSubmitToday() ? (
-            <div className="flex gap-2">
-              <input
-                value={newTxId}
-                onChange={e => setNewTxId(e.target.value)}
-                placeholder="Enter transaction ID"
-                className="flex-1 glass-input rounded-xl px-4 py-3 text-foreground text-[13px]"
-              />
-              <GlassButton variant="primary" onClick={handleSubmitTx} disabled={submitting || !newTxId.trim()} className="px-4">
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <GlassInput
+                  value={newTxId}
+                  onChange={e => setNewTxId(e.target.value)}
+                  placeholder="Enter transaction ID"
+                />
+              </div>
+              <GlassButton variant="primary" onClick={handleSubmitTx} disabled={submitting || !newTxId.trim()} className="h-[46px] px-4">
                 <Plus className="w-4 h-4" />
               </GlassButton>
             </div>

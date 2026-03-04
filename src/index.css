@@ -18,7 +18,7 @@
     --secondary: 140 8% 93%;
     --secondary-foreground: 0 0% 20%;
     --muted: 140 8% 95%;
-    --muted-foreground: 0 0% 33%;
+    --muted-foreground: 0 0% 40%;
     --accent: 160 50% 25%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
@@ -51,7 +51,7 @@
     --secondary: 150 10% 12%;
     --secondary-foreground: 0 0% 85%;
     --muted: 150 8% 14%;
-    --muted-foreground: 0 0% 63%;
+    --muted-foreground: 150 5% 75%;
     --accent: 160 40% 30%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
@@ -199,31 +199,31 @@
 
   /* ── Dark-mode glass overrides ── */
   :root.dark .glass {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
   :root.dark .glass-strong {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
   :root.dark .glass-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+    background: rgba(15, 61, 46, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
   :root.dark .glass-pill {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
   }
   :root.dark .glass-stat {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.06);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   }
   :root.dark .glass-button {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
   }
   :root.dark .glass-button:hover {
     background: hsl(160 45% 35% / 0.12);
@@ -249,8 +249,8 @@
     border-color: hsl(160 45% 35% / 0.45);
   }
   :root.dark .glass-input {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
   :root.dark .glass-input:focus {
     border-color: hsl(160 45% 35% / 0.5);
