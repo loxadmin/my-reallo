@@ -96,7 +96,6 @@ const Dashboard = () => {
   const sidebarItems: { id: DashView; label: string; icon: typeof LayoutDashboard }[] = [
     { id: "home", label: "Home", icon: LayoutDashboard },
     { id: "earn", label: "Earn", icon: Award },
-    { id: "goal", label: "Goal", icon: Target },
     ...(isOffQueue ? [{ id: "verify" as DashView, label: "Verify", icon: ShieldCheck }] : []),
   ];
 
@@ -147,6 +146,7 @@ const Dashboard = () => {
                     goal={profile.selected_goal || ""}
                     targetAmount={profile.target_amount}
                     view={activeView}
+                    onViewChange={setActiveView}
                   />
                   <BottomNav active={activeView} onChange={setActiveView} showVerify={isOffQueue} />
                 </>
