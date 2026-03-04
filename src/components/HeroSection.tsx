@@ -4,7 +4,6 @@ import GlassButton from "./GlassButton";
 import CountUpAnimation from "./CountUpAnimation";
 import { supabase } from "@/integrations/supabase/client";
 import { MoveRight, TrendingUp, Users, Shield } from "lucide-react";
-import RealloEyeLogo from "./RealloEyeLogo";
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -36,25 +35,11 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-24 pb-16 overflow-hidden">
-      {/* Ambient background */}
-      <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-primary/8 blur-[200px] pointer-events-none" />
-      <div className="absolute bottom-[5%] right-[-10%] w-[400px] h-[400px] rounded-full bg-accent/6 blur-[160px] pointer-events-none" />
-      <div className="absolute top-[30%] left-[-8%] w-[300px] h-[300px] rounded-full bg-primary/4 blur-[120px] pointer-events-none" />
-
-      {/* Dot grid */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage: `radial-gradient(hsl(217 91% 60% / 0.5) 1px, transparent 1px)`,
-          backgroundSize: "40px 40px",
-        }}
-      />
-
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-        className="z-10 w-full max-w-lg mx-auto text-center"
+        className="z-10 w-full max-w-2xl mx-auto text-center"
       >
         {/* Status pill */}
         <motion.div
@@ -63,18 +48,18 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           transition={{ delay: 0.2, duration: 0.5 }}
           className="inline-flex items-center gap-2.5 glass-pill rounded-full px-5 py-2 mb-8"
         >
-          <span className="w-2 h-2 rounded-full bg-accent pulse-glow" />
-          <span className="text-xs font-display text-accent/80 tracking-[0.15em] uppercase">
+          <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
+          <span className="text-[11px] font-medium text-muted-foreground tracking-[0.12em] uppercase">
             Reclaim What's Yours
           </span>
         </motion.div>
 
-        {/* Headline with animated word */}
+        {/* Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.7 }}
-          className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] mb-4"
+          className="font-display text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] mb-5"
         >
           <span className="text-foreground">Stop </span>
           <span className="relative inline-flex flex-col h-[1.15em] overflow-hidden">
@@ -104,51 +89,70 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.7 }}
-          className="text-muted-foreground text-sm sm:text-base lg:text-lg mb-8 leading-relaxed max-w-md mx-auto"
+          className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto mb-8 leading-relaxed"
         >
           Calculate your annual utility spend and claim it back toward your life goals.
         </motion.p>
 
-        {/* CTA Buttons */}
+        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.5 }}
           className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto"
         >
-          <GlassButton variant="primary" onClick={onGetStarted} className="text-sm px-8 py-4 flex-1">
+          <GlassButton variant="primary" onClick={onGetStarted} className="text-[13px] px-8 py-3.5 flex-1">
             Calculate & Claim <MoveRight className="inline w-4 h-4 ml-2" />
           </GlassButton>
-          <GlassButton variant="outline" className="text-sm px-8 py-4 flex-1">
+          <GlassButton variant="outline" className="text-[13px] px-8 py-3.5 flex-1">
             How It Works
           </GlassButton>
         </motion.div>
 
-        {/* Stats row */}
+        {/* Stats */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.7 }}
-          className="grid grid-cols-3 gap-3 sm:gap-4 mt-10 max-w-md mx-auto"
+          className="grid grid-cols-3 gap-3 sm:gap-4 mt-12 max-w-md mx-auto"
         >
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
             <Users className="w-4 h-4 text-primary mx-auto mb-1.5" />
             <p className="font-display text-lg sm:text-xl font-bold text-primary glow-text">
               <CountUpAnimation end={queueCount} duration={2} suffix="+" />
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5 tracking-wide">In Queue</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">In Queue</p>
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
-            <TrendingUp className="w-4 h-4 text-accent mx-auto mb-1.5" />
-            <p className="font-display text-lg sm:text-xl font-bold text-accent">₦0</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5 tracking-wide">To Join</p>
+            <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1.5" />
+            <p className="font-display text-lg sm:text-xl font-bold text-primary">₦0</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">To Join</p>
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
             <Shield className="w-4 h-4 text-primary mx-auto mb-1.5" />
             <p className="font-display text-lg sm:text-xl font-bold text-primary glow-text">5x</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5 tracking-wide">Skip / Referral</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Skip / Referral</p>
           </div>
         </motion.div>
+      </motion.div>
+
+      {/* Feature cards below hero */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.1, duration: 0.7 }}
+        className="z-10 w-full max-w-3xl mx-auto mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 px-4"
+      >
+        {[
+          { title: "Calculate", desc: "Know exactly what you spend on data & electricity yearly." },
+          { title: "Join Queue", desc: "Get in line. Refer friends to skip ahead faster." },
+          { title: "Claim Back", desc: "Once off queue, claim your spend toward real goals." },
+        ].map((item, i) => (
+          <div key={i} className="glass-card rounded-2xl p-5 text-center">
+            <p className="text-[13px] font-semibold text-foreground mb-1">{item.title}</p>
+            <p className="text-[12px] text-muted-foreground leading-relaxed">{item.desc}</p>
+          </div>
+        ))}
       </motion.div>
     </section>
   );

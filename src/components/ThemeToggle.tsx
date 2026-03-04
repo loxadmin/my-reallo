@@ -2,27 +2,27 @@ import { useState } from "react";
 import { Sun, Moon } from "lucide-react";
 
 const ThemeToggle = () => {
-  const [isLight, setIsLight] = useState(
-    () => document.documentElement.classList.contains("light")
+  const [isDark, setIsDark] = useState(
+    () => document.documentElement.classList.contains("dark")
   );
 
   const toggle = () => {
-    document.documentElement.classList.toggle("light");
-    const nowLight = document.documentElement.classList.contains("light");
-    setIsLight(nowLight);
-    localStorage.setItem("reallo-theme", nowLight ? "light" : "dark");
+    document.documentElement.classList.toggle("dark");
+    const nowDark = document.documentElement.classList.contains("dark");
+    setIsDark(nowDark);
+    localStorage.setItem("reallo-theme", nowDark ? "dark" : "light");
   };
 
   return (
     <button
       onClick={toggle}
       className="p-2 rounded-xl glass-button"
-      title={isLight ? "Switch to dark mode" : "Switch to light mode"}
+      title={isDark ? "Switch to day mode" : "Switch to night mode"}
     >
-      {isLight ? (
-        <Moon className="w-4 h-4 text-primary" />
-      ) : (
+      {isDark ? (
         <Sun className="w-4 h-4 text-primary" />
+      ) : (
+        <Moon className="w-4 h-4 text-primary" />
       )}
     </button>
   );
