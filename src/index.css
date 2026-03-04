@@ -79,10 +79,22 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
+    font-size: 13px;
   }
+  h1 { font-size: 60px; @apply font-bold tracking-tight; }
+  h2 { font-size: 40px; @apply font-bold tracking-tight; }
+  h3 { font-size: 22px; @apply font-bold tracking-tight; }
+  button, input, select, textarea { font-size: 13px !important; }
 }
 
 @layer components {
+  .layout-grid-item {
+    @apply bg-white/50 border border-foreground/5 rounded-3xl p-4 transition-all hover:bg-white/70 flex flex-col items-start text-left h-36 relative overflow-hidden;
+  }
+  :root.dark .layout-grid-item {
+    @apply bg-white/5 border border-white/5 hover:bg-white/10;
+  }
+
   /* ── Glass components ── */
   .glass {
     background: rgba(255,255,255,0.55);
