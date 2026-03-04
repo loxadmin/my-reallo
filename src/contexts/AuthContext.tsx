@@ -13,6 +13,7 @@ interface Profile {
   queue_position: number;
   referral_code: string | null;
   referred_by: string | null;
+  full_name: string | null;
   last_active: string;
   created_at: string;
   points_balance: number;
@@ -24,7 +25,7 @@ interface AuthContextType {
   profile: Profile | null;
   isAdmin: boolean;
   loading: boolean;
-  signUp: (email: string, password: string, referralCode?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, referralCode?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -97,13 +98,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, referralCode?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: referralCode ? { referral_code: referralCode.toUpperCase() } : {},
+        data: {
+          full_name: fullName,
+          ...(referralCode ? { referral_code: referralCode.toUpperCase() } : {}),
+        },
       },
     });
 
