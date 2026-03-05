@@ -25,24 +25,8 @@ interface SpendResult {
 const Dashboard = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const [step, setStep] = useState<DashStep>(() => {
-    if (profile?.selected_goal && profile?.total_annual_spend > 0) return "queue";
-    if (profile?.total_annual_spend > 0) return "goal";
-    return "calculator";
-  });
-  const [spendResult, setSpendResult] = useState<SpendResult | null>(() => {
-    if (profile?.total_annual_spend > 0) {
-      return {
-        weeklyData: 0,
-        monthlyElectricity: 0,
-        annualData: profile.annual_data_spend,
-        annualElectricity: profile.annual_electricity_spend,
-        total_annual_spend: profile.total_annual_spend,
-        totalAnnual: profile.total_annual_spend,
-      } as any;
-    }
-    return null;
-  });
+  const [step, setStep] = useState<DashStep>("calculator");
+  const [spendResult, setSpendResult] = useState<SpendResult | null>(null);
   const [activeView, setActiveView] = useState<DashView>("home");
 
   useEffect(() => {
@@ -149,12 +133,6 @@ const Dashboard = () => {
 
         {/* Main content */}
         <main className={cn("flex-1 w-full", step === "queue" && "lg:ml-56")}>
-          <div className="px-4 pt-6 pb-2">
-            <h1 className="text-2xl font-bold text-foreground">
-              Welcome back, {user?.email?.split('@')[0] || "User"}!
-            </h1>
-          </div>
-
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
               {step === "calculator" && <SpendCalculator onComplete={handleSpendComplete} />}
