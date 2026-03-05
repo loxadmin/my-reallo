@@ -40,12 +40,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .single();
-    setProfile(data as Profile | null);
+
+    if (error) {
+      console.error("fetchProfile error:", error.message);
+      setProfile(null);
+      return;
+    }
+
+    setProfile((data ?? null) as Profile | null);
   };
 
   const checkAdmin = async (userId: string) => {
@@ -65,36 +72,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!mounted) return;
+
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+        await checkAdmin(session.user.id);
+      } else {
+        setProfile(null);
+        setIsAdmin(false);
+      }
+
+      setLoading(false);
+    };
+
+    init();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          setTimeout(async () => {
-            await fetchProfile(session.user.id);
-            await checkAdmin(session.user.id);
-            setLoading(false);
-          }, 0);
+          await fetchProfile(session.user.id);
+          await checkAdmin(session.user.id);
         } else {
           setProfile(null);
           setIsAdmin(false);
-          setLoading(false);
         }
+
+        setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-        checkAdmin(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, referralCode?: string) => {
