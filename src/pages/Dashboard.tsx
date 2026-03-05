@@ -104,10 +104,10 @@ const Dashboard = () => {
       <WaterBackground />
       <Navbar />
 
-      <div className="flex pt-16">
+      <div className="flex pt-14">
         {/* Desktop sidebar */}
         {step === "queue" && (
-          <aside className="hidden lg:flex flex-col w-56 fixed top-16 left-0 bottom-0 z-30 p-4">
+          <aside className="hidden lg:flex flex-col w-56 fixed top-14 left-0 bottom-0 z-30 p-4">
             <div className="glass-strong rounded-2xl p-3 space-y-1 mt-2">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
