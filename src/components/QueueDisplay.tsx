@@ -104,11 +104,13 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {view === "home" && (
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             {/* Welcome Section */}
-            <div className="px-1">
-              <h2 className="text-xl font-bold text-foreground leading-tight">
-                Hi, {user?.email?.split('@')[0] || 'User'}
+            <div className="px-1 py-2 mb-2">
+              <h2 className="text-2xl font-bold text-foreground tracking-tight">
+                Hi, {user?.email?.split('@')?.[0] || profile?.email?.split('@')?.[0] || 'User'}
               </h2>
-              <p className="text-muted-foreground text-[12px]">Welcome back</p>
+              <p className="text-muted-foreground text-[13px] font-medium">
+                Welcome back to your Reallo dashboard
+              </p>
             </div>
 
             {/* Goal Balance Hero Card */}
