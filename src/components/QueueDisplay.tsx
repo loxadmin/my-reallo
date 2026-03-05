@@ -7,9 +7,9 @@ import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import DecisionFlow from "./DecisionFlow";
 import VerifySpendFlow from "./VerifySpendFlow";
-import { Users, Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, Target, Eye, Megaphone, ChevronRight } from "lucide-react";
+import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import type { DashView } from "./BottomNav";
+import type { DashView } from "@/pages/Dashboard";
 import { cn } from "@/lib/utils";
 
 interface QueueDisplayProps {
@@ -30,7 +30,7 @@ const goalLabels: Record<string, string> = {
 };
 
 const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange }: QueueDisplayProps) => {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
@@ -44,7 +44,6 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
     ? `${window.location.origin}/auth?ref=${profile.referral_code}`
     : "";
 
-  const isNext = position <= 1;
   const isOffQueue = position <= 0;
   const pointsBalance = profile?.points_balance ?? 0;
   const claimableAmount = Math.max(0, totalAnnualSpend - claimedTotal);
@@ -98,7 +97,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   };
 
   return (
-    <section className="min-h-screen flex items-start justify-center px-4 pt-4 pb-28 lg:pt-8 lg:pb-8">
+    <section className="min-h-screen flex items-start justify-center px-4 pt-4 pb-12 lg:pt-8 lg:pb-8">
       <div className="w-full max-w-md lg:max-w-2xl space-y-4">
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
