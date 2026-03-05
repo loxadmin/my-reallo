@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, Shield, LayoutDashboard } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import RealloLogo from "./RealloLogo";
 
 const Navbar = () => {
   const { user, isAdmin, signOut } = useAuth();
@@ -12,9 +13,10 @@ const Navbar = () => {
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         <button
           onClick={() => navigate("/")}
-          className="font-display text-[13px] font-bold text-foreground tracking-tight"
+          className="font-display text-[13px] font-bold text-foreground tracking-tight flex items-center gap-1.5 group"
         >
-          <span className="gradient-text">Reallo</span>
+          <RealloLogo size={24} />
+          <span className="gradient-text group-hover:opacity-80 transition-opacity">Reallo</span>
         </button>
         <div className="flex items-center gap-1">
           <ThemeToggle />

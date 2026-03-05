@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Mail, Lock, UserPlus, LogIn, Gift } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import WaterBackground from "@/components/WaterBackground";
+import RealloLogo from "@/components/RealloLogo";
 
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -55,7 +56,8 @@ const Auth = () => {
         className="w-full max-w-md z-10"
       >
         <div className="text-center mb-8">
-          <h1 className="font-display text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
+          <h1 className="font-display text-2xl font-bold text-foreground mb-2 flex flex-col items-center justify-center gap-3">
+            <RealloLogo size={48} />
             <span className="gradient-text">Reallo</span>
           </h1>
           <p className="text-[13px] text-muted-foreground">Reclaim what's yours</p>
