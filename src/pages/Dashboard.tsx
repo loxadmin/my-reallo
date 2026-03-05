@@ -7,10 +7,12 @@ import Navbar from "@/components/Navbar";
 import SpendCalculator from "@/components/SpendCalculator";
 import GoalSelector from "@/components/GoalSelector";
 import QueueDisplay from "@/components/QueueDisplay";
-import BottomNav, { type DashView } from "@/components/BottomNav";
 import WaterBackground from "@/components/WaterBackground";
-import { LayoutDashboard, Award, Target, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Award, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+
+export type DashView = "home" | "earn" | "goal" | "verify";
 
 type DashStep = "calculator" | "goal" | "queue";
 
@@ -92,8 +94,8 @@ const Dashboard = () => {
 
   if (!user) return null;
 
-  // Desktop sidebar nav items
-  const sidebarItems: { id: DashView; label: string; icon: typeof LayoutDashboard }[] = [
+  // Sidebar nav items
+  const navItems: { id: DashView; label: string; icon: typeof LayoutDashboard }[] = [
     { id: "home", label: "Home", icon: LayoutDashboard },
     { id: "earn", label: "Earn", icon: Award },
     ...(isOffQueue ? [{ id: "verify" as DashView, label: "Verify", icon: ShieldCheck }] : []),
@@ -102,14 +104,28 @@ const Dashboard = () => {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <WaterBackground />
-      <Navbar />
+      <Navbar>
+        {step === "queue" && navItems.map((item) => (
+          <DropdownMenuItem
+            key={item.id}
+            onClick={() => setActiveView(item.id)}
+            className={cn(
+              "flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] transition-colors",
+              activeView === item.id ? "text-primary bg-primary/10" : "text-muted-foreground"
+            )}
+          >
+            <item.icon className="w-4 h-4" />
+            {item.label}
+          </DropdownMenuItem>
+        ))}
+      </Navbar>
 
       <div className="flex pt-14">
         {/* Desktop sidebar */}
         {step === "queue" && (
           <aside className="hidden lg:flex flex-col w-56 fixed top-14 left-0 bottom-0 z-30 p-4">
             <div className="glass-strong rounded-2xl p-3 space-y-1 mt-2">
-              {sidebarItems.map((item) => {
+              {navItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <button
@@ -140,16 +156,13 @@ const Dashboard = () => {
                 <GoalSelector totalAnnualSpend={spendResult.totalAnnual} onSelect={handleGoalSelect} />
               )}
               {step === "queue" && spendResult && profile && (
-                <>
-                  <QueueDisplay
-                    totalAnnualSpend={spendResult.totalAnnual}
-                    goal={profile.selected_goal || ""}
-                    targetAmount={profile.target_amount}
-                    view={activeView}
-                    onViewChange={setActiveView}
-                  />
-                  <BottomNav active={activeView} onChange={setActiveView} showVerify={isOffQueue} />
-                </>
+                <QueueDisplay
+                  totalAnnualSpend={spendResult.totalAnnual}
+                  goal={profile.selected_goal || ""}
+                  targetAmount={profile.target_amount}
+                  view={activeView}
+                  onViewChange={setActiveView}
+                />
               )}
             </motion.div>
           </AnimatePresence>
