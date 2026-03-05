@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
-import { Award, CheckSquare, ExternalLink, Clock, Upload, X } from "lucide-react";
+import { Award, CheckSquare, ExternalLink, Clock, Upload, X, History, Zap } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface DecisionApp {
@@ -35,9 +35,10 @@ interface DecisionResponse {
   points_awarded: number;
 }
 
-// Use raw queries since types aren't regenerated yet
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromResponses = () => supabase.from("decision_responses" as any);
+
+type EarnTab = "earn" | "ongoing" | "past";
 
 const DecisionFlow = () => {
   const { user, refreshProfile } = useAuth();
@@ -49,6 +50,9 @@ const DecisionFlow = () => {
   const [referralOffer, setReferralOffer] = useState<DecisionApp | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [earnTab, setEarnTab] = useState<EarnTab>("earn");
+  const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) fetchData();
@@ -84,37 +88,25 @@ const DecisionFlow = () => {
       if (app.category === "yes_no") {
         if (hasApp) {
           await fromResponses().insert({
-            user_id: user.id,
-            app_id: app.id,
-            has_app: true,
-            would_switch: null,
-            points_awarded: app.points_select,
+            user_id: user.id, app_id: app.id, has_app: true,
+            would_switch: null, points_awarded: app.points_select,
           });
           const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
           await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.points_select }).eq("id", user.id);
         } else {
           await fromResponses().insert({
-            user_id: user.id,
-            app_id: app.id,
-            has_app: false,
-            points_awarded: 0,
+            user_id: user.id, app_id: app.id, has_app: false, points_awarded: 0,
           });
         }
       } else if (app.category === "referral") {
         if (hasApp) {
           await fromResponses().insert({
-            user_id: user.id,
-            app_id: app.id,
-            has_app: true,
-            points_awarded: 0,
+            user_id: user.id, app_id: app.id, has_app: true, points_awarded: 0,
           });
         } else {
           await fromResponses().insert({
-            user_id: user.id,
-            app_id: app.id,
-            has_app: false,
-            referral_clicked: false,
-            points_awarded: 0,
+            user_id: user.id, app_id: app.id, has_app: false,
+            referral_clicked: false, points_awarded: 0,
           });
         }
       }
@@ -134,16 +126,14 @@ const DecisionFlow = () => {
 
     const { data: resp } = await fromResponses()
       .select("*").eq("user_id", user.id).eq("app_id", app.id).single();
-    
+
     if (resp) {
       const r = resp as any;
       const newPoints = r.points_awarded + app.points_switch_intent;
       await fromResponses().update({
-        would_switch: true,
-        switch_available_at: switchDate.toISOString(),
-        points_awarded: newPoints,
+        would_switch: true, switch_available_at: switchDate.toISOString(), points_awarded: newPoints,
       }).eq("id", r.id);
-      
+
       const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
       await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.points_switch_intent }).eq("id", user.id);
     }
@@ -172,30 +162,48 @@ const DecisionFlow = () => {
     toast({ title: "Action recorded", description: "Submit a screenshot for admin approval to earn points." });
   };
 
-  const handleScreenshotUpload = async (appId: string) => {
+  const handleScreenshotUpload = async (appId: string, file: File) => {
     if (!user) return;
-    await fromResponses().update({ 
-      referral_screenshot_url: "pending_review" 
+
+    const fileExt = file.name.split(".").pop();
+    const filePath = `${user.id}/${appId}-${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("admin-uploads")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast({ title: "Upload failed", description: uploadError.message });
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("admin-uploads")
+      .getPublicUrl(filePath);
+
+    await fromResponses().update({
+      referral_screenshot_url: urlData.publicUrl || "pending_review",
     }).eq("user_id", user.id).eq("app_id", appId);
+
     toast({ title: "Screenshot submitted", description: "Admin will review and approve your points." });
+    setUploadingFor(null);
     await fetchData();
   };
 
   const handleSwitchComplete = async (app: DecisionApp) => {
     if (!user || !app.switch_link) return;
     window.open(app.switch_link, "_blank");
-    
+
     const { data: resp } = await fromResponses()
       .select("*").eq("user_id", user.id).eq("app_id", app.id).single();
-    
+
     if (resp) {
       const r = resp as any;
       const newPoints = r.points_awarded + app.points_switch_complete;
       await fromResponses().update({
-        switch_completed: true,
-        points_awarded: newPoints,
+        switch_completed: true, points_awarded: newPoints,
       }).eq("id", r.id);
-      
+
       const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
       await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.points_switch_complete }).eq("id", user.id);
     }
@@ -207,10 +215,28 @@ const DecisionFlow = () => {
 
   if (!user) return null;
 
+  // Hidden file input for screenshot uploads
+  const fileInput = (
+    <input
+      ref={fileInputRef}
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file && uploadingFor) {
+          handleScreenshotUpload(uploadingFor, file);
+        }
+        e.target.value = "";
+      }}
+    />
+  );
+
   // Switch prompt modal
   if (switchPrompt) {
     return (
       <GlassCard variant="glow" className="space-y-4">
+        {fileInput}
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-foreground text-[13px]">Switch Offer</h3>
           <button onClick={() => setSwitchPrompt(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
@@ -237,6 +263,7 @@ const DecisionFlow = () => {
   if (referralOffer) {
     return (
       <GlassCard variant="glow" className="space-y-4">
+        {fileInput}
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-foreground text-[13px]">Try This App</h3>
           <button onClick={() => setReferralOffer(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
@@ -254,111 +281,178 @@ const DecisionFlow = () => {
     );
   }
 
-  // Already submitted - show results
+  // Classify responses
+  const getResponseStatus = (resp: DecisionResponse, app: DecisionApp | undefined) => {
+    if (!app) return "past";
+    // Completed/past: yes_no with switch done or no switch, referral approved or has_app
+    if (app.category === "yes_no") {
+      if (resp.switch_completed) return "past";
+      if (resp.would_switch === false) return "past";
+      if (resp.has_app && resp.would_switch === null) return "earn"; // switch offer pending
+      if (resp.would_switch === true && !resp.switch_completed) return "ongoing"; // waiting 30 days
+      if (!resp.has_app && resp.would_switch === null) return "past"; // didn't have, no action
+      return "past";
+    }
+    if (app.category === "referral") {
+      if (resp.has_app) return "past"; // selected it, no action
+      if (resp.referral_approved) return "past"; // approved
+      if (resp.referral_screenshot_url) return "ongoing"; // pending review
+      if (resp.referral_clicked) return "earn"; // clicked but no screenshot yet
+      if (!resp.has_app && !resp.referral_clicked) return "earn"; // offer available
+      return "past";
+    }
+    return "past";
+  };
+
+  // Already submitted - show results with tabs
   if (hasSubmitted && responses.length > 0) {
+    const earnResponses = responses.filter(r => getResponseStatus(r, apps.find(a => a.id === r.app_id)) === "earn");
+    const ongoingResponses = responses.filter(r => getResponseStatus(r, apps.find(a => a.id === r.app_id)) === "ongoing");
+    const pastResponses = responses.filter(r => getResponseStatus(r, apps.find(a => a.id === r.app_id)) === "past");
+
+    const currentList = earnTab === "earn" ? earnResponses : earnTab === "ongoing" ? ongoingResponses : pastResponses;
+
     return (
       <div className="space-y-3">
-        <h3 className="font-semibold text-foreground text-[13px] flex items-center gap-2">
-          <Award className="w-4 h-4 text-primary" />
-          Earn Points
-        </h3>
+        {fileInput}
+        {/* Tab bar */}
+        <div className="flex gap-1 p-1 rounded-xl glass">
+          {([
+            { id: "earn" as EarnTab, label: "Earn", icon: Zap, count: earnResponses.length },
+            { id: "ongoing" as EarnTab, label: "Ongoing", icon: Clock, count: ongoingResponses.length },
+            { id: "past" as EarnTab, label: "Past", icon: History, count: pastResponses.length },
+          ]).map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setEarnTab(tab.id)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium transition-all ${
+                earnTab === tab.id ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <tab.icon className="w-3.5 h-3.5" />
+              {tab.label} ({tab.count})
+            </button>
+          ))}
+        </div>
 
-        {responses.map((resp) => {
-          const app = apps.find(a => a.id === resp.app_id);
-          if (!app) return null;
+        <AnimatePresence mode="wait">
+          <motion.div key={earnTab} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2">
+            {currentList.length === 0 && (
+              <GlassCard className="text-center py-8">
+                <p className="text-muted-foreground text-[12px]">No {earnTab === "earn" ? "available" : earnTab} earnings</p>
+              </GlassCard>
+            )}
 
-          const now = new Date();
-          const switchAvailable = resp.switch_available_at ? new Date(resp.switch_available_at) : null;
-          const canSwitch = switchAvailable && now >= switchAvailable && !resp.switch_completed;
-          const daysUntilSwitch = switchAvailable && now < switchAvailable
-            ? Math.ceil((switchAvailable.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-            : 0;
+            {currentList.map((resp) => {
+              const app = apps.find(a => a.id === resp.app_id);
+              if (!app) return null;
 
-          return (
-            <GlassCard key={resp.id} className="p-4" animate={false}>
-              <div className="flex items-center gap-3">
-                {app.app_logo_url ? (
-                  <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
-                ) : (
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">
-                    {app.app_name.charAt(0)}
+              const now = new Date();
+              const switchAvailable = resp.switch_available_at ? new Date(resp.switch_available_at) : null;
+              const canSwitch = switchAvailable && now >= switchAvailable && !resp.switch_completed;
+              const daysUntilSwitch = switchAvailable && now < switchAvailable
+                ? Math.ceil((switchAvailable.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+                : 0;
+
+              return (
+                <GlassCard key={resp.id} className="p-4" animate={false}>
+                  <div className="flex items-center gap-3">
+                    {app.app_logo_url ? (
+                      <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">
+                        {app.app_name.charAt(0)}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-foreground">{app.app_name}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {resp.has_app ? "Selected" : "Not selected"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      {resp.points_awarded > 0 && (
+                        <p className="text-[12px] text-primary font-semibold">+{resp.points_awarded} pts</p>
+                      )}
+                    </div>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-foreground">{app.app_name}</p>
-                  <p className="text-[11px] text-muted-foreground capitalize">
-                    {app.category === "yes_no" ? "Yes/No" : "Referral"} • {resp.has_app ? "Has app" : "Doesn't have"}
-                  </p>
-                </div>
-                <div className="text-right">
-                  {resp.points_awarded > 0 && (
-                    <p className="text-[12px] text-primary font-semibold">+{resp.points_awarded} pts</p>
-                  )}
-                </div>
-              </div>
 
-              {app.category === "yes_no" && resp.has_app && resp.would_switch === null && (
-                <div className="mt-3">
-                  <GlassButton variant="outline" onClick={() => setSwitchPrompt(app)} className="w-full text-[12px]">
-                    Switch Offer Available
-                  </GlassButton>
-                </div>
-              )}
-
-              {app.category === "yes_no" && resp.would_switch === true && !resp.switch_completed && (
-                <div className="mt-3">
-                  {canSwitch ? (
-                    <GlassButton variant="primary" onClick={() => handleSwitchComplete(app)} className="w-full text-[12px]">
-                      <ExternalLink className="inline w-3 h-3 mr-1" /> Switch Now (+{app.points_switch_complete} pts)
-                    </GlassButton>
-                  ) : (
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      <span>Switch available in {daysUntilSwitch} days</span>
+                  {/* Yes/No: switch offer available */}
+                  {app.category === "yes_no" && resp.has_app && resp.would_switch === null && (
+                    <div className="mt-3">
+                      <GlassButton variant="outline" onClick={() => setSwitchPrompt(app)} className="w-full text-[12px]">
+                        Switch Offer Available
+                      </GlassButton>
                     </div>
                   )}
-                </div>
-              )}
 
-              {app.category === "yes_no" && resp.switch_completed && (
-                <p className="text-[11px] text-primary mt-2">✓ Switched</p>
-              )}
+                  {/* Yes/No: waiting for switch */}
+                  {app.category === "yes_no" && resp.would_switch === true && !resp.switch_completed && (
+                    <div className="mt-3">
+                      {canSwitch ? (
+                        <GlassButton variant="primary" onClick={() => handleSwitchComplete(app)} className="w-full text-[12px]">
+                          <ExternalLink className="inline w-3 h-3 mr-1" /> Switch Now (+{app.points_switch_complete} pts)
+                        </GlassButton>
+                      ) : (
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          <span>Switch available in {daysUntilSwitch} days</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-              {app.category === "referral" && !resp.has_app && !resp.referral_clicked && (
-                <div className="mt-3">
-                  <GlassButton variant="primary" onClick={() => setReferralOffer(app)} className="w-full text-[12px]">
-                    Try It Out Offer
-                  </GlassButton>
-                </div>
-              )}
+                  {app.category === "yes_no" && resp.switch_completed && (
+                    <p className="text-[11px] text-primary mt-2">✓ Switched</p>
+                  )}
 
-              {app.category === "referral" && resp.referral_clicked && !resp.referral_screenshot_url && (
-                <div className="mt-3">
-                  <GlassButton variant="outline" onClick={() => handleScreenshotUpload(resp.app_id)} className="w-full text-[12px]">
-                    <Upload className="inline w-3 h-3 mr-1" /> Submit Screenshot
-                  </GlassButton>
-                </div>
-              )}
+                  {/* Referral: offer to try (only if user did NOT select the app) */}
+                  {app.category === "referral" && !resp.has_app && !resp.referral_clicked && (
+                    <div className="mt-3">
+                      <GlassButton variant="primary" onClick={() => setReferralOffer(app)} className="w-full text-[12px]">
+                        Try It Out Offer
+                      </GlassButton>
+                    </div>
+                  )}
 
-              {app.category === "referral" && resp.referral_screenshot_url === "pending_review" && !resp.referral_approved && (
-                <p className="text-[11px] text-muted-foreground mt-2">📋 Screenshot pending admin review</p>
-              )}
+                  {/* Referral: clicked but no screenshot - show upload */}
+                  {app.category === "referral" && resp.referral_clicked && !resp.referral_screenshot_url && (
+                    <div className="mt-3">
+                      <GlassButton
+                        variant="outline"
+                        onClick={() => {
+                          setUploadingFor(resp.app_id);
+                          fileInputRef.current?.click();
+                        }}
+                        className="w-full text-[12px]"
+                      >
+                        <Upload className="inline w-3 h-3 mr-1" /> Upload Screenshot
+                      </GlassButton>
+                    </div>
+                  )}
 
-              {app.category === "referral" && resp.referral_approved && (
-                <p className="text-[11px] text-primary mt-2">✓ Approved — {app.referral_points} pts awarded</p>
-              )}
-            </GlassCard>
-          );
-        })}
+                  {app.category === "referral" && resp.referral_screenshot_url && !resp.referral_approved && (
+                    <p className="text-[11px] text-muted-foreground mt-2">📋 Screenshot pending admin review</p>
+                  )}
+
+                  {app.category === "referral" && resp.referral_approved && (
+                    <p className="text-[11px] text-primary mt-2">✓ Approved — {app.referral_points} pts awarded</p>
+                  )}
+                </GlassCard>
+              );
+            })}
+          </motion.div>
+        </AnimatePresence>
       </div>
     );
   }
 
-  // Checklist
+  // Checklist - don't show category to user
   if (apps.length === 0) return null;
 
   return (
     <div className="space-y-4">
+      {fileInput}
       <GlassCard variant="strong">
         <div className="flex items-center gap-2 mb-3">
           <CheckSquare className="w-4 h-4 text-primary" />
@@ -388,9 +482,7 @@ const DecisionFlow = () => {
               )}
               <span className="text-[13px] font-medium text-foreground flex-1 text-left">{app.app_name}</span>
               <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                selectedApps.has(app.id)
-                  ? "bg-primary border-primary"
-                  : "border-muted-foreground/30"
+                selectedApps.has(app.id) ? "bg-primary border-primary" : "border-muted-foreground/30"
               }`}>
                 {selectedApps.has(app.id) && <span className="text-primary-foreground text-[10px]">✓</span>}
               </div>

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
+import GlassInput from "./GlassInput";
 import { ShieldCheck, Clock, ExternalLink, Plus, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
