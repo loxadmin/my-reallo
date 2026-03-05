@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import WaterBackground from "@/components/WaterBackground";
-import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet, Smartphone, Check } from "lucide-react";
+import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet, Smartphone, Check, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ProfileRow {
@@ -477,7 +477,7 @@ const Admin = () => {
             {/* Existing apps */}
             {decisionApps.map(app => {
               const appResponses = decisionResponses.filter(r => r.app_id === app.id);
-              const pendingApprovals = appResponses.filter(r => r.referral_screenshot_url === "pending_review" && !r.referral_approved);
+              const pendingApprovals = appResponses.filter(r => r.referral_screenshot_url && !r.referral_approved);
               return (
                 <GlassCard key={app.id} animate={false}>
                   <div className="flex items-center justify-between mb-2">
@@ -521,7 +521,19 @@ const Admin = () => {
                         const userEmail = profiles.find(p => p.id === pr.user_id)?.email || pr.user_id.slice(0, 8);
                         return (
                           <div key={pr.id} className="flex items-center justify-between glass rounded-xl p-2">
-                            <span className="text-[11px] text-muted-foreground">{userEmail}</span>
+                            <div className="flex flex-col">
+                              <span className="text-[11px] text-muted-foreground">{userEmail}</span>
+                              {pr.referral_screenshot_url && pr.referral_screenshot_url !== "pending_review" && (
+                                <a
+                                  href={pr.referral_screenshot_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5"
+                                >
+                                  <ExternalLink className="w-2.5 h-2.5" /> View Screenshot
+                                </a>
+                              )}
+                            </div>
                             <GlassButton variant="primary" onClick={() => handleApproveReferral(pr.id, pr.app_id, pr.user_id)} className="px-3 py-1 text-[10px]">
                               <Check className="w-3 h-3 mr-1 inline" /> Approve
                             </GlassButton>
