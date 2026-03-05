@@ -71,11 +71,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          setTimeout(async () => {
-            await fetchProfile(session.user.id);
-            await checkAdmin(session.user.id);
-            setLoading(false);
-          }, 0);
+          await fetchProfile(session.user.id);
+          await checkAdmin(session.user.id);
+          setLoading(false);
         } else {
           setProfile(null);
           setIsAdmin(false);
@@ -84,12 +82,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
-        checkAdmin(session.user.id);
+        await fetchProfile(session.user.id);
+        await checkAdmin(session.user.id);
       }
       setLoading(false);
     });
