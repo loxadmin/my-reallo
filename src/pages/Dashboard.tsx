@@ -133,16 +133,6 @@ const Dashboard = () => {
 
         {/* Main content */}
         <main className={cn("flex-1 w-full", step === "queue" && "lg:ml-56")}>
-          {/* NEW: Stable Welcome Header that never unmounts */}
-          <div className="px-6 pt-8 pb-4">
-            <h1 className="text-2xl font-bold text-foreground">
-              Welcome{profile?.username ? `, ${profile.username}` : (user?.email ? `, ${user.email.split('@')[0]}` : " back")}!
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Let's reclaim what's yours.
-            </p>
-          </div>
-
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
               {step === "calculator" && <SpendCalculator onComplete={handleSpendComplete} />}

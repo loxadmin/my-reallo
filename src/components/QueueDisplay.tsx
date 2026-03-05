@@ -98,11 +98,26 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   };
 
   return (
-    <section className="min-h-screen flex items-start justify-center px-4 pt-4 pb-20 lg:pt-4 lg:pb-8">
+    <section className="min-h-screen flex items-start justify-center px-4 pt-20 pb-28 lg:pt-8 lg:pb-8">
       <div className="w-full max-w-md lg:max-w-2xl space-y-4">
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+            {/* Header Greeting - always visible */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <LayoutGrid className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-foreground font-semibold text-[13px] leading-tight">
+                    Hi, {user?.email?.split('@')[0] || "User"}
+                  </p>
+                  <p className="text-muted-foreground text-[11px]">Welcome back</p>
+                </div>
+              </div>
+            </div>
+
             {/* Goal Balance Hero Card */}
             <GlassCard variant="glow" className="relative overflow-hidden p-5">
               <p className="text-muted-foreground uppercase tracking-[0.15em] text-[10px] font-medium mb-1">Goal Balance</p>

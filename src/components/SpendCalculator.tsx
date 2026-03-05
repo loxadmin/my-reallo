@@ -38,7 +38,7 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
   };
 
   return (
-    <section className="min-h-[calc(100vh-12rem)] flex items-center justify-center px-4 sm:px-6 py-8">
+    <section className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-20">
       <div className="w-full max-w-md">
         <div className="flex gap-2 mb-8">
           {[0, 1, 2].map((i) => (
