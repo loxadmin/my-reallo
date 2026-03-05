@@ -171,7 +171,7 @@ const DecisionFlow = () => {
     const filePath = `${user.id}/${appId}-${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
-      .from("admin-uploads")
+      .from("referral_screenshots")
       .upload(filePath, file);
 
     if (uploadError) {
@@ -179,12 +179,8 @@ const DecisionFlow = () => {
       return;
     }
 
-    const { data: urlData } = supabase.storage
-      .from("admin-uploads")
-      .getPublicUrl(filePath);
-
     await fromResponses().update({
-      referral_screenshot_url: urlData.publicUrl || "pending_review",
+      referral_screenshot_url: filePath,
     }).eq("user_id", user.id).eq("app_id", appId);
 
     toast({ title: "Screenshot submitted", description: "Admin will review and approve your points." });

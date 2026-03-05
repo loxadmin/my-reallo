@@ -41,7 +41,8 @@ CREATE POLICY "Users can insert own transactions" ON public.verification_transac
 CREATE POLICY "Admins can manage transactions" ON public.verification_transactions FOR ALL USING (has_role(auth.uid(), 'admin'::app_role));
 
 -- Create storage bucket for CSV uploads
-INSERT INTO storage.buckets (id, name, public) VALUES ('admin-uploads', 'admin-uploads', false);
+-- Create storage bucket for referral screenshots
+INSERT INTO storage.buckets (id, name, public) VALUES ('referral_screenshots', 'referral_screenshots', true);
 
-CREATE POLICY "Admins can upload" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'admin-uploads' AND has_role(auth.uid(), 'admin'::app_role));
-CREATE POLICY "Admins can read uploads" ON storage.objects FOR SELECT USING (bucket_id = 'admin-uploads' AND has_role(auth.uid(), 'admin'::app_role));
+CREATE POLICY "Users can upload screenshots" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'referral_screenshots' AND auth.role() = 'authenticated');
+CREATE POLICY "Anyone can view screenshots" ON storage.objects FOR SELECT USING (bucket_id = 'referral_screenshots');

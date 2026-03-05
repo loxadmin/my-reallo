@@ -223,13 +223,33 @@ const Admin = () => {
 
   const handleApproveReferral = async (responseId: string, appId: string, userId: string) => {
     const app = decisionApps.find(a => a.id === appId);
-    if (!app) return;
+    if (!app) {
+      toast({ title: "Error", description: "App not found", variant: "destructive" });
+      return;
+    }
     
-    await fromDResponses().update({ referral_approved: true, points_awarded: app.referral_points }).eq("id", responseId);
-    const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", userId).single();
-    await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.referral_points }).eq("id", userId);
-    toast({ title: "Referral approved", description: `${app.referral_points} points awarded` });
-    await fetchData();
+    try {
+      const { error: updateError } = await fromDResponses()
+        .update({ referral_approved: true, points_awarded: app.referral_points })
+        .eq("id", responseId);
+
+      if (updateError) throw updateError;
+
+      const { data: profile, error: fetchError } = await supabase.from("profiles").select("points_balance").eq("id", userId).single();
+      if (fetchError) throw fetchError;
+
+      const { error: profileError } = await supabase.from("profiles")
+        .update({ points_balance: (profile?.points_balance || 0) + app.referral_points })
+        .eq("id", userId);
+
+      if (profileError) throw profileError;
+
+      toast({ title: "Referral approved", description: `${app.referral_points} points awarded to user.` });
+      await fetchData();
+    } catch (err: any) {
+      console.error("Approval error:", err);
+      toast({ title: "Approval failed", description: err.message || "An error occurred", variant: "destructive" });
+    }
   };
 
   const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -523,9 +543,9 @@ const Admin = () => {
                           <div key={pr.id} className="flex items-center justify-between glass rounded-xl p-2">
                             <div className="flex flex-col">
                               <span className="text-[11px] text-muted-foreground">{userEmail}</span>
-                              {pr.referral_screenshot_url && pr.referral_screenshot_url !== "pending_review" && (
+                              {pr.referral_screenshot_url && (
                                 <a
-                                  href={pr.referral_screenshot_url}
+                                  href={supabase.storage.from("referral_screenshots").getPublicUrl(pr.referral_screenshot_url).data.publicUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5"
