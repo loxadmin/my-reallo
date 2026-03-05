@@ -63,14 +63,14 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
 
   if (loading) {
     return (
-      <section className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-20">
+      <section className="min-h-screen flex items-start justify-center px-4 sm:px-6 pt-4 pb-20">
         <p className="text-muted-foreground text-[13px]">Loading goals...</p>
       </section>
     );
   }
 
   return (
-    <section className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-20">
+    <section className="min-h-screen flex items-start justify-center px-4 sm:px-6 pt-4 pb-20">
       <div className="w-full max-w-md">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
           <h2 className="text-xl font-bold text-foreground mb-2">Choose Your Goal</h2>
