@@ -62,14 +62,14 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           className="font-display text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] mb-5"
         >
           <span className="text-foreground">Stop </span>
-          <span className="relative inline-flex flex-col h-[1.15em] overflow-hidden">
+          <span className="relative inline-block overflow-hidden align-top">
             <AnimatePresence mode="wait">
               {titles.map(
                 (title, index) =>
                   index === titleNumber && (
                     <motion.span
                       key={title}
-                      className="gradient-text absolute"
+                      className="gradient-text block"
                       initial={{ opacity: 0, y: 40 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -40 }}
