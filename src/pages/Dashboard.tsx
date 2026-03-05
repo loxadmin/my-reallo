@@ -139,12 +139,12 @@ const Dashboard = () => {
               {step === "goal" && spendResult && (
                 <GoalSelector totalAnnualSpend={spendResult.totalAnnual} onSelect={handleGoalSelect} />
               )}
-              {step === "queue" && spendResult && (
+              {step === "queue" && spendResult && profile && (
                 <>
                   <QueueDisplay
                     totalAnnualSpend={spendResult.totalAnnual}
-                    goal={profile?.selected_goal || ""}
-                    targetAmount={profile?.target_amount || 0}
+                    goal={profile.selected_goal || ""}
+                    targetAmount={profile.target_amount}
                     view={activeView}
                     onViewChange={setActiveView}
                   />

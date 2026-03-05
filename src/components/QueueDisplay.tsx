@@ -39,7 +39,6 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   const [nextUnlock, setNextUnlock] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [claimedTotal, setClaimedTotal] = useState(0);
 
-  const username = user?.email?.split('@')?.[0] || "User";
   const position = profile?.queue_position ?? 201;
   const referralLink = profile?.referral_code
     ? `${window.location.origin}/auth?ref=${profile.referral_code}`
@@ -112,7 +111,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 </div>
                 <div>
                   <p className="text-foreground font-semibold text-[13px] leading-tight">
-                    Hi, {username}
+                    Hi, {user?.email?.split('@')[0] || "User"}
                   </p>
                   <p className="text-muted-foreground text-[11px]">Welcome back</p>
                 </div>
