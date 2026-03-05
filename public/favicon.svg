@@ -1,5 +1,19 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M2 16C2 16 9 6 16 6C23 6 30 16 30 16C30 16 23 26 16 26C9 26 2 16 2 16Z" stroke="hsl(45, 100%, 50%)" stroke-width="2"/>
-  <circle cx="16" cy="16" r="6" fill="hsl(45, 100%, 50%)"/>
-  <circle cx="16" cy="16" r="2.5" fill="black"/>
+  <defs>
+    <linearGradient id="leafGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="hsl(160, 60%, 55%)" />
+      <stop offset="50%" stop-color="hsl(160, 60%, 35%)" />
+      <stop offset="100%" stop-color="hsl(160, 60%, 15%)" />
+    </linearGradient>
+    <filter id="leaf3D">
+      <feDropShadow dx="1" dy="1" stdDeviation="0.8" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <path d="M16 2C16 2 4 10 4 20C4 28 16 30 16 30C16 30 28 28 28 20C28 10 16 2 16 2Z" fill="url(#leafGrad)" filter="url(#leaf3D)" />
+  <path d="M16 2V30" stroke="hsl(160, 60%, 10%)" stroke-width="0.5" opacity="0.4" />
+  <path d="M15 4C9 10 7 18 10 26" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.1" />
+  <g stroke="hsl(160, 60%, 10%)" stroke-width="0.4" opacity="0.3">
+    <path d="M16 8L22 12M16 15L25 20M16 22L22 26" />
+    <path d="M16 8L10 12M16 15L7 20M16 22L10 26" />
+  </g>
 </svg>
