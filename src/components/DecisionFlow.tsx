@@ -54,6 +54,8 @@ const DecisionFlow = () => {
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const unansweredApps = apps.filter(app => !responses.some(r => r.app_id === app.id));
+
   useEffect(() => {
     if (user) fetchData();
   }, [user]);
@@ -78,11 +80,11 @@ const DecisionFlow = () => {
   };
 
   const handleSubmitChecklist = async () => {
-    if (!user || apps.length === 0) return;
+    if (!user || unansweredApps.length === 0) return;
     setSubmitting(true);
     setStep("processing");
 
-    for (const app of apps) {
+    for (const app of unansweredApps) {
       const hasApp = selectedApps.has(app.id);
 
       if (app.category === "yes_no") {
@@ -305,7 +307,7 @@ const DecisionFlow = () => {
   };
 
   // Already submitted - show results with tabs
-  if (hasSubmitted && responses.length > 0) {
+  if (hasSubmitted && responses.length > 0 && unansweredApps.length === 0) {
     const earnResponses = responses.filter(r => getResponseStatus(r, apps.find(a => a.id === r.app_id)) === "earn");
     const ongoingResponses = responses.filter(r => getResponseStatus(r, apps.find(a => a.id === r.app_id)) === "ongoing");
     const pastResponses = responses.filter(r => getResponseStatus(r, apps.find(a => a.id === r.app_id)) === "past");
@@ -463,7 +465,7 @@ const DecisionFlow = () => {
         </p>
 
         <div className="space-y-2 max-h-[400px] overflow-y-auto">
-          {apps.map((app) => (
+          {unansweredApps.map((app) => (
             <button
               key={app.id}
               onClick={() => toggleApp(app.id)}
