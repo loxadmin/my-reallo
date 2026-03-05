@@ -202,6 +202,7 @@ const Admin = () => {
       referral_message: newApp.referral_message || null,
       referral_link: newApp.referral_link || null,
       referral_points: newApp.referral_points,
+      is_active: true,
     });
     toast({ title: "Decision app created" });
     setNewApp({ app_name: "", app_logo_url: "", category: "yes_no", points_select: 500, points_switch_intent: 2000, points_switch_complete: 10000, switch_link: "", referral_message: "", referral_link: "", referral_points: 10000 });
