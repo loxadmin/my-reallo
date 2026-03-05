@@ -18,7 +18,7 @@
     --secondary: 140 8% 93%;
     --secondary-foreground: 0 0% 20%;
     --muted: 140 8% 95%;
-    --muted-foreground: 0 0% 40%;
+    --muted-foreground: 0 0% 32%;
     --accent: 160 50% 25%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
@@ -51,7 +51,7 @@
     --secondary: 150 10% 12%;
     --secondary-foreground: 0 0% 85%;
     --muted: 150 8% 14%;
-    --muted-foreground: 150 5% 75%;
+    --muted-foreground: 150 5% 82%;
     --accent: 160 40% 30%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
@@ -100,34 +100,34 @@
     background: rgba(255,255,255,0.55);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.1);
   }
   .glass-strong {
     background: rgba(255,255,255,0.65);
     backdrop-filter: blur(32px);
     -webkit-backdrop-filter: blur(32px);
-    border: 1px solid rgba(0,0,0,0.08);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.12);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
   }
   .glass-card {
     background: rgba(255,255,255,0.55);
     backdrop-filter: blur(28px);
     -webkit-backdrop-filter: blur(28px);
-    border: 1px solid rgba(0,0,0,0.06);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9);
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9);
   }
   .glass-pill {
     background: rgba(255,255,255,0.55);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.1);
   }
   .glass-stat {
     background: rgba(255,255,255,0.55);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0,0,0,0.06);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   }
   .glass-button {
     background: rgba(255,255,255,0.6);
@@ -200,26 +200,26 @@
   /* ── Dark-mode glass overrides ── */
   :root.dark .glass {
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
   }
   :root.dark .glass-strong {
     background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   }
   :root.dark .glass-card {
     background: rgba(15, 61, 46, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
   :root.dark .glass-pill {
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
   }
   :root.dark .glass-stat {
     background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   }
   :root.dark .glass-button {
     background: rgba(255, 255, 255, 0.08);
