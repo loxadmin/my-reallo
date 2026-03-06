@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import WaterBackground from "@/components/WaterBackground";
-import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet, Smartphone, Check, ExternalLink, Edit2, Download } from "lucide-react";
+import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, ChartBar as BarChart3, Plus, Trash2, Link, Upload, CircleCheck as CheckCircle2, FileSpreadsheet, Smartphone, Check, ExternalLink, CreditCard as Edit2, Download } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ProfileRow {
@@ -199,12 +199,45 @@ const Admin = () => {
   const handleApproveReferral = async (responseId: string, appId: string, userId: string) => {
     const app = decisionApps.find(a => a.id === appId);
     if (!app) return;
-    
-    await fromDResponses().update({ referral_approved: true, points_awarded: app.referral_points }).eq("id", responseId);
-    const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", userId).single();
-    await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.referral_points }).eq("id", userId);
-    toast({ title: "Referral approved", description: `${app.referral_points} points awarded to user` });
-    await fetchData();
+
+    try {
+      const { error: respError } = await fromDResponses().update({
+        referral_approved: true,
+        points_awarded: app.referral_points
+      }).eq("id", responseId);
+
+      if (respError) {
+        toast({ title: "Error updating response", description: respError.message });
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("points_balance")
+        .eq("id", userId)
+        .single();
+
+      if (profileError || !profile) {
+        toast({ title: "Error fetching profile", description: profileError?.message || "Profile not found" });
+        return;
+      }
+
+      const newBalance = (profile.points_balance || 0) + app.referral_points;
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ points_balance: newBalance })
+        .eq("id", userId);
+
+      if (updateError) {
+        toast({ title: "Error updating points", description: updateError.message });
+        return;
+      }
+
+      toast({ title: "Referral approved", description: `${app.referral_points} points awarded to user` });
+      await fetchData();
+    } catch (error) {
+      toast({ title: "Approval failed", description: (error as Error).message });
+    }
   };
 
   const getPublicScreenshotUrl = (path: string | null) => {
