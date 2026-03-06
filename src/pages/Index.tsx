@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import HowItWorks from "@/components/HowItWorks";
+import Footer from "@/components/Footer";
 import WaterBackground from "@/components/WaterBackground";
 
 const Index = () => {
@@ -20,6 +22,8 @@ const Index = () => {
       <AnimatePresence mode="wait">
         <motion.div key="hero" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
           <HeroSection onGetStarted={handleGetStarted} />
+          <HowItWorks />
+          <Footer />
         </motion.div>
       </AnimatePresence>
     </div>

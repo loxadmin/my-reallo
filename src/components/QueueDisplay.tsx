@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,10 +7,9 @@ import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import DecisionFlow from "./DecisionFlow";
 import VerifySpendFlow from "./VerifySpendFlow";
-import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock } from "lucide-react";
+import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
-import { cn } from "@/lib/utils";
 
 interface QueueDisplayProps {
   totalAnnualSpend: number;
@@ -38,6 +37,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   const [verifyLink, setVerifyLink] = useState("");
   const [nextUnlock, setNextUnlock] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [claimedTotal, setClaimedTotal] = useState(0);
+  const [spendVerified, setSpendVerified] = useState(false);
 
   const position = profile?.queue_position ?? 201;
   const referralLink = profile?.referral_code
@@ -46,8 +46,8 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
 
   const isOffQueue = position <= 0;
   const pointsBalance = profile?.points_balance ?? 0;
+  const nairaValue = Math.floor(pointsBalance * 0.5);
   const claimableAmount = Math.max(0, totalAnnualSpend - claimedTotal);
-  const canClaim = isOffQueue && pointsBalance >= 100000 && claimableAmount >= 50000;
 
   useEffect(() => {
     const calcTimeLeft = () => {
@@ -68,16 +68,19 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   useEffect(() => {
     const fetchStats = async () => {
       if (!profile || !user) return;
-      const [refRes, actRes, settingsRes, voucherRes] = await Promise.all([
+      const [refRes, actRes, settingsRes, voucherRes, verifyRes] = await Promise.all([
         supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", profile.id),
         supabase.from("waitlist_activity").select("positions_moved").eq("user_id", profile.id).gte("created_at", new Date().toISOString().split("T")[0]),
         supabase.from("admin_settings").select("value").eq("key", "verify_expense_link").single(),
         supabase.from("vouchers").select("amount_naira").eq("user_id", user.id),
+        supabase.from("spend_verifications").select("status").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
       ]);
       setReferralCount(refRes.count || 0);
       setTodaySkipped((actRes.data || []).reduce((sum, a) => sum + (a.positions_moved || 0), 0));
       setVerifyLink(settingsRes.data?.value || "");
       setClaimedTotal((voucherRes.data || []).reduce((sum, v) => sum + Number(v.amount_naira || 0), 0));
+      const vStatus = (verifyRes.data || [])[0] as any;
+      setSpendVerified(vStatus?.status === "verified" || vStatus?.status === "completed");
     };
     fetchStats();
   }, [profile, user]);
@@ -96,6 +99,44 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
     }
   };
 
+  // 4-step claim check
+  const handleClaimClick = () => {
+    // Check 1: Has points?
+    if (pointsBalance <= 0) {
+      toast({ title: "No Points", description: "You need to earn points before you can claim. Go to the Earn page." });
+      return;
+    }
+    // Check 2: Spend verified?
+    if (!spendVerified) {
+      toast({ title: "Verify Your Spend", description: "You need to verify your spend before claiming. Go to the Verify page." });
+      return;
+    }
+    // Check 3: Min 50k naira (100k points)?
+    if (nairaValue < 50000) {
+      toast({ title: "Not Enough Points", description: `You need at least 100,000 points (₦50,000). You have ${pointsBalance.toLocaleString()} points (₦${nairaValue.toLocaleString()}). Earn more points!` });
+      return;
+    }
+    // Check 4: Off queue for 6 months?
+    const offQueueAt = (profile as any)?.off_queue_at;
+    if (offQueueAt) {
+      const offDate = new Date(offQueueAt);
+      const sixMonthsLater = new Date(offDate);
+      sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
+      if (new Date() < sixMonthsLater) {
+        const monthsLeft = Math.ceil((sixMonthsLater.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30));
+        toast({ title: "Goal Not Matured", description: `Your goal savings has not reached maturity. ${monthsLeft} month(s) remaining of the 6-month maturity period.` });
+        return;
+      }
+    } else if (isOffQueue) {
+      // Off queue but no off_queue_at recorded - set it now
+      supabase.from("profiles").update({ off_queue_at: new Date().toISOString() }).eq("id", user!.id);
+      toast({ title: "Goal Not Matured", description: "Your goal savings is less than 6 months and has not reached maturity." });
+      return;
+    }
+    // All checks passed
+    navigate("/vouchers");
+  };
+
   return (
     <section className="min-h-screen flex items-start justify-center px-4 pt-4 pb-12 lg:pt-8 lg:pb-8">
       <div className="w-full max-w-md lg:max-w-2xl space-y-4">
@@ -104,24 +145,30 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             {/* Goal Balance Hero Card */}
             <GlassCard variant="glow" className="relative overflow-hidden p-5">
+              <p className="text-foreground text-[13px] font-medium mb-3">
+                Welcome back, {user?.email?.split("@")[0] || "User"} 👋
+              </p>
               <p className="text-muted-foreground uppercase tracking-[0.15em] text-[10px] font-medium mb-1">Goal Balance</p>
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-baseline gap-3 mb-1">
                 <h2 className="font-display text-2xl font-bold gradient-text tabular-nums leading-none">
-                  {formatNaira(claimableAmount)}
+                  {formatNaira(targetAmount)}
                 </h2>
               </div>
+              <p className="text-[11px] text-muted-foreground mb-4">
+                Claimable: <span className="text-primary font-semibold">{formatNaira(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
+              </p>
 
               {/* Goal Progress */}
               <div className="space-y-1.5 mb-5">
                 <div className="flex justify-between items-end">
                   <p className="font-medium text-foreground text-[12px]">{goalLabels[goal] || goal}</p>
-                  <p className="text-muted-foreground text-[11px]">{Math.round((claimableAmount / targetAmount) * 100)}%</p>
+                  <p className="text-muted-foreground text-[11px]">{Math.round((nairaValue / targetAmount) * 100)}%</p>
                 </div>
                 <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
                   <motion.div
                     className="h-full rounded-full bg-primary"
                     initial={{ width: 0 }}
-                    animate={{ width: `${Math.min((claimableAmount / targetAmount) * 100, 100)}%` }}
+                    animate={{ width: `${Math.min((nairaValue / targetAmount) * 100, 100)}%` }}
                     transition={{ duration: 1.2, ease: "easeOut" }}
                   />
                 </div>
@@ -131,11 +178,11 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               <div className="flex gap-3">
                 <GlassButton
                   variant="primary"
-                  onClick={() => navigate("/vouchers")}
+                  onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })}
                   className="flex-1 h-10 rounded-xl text-[12px]"
-                  disabled={!canClaim}
+                  disabled={!isOffQueue}
                 >
-                  {canClaim ? <><Wallet className="w-3.5 h-3.5" /> Claim</> : <><Lock className="w-3.5 h-3.5" /> Claim</>}
+                  {isOffQueue ? <><Wallet className="w-3.5 h-3.5" /> Claim</> : <><Lock className="w-3.5 h-3.5" /> Claim</>}
                 </GlassButton>
                 <GlassButton
                   variant="outline"
@@ -147,21 +194,53 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               </div>
             </GlassCard>
 
-            {/* Quick Stats Row */}
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { label: "Queue", value: isOffQueue ? "✓" : position.toString(), icon: Zap },
-                { label: "Points", value: pointsBalance.toLocaleString(), icon: Award },
-                { label: "Skipped", value: todaySkipped.toString(), icon: TrendingUp },
-                { label: "Timer", value: `${nextUnlock.hours}h ${nextUnlock.minutes}m`, icon: Clock },
-              ].map((item, idx) => (
-                <div key={idx} className="glass-stat rounded-xl p-3 text-center">
-                  <item.icon className="w-3.5 h-3.5 text-primary mx-auto mb-1" />
-                  <p className="text-[12px] font-bold text-foreground leading-none">{item.value}</p>
-                  <p className="text-[9px] text-muted-foreground mt-0.5">{item.label}</p>
+            {/* Queue & Stats - Interactive */}
+            {!isOffQueue && (
+              <GlassCard className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[12px] font-semibold text-foreground">Queue Progress</p>
+                  <div className="flex items-center gap-1 text-[11px] text-primary font-semibold">
+                    <Zap className="w-3 h-3" />
+                    Position #{position}
+                  </div>
                 </div>
-              ))}
-            </div>
+                <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden mb-3">
+                  <motion.div
+                    className="h-full rounded-full bg-primary"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.max(5, Math.min(100, 100 - (position / 5)))}%` }}
+                    transition={{ duration: 1 }}
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center">
+                    <p className="text-[13px] font-bold text-foreground">{todaySkipped}</p>
+                    <p className="text-[9px] text-muted-foreground">Skipped Today</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[13px] font-bold text-primary">{`${nextUnlock.hours}h ${nextUnlock.minutes}m`}</p>
+                    <p className="text-[9px] text-muted-foreground">Next Advance</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[13px] font-bold text-foreground">50/day</p>
+                    <p className="text-[9px] text-muted-foreground">Auto Skip</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-3 text-center">
+                  Refer friends to skip 20 positions each
+                </p>
+              </GlassCard>
+            )}
+
+            {isOffQueue && (
+              <GlassCard className="p-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                  <p className="text-[12px] font-semibold text-foreground">You're off the queue!</p>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">Earn points and verify your spend to claim your goal.</p>
+              </GlassCard>
+            )}
 
             {/* Services Grid */}
             <div className="space-y-3">
@@ -186,7 +265,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                   <p className="text-muted-foreground text-[10px] leading-relaxed">Submit receipts</p>
                 </button>
 
-                <button onClick={() => navigate("/vouchers")} className="layout-grid-item group">
+                <button onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })} className="layout-grid-item group">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Gift className="w-4 h-4 text-primary" />
                   </div>
@@ -228,7 +307,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px]">Points Balance</p>
               </div>
               <h2 className="font-display text-2xl font-bold gradient-text">{pointsBalance.toLocaleString()}</h2>
-              <p className="text-muted-foreground mt-1 text-[11px]">= {formatNaira(Math.floor(pointsBalance * 0.5))} value</p>
+              <p className="text-muted-foreground mt-1 text-[11px]">= {formatNaira(nairaValue)} value</p>
             </GlassCard>
             <DecisionFlow />
           </motion.div>
@@ -245,23 +324,19 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 </div>
                 <div className="text-right">
                   <p className="text-muted-foreground uppercase tracking-widest text-[10px]">Claimable</p>
-                  <p className="font-semibold text-primary text-[13px]">{formatNaira(claimableAmount)}</p>
+                  <p className="font-semibold text-primary text-[13px]">{formatNaira(nairaValue)}</p>
                 </div>
               </div>
               <div className="mt-3 w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min((claimableAmount / targetAmount) * 100, 100)}%` }} transition={{ duration: 1, delay: 0.3 }} />
+                <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min((nairaValue / targetAmount) * 100, 100)}%` }} transition={{ duration: 1, delay: 0.3 }} />
               </div>
-              <p className="text-muted-foreground mt-2 text-[11px]">{formatNaira(claimableAmount)} / {formatNaira(targetAmount)}</p>
+              <p className="text-muted-foreground mt-2 text-[11px]">{formatNaira(nairaValue)} / {formatNaira(targetAmount)}</p>
               {claimedTotal > 0 && <p className="text-muted-foreground mt-1 text-[10px]">Already claimed: {formatNaira(claimedTotal)}</p>}
             </GlassCard>
 
-            <GlassButton variant="primary" onClick={() => navigate("/vouchers")} className="w-full" disabled={!canClaim}>
+            <GlassButton variant="primary" onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })} className="w-full" disabled={!isOffQueue}>
               {!isOffQueue ? (
                 <><Lock className="inline w-4 h-4" /> Complete Queue to Claim</>
-              ) : claimableAmount < 50000 ? (
-                <><Lock className="inline w-4 h-4" /> Min ₦50,000 to Claim</>
-              ) : pointsBalance < 100000 ? (
-                <><Lock className="inline w-4 h-4" /> Need 100,000 pts to Claim</>
               ) : (
                 <><Wallet className="inline w-4 h-4" /> Claim Amount — Create Voucher</>
               )}

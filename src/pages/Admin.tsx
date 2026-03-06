@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import WaterBackground from "@/components/WaterBackground";
-import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet, Smartphone, Check, ExternalLink } from "lucide-react";
+import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet, Smartphone, Check, ExternalLink, Edit2, Download } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ProfileRow {
@@ -15,44 +15,27 @@ interface ProfileRow {
 }
 interface ActivityRow { id: string; user_id: string; action_type: string; positions_moved: number; created_at: string; }
 interface GoalCategoryRow { id: string; goal_type: string; subcategory: string | null; label: string; max_price: number; }
-interface QuestionnaireRow {
-  id: string; title: string; is_active: boolean; points_reward: number; preferred_bank: string;
-  switch_timer_days: number; switch_enabled: boolean; switch_link: string; why_switch_options: string[];
-  current_bank_question: string; switch_question_template: string; category: string;
-}
-interface QResponseRow {
-  id: string; user_id: string; questionnaire_id: string; current_bank: string; would_switch: boolean;
-  switch_reason: string | null; switch_reason_freetext: string | null; points_awarded: number; completed_at: string;
-}
-interface VerificationTx {
-  id: string; verification_id: string; user_id: string; transaction_id: string;
-  is_verified: boolean; verified_amount: number | null; submitted_at: string;
-}
 interface DecisionAppRow {
   id: string; app_name: string; app_logo_url: string | null; category: string;
   points_select: number; points_switch_intent: number; points_switch_complete: number;
   switch_link: string | null; referral_message: string | null; referral_link: string | null;
-  referral_points: number; is_active: boolean;
+  referral_points: number; is_active: boolean; switch_to_referral_app_ids: string[] | null;
 }
 interface DecisionResponseRow {
   id: string; user_id: string; app_id: string; has_app: boolean; would_switch: boolean | null;
   switch_completed: boolean; referral_clicked: boolean; referral_screenshot_url: string | null;
   referral_approved: boolean; points_awarded: number; created_at: string;
 }
+interface VerificationTx {
+  id: string; verification_id: string; user_id: string; transaction_id: string;
+  is_verified: boolean; verified_amount: number | null; submitted_at: string;
+}
 
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
-
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-const SURVEY_CATEGORIES = [
-  { value: "bank_switch", label: "Bank Switch" },
-  { value: "transport_switch", label: "Transport Switch" },
-  { value: "food_purchase_switch", label: "Food Purchase Switch" },
-  { value: "general_app_switch", label: "General App Switch" },
-];
-
-type AdminTab = "users" | "ghosts" | "activity" | "goals" | "questionnaires" | "analytics" | "settings" | "verification" | "decisions";
+type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings";
 
 const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
@@ -61,9 +44,7 @@ const Admin = () => {
   const [ghostCount, setGhostCount] = useState(0);
   const [activities, setActivities] = useState<ActivityRow[]>([]);
   const [goalCategories, setGoalCategories] = useState<GoalCategoryRow[]>([]);
-  const [questionnaires, setQuestionnaires] = useState<QuestionnaireRow[]>([]);
-  const [qResponses, setQResponses] = useState<QResponseRow[]>([]);
-  const [editedPrices, setEditedPrices] = useState<Record<string, string>>({});
+  const [editedGoals, setEditedGoals] = useState<Record<string, Partial<GoalCategoryRow>>>({});
   const [activeTab, setActiveTab] = useState<AdminTab>("users");
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -78,17 +59,18 @@ const Admin = () => {
   const [postQueueReferralPoints, setPostQueueReferralPoints] = useState("1000");
   const [verifySpendLink, setVerifySpendLink] = useState("");
   const [verifySpendDescription, setVerifySpendDescription] = useState("");
-
-  const [newQ, setNewQ] = useState({
-    title: "", points_reward: 100, preferred_bank: "", switch_timer_days: 30,
-    switch_enabled: false, switch_link: "", why_switch_options: [""] as string[], category: "bank_switch",
-  });
+  const [footerContactUs, setFooterContactUs] = useState("");
+  const [footerAboutUs, setFooterAboutUs] = useState("");
+  const [footerInvestWithUs, setFooterInvestWithUs] = useState("");
 
   const [newApp, setNewApp] = useState({
     app_name: "", app_logo_url: "", category: "yes_no" as string,
     points_select: 500, points_switch_intent: 2000, points_switch_complete: 10000,
     switch_link: "", referral_message: "", referral_link: "", referral_points: 10000,
+    switch_to_referral_app_ids: [] as string[],
   });
+
+  const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0 });
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate("/");
@@ -96,13 +78,11 @@ const Admin = () => {
 
   const fetchData = async () => {
     setRefreshing(true);
-    const [profilesRes, ghostsRes, activityRes, goalsRes, qRes, qrRes, settingsRes, vtRes, daRes, drRes] = await Promise.all([
+    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes] = await Promise.all([
       supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
       supabase.from("ghost_users").select("id", { count: "exact", head: true }),
       supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("goal_categories").select("*").order("goal_type"),
-      supabase.from("questionnaires").select("*").order("created_at", { ascending: false }),
-      supabase.from("questionnaire_responses").select("*").order("completed_at", { ascending: false }),
       supabase.from("admin_settings").select("*"),
       supabase.from("verification_transactions").select("*").order("submitted_at", { ascending: false }).limit(200),
       fromApps().select("*").order("created_at", { ascending: false }),
@@ -114,18 +94,19 @@ const Admin = () => {
     setGhostCount(ghostsRes.count || 0);
     setActivities((activityRes.data as ActivityRow[]) || []);
     setGoalCategories((goalsRes.data as GoalCategoryRow[]) || []);
-    setQuestionnaires((qRes.data as QuestionnaireRow[]) || []);
-    setQResponses((qrRes.data as QResponseRow[]) || []);
     setVerificationTxs((vtRes.data as VerificationTx[]) || []);
     setDecisionApps((daRes.data || []) as unknown as DecisionAppRow[]);
     setDecisionResponses((drRes.data || []) as unknown as DecisionResponseRow[]);
-    setEditedPrices({});
+    setEditedGoals({});
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
     setPostQueueReferralPoints(settings.find(s => s.key === "post_queue_referral_points")?.value || "1000");
     setVerifySpendLink(settings.find(s => s.key === "verify_spend_link")?.value || "");
     setVerifySpendDescription(settings.find(s => s.key === "verify_spend_description")?.value || "");
+    setFooterContactUs(settings.find(s => s.key === "footer_contact_us")?.value || "");
+    setFooterAboutUs(settings.find(s => s.key === "footer_about_us")?.value || "");
+    setFooterInvestWithUs(settings.find(s => s.key === "footer_invest_with_us")?.value || "");
 
     const counts: Record<string, number> = {};
     for (const p of profs) {
@@ -138,19 +119,33 @@ const Admin = () => {
 
   useEffect(() => { if (isAdmin) fetchData(); }, [isAdmin]);
 
-  const handlePriceChange = (id: string, value: string) => setEditedPrices(prev => ({ ...prev, [id]: value }));
-
-  const handleSavePrices = async () => {
+  const handleSaveGoals = async () => {
     setSaving(true);
-    for (const [id, priceStr] of Object.entries(editedPrices)) {
-      const price = parseInt(priceStr, 10);
-      if (!isNaN(price) && price >= 0) {
-        await supabase.from("goal_categories").update({ max_price: price }).eq("id", id);
-      }
+    for (const [id, changes] of Object.entries(editedGoals)) {
+      await supabase.from("goal_categories").update(changes).eq("id", id);
     }
-    toast({ title: "Prices updated" });
+    toast({ title: "Goals updated" });
     await fetchData();
     setSaving(false);
+  };
+
+  const handleCreateGoal = async () => {
+    if (!newGoal.goal_type || !newGoal.label) return;
+    await supabase.from("goal_categories").insert({
+      goal_type: newGoal.goal_type,
+      subcategory: newGoal.subcategory || null,
+      label: newGoal.label,
+      max_price: newGoal.max_price,
+    });
+    toast({ title: "Goal category created" });
+    setNewGoal({ goal_type: "", subcategory: "", label: "", max_price: 0 });
+    await fetchData();
+  };
+
+  const handleDeleteGoal = async (id: string) => {
+    await supabase.from("goal_categories").delete().eq("id", id);
+    toast({ title: "Goal category deleted" });
+    await fetchData();
   };
 
   const handleSaveSettings = async () => {
@@ -160,33 +155,12 @@ const Admin = () => {
       supabase.from("admin_settings").upsert({ key: "post_queue_referral_points", value: postQueueReferralPoints, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_spend_link", value: verifySpendLink, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_spend_description", value: verifySpendDescription, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "footer_contact_us", value: footerContactUs, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "footer_about_us", value: footerAboutUs, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "footer_invest_with_us", value: footerInvestWithUs, updated_at: new Date().toISOString() }),
     ]);
     toast({ title: "Settings saved" });
     setSaving(false);
-  };
-
-  const handleCreateQuestionnaire = async () => {
-    if (!newQ.title || !newQ.preferred_bank) return;
-    await supabase.from("questionnaires").insert({
-      title: newQ.title, points_reward: newQ.points_reward, preferred_bank: newQ.preferred_bank,
-      switch_timer_days: newQ.switch_timer_days, switch_enabled: newQ.switch_enabled, switch_link: newQ.switch_link,
-      why_switch_options: newQ.why_switch_options.filter(o => o.trim()), category: newQ.category,
-    });
-    toast({ title: "Questionnaire created" });
-    setNewQ({ title: "", points_reward: 100, preferred_bank: "", switch_timer_days: 30, switch_enabled: false, switch_link: "", why_switch_options: [""], category: "bank_switch" });
-    await fetchData();
-  };
-
-  const handleDeleteQuestionnaire = async (id: string) => {
-    await supabase.from("questionnaire_responses").delete().eq("questionnaire_id", id);
-    await supabase.from("questionnaires").delete().eq("id", id);
-    toast({ title: "Questionnaire deleted" });
-    await fetchData();
-  };
-
-  const handleToggleQuestionnaire = async (id: string, active: boolean) => {
-    await supabase.from("questionnaires").update({ is_active: !active }).eq("id", id);
-    await fetchData();
   };
 
   const handleCreateDecisionApp = async () => {
@@ -203,9 +177,10 @@ const Admin = () => {
       referral_link: newApp.referral_link || null,
       referral_points: newApp.referral_points,
       is_active: true,
+      switch_to_referral_app_ids: newApp.category === "robust" ? newApp.switch_to_referral_app_ids : [],
     });
     toast({ title: "Decision app created" });
-    setNewApp({ app_name: "", app_logo_url: "", category: "yes_no", points_select: 500, points_switch_intent: 2000, points_switch_complete: 10000, switch_link: "", referral_message: "", referral_link: "", referral_points: 10000 });
+    setNewApp({ app_name: "", app_logo_url: "", category: "yes_no", points_select: 500, points_switch_intent: 2000, points_switch_complete: 10000, switch_link: "", referral_message: "", referral_link: "", referral_points: 10000, switch_to_referral_app_ids: [] });
     await fetchData();
   };
 
@@ -228,7 +203,7 @@ const Admin = () => {
     await fromDResponses().update({ referral_approved: true, points_awarded: app.referral_points }).eq("id", responseId);
     const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", userId).single();
     await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.referral_points }).eq("id", userId);
-    toast({ title: "Referral approved", description: `${app.referral_points} points awarded` });
+    toast({ title: "Referral approved", description: `${app.referral_points} points awarded to user` });
     await fetchData();
   };
 
@@ -240,7 +215,7 @@ const Admin = () => {
       const text = await file.text();
       const lines = text.split("\n").filter(l => l.trim());
       const rows = lines.slice(1).map(line => {
-        const parts = line.split(",").map(s => s.trim().replace(/^\"|\"$/g, ""));
+        const parts = line.split(",").map(s => s.trim().replace(/^"|"$/g, ""));
         return { transaction_id: parts[0], amount: parseFloat(parts[1]) || 0 };
       }).filter(r => r.transaction_id);
 
@@ -251,12 +226,34 @@ const Admin = () => {
           for (const match of matches) {
             await supabase.from("verification_transactions").update({ is_verified: true, verified_amount: row.amount }).eq("id", match.id);
             matchCount++;
+            // Check if all txs for this verification are done
             const { data: allTxs } = await supabase.from("verification_transactions").select("is_verified, verified_amount").eq("verification_id", match.verification_id);
-            if (allTxs && allTxs.every(t => t.is_verified)) {
-              const totalMonthly = allTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
-              const annualAmount = Math.round(totalMonthly * 12);
-              await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: annualAmount }).eq("id", match.verification_id);
-              await supabase.from("profiles").update({ total_annual_spend: annualAmount }).eq("id", match.user_id);
+            const { data: verif } = await supabase.from("spend_verifications").select("frequency").eq("id", match.verification_id).single();
+            if (allTxs && verif) {
+              const verifiedTxs = allTxs.filter(t => t.is_verified);
+              const totalAmount = verifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
+              const freq = (verif as any).frequency;
+              
+              // For monthly, use first tx × 12 as final
+              if (freq === "monthly" && verifiedTxs.length >= 1) {
+                const annualAmount = Math.round(Number(verifiedTxs[0].verified_amount || 0) * 12);
+                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: annualAmount }).eq("id", match.verification_id);
+                await supabase.from("profiles").update({ total_annual_spend: annualAmount, spend_verified: true }).eq("id", match.user_id);
+              }
+              // For daily/weekly, set initial on first verification
+              else if (verifiedTxs.length === 1) {
+                const multiplier = freq === "daily" ? 365 : 52;
+                const initialAnnual = Math.round(Number(verifiedTxs[0].verified_amount || 0) * multiplier);
+                await supabase.from("profiles").update({ total_annual_spend: initialAnnual }).eq("id", match.user_id);
+              }
+              // Check if verification period ended for recalculation
+              const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", match.verification_id).single();
+              if (vData && new Date() >= new Date((vData as any).ends_at) && freq !== "monthly") {
+                const recalcMultiplier = freq === "daily" ? 12 : 13;
+                const finalAnnual = Math.round(totalAmount * recalcMultiplier);
+                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: finalAnnual }).eq("id", match.verification_id);
+                await supabase.from("profiles").update({ total_annual_spend: finalAnnual, spend_verified: true }).eq("id", match.user_id);
+              }
             }
           }
         }
@@ -270,8 +267,33 @@ const Admin = () => {
     if (csvInputRef.current) csvInputRef.current.value = "";
   };
 
+  // Decision analytics
+  const downloadDecisionAnalytics = () => {
+    const rows = [["App Name", "Category", "Total Responses", "Has App", "Doesn't Have", "Would Switch", "Switch Completed", "Referral Clicked", "Referral Approved", "% Selected"]];
+    for (const app of decisionApps) {
+      const appResps = decisionResponses.filter(r => r.app_id === app.id);
+      const hasApp = appResps.filter(r => r.has_app).length;
+      const noApp = appResps.filter(r => !r.has_app).length;
+      const wouldSwitch = appResps.filter(r => r.would_switch === true).length;
+      const switched = appResps.filter(r => r.switch_completed).length;
+      const refClicked = appResps.filter(r => r.referral_clicked).length;
+      const refApproved = appResps.filter(r => r.referral_approved).length;
+      const pct = appResps.length > 0 ? Math.round((hasApp / appResps.length) * 100) : 0;
+      rows.push([app.app_name, app.category, String(appResps.length), String(hasApp), String(noApp), String(wouldSwitch), String(switched), String(refClicked), String(refApproved), `${pct}%`]);
+    }
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "decision_analytics.csv";
+    a.click();
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground text-[13px]">Loading...</p></div>;
   if (!isAdmin) return null;
+
+  const referralApps = decisionApps.filter(a => a.category === "referral");
 
   const tabs: { id: AdminTab; label: string; icon: any; count: number }[] = [
     { id: "users", label: "Users", icon: Users, count: profiles.length },
@@ -279,14 +301,10 @@ const Admin = () => {
     { id: "activity", label: "Activity", icon: Activity, count: activities.length },
     { id: "goals", label: "Goals", icon: Settings, count: goalCategories.length },
     { id: "decisions", label: "Decisions", icon: Smartphone, count: decisionApps.length },
-    { id: "questionnaires", label: "Surveys", icon: MessageSquare, count: questionnaires.length },
-    { id: "analytics", label: "Analytics", icon: BarChart3, count: qResponses.length },
+    { id: "analytics", label: "Analytics", icon: BarChart3, count: decisionResponses.length },
     { id: "verification", label: "Verify", icon: CheckCircle2, count: verificationTxs.length },
     { id: "settings", label: "Settings", icon: Link, count: 0 },
   ];
-
-  const switchCount = qResponses.filter(r => r.would_switch).length;
-  const noSwitchCount = qResponses.filter(r => !r.would_switch).length;
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
@@ -325,7 +343,7 @@ const Admin = () => {
           })}
         </div>
 
-        {/* Users tab */}
+        {/* Users */}
         {activeTab === "users" && (
           <GlassCard animate={false}>
             <h3 className="font-semibold text-foreground text-[13px] mb-4">Registered Users</h3>
@@ -350,7 +368,6 @@ const Admin = () => {
                       <td className="py-2 px-2 text-right text-foreground">{referralCounts[p.id] || 0}</td>
                     </tr>
                   ))}
-                  {profiles.length === 0 && <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">No users yet</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -391,34 +408,70 @@ const Admin = () => {
           </GlassCard>
         )}
 
-        {/* Goals */}
+        {/* Goals - Fully Editable */}
         {activeTab === "goals" && (
-          <GlassCard animate={false}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-foreground text-[13px]">Goal Pricing</h3>
-              {Object.keys(editedPrices).length > 0 && (
-                <GlassButton variant="primary" onClick={handleSavePrices} disabled={saving} className="px-4 py-2 text-[11px]">
-                  <Save className="w-3 h-3 mr-1 inline" /> {saving ? "Saving..." : "Save"}
-                </GlassButton>
-              )}
-            </div>
-            <div className="space-y-3">
-              {goalCategories.map((cat) => (
-                <div key={cat.id} className="glass rounded-xl p-4">
-                  <p className="font-semibold text-foreground text-[13px] capitalize mb-2">
-                    {cat.goal_type}{cat.subcategory ? ` → ${cat.label}` : ` — ${cat.label}`}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-muted-foreground">Max ₦</span>
-                    <input type="number" value={editedPrices[cat.id] !== undefined ? editedPrices[cat.id] : String(cat.max_price)} onChange={(e) => handlePriceChange(cat.id, e.target.value)} className="flex-1 glass-input rounded-lg px-3 py-2 text-[13px] text-foreground" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
+          <div className="space-y-4">
+            <GlassCard animate={false}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-foreground text-[13px]">Goal Categories</h3>
+                {Object.keys(editedGoals).length > 0 && (
+                  <GlassButton variant="primary" onClick={handleSaveGoals} disabled={saving} className="px-4 py-2 text-[11px]">
+                    <Save className="w-3 h-3 mr-1 inline" /> {saving ? "Saving..." : "Save All"}
+                  </GlassButton>
+                )}
+              </div>
+              <div className="space-y-3">
+                {goalCategories.map((cat) => {
+                  const edited = editedGoals[cat.id] || {};
+                  return (
+                    <div key={cat.id} className="glass rounded-xl p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Edit2 className="w-3 h-3 text-muted-foreground" />
+                        <button onClick={() => handleDeleteGoal(cat.id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground mb-1">Type</p>
+                          <input value={edited.goal_type ?? cat.goal_type} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], goal_type: e.target.value } }))} className="w-full glass-input rounded-lg px-3 py-2 text-[12px] text-foreground" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground mb-1">Subcategory</p>
+                          <input value={edited.subcategory ?? (cat.subcategory || "")} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], subcategory: e.target.value || null } }))} className="w-full glass-input rounded-lg px-3 py-2 text-[12px] text-foreground" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground mb-1">Label</p>
+                          <input value={edited.label ?? cat.label} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], label: e.target.value } }))} className="w-full glass-input rounded-lg px-3 py-2 text-[12px] text-foreground" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground mb-1">Max Price ₦</p>
+                          <input type="number" value={edited.max_price ?? cat.max_price} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], max_price: parseInt(e.target.value) || 0 } }))} className="w-full glass-input rounded-lg px-3 py-2 text-[12px] text-foreground" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </GlassCard>
+
+            {/* Add new goal */}
+            <GlassCard animate={false}>
+              <h3 className="font-semibold text-foreground text-[13px] mb-3 flex items-center gap-2">
+                <Plus className="w-4 h-4 text-primary" /> Add Goal Category
+              </h3>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <input value={newGoal.goal_type} onChange={e => setNewGoal(p => ({ ...p, goal_type: e.target.value }))} placeholder="Type (e.g. education)" className="glass-input rounded-xl px-3 py-2 text-[12px] text-foreground" />
+                <input value={newGoal.subcategory} onChange={e => setNewGoal(p => ({ ...p, subcategory: e.target.value }))} placeholder="Subcategory (optional)" className="glass-input rounded-xl px-3 py-2 text-[12px] text-foreground" />
+                <input value={newGoal.label} onChange={e => setNewGoal(p => ({ ...p, label: e.target.value }))} placeholder="Label" className="glass-input rounded-xl px-3 py-2 text-[12px] text-foreground" />
+                <input type="number" value={newGoal.max_price} onChange={e => setNewGoal(p => ({ ...p, max_price: parseInt(e.target.value) || 0 }))} placeholder="Max price" className="glass-input rounded-xl px-3 py-2 text-[12px] text-foreground" />
+              </div>
+              <GlassButton variant="primary" onClick={handleCreateGoal} className="w-full text-[12px]">Add Goal</GlassButton>
+            </GlassCard>
+          </div>
         )}
 
-        {/* Decisions tab - NEW */}
+        {/* Decisions */}
         {activeTab === "decisions" && (
           <div className="space-y-4">
             <GlassCard animate={false}>
@@ -434,10 +487,11 @@ const Admin = () => {
                   <select value={newApp.category} onChange={e => setNewApp(p => ({ ...p, category: e.target.value }))} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] bg-transparent">
                     <option value="yes_no" className="bg-background">Yes/No (Switch Offer)</option>
                     <option value="referral" className="bg-background">Referral (Try It Out)</option>
+                    <option value="robust" className="bg-background">Robust (Advanced Switch)</option>
                   </select>
                 </div>
 
-                {newApp.category === "yes_no" && (
+                {(newApp.category === "yes_no" || newApp.category === "robust") && (
                   <>
                     <div className="grid grid-cols-3 gap-2">
                       <div>
@@ -453,8 +507,36 @@ const Admin = () => {
                         <input type="number" value={newApp.points_switch_complete} onChange={e => setNewApp(p => ({ ...p, points_switch_complete: parseInt(e.target.value) || 0 }))} className="w-full glass-input rounded-xl px-3 py-2 text-foreground text-[13px]" />
                       </div>
                     </div>
-                    <input value={newApp.switch_link} onChange={e => setNewApp(p => ({ ...p, switch_link: e.target.value }))} placeholder="Switch link URL" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
+                    {newApp.category === "yes_no" && (
+                      <input value={newApp.switch_link} onChange={e => setNewApp(p => ({ ...p, switch_link: e.target.value }))} placeholder="Switch link URL" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
+                    )}
                   </>
+                )}
+
+                {newApp.category === "robust" && (
+                  <div>
+                    <p className="text-[11px] text-muted-foreground mb-1">Link to Referral Apps (switch options):</p>
+                    {referralApps.length === 0 && <p className="text-[10px] text-muted-foreground">Create referral apps first to link them here.</p>}
+                    <div className="space-y-1 max-h-[150px] overflow-y-auto">
+                      {referralApps.map(ra => (
+                        <label key={ra.id} className="flex items-center gap-2 glass rounded-lg p-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={newApp.switch_to_referral_app_ids.includes(ra.id)}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setNewApp(p => ({ ...p, switch_to_referral_app_ids: [...p.switch_to_referral_app_ids, ra.id] }));
+                              } else {
+                                setNewApp(p => ({ ...p, switch_to_referral_app_ids: p.switch_to_referral_app_ids.filter(id => id !== ra.id) }));
+                              }
+                            }}
+                            className="accent-primary"
+                          />
+                          <span className="text-[12px] text-foreground">{ra.app_name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
                 {newApp.category === "referral" && (
@@ -492,7 +574,7 @@ const Admin = () => {
                       <div>
                         <h4 className="font-semibold text-foreground text-[13px]">{app.app_name}</h4>
                         <p className="text-[11px] text-muted-foreground capitalize">
-                          {app.category === "yes_no" ? "Yes/No" : "Referral"} • {app.is_active ? "Active" : "Inactive"}
+                          {app.category === "yes_no" ? "Yes/No" : app.category === "referral" ? "Referral" : "Robust"} • {app.is_active ? "Active" : "Inactive"}
                         </p>
                       </div>
                     </div>
@@ -506,14 +588,18 @@ const Admin = () => {
                     </div>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Responses: {appResponses.length} • 
-                    {app.category === "yes_no" 
+                    Responses: {appResponses.length} •
+                    {app.category === "yes_no" || app.category === "robust"
                       ? ` Select: ${app.points_select}pts | Intent: ${app.points_switch_intent}pts | Complete: ${app.points_switch_complete}pts`
                       : ` Referral: ${app.referral_points}pts`
                     }
                   </p>
+                  {app.category === "robust" && (app.switch_to_referral_app_ids || []).length > 0 && (
+                    <p className="text-[10px] text-primary mt-1">
+                      Linked referral apps: {(app.switch_to_referral_app_ids || []).map(id => decisionApps.find(a => a.id === id)?.app_name).filter(Boolean).join(", ")}
+                    </p>
+                  )}
 
-                  {/* Pending referral approvals */}
                   {pendingApprovals.length > 0 && (
                     <div className="mt-3 space-y-2">
                       <p className="text-[11px] text-primary font-semibold">Pending Approvals ({pendingApprovals.length})</p>
@@ -524,12 +610,7 @@ const Admin = () => {
                             <div className="flex flex-col">
                               <span className="text-[11px] text-muted-foreground">{userEmail}</span>
                               {pr.referral_screenshot_url && pr.referral_screenshot_url !== "pending_review" && (
-                                <a
-                                  href={pr.referral_screenshot_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5"
-                                >
+                                <a href={pr.referral_screenshot_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5">
                                   <ExternalLink className="w-2.5 h-2.5" /> View Screenshot
                                 </a>
                               )}
@@ -548,91 +629,58 @@ const Admin = () => {
           </div>
         )}
 
-        {/* Questionnaires */}
-        {activeTab === "questionnaires" && (
+        {/* Analytics - Decision analytics */}
+        {activeTab === "analytics" && (
           <div className="space-y-4">
             <GlassCard animate={false}>
-              <h3 className="font-semibold text-foreground text-[13px] mb-4 flex items-center gap-2">
-                <Plus className="w-4 h-4 text-primary" /> Create Questionnaire
-              </h3>
-              <div className="space-y-3">
-                <input value={newQ.title} onChange={e => setNewQ(p => ({ ...p, title: e.target.value }))} placeholder="Title" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
-                <select value={newQ.category} onChange={e => setNewQ(p => ({ ...p, category: e.target.value }))} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] bg-transparent">
-                  {SURVEY_CATEGORIES.map(c => <option key={c.value} value={c.value} className="bg-background">{c.label}</option>)}
-                </select>
-                <div className="grid grid-cols-2 gap-3">
-                  <input value={newQ.preferred_bank} onChange={e => setNewQ(p => ({ ...p, preferred_bank: e.target.value }))} placeholder="Preferred bank/app" className="glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
-                  <input type="number" value={newQ.points_reward} onChange={e => setNewQ(p => ({ ...p, points_reward: parseInt(e.target.value) || 0 }))} placeholder="Points" className="glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <input type="number" value={newQ.switch_timer_days} onChange={e => setNewQ(p => ({ ...p, switch_timer_days: parseInt(e.target.value) || 30 }))} placeholder="Timer days" className="glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
-                  <input value={newQ.switch_link} onChange={e => setNewQ(p => ({ ...p, switch_link: e.target.value }))} placeholder="Switch link" className="glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" checked={newQ.switch_enabled} onChange={e => setNewQ(p => ({ ...p, switch_enabled: e.target.checked }))} className="accent-primary" />
-                  <span className="text-[13px] text-muted-foreground">Enable switch button</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground">Why-switch options:</p>
-                {newQ.why_switch_options.map((opt, i) => (
-                  <div key={i} className="flex gap-2">
-                    <input value={opt} onChange={e => { const opts = [...newQ.why_switch_options]; opts[i] = e.target.value; setNewQ(p => ({ ...p, why_switch_options: opts })); }} placeholder={`Option ${i + 1}`} className="flex-1 glass-input rounded-xl px-4 py-2 text-foreground text-[13px]" />
-                    {newQ.why_switch_options.length > 1 && <button onClick={() => setNewQ(p => ({ ...p, why_switch_options: p.why_switch_options.filter((_, j) => j !== i) }))} className="text-destructive"><Trash2 className="w-4 h-4" /></button>}
-                  </div>
-                ))}
-                <button onClick={() => setNewQ(p => ({ ...p, why_switch_options: [...p.why_switch_options, ""] }))} className="text-[11px] text-primary">+ Add option</button>
-                <GlassButton variant="primary" onClick={handleCreateQuestionnaire} className="w-full text-[13px]">Create Questionnaire</GlassButton>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-foreground text-[13px]">Decision Analytics</h3>
+                <GlassButton variant="outline" onClick={downloadDecisionAnalytics} className="px-3 py-1 text-[11px]">
+                  <Download className="w-3 h-3 mr-1 inline" /> Download CSV
+                </GlassButton>
               </div>
+
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="glass rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-primary">{decisionResponses.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Total Responses</p>
+                </div>
+                <div className="glass rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-foreground">{decisionResponses.filter(r => r.has_app).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Has App</p>
+                </div>
+                <div className="glass rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-foreground">{decisionResponses.filter(r => r.referral_approved).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Referrals Approved</p>
+                </div>
+              </div>
+
+              {decisionApps.map(app => {
+                const appResps = decisionResponses.filter(r => r.app_id === app.id);
+                const hasApp = appResps.filter(r => r.has_app).length;
+                const wouldSwitch = appResps.filter(r => r.would_switch === true).length;
+                const switched = appResps.filter(r => r.switch_completed).length;
+                const pct = appResps.length > 0 ? Math.round((hasApp / appResps.length) * 100) : 0;
+                return (
+                  <div key={app.id} className="glass rounded-xl p-4 mb-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-semibold text-foreground text-[13px]">{app.app_name}</p>
+                      <span className="text-[10px] text-muted-foreground capitalize">{app.category}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden mb-2">
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="flex gap-4 text-[11px]">
+                      <span className="text-primary">{hasApp} selected ({pct}%)</span>
+                      <span className="text-muted-foreground">{wouldSwitch} would switch</span>
+                      <span className="text-muted-foreground">{switched} switched</span>
+                      <span className="text-muted-foreground">{appResps.length} total</span>
+                    </div>
+                  </div>
+                );
+              })}
             </GlassCard>
-
-            {questionnaires.map(q => (
-              <GlassCard key={q.id} animate={false}>
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <h4 className="font-semibold text-foreground text-[13px]">{q.title}</h4>
-                    <p className="text-[11px] text-muted-foreground">{q.points_reward} pts • {q.preferred_bank} • {q.switch_timer_days}d{q.switch_enabled && " • Switch ON"}</p>
-                    <p className="text-[10px] text-primary mt-0.5 capitalize">{SURVEY_CATEGORIES.find(c => c.value === q.category)?.label || q.category}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <GlassButton variant="outline" onClick={() => handleToggleQuestionnaire(q.id, q.is_active)} className="px-3 py-1 text-[11px]">{q.is_active ? "Deactivate" : "Activate"}</GlassButton>
-                    <button onClick={() => handleDeleteQuestionnaire(q.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                </div>
-                <p className="text-[11px] text-muted-foreground">Responses: {qResponses.filter(r => r.questionnaire_id === q.id).length} | Would switch: {qResponses.filter(r => r.questionnaire_id === q.id && r.would_switch).length}</p>
-              </GlassCard>
-            ))}
           </div>
-        )}
-
-        {/* Analytics */}
-        {activeTab === "analytics" && (
-          <GlassCard animate={false}>
-            <h3 className="font-semibold text-foreground text-[13px] mb-4">Questionnaire Analytics</h3>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="glass rounded-xl p-4 text-center">
-                <p className="text-xl font-bold text-primary">{switchCount}</p>
-                <p className="text-[11px] text-muted-foreground">Would Switch</p>
-              </div>
-              <div className="glass rounded-xl p-4 text-center">
-                <p className="text-xl font-bold text-foreground">{noSwitchCount}</p>
-                <p className="text-[11px] text-muted-foreground">Declined</p>
-              </div>
-            </div>
-            {questionnaires.map(q => {
-              const qr = qResponses.filter(r => r.questionnaire_id === q.id);
-              const yesCount = qr.filter(r => r.would_switch).length;
-              return (
-                <div key={q.id} className="glass rounded-xl p-4 mb-3">
-                  <p className="font-semibold text-foreground text-[13px]">{q.title}</p>
-                  <p className="text-[10px] text-primary capitalize">{SURVEY_CATEGORIES.find(c => c.value === q.category)?.label || q.category}</p>
-                  <div className="flex gap-4 mt-2">
-                    <p className="text-[11px] text-primary">{yesCount} yes</p>
-                    <p className="text-[11px] text-muted-foreground">{qr.length - yesCount} no</p>
-                    <p className="text-[11px] text-muted-foreground">{qr.length} total</p>
-                  </div>
-                </div>
-              );
-            })}
-          </GlassCard>
         )}
 
         {/* Verification */}
@@ -698,7 +746,6 @@ const Admin = () => {
               <div>
                 <label className="text-[13px] text-muted-foreground">Post-Queue Referral Points</label>
                 <input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] mt-1" />
-                <p className="text-[11px] text-muted-foreground mt-1">Points per referral after off queue</p>
               </div>
               <div>
                 <label className="text-[13px] text-muted-foreground">Verify Spend Link</label>
@@ -707,6 +754,20 @@ const Admin = () => {
               <div>
                 <label className="text-[13px] text-muted-foreground">Verify Spend Description</label>
                 <textarea value={verifySpendDescription} onChange={e => setVerifySpendDescription(e.target.value)} placeholder="Describe..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] mt-1 min-h-[60px] resize-none" />
+              </div>
+              <hr className="border-border/30" />
+              <h4 className="font-semibold text-foreground text-[13px]">Footer Content</h4>
+              <div>
+                <label className="text-[13px] text-muted-foreground">About Us</label>
+                <textarea value={footerAboutUs} onChange={e => setFooterAboutUs(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] mt-1 min-h-[60px] resize-none" />
+              </div>
+              <div>
+                <label className="text-[13px] text-muted-foreground">Contact Us</label>
+                <textarea value={footerContactUs} onChange={e => setFooterContactUs(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] mt-1 min-h-[60px] resize-none" />
+              </div>
+              <div>
+                <label className="text-[13px] text-muted-foreground">Invest With Us</label>
+                <textarea value={footerInvestWithUs} onChange={e => setFooterInvestWithUs(e.target.value)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] mt-1 min-h-[60px] resize-none" />
               </div>
               <GlassButton variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full text-[13px]">
                 <Save className="inline w-4 h-4 mr-1" /> {saving ? "Saving..." : "Save Settings"}

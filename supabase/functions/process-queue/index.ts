@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Move all users up 10 positions daily
+    // Move all users up 50 positions daily
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, queue_position")
@@ -24,10 +24,13 @@ Deno.serve(async (req) => {
 
     if (profiles && profiles.length > 0) {
       for (const profile of profiles) {
-        const newPos = Math.max(0, profile.queue_position - 10);
+        const newPos = Math.max(0, profile.queue_position - 50);
         await supabase
           .from("profiles")
-          .update({ queue_position: newPos })
+          .update({ 
+            queue_position: newPos,
+            ...(newPos === 0 ? { off_queue_at: new Date().toISOString() } : {}),
+          })
           .eq("id", profile.id);
 
         await supabase.from("waitlist_activity").insert({

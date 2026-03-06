@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import GlassInput from "./GlassInput";
-import { ShieldCheck, Clock, ExternalLink, Plus, CheckCircle2, AlertCircle } from "lucide-react";
+import { ShieldCheck, Clock, ExternalLink, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface Verification {
@@ -32,7 +32,7 @@ const VerifySpendFlow = () => {
   const { user, profile, refreshProfile } = useAuth();
   const [verification, setVerification] = useState<Verification | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [newTxId, setNewTxId] = useState("");
+  const [txInputs, setTxInputs] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">("daily");
   const [verifySettings, setVerifySettings] = useState({ link: "", description: "" });
@@ -56,8 +56,15 @@ const VerifySpendFlow = () => {
         .from("verification_transactions")
         .select("*")
         .eq("verification_id", v.id)
-        .order("submitted_at", { ascending: false });
-      setTransactions((txs || []) as Transaction[]);
+        .order("submitted_at", { ascending: true });
+      const txList = (txs || []) as Transaction[];
+      setTransactions(txList);
+
+      // Set up input boxes based on frequency
+      const maxBoxes = v.frequency === "daily" ? 30 : v.frequency === "weekly" ? 4 : 1;
+      const filled = txList.map(t => t.transaction_id);
+      const inputs = Array.from({ length: maxBoxes }, (_, i) => filled[i] || "");
+      setTxInputs(inputs);
     }
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
@@ -67,11 +74,14 @@ const VerifySpendFlow = () => {
     });
   };
 
+  const getMaxBoxes = (freq: string) => freq === "daily" ? 30 : freq === "weekly" ? 4 : 1;
+
   const handleStartVerification = async () => {
     if (!user) return;
     setStarting(true);
+    const days = frequency === "daily" ? 30 : frequency === "weekly" ? 28 : 1;
     const endsAt = new Date();
-    endsAt.setDate(endsAt.getDate() + 30);
+    endsAt.setDate(endsAt.getDate() + days);
 
     await supabase.from("spend_verifications").insert({
       user_id: user.id,
@@ -81,44 +91,86 @@ const VerifySpendFlow = () => {
       ends_at: endsAt.toISOString(),
     });
 
-    toast({ title: "Verification started!", description: "Submit transaction IDs over the next 30 days." });
+    toast({ title: "Verification started!", description: frequency === "monthly" ? "Submit your transaction ID." : `Submit transaction IDs over the next ${days} days.` });
     setStarting(false);
     await fetchData();
   };
 
-  const handleSubmitTx = async () => {
-    if (!newTxId.trim() || !verification || !user) return;
-    setSubmitting(true);
+  const handleSubmitTx = async (index: number) => {
+    const txId = txInputs[index]?.trim();
+    if (!txId || !verification || !user) return;
 
+    // Check if this slot already has a submitted transaction
+    if (transactions[index]) {
+      toast({ title: "Already submitted", description: "This slot already has a transaction ID." });
+      return;
+    }
+
+    setSubmitting(true);
     await supabase.from("verification_transactions").insert({
       verification_id: verification.id,
       user_id: user.id,
-      transaction_id: newTxId.trim(),
+      transaction_id: txId,
     });
 
+    // After first submission, calculate initial verified spend
+    const updatedTxCount = transactions.length + 1;
+    if (updatedTxCount === 1) {
+      // First transaction - calculate initial annual spend
+      // Will be recalculated once verified by admin CSV
+    }
+
     toast({ title: "Transaction ID submitted" });
-    setNewTxId("");
     setSubmitting(false);
     await fetchData();
+    await refreshProfile();
   };
 
   const isOffQueue = (profile?.queue_position ?? 999) <= 0;
   if (!isOffQueue || !user) return null;
 
   const now = new Date();
-  const daysLeft = verification ? Math.max(0, Math.ceil((new Date(verification.ends_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 30;
   const isComplete = verification?.status === "completed" || verification?.status === "verified";
-  const allVerified = transactions.length > 0 && transactions.every(t => t.is_verified);
+  const daysLeft = verification ? Math.max(0, Math.ceil((new Date(verification.ends_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
+  const verificationEnded = verification ? now >= new Date(verification.ends_at) : false;
 
-  const canSubmitToday = () => {
-    if (!verification || transactions.length === 0) return true;
-    const lastSubmission = new Date(transactions[0].submitted_at);
-    const diffDays = Math.floor((now.getTime() - lastSubmission.getTime()) / (1000 * 60 * 60 * 24));
-    if (verification.frequency === "daily") return diffDays >= 1;
-    if (verification.frequency === "weekly") return diffDays >= 7;
-    if (verification.frequency === "monthly") return diffDays >= 30;
-    return true;
-  };
+  // Calculate verified spend based on frequency
+  const verifiedTxs = transactions.filter(t => t.is_verified);
+  const totalVerifiedAmount = verifiedTxs.reduce((sum, t) => sum + Number(t.verified_amount || 0), 0);
+  
+  const getMultiplier = (freq: string) => freq === "daily" ? 365 : freq === "weekly" ? 52 : 12;
+  const getRecalcMultiplier = (freq: string) => freq === "daily" ? 12 : freq === "weekly" ? 13 : 12;
+  
+  const firstVerifiedAmount = verifiedTxs.length > 0 ? Number(verifiedTxs[0].verified_amount || 0) : 0;
+  const initialAnnualSpend = firstVerifiedAmount * getMultiplier(verification?.frequency || "daily");
+
+  // If verification ended and not monthly, recalculate
+  const shouldRecalculate = verification && verificationEnded && verification.frequency !== "monthly";
+  const recalculatedSpend = shouldRecalculate ? totalVerifiedAmount * getRecalcMultiplier(verification!.frequency) : null;
+
+  // Show "already verified" if complete
+  if (isComplete || (verification && verification.status === "verified")) {
+    return (
+      <GlassCard variant="strong" className="space-y-4">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-primary" />
+          <h3 className="font-semibold text-foreground text-[13px]">Spend Verified</h3>
+        </div>
+        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="glass rounded-xl p-4 text-center border border-primary/20">
+          <CheckCircle2 className="w-7 h-7 text-primary mx-auto mb-2" />
+          <p className="font-semibold text-foreground text-[13px]">Verification Complete!</p>
+          {verification?.recalculated_amount !== null && verification?.recalculated_amount !== undefined && (
+            <p className="text-[12px] text-primary mt-1">
+              Verified Annual Spend: ₦{verification.recalculated_amount.toLocaleString("en-NG")}
+            </p>
+          )}
+        </motion.div>
+        <p className="text-[10px] text-muted-foreground">
+          {verifiedTxs.length} transactions verified
+        </p>
+      </GlassCard>
+    );
+  }
 
   if (!verification) {
     return (
@@ -128,7 +180,7 @@ const VerifySpendFlow = () => {
           <h3 className="font-semibold text-foreground text-[13px]">Verify Your Spend</h3>
         </div>
         <p className="text-[12px] text-muted-foreground">
-          Before claiming your amount, verify your yearly data spend over 30 days.
+          Before claiming your amount, verify your yearly data spend.
         </p>
         {verifySettings.description && (
           <p className="text-[11px] text-muted-foreground">{verifySettings.description}</p>
@@ -154,17 +206,19 @@ const VerifySpendFlow = () => {
             ))}
           </div>
           <p className="text-[10px] text-muted-foreground mt-1">
-            {frequency === "daily" && "Submit transaction IDs daily for 30 days"}
-            {frequency === "weekly" && "Submit transaction IDs every 7 days for 30 days"}
-            {frequency === "monthly" && "Submit transaction IDs once in 30 days"}
+            {frequency === "daily" && "30 transaction IDs over 30 days (first tx × 365 = initial annual spend)"}
+            {frequency === "weekly" && "4 transaction IDs over 28 days (first tx × 52 = initial annual spend)"}
+            {frequency === "monthly" && "1 transaction ID (tx × 12 = final annual spend, no recalculation)"}
           </p>
         </div>
         <GlassButton variant="primary" className="w-full text-[13px]" onClick={handleStartVerification} disabled={starting}>
-          {starting ? "Starting..." : "Start 30-Day Verification"}
+          {starting ? "Starting..." : "Start Verification"}
         </GlassButton>
       </GlassCard>
     );
   }
+
+  const maxBoxes = getMaxBoxes(verification.frequency);
 
   return (
     <GlassCard variant="strong" className="space-y-4">
@@ -173,7 +227,7 @@ const VerifySpendFlow = () => {
           <ShieldCheck className="w-4 h-4 text-primary" />
           <h3 className="font-semibold text-foreground text-[13px]">Spend Verification</h3>
         </div>
-        {!isComplete && (
+        {!verificationEnded && (
           <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
             <Clock className="w-3 h-3" />
             <span>{daysLeft}d left</span>
@@ -181,70 +235,75 @@ const VerifySpendFlow = () => {
         )}
       </div>
 
-      {allVerified && (
-        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="glass rounded-xl p-4 text-center border border-primary/20">
-          <CheckCircle2 className="w-7 h-7 text-primary mx-auto mb-2" />
-          <p className="font-semibold text-foreground text-[13px]">All Transactions Verified!</p>
-          {verification.recalculated_amount !== null && (
-            <p className="text-[12px] text-primary mt-1">
-              Recalculated claimable: ₦{verification.recalculated_amount?.toLocaleString("en-NG")}
-            </p>
-          )}
-        </motion.div>
-      )}
-
-      {!isComplete && daysLeft > 0 && (
-        <div>
-          {canSubmitToday() ? (
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
-                <GlassInput
-                  value={newTxId}
-                  onChange={e => setNewTxId(e.target.value)}
-                  placeholder="Enter transaction ID"
-                />
-              </div>
-              <GlassButton variant="primary" onClick={handleSubmitTx} disabled={submitting || !newTxId.trim()} className="h-[46px] px-4">
-                <Plus className="w-4 h-4" />
-              </GlassButton>
-            </div>
-          ) : (
-            <div className="glass rounded-xl p-3 text-center">
-              <p className="text-[11px] text-muted-foreground">
-                Next submission: {verification.frequency === "daily" ? "tomorrow" : verification.frequency === "weekly" ? "in a few days" : "end of period"}
-              </p>
-            </div>
+      {firstVerifiedAmount > 0 && (
+        <div className="glass rounded-xl p-3">
+          <p className="text-[11px] text-muted-foreground">Initial Verified Annual Spend</p>
+          <p className="text-[13px] font-semibold text-primary">₦{initialAnnualSpend.toLocaleString("en-NG")}</p>
+          {recalculatedSpend !== null && (
+            <>
+              <p className="text-[11px] text-muted-foreground mt-2">Final Recalculated Annual Spend</p>
+              <p className="text-[13px] font-semibold text-primary">₦{recalculatedSpend.toLocaleString("en-NG")}</p>
+            </>
           )}
         </div>
       )}
 
-      {transactions.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[11px] text-muted-foreground">Submitted Transactions ({transactions.length})</p>
-          {transactions.map(tx => (
-            <div key={tx.id} className="flex items-center justify-between glass rounded-xl p-3">
-              <div>
-                <p className="text-[13px] font-mono text-foreground">{tx.transaction_id}</p>
-                <p className="text-[10px] text-muted-foreground">{new Date(tx.submitted_at).toLocaleDateString()}</p>
+      <div className="space-y-2">
+        <p className="text-[11px] text-muted-foreground">
+          Transaction IDs ({transactions.length}/{maxBoxes})
+        </p>
+        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          {txInputs.map((val, idx) => {
+            const existingTx = transactions[idx];
+            const isSubmitted = !!existingTx;
+            return (
+              <div key={idx} className="flex gap-2 items-center">
+                <span className="text-[10px] text-muted-foreground w-6 text-right">{idx + 1}.</span>
+                <div className="flex-1">
+                  <GlassInput
+                    value={isSubmitted ? existingTx.transaction_id : val}
+                    onChange={e => {
+                      if (!isSubmitted) {
+                        const next = [...txInputs];
+                        next[idx] = e.target.value;
+                        setTxInputs(next);
+                      }
+                    }}
+                    placeholder={`Transaction ID #${idx + 1}`}
+                    disabled={isSubmitted}
+                    className="text-[12px]"
+                  />
+                </div>
+                {isSubmitted ? (
+                  existingTx.is_verified ? (
+                    <div className="flex items-center gap-1 text-primary min-w-[60px]">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span className="text-[10px]">₦{existingTx.verified_amount?.toLocaleString("en-NG")}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 text-muted-foreground min-w-[60px]">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      <span className="text-[10px]">Pending</span>
+                    </div>
+                  )
+                ) : (
+                  <GlassButton
+                    variant="primary"
+                    onClick={() => handleSubmitTx(idx)}
+                    disabled={submitting || !val.trim()}
+                    className="px-3 py-2 text-[10px] min-w-[60px]"
+                  >
+                    Submit
+                  </GlassButton>
+                )}
               </div>
-              {tx.is_verified ? (
-                <div className="flex items-center gap-1 text-primary">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span className="text-[11px]">₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  <span className="text-[11px]">Pending</span>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
-      )}
+      </div>
 
       <p className="text-[10px] text-muted-foreground">
-        Frequency: {verification.frequency} • {transactions.filter(t => t.is_verified).length}/{transactions.length} verified
+        Frequency: {verification.frequency} • {verifiedTxs.length}/{transactions.length} verified
       </p>
     </GlassCard>
   );
