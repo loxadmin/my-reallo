@@ -104,7 +104,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           <GlassButton variant="primary" onClick={onGetStarted} className="text-[13px] px-8 py-3.5 flex-1">
             Calculate & Claim <MoveRight className="inline w-4 h-4 ml-2" />
           </GlassButton>
-          <GlassButton variant="outline" className="text-[13px] px-8 py-3.5 flex-1">
+          <GlassButton variant="outline" className="text-[13px] px-8 py-3.5 flex-1" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
             How It Works
           </GlassButton>
         </motion.div>
@@ -130,7 +130,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
             <Shield className="w-4 h-4 text-primary mx-auto mb-1.5" />
-            <p className="font-display text-lg sm:text-xl font-bold text-primary glow-text">5x</p>
+            <p className="font-display text-lg sm:text-xl font-bold text-primary glow-text">20x</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">Skip / Referral</p>
           </div>
         </motion.div>

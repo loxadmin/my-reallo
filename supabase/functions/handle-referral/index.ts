@@ -15,12 +15,10 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Verify JWT
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -28,20 +26,17 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const { referral_code } = await req.json();
     if (!referral_code) {
       return new Response(JSON.stringify({ error: "Missing referral code" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Find referrer
     const { data: referrer } = await supabase
       .from("profiles")
       .select("id, queue_position")
@@ -50,12 +45,10 @@ Deno.serve(async (req) => {
 
     if (!referrer) {
       return new Response(JSON.stringify({ error: "Invalid referral code" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Check if already referred
     const { data: existing } = await supabase
       .from("referrals")
       .select("id")
@@ -65,13 +58,12 @@ Deno.serve(async (req) => {
 
     if (existing) {
       return new Response(JSON.stringify({ error: "Already referred" }), {
-        status: 409,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Award skip
-    const newPos = Math.max(1, referrer.queue_position - 5);
+    // Award skip - 20 positions
+    const newPos = Math.max(1, referrer.queue_position - 20);
     await supabase
       .from("profiles")
       .update({ queue_position: newPos })
@@ -85,7 +77,7 @@ Deno.serve(async (req) => {
     await supabase.from("waitlist_activity").insert({
       user_id: referrer.id,
       action_type: "referral",
-      positions_moved: 5,
+      positions_moved: 20,
     });
 
     return new Response(

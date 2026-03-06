@@ -47,6 +47,7 @@ export type Database = {
           referral_message: string | null
           referral_points: number
           switch_link: string | null
+          switch_to_referral_app_ids: string[] | null
         }
         Insert: {
           app_logo_url?: string | null
@@ -62,6 +63,7 @@ export type Database = {
           referral_message?: string | null
           referral_points?: number
           switch_link?: string | null
+          switch_to_referral_app_ids?: string[] | null
         }
         Update: {
           app_logo_url?: string | null
@@ -77,6 +79,7 @@ export type Database = {
           referral_message?: string | null
           referral_points?: number
           switch_link?: string | null
+          switch_to_referral_app_ids?: string[] | null
         }
         Relationships: []
       }
@@ -193,11 +196,13 @@ export type Database = {
           email: string
           id: string
           last_active: string | null
+          off_queue_at: string | null
           points_balance: number
           queue_position: number | null
           referral_code: string | null
           referred_by: string | null
           selected_goal: string | null
+          spend_verified: boolean | null
           target_amount: number | null
           total_annual_spend: number | null
         }
@@ -208,11 +213,13 @@ export type Database = {
           email: string
           id: string
           last_active?: string | null
+          off_queue_at?: string | null
           points_balance?: number
           queue_position?: number | null
           referral_code?: string | null
           referred_by?: string | null
           selected_goal?: string | null
+          spend_verified?: boolean | null
           target_amount?: number | null
           total_annual_spend?: number | null
         }
@@ -223,11 +230,13 @@ export type Database = {
           email?: string
           id?: string
           last_active?: string | null
+          off_queue_at?: string | null
           points_balance?: number
           queue_position?: number | null
           referral_code?: string | null
           referred_by?: string | null
           selected_goal?: string | null
+          spend_verified?: boolean | null
           target_amount?: number | null
           total_annual_spend?: number | null
         }

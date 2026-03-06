@@ -28,13 +28,19 @@ const Vouchers = () => {
   const [pointsToUse, setPointsToUse] = useState("");
   const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [spendVerified, setSpendVerified] = useState(false);
 
   useEffect(() => { if (!loading && !user) navigate("/auth"); }, [loading, user, navigate]);
-  useEffect(() => { if (user) fetchVouchers(); }, [user]);
+  useEffect(() => { if (user) fetchData(); }, [user]);
 
-  const fetchVouchers = async () => {
-    const { data } = await supabase.from("vouchers").select("*").eq("user_id", user!.id).order("created_at", { ascending: false });
-    setVouchers((data || []) as Voucher[]);
+  const fetchData = async () => {
+    const [vRes, verifyRes] = await Promise.all([
+      supabase.from("vouchers").select("*").eq("user_id", user!.id).order("created_at", { ascending: false }),
+      supabase.from("spend_verifications").select("status").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(1),
+    ]);
+    setVouchers((vRes.data || []) as Voucher[]);
+    const vStatus = (verifyRes.data || [])[0] as any;
+    setSpendVerified(vStatus?.status === "verified" || vStatus?.status === "completed");
   };
 
   const pointsBalance = profile?.points_balance ?? 0;
@@ -44,10 +50,34 @@ const Vouchers = () => {
   const isOffQueue = (profile?.queue_position ?? 999) <= 0;
   const nairaValue = Math.floor(Number(pointsToUse || 0) * 0.5);
 
+  // 4-step claim validation
+  const getClaimBlockMessage = (): string | null => {
+    if (!isOffQueue) return "You must complete the queue before claiming vouchers.";
+    if (pointsBalance <= 0) return "You need to earn points before you can claim. Go to the Earn page.";
+    if (!spendVerified) return "You need to verify your spend before claiming. Go to the Verify page.";
+    if (Math.floor(pointsBalance * 0.5) < 50000) return `You need at least 100,000 points (₦50,000). You have ${pointsBalance.toLocaleString()} points.`;
+    const offQueueAt = (profile as any)?.off_queue_at;
+    if (offQueueAt) {
+      const offDate = new Date(offQueueAt);
+      const sixMonthsLater = new Date(offDate);
+      sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
+      if (new Date() < sixMonthsLater) {
+        const monthsLeft = Math.ceil((sixMonthsLater.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30));
+        return `Your goal savings has not reached maturity. ${monthsLeft} month(s) remaining.`;
+      }
+    } else if (isOffQueue) {
+      supabase.from("profiles").update({ off_queue_at: new Date().toISOString() }).eq("id", user!.id);
+      return "Your goal savings is less than 6 months and has not reached maturity.";
+    }
+    return null;
+  };
+
+  const blockMessage = getClaimBlockMessage();
+
   const canCreate = () => {
+    if (blockMessage) return false;
     const pts = parseInt(pointsToUse, 10);
     if (!pts || pts <= 0 || pts > pointsBalance) return false;
-    if (!isOffQueue) return false;
     if (pts < 100000) return false;
     const claimNaira = Math.floor(pts * 0.5);
     if (claimNaira > claimableAmount) return false;
@@ -65,7 +95,7 @@ const Vouchers = () => {
     await supabase.from("profiles").update({ points_balance: pointsBalance - pts }).eq("id", user.id);
     toast({ title: "Voucher created!", description: `${code} — ${formatNaira(claimNaira)}` });
     setPointsToUse("");
-    await fetchVouchers();
+    await fetchData();
     await refreshProfile();
     setCreating(false);
   };
@@ -103,21 +133,14 @@ const Vouchers = () => {
             </div>
           </GlassCard>
 
-          {!isOffQueue && (
-            <GlassCard className="text-center">
-              <Lock className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
-              <p className="text-[13px] text-muted-foreground">You must complete the queue before claiming vouchers.</p>
-            </GlassCard>
-          )}
-
-          {claimableAmount < 50000 && isOffQueue && (
+          {blockMessage && (
             <GlassCard className="text-center">
               <AlertCircle className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
-              <p className="text-[13px] text-muted-foreground">Minimum claimable amount is ₦50,000. Current: {formatNaira(claimableAmount)}</p>
+              <p className="text-[13px] text-muted-foreground">{blockMessage}</p>
             </GlassCard>
           )}
 
-          {isOffQueue && claimableAmount >= 50000 && (
+          {!blockMessage && (
             <GlassCard variant="strong">
               <h3 className="font-semibold text-foreground text-[13px] mb-3 flex items-center gap-2">
                 <Gift className="w-4 h-4 text-primary" /> Create Voucher
