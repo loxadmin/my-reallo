@@ -211,44 +211,33 @@ const Admin = () => {
         return;
       }
 
-      const { error: recalcError } = await supabase.rpc("recalculate_user_points", { target_user_id: userId });
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("points_balance")
+        .eq("id", userId)
+        .single();
 
-      if (recalcError) {
-        toast({ title: "Error recalculating points", description: recalcError.message });
+      if (profileError || !profile) {
+        toast({ title: "Error fetching profile", description: profileError?.message || "Profile not found" });
         return;
       }
 
-      toast({ title: "Referral approved", description: `${app.referral_points} points awarded and balance synced.` });
+      const newBalance = (profile.points_balance || 0) + app.referral_points;
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ points_balance: newBalance })
+        .eq("id", userId);
+
+      if (updateError) {
+        toast({ title: "Error updating points", description: updateError.message });
+        return;
+      }
+
+      toast({ title: "Referral approved", description: `${app.referral_points} points awarded to user` });
       await fetchData();
     } catch (error) {
       toast({ title: "Approval failed", description: (error as Error).message });
     }
-  };
-
-  const handleSyncBalance = async (userId: string) => {
-    setSaving(true);
-    try {
-      const { error } = await supabase.rpc("recalculate_user_points", { target_user_id: userId });
-      if (error) throw error;
-      toast({ title: "Balance synchronized" });
-      await fetchData();
-    } catch (error) {
-      toast({ title: "Sync failed", description: (error as Error).message });
-    }
-    setSaving(false);
-  };
-
-  const handleSyncAllBalances = async () => {
-    setSaving(true);
-    try {
-      const { error } = await supabase.rpc("recalculate_all_users_points");
-      if (error) throw error;
-      toast({ title: "All balances synchronized" });
-      await fetchData();
-    } catch (error) {
-      toast({ title: "Global sync failed", description: (error as Error).message });
-    }
-    setSaving(false);
   };
 
   const getPublicScreenshotUrl = (path: string | null) => {
@@ -407,7 +396,6 @@ const Admin = () => {
                     <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Queue #</th>
                     <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Points</th>
                     <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Referrals</th>
-                    <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -418,11 +406,6 @@ const Admin = () => {
                       <td className="py-2 px-2 text-right font-bold text-foreground">{p.queue_position}</td>
                       <td className="py-2 px-2 text-right text-primary">{p.points_balance || 0}</td>
                       <td className="py-2 px-2 text-right text-foreground">{referralCounts[p.id] || 0}</td>
-                      <td className="py-2 px-2 text-right">
-                        <button onClick={() => handleSyncBalance(p.id)} disabled={saving} className="text-primary hover:text-primary/80 transition-colors">
-                          <RefreshCw className={`w-3.5 h-3.5 ${saving ? "animate-spin" : ""}`} />
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -693,14 +676,9 @@ const Admin = () => {
             <GlassCard animate={false}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-foreground text-[13px]">Decision Analytics</h3>
-                <div className="flex gap-2">
-                  <GlassButton variant="outline" onClick={handleSyncAllBalances} disabled={saving} className="px-3 py-1 text-[11px]">
-                    <RefreshCw className={`w-3 h-3 mr-1 inline ${saving ? "animate-spin" : ""}`} /> Sync All Balances
-                  </GlassButton>
-                  <GlassButton variant="outline" onClick={downloadDecisionAnalytics} className="px-3 py-1 text-[11px]">
-                    <Download className="w-3 h-3 mr-1 inline" /> Download CSV
-                  </GlassButton>
-                </div>
+                <GlassButton variant="outline" onClick={downloadDecisionAnalytics} className="px-3 py-1 text-[11px]">
+                  <Download className="w-3 h-3 mr-1 inline" /> Download CSV
+                </GlassButton>
               </div>
 
               <div className="grid grid-cols-3 gap-3 mb-4">

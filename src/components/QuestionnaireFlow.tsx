@@ -108,8 +108,11 @@ const QuestionnaireFlow = () => {
       switch_timer_start: new Date().toISOString(),
     });
 
-    // Recalculate points
-    await supabase.rpc("recalculate_user_points", { target_user_id: user.id });
+    // Award points
+    await supabase.rpc("generate_referral_code"); // just to use rpc pattern
+    const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
+    const newBalance = (profile?.points_balance || 0) + activeQ.points_reward;
+    await supabase.from("profiles").update({ points_balance: newBalance }).eq("id", user.id);
 
     toast({
       title: "Questionnaire completed!",
