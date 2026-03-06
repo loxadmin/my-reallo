@@ -80,7 +80,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
       setVerifyLink(settingsRes.data?.value || "");
       setClaimedTotal((voucherRes.data || []).reduce((sum, v) => sum + Number(v.amount_naira || 0), 0));
       const vStatus = (verifyRes.data || [])[0] as any;
-      setSpendVerified(vStatus?.status === "verified" || vStatus?.status === "completed");
+      setSpendVerified(vStatus?.status === "verified" || vStatus?.status === "completed" || profile.spend_verified);
     };
     fetchStats();
   }, [profile, user]);
