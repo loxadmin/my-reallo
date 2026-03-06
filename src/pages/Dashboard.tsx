@@ -27,29 +27,9 @@ interface SpendResult {
 const Dashboard = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
-
-  const [step, setStep] = useState<DashStep>(() => {
-    if (profile?.selected_goal && (profile.total_annual_spend ?? 0) > 0) return "queue";
-    if ((profile?.total_annual_spend ?? 0) > 0) return "goal";
-    return "calculator";
-  });
-
-  const [spendResult, setSpendResult] = useState<SpendResult | null>(() => {
-    if (profile && (profile.total_annual_spend ?? 0) > 0) {
-      return {
-        weeklyData: 0, monthlyElectricity: 0,
-        annualData: profile.annual_data_spend ?? 0,
-        annualElectricity: profile.annual_electricity_spend ?? 0,
-        totalAnnual: profile.total_annual_spend ?? 0,
-      };
-    }
-    return null;
-  });
-
-  const [activeView, setActiveView] = useState<DashView>(() => {
-    const saved = localStorage.getItem("reallo_dash_view");
-    return (saved as DashView) || "home";
-  });
+  const [step, setStep] = useState<DashStep>("calculator");
+  const [spendResult, setSpendResult] = useState<SpendResult | null>(null);
+  const [activeView, setActiveView] = useState<DashView>("home");
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -57,33 +37,25 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (profile) {
-      if (profile.selected_goal && (profile.total_annual_spend ?? 0) > 0) {
+      if (profile.selected_goal && profile.total_annual_spend > 0) {
+        setSpendResult({
+          weeklyData: 0, monthlyElectricity: 0,
+          annualData: profile.annual_data_spend,
+          annualElectricity: profile.annual_electricity_spend,
+          totalAnnual: profile.total_annual_spend,
+        });
         setStep("queue");
+      } else if (profile.total_annual_spend > 0) {
         setSpendResult({
           weeklyData: 0, monthlyElectricity: 0,
-          annualData: profile.annual_data_spend ?? 0,
-          annualElectricity: profile.annual_electricity_spend ?? 0,
-          totalAnnual: profile.total_annual_spend ?? 0,
+          annualData: profile.annual_data_spend,
+          annualElectricity: profile.annual_electricity_spend,
+          totalAnnual: profile.total_annual_spend,
         });
-      } else if ((profile.total_annual_spend ?? 0) > 0) {
         setStep("goal");
-        setSpendResult({
-          weeklyData: 0, monthlyElectricity: 0,
-          annualData: profile.annual_data_spend ?? 0,
-          annualElectricity: profile.annual_electricity_spend ?? 0,
-          totalAnnual: profile.total_annual_spend ?? 0,
-        });
-      } else {
-        setStep("calculator");
-        setSpendResult(null);
       }
     }
   }, [profile]);
-
-  const handleViewChange = (view: DashView) => {
-    setActiveView(view);
-    localStorage.setItem("reallo_dash_view", view);
-  };
 
   const handleSpendComplete = async (result: SpendResult) => {
     setSpendResult(result);
@@ -136,7 +108,7 @@ const Dashboard = () => {
         {step === "queue" && navItems.map((item) => (
           <DropdownMenuItem
             key={item.id}
-            onClick={() => handleViewChange(item.id)}
+            onClick={() => setActiveView(item.id)}
             className={cn(
               "flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] transition-colors",
               activeView === item.id ? "text-primary bg-primary/10" : "text-muted-foreground"
@@ -158,7 +130,7 @@ const Dashboard = () => {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => handleViewChange(item.id)}
+                    onClick={() => setActiveView(item.id)}
                     className={cn(
                       "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200",
                       activeView === item.id
@@ -189,7 +161,7 @@ const Dashboard = () => {
                   goal={profile.selected_goal || ""}
                   targetAmount={profile.target_amount}
                   view={activeView}
-                  onViewChange={handleViewChange}
+                  onViewChange={setActiveView}
                 />
               )}
             </motion.div>
