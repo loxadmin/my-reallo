@@ -98,8 +98,6 @@ const DecisionFlow = () => {
             user_id: user.id, app_id: app.id, has_app: true,
             would_switch: null, points_awarded: app.points_select,
           });
-          const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
-          await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.points_select }).eq("id", user.id);
           interactionsNeeded.push(app);
         } else {
           // Doesn't have app -> no points, done
@@ -136,8 +134,6 @@ const DecisionFlow = () => {
             user_id: user.id, app_id: app.id, has_app: true,
             would_switch: null, points_awarded: app.points_select,
           });
-          const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
-          await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.points_select }).eq("id", user.id);
           
           // Check if user selected the linked referral apps
           const linkedReferralIds = app.switch_to_referral_app_ids || [];
@@ -157,6 +153,7 @@ const DecisionFlow = () => {
       }
     }
 
+    await supabase.rpc("recalculate_user_points", { target_user_id: user.id });
     await fetchData();
     await refreshProfile();
     setSubmitting(false);
@@ -197,8 +194,7 @@ const DecisionFlow = () => {
         would_switch: true, switch_available_at: switchDate.toISOString(), points_awarded: newPoints,
       }).eq("id", r.id);
 
-      const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
-      await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.points_switch_intent }).eq("id", user.id);
+      await supabase.rpc("recalculate_user_points", { target_user_id: user.id });
     }
 
     toast({ title: `+${app.points_switch_intent} points!`, description: `Switch button unlocks in 30 days for +${app.points_switch_complete} more points.` });
@@ -292,8 +288,7 @@ const DecisionFlow = () => {
         switch_completed: true, points_awarded: newPoints,
       }).eq("id", r.id);
 
-      const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
-      await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.points_switch_complete }).eq("id", user.id);
+      await supabase.rpc("recalculate_user_points", { target_user_id: user.id });
     }
 
     toast({ title: `+${app.points_switch_complete} points!`, description: "Switch completed!" });
