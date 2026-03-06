@@ -16,6 +16,8 @@ interface Profile {
   last_active: string;
   created_at: string;
   points_balance: number;
+  spend_verified: boolean | null;
+  off_queue_at: string | null;
 }
 
 interface AuthContextType {
@@ -65,17 +67,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!mounted) return;
+
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        await Promise.all([
+          fetchProfile(session.user.id),
+          checkAdmin(session.user.id)
+        ]);
+      } else {
+        setProfile(null);
+        setIsAdmin(false);
+      }
+      setLoading(false);
+    };
+
+    init();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        if (!mounted) return;
+
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          setTimeout(async () => {
-            await fetchProfile(session.user.id);
-            await checkAdmin(session.user.id);
-            setLoading(false);
-          }, 0);
+          setLoading(true);
+          await Promise.all([
+            fetchProfile(session.user.id),
+            checkAdmin(session.user.id)
+          ]);
+          setLoading(false);
         } else {
           setProfile(null);
           setIsAdmin(false);
@@ -84,17 +112,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-        checkAdmin(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, referralCode?: string) => {
