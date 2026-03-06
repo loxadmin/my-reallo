@@ -92,7 +92,7 @@ const Vouchers = () => {
     const code = codeData || `RLO-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
     const claimNaira = Math.floor(pts * 0.5);
     await supabase.from("vouchers").insert({ user_id: user.id, voucher_code: code, amount_naira: claimNaira, points_used: pts });
-    await supabase.from("profiles").update({ points_balance: pointsBalance - pts }).eq("id", user.id);
+    await supabase.rpc("recalculate_user_points", { target_user_id: user.id });
     toast({ title: "Voucher created!", description: `${code} — ${formatNaira(claimNaira)}` });
     setPointsToUse("");
     await fetchData();
