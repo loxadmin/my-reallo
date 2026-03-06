@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, Shield, LayoutDashboard, Menu } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import RealloLogo from "./RealloLogo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,9 +28,10 @@ const Navbar = ({ children }: NavbarProps) => {
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         <button
           onClick={() => navigate("/")}
-          className="font-display text-[13px] font-bold text-foreground tracking-tight"
+          className="flex items-center gap-2 group"
         >
-          <span className="gradient-text">Reallo</span>
+          <RealloLogo size={24} className="group-hover:scale-110 transition-transform duration-300" />
+          <span className="font-display text-[13px] font-bold text-foreground tracking-tight gradient-text">Reallo</span>
         </button>
         <div className="flex items-center gap-1">
           <ThemeToggle />

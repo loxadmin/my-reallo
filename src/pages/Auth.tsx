@@ -7,6 +7,7 @@ import GlassInput from "@/components/GlassInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { Mail, Lock, UserPlus, LogIn, Gift } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import RealloLogo from "@/components/RealloLogo";
 import WaterBackground from "@/components/WaterBackground";
 
 const Auth = () => {
@@ -55,7 +56,10 @@ const Auth = () => {
         className="w-full max-w-md z-10"
       >
         <div className="text-center mb-8">
-          <h1 className="font-display text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
+          <div className="flex justify-center mb-4">
+            <RealloLogo size={48} />
+          </div>
+          <h1 className="font-display text-2xl font-bold text-foreground mb-2">
             <span className="gradient-text">Reallo</span>
           </h1>
           <p className="text-[13px] text-muted-foreground">Reclaim what's yours</p>
