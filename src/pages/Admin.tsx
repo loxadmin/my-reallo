@@ -207,6 +207,13 @@ const Admin = () => {
     await fetchData();
   };
 
+  const getPublicScreenshotUrl = (path: string | null) => {
+    if (!path) return null;
+    if (path.startsWith("http")) return path;
+    const { data } = supabase.storage.from("referral_screenshots").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
   const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -605,12 +612,13 @@ const Admin = () => {
                       <p className="text-[11px] text-primary font-semibold">Pending Approvals ({pendingApprovals.length})</p>
                       {pendingApprovals.map(pr => {
                         const userEmail = profiles.find(p => p.id === pr.user_id)?.email || pr.user_id.slice(0, 8);
+                        const screenshotUrl = getPublicScreenshotUrl(pr.referral_screenshot_url);
                         return (
                           <div key={pr.id} className="flex items-center justify-between glass rounded-xl p-2">
                             <div className="flex flex-col">
                               <span className="text-[11px] text-muted-foreground">{userEmail}</span>
-                              {pr.referral_screenshot_url && pr.referral_screenshot_url !== "pending_review" && (
-                                <a href={pr.referral_screenshot_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5">
+                              {screenshotUrl && pr.referral_screenshot_url !== "pending_review" && (
+                                <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5">
                                   <ExternalLink className="w-2.5 h-2.5" /> View Screenshot
                                 </a>
                               )}
