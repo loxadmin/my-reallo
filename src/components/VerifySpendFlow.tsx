@@ -130,13 +130,9 @@ const VerifySpendFlow = () => {
   if (!isOffQueue || !user) return null;
 
   const now = new Date();
-  const isComplete = verification?.status === "completed" || verification?.status === "verified" || profile?.spend_verified;
+  const isComplete = verification?.status === "completed" || verification?.status === "verified";
   const daysLeft = verification ? Math.max(0, Math.ceil((new Date(verification.ends_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
   const verificationEnded = verification ? now >= new Date(verification.ends_at) : false;
-
-  const maxBoxes = verification ? getMaxBoxes(verification.frequency) : 0;
-  const allTxsSubmitted = transactions.length >= maxBoxes && maxBoxes > 0;
-  const isPendingReview = (allTxsSubmitted || verificationEnded) && !isComplete;
 
   // Calculate verified spend based on frequency
   const verifiedTxs = transactions.filter(t => t.is_verified);
@@ -153,8 +149,7 @@ const VerifySpendFlow = () => {
   const recalculatedSpend = shouldRecalculate ? totalVerifiedAmount * getRecalcMultiplier(verification!.frequency) : null;
 
   // Show "already verified" if complete
-  if (isComplete) {
-    const displayAmount = verification?.recalculated_amount ?? profile?.total_annual_spend;
+  if (isComplete || (verification && verification.status === "verified")) {
     return (
       <GlassCard variant="strong" className="space-y-4">
         <div className="flex items-center gap-2">
@@ -164,20 +159,20 @@ const VerifySpendFlow = () => {
         <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="glass rounded-xl p-4 text-center border border-primary/20">
           <CheckCircle2 className="w-7 h-7 text-primary mx-auto mb-2" />
           <p className="font-semibold text-foreground text-[13px]">Verification Complete!</p>
-          {displayAmount !== null && displayAmount !== undefined && (
+          {verification?.recalculated_amount !== null && verification?.recalculated_amount !== undefined && (
             <p className="text-[12px] text-primary mt-1">
-              Verified Annual Spend: ₦{displayAmount.toLocaleString("en-NG")}
+              Verified Annual Spend: ₦{verification.recalculated_amount.toLocaleString("en-NG")}
             </p>
           )}
         </motion.div>
         <p className="text-[10px] text-muted-foreground">
-          {verifiedTxs.length > 0 ? `${verifiedTxs.length} transactions verified` : "Your spend has been verified by the administrator."}
+          {verifiedTxs.length} transactions verified
         </p>
       </GlassCard>
     );
   }
 
-  if (!verification || (!isPendingReview && verificationEnded && transactions.length === 0)) {
+  if (!verification) {
     return (
       <GlassCard variant="strong" className="space-y-4">
         <div className="flex items-center gap-2">
@@ -223,6 +218,8 @@ const VerifySpendFlow = () => {
     );
   }
 
+  const maxBoxes = getMaxBoxes(verification.frequency);
+
   return (
     <GlassCard variant="strong" className="space-y-4">
       <div className="flex items-center justify-between">
@@ -230,23 +227,13 @@ const VerifySpendFlow = () => {
           <ShieldCheck className="w-4 h-4 text-primary" />
           <h3 className="font-semibold text-foreground text-[13px]">Spend Verification</h3>
         </div>
-        {!verificationEnded && !allTxsSubmitted && (
+        {!verificationEnded && (
           <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
             <Clock className="w-3 h-3" />
             <span>{daysLeft}d left</span>
           </div>
         )}
       </div>
-
-      {isPendingReview && (
-        <div className="glass rounded-xl p-4 text-center border border-primary/10 bg-primary/5">
-          <Clock className="w-6 h-6 text-primary mx-auto mb-2 animate-pulse" />
-          <p className="font-semibold text-foreground text-[13px]">Pending Admin Review</p>
-          <p className="text-[11px] text-muted-foreground mt-1">
-            All required transactions submitted. Your verification is being processed.
-          </p>
-        </div>
-      )}
 
       {firstVerifiedAmount > 0 && (
         <div className="glass rounded-xl p-3">
@@ -283,7 +270,7 @@ const VerifySpendFlow = () => {
                       }
                     }}
                     placeholder={`Transaction ID #${idx + 1}`}
-                    disabled={isSubmitted || isPendingReview}
+                    disabled={isSubmitted}
                     className="text-[12px]"
                   />
                 </div>
@@ -303,7 +290,7 @@ const VerifySpendFlow = () => {
                   <GlassButton
                     variant="primary"
                     onClick={() => handleSubmitTx(idx)}
-                    disabled={submitting || !val.trim() || isPendingReview}
+                    disabled={submitting || !val.trim()}
                     className="px-3 py-2 text-[10px] min-w-[60px]"
                   >
                     Submit
