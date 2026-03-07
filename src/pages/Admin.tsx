@@ -56,6 +56,7 @@ const Admin = () => {
   const [decisionResponses, setDecisionResponses] = useState<DecisionResponseRow[]>([]);
 
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
+  const [verifyPageActive, setVerifyPageActive] = useState(true);
   const [postQueueReferralPoints, setPostQueueReferralPoints] = useState("1000");
   const [verifySpendLink, setVerifySpendLink] = useState("");
   const [verifySpendDescription, setVerifySpendDescription] = useState("");
@@ -101,6 +102,7 @@ const Admin = () => {
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
+    setVerifyPageActive(settings.find(s => s.key === "verify_page_active")?.value === "false" ? false : true);
     setPostQueueReferralPoints(settings.find(s => s.key === "post_queue_referral_points")?.value || "1000");
     setVerifySpendLink(settings.find(s => s.key === "verify_spend_link")?.value || "");
     setVerifySpendDescription(settings.find(s => s.key === "verify_spend_description")?.value || "");
@@ -152,6 +154,7 @@ const Admin = () => {
     setSaving(true);
     await Promise.all([
       supabase.from("admin_settings").upsert({ key: "verify_expense_link", value: verifyExpenseLink, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "verify_page_active", value: String(verifyPageActive), updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "post_queue_referral_points", value: postQueueReferralPoints, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_spend_link", value: verifySpendLink, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_spend_description", value: verifySpendDescription, updated_at: new Date().toISOString() }),
@@ -780,6 +783,18 @@ const Admin = () => {
           <GlassCard animate={false}>
             <h3 className="font-semibold text-foreground text-[13px] mb-4">App Settings</h3>
             <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 glass rounded-xl">
+                <div>
+                  <label className="text-[13px] font-medium text-foreground">Verify Page Active</label>
+                  <p className="text-[11px] text-muted-foreground">If disabled, users will see "Coming Soon" on the verify page.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={verifyPageActive}
+                  onChange={e => setVerifyPageActive(e.target.checked)}
+                  className="w-5 h-5 accent-primary cursor-pointer"
+                />
+              </div>
               <div>
                 <label className="text-[13px] text-muted-foreground">Verify Expense Button Link</label>
                 <input value={verifyExpenseLink} onChange={e => setVerifyExpenseLink(e.target.value)} placeholder="https://..." className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] mt-1" />
