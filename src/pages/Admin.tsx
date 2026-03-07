@@ -31,26 +31,11 @@ interface VerificationTx {
   is_verified: boolean; verified_amount: number | null; submitted_at: string;
 }
 
-interface Survey {
-  id: string; title: string; description: string | null; points_reward: number;
-  completion_link: string | null; is_active: boolean; created_at: string;
-}
-
-interface SurveyQuestion {
-  id: string; survey_id: string; question_text: string; options: string[];
-  correct_option: string; order_index: number;
-}
-
-interface SurveyResponse {
-  id: string; user_id: string; survey_id: string; screenshot_url: string | null;
-  is_approved: boolean; points_awarded: number; created_at: string;
-}
-
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "surveys" | "analytics" | "verification" | "settings";
+type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings";
 
 const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
@@ -69,9 +54,6 @@ const Admin = () => {
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [decisionApps, setDecisionApps] = useState<DecisionAppRow[]>([]);
   const [decisionResponses, setDecisionResponses] = useState<DecisionResponseRow[]>([]);
-  const [surveys, setSurveys] = useState<Survey[]>([]);
-  const [surveyQuestions, setSurveyQuestions] = useState<SurveyQuestion[]>([]);
-  const [surveyResponses, setSurveyResponses] = useState<SurveyResponse[]>([]);
 
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [verifyPageActive, setVerifyPageActive] = useState(true);
@@ -91,20 +73,13 @@ const Admin = () => {
 
   const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0 });
 
-  const [newSurvey, setNewSurvey] = useState({
-    title: "", description: "", points_reward: 5000, completion_link: ""
-  });
-  const [newQuestion, setNewQuestion] = useState({
-    survey_id: "", question_text: "", options: ["", ""], correct_option: ""
-  });
-
   useEffect(() => {
     if (!loading && !isAdmin) navigate("/");
   }, [loading, isAdmin, navigate]);
 
   const fetchData = async () => {
     setRefreshing(true);
-    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, sRes, sqRes, srRes] = await Promise.all([
+    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes] = await Promise.all([
       supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
       supabase.from("ghost_users").select("id", { count: "exact", head: true }),
       supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
@@ -113,9 +88,6 @@ const Admin = () => {
       supabase.from("verification_transactions").select("*").order("submitted_at", { ascending: false }).limit(200),
       fromApps().select("*").order("created_at", { ascending: false }),
       fromDResponses().select("*").order("created_at", { ascending: false }),
-      supabase.from("surveys").select("*").order("created_at", { ascending: false }),
-      supabase.from("survey_questions").select("*").order("order_index", { ascending: true }),
-      supabase.from("survey_responses").select("*").order("created_at", { ascending: false }),
     ]);
 
     const profs = (profilesRes.data as ProfileRow[]) || [];
@@ -126,9 +98,6 @@ const Admin = () => {
     setVerificationTxs((vtRes.data as VerificationTx[]) || []);
     setDecisionApps((daRes.data || []) as unknown as DecisionAppRow[]);
     setDecisionResponses((drRes.data || []) as unknown as DecisionResponseRow[]);
-    setSurveys((sRes.data as Survey[]) || []);
-    setSurveyQuestions((sqRes.data as any[] || []).map(q => ({ ...q, options: Array.isArray(q.options) ? q.options : [] })));
-    setSurveyResponses((srRes.data as SurveyResponse[]) || []);
     setEditedGoals({});
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
@@ -230,78 +199,6 @@ const Admin = () => {
     await fetchData();
   };
 
-  const handleCreateSurvey = async () => {
-    if (!newSurvey.title) return;
-    await supabase.from("surveys").insert({
-      title: newSurvey.title,
-      description: newSurvey.description || null,
-      points_reward: newSurvey.points_reward,
-      completion_link: newSurvey.completion_link || null,
-      is_active: true
-    });
-    toast({ title: "Survey created" });
-    setNewSurvey({ title: "", description: "", points_reward: 5000, completion_link: "" });
-    await fetchData();
-  };
-
-  const handleDeleteSurvey = async (id: string) => {
-    await supabase.from("surveys").delete().eq("id", id);
-    toast({ title: "Survey deleted" });
-    await fetchData();
-  };
-
-  const handleToggleSurvey = async (id: string, active: boolean) => {
-    await supabase.from("surveys").update({ is_active: !active }).eq("id", id);
-    await fetchData();
-  };
-
-  const handleCreateQuestion = async () => {
-    if (!newQuestion.survey_id || !newQuestion.question_text || !newQuestion.correct_option) return;
-    const { data: existing } = await supabase.from("survey_questions").select("order_index").eq("survey_id", newQuestion.survey_id).order("order_index", { ascending: false }).limit(1);
-    const nextIdx = existing && existing.length > 0 ? existing[0].order_index + 1 : 0;
-
-    await supabase.from("survey_questions").insert({
-      survey_id: newQuestion.survey_id,
-      question_text: newQuestion.question_text,
-      options: newQuestion.options.filter(o => o.trim()),
-      correct_option: newQuestion.correct_option,
-      order_index: nextIdx
-    });
-    toast({ title: "Question added" });
-    setNewQuestion({ ...newQuestion, question_text: "", options: ["", ""], correct_option: "" });
-    await fetchData();
-  };
-
-  const handleDeleteQuestion = async (id: string) => {
-    await supabase.from("survey_questions").delete().eq("id", id);
-    toast({ title: "Question deleted" });
-    await fetchData();
-  };
-
-  const handleApproveSurvey = async (responseId: string, surveyId: string, userId: string) => {
-    const survey = surveys.find(s => s.id === surveyId);
-    if (!survey) return;
-
-    try {
-      const { error: respError } = await supabase.from("survey_responses").update({
-        is_approved: true,
-        points_awarded: survey.points_reward
-      }).eq("id", responseId);
-
-      if (respError) throw respError;
-
-      const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", userId).single();
-      if (profile) {
-        await supabase.from("profiles").update({ points_balance: (profile.points_balance || 0) + survey.points_reward }).eq("id", userId);
-      }
-
-      toast({ title: "Survey approved", description: `${survey.points_reward} points awarded` });
-      await fetchData();
-    } catch (e: any) {
-      toast({ title: "Approval failed", description: e.message });
-    }
-  };
-
   const handleApproveReferral = async (responseId: string, appId: string, userId: string) => {
     const app = decisionApps.find(a => a.id === appId);
     if (!app) return;
@@ -346,10 +243,10 @@ const Admin = () => {
     }
   };
 
-  const getPublicScreenshotUrl = (path: string | null, bucket: string = "referral_screenshots") => {
+  const getPublicScreenshotUrl = (path: string | null) => {
     if (!path) return null;
     if (path.startsWith("http")) return path;
-    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    const { data } = supabase.storage.from("referral_screenshots").getPublicUrl(path);
     return data.publicUrl;
   };
 
@@ -447,8 +344,7 @@ const Admin = () => {
     { id: "activity", label: "Activity", icon: Activity, count: activities.length },
     { id: "goals", label: "Goals", icon: Settings, count: goalCategories.length },
     { id: "decisions", label: "Decisions", icon: Smartphone, count: decisionApps.length },
-    { id: "surveys", label: "Surveys", icon: MessageSquare, count: surveys.length },
-    { id: "analytics", label: "Analytics", icon: BarChart3, count: decisionResponses.length + surveyResponses.length },
+    { id: "analytics", label: "Analytics", icon: BarChart3, count: decisionResponses.length },
     { id: "verification", label: "Verify", icon: CheckCircle2, count: verificationTxs.length },
     { id: "settings", label: "Settings", icon: Link, count: 0 },
   ];
@@ -615,120 +511,6 @@ const Admin = () => {
               </div>
               <GlassButton variant="primary" onClick={handleCreateGoal} className="w-full text-[12px]">Add Goal</GlassButton>
             </GlassCard>
-          </div>
-        )}
-
-        {/* Surveys */}
-        {activeTab === "surveys" && (
-          <div className="space-y-4">
-            <GlassCard animate={false}>
-              <h3 className="font-semibold text-foreground text-[13px] mb-4 flex items-center gap-2">
-                <Plus className="w-4 h-4 text-primary" /> Create New Survey
-              </h3>
-              <div className="space-y-3">
-                <input value={newSurvey.title} onChange={e => setNewSurvey(p => ({ ...p, title: e.target.value }))} placeholder="Survey Title" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
-                <textarea value={newSurvey.description} onChange={e => setNewSurvey(p => ({ ...p, description: e.target.value }))} placeholder="Description (optional)" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] min-h-[60px] resize-none" />
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <p className="text-[10px] text-muted-foreground mb-1">Points Reward</p>
-                    <input type="number" value={newSurvey.points_reward} onChange={e => setNewSurvey(p => ({ ...p, points_reward: parseInt(e.target.value) || 0 }))} className="w-full glass-input rounded-xl px-3 py-2 text-foreground text-[13px]" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground mb-1">Completion Link (External)</p>
-                    <input value={newSurvey.completion_link} onChange={e => setNewSurvey(p => ({ ...p, completion_link: e.target.value }))} placeholder="https://..." className="w-full glass-input rounded-xl px-3 py-2 text-foreground text-[13px]" />
-                  </div>
-                </div>
-                <GlassButton variant="primary" onClick={handleCreateSurvey} className="w-full text-[13px]">Create Survey</GlassButton>
-              </div>
-            </GlassCard>
-
-            {surveys.map(s => {
-              const questions = surveyQuestions.filter(q => q.survey_id === s.id);
-              const pendingResponses = surveyResponses.filter(r => r.survey_id === s.id && r.screenshot_url && !r.is_approved);
-              return (
-                <GlassCard key={s.id} animate={false}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h4 className="font-semibold text-foreground text-[13px]">{s.title}</h4>
-                      <p className="text-[11px] text-muted-foreground">{s.points_reward} pts • {questions.length} questions • {s.is_active ? "Active" : "Inactive"}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <GlassButton variant="outline" onClick={() => handleToggleSurvey(s.id, s.is_active)} className="px-3 py-1 text-[11px]">
-                        {s.is_active ? "Deactivate" : "Activate"}
-                      </GlassButton>
-                      <button onClick={() => handleDeleteSurvey(s.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 p-3 glass rounded-xl space-y-3">
-                    <p className="text-[11px] font-semibold text-primary">Questions</p>
-                    {questions.map(q => (
-                      <div key={q.id} className="flex items-center justify-between border-b border-border/30 pb-2">
-                        <div>
-                          <p className="text-[12px] text-foreground font-medium">{q.question_text}</p>
-                          <p className="text-[10px] text-muted-foreground">Options: {q.options.join(", ")} | Correct: <span className="text-primary">{q.correct_option}</span></p>
-                        </div>
-                        <button onClick={() => handleDeleteQuestion(q.id)} className="text-destructive"><Trash2 className="w-3 h-3" /></button>
-                      </div>
-                    ))}
-                    <div className="pt-2 space-y-2">
-                      <p className="text-[10px] text-muted-foreground uppercase">Add Question</p>
-                      <input value={newQuestion.survey_id === s.id ? newQuestion.question_text : ""} onChange={e => setNewQuestion(p => ({ ...p, survey_id: s.id, question_text: e.target.value }))} placeholder="Question text" className="w-full glass-input rounded-lg px-3 py-2 text-[12px]" />
-                      <div className="space-y-1">
-                        {(newQuestion.survey_id === s.id ? newQuestion.options : ["", ""]).map((opt, i) => (
-                          <div key={i} className="flex gap-1">
-                            <input value={opt} onChange={e => {
-                              const next = [...(newQuestion.survey_id === s.id ? newQuestion.options : ["", ""])];
-                              next[i] = e.target.value;
-                              setNewQuestion(p => ({ ...p, survey_id: s.id, options: next }));
-                            }} placeholder={`Option ${i+1}`} className="flex-1 glass-input rounded-lg px-3 py-1.5 text-[11px]" />
-                            <button onClick={() => {
-                              const next = [...(newQuestion.survey_id === s.id ? newQuestion.options : ["", ""])];
-                              next.splice(i, 1);
-                              setNewQuestion(p => ({ ...p, survey_id: s.id, options: next }));
-                            }} className="text-destructive px-1">×</button>
-                          </div>
-                        ))}
-                        <button onClick={() => {
-                          const next = [...(newQuestion.survey_id === s.id ? newQuestion.options : ["", ""]), ""];
-                          setNewQuestion(p => ({ ...p, survey_id: s.id, options: next }));
-                        }} className="text-[10px] text-primary hover:underline">+ Add Option</button>
-                      </div>
-                      <select value={newQuestion.survey_id === s.id ? newQuestion.correct_option : ""} onChange={e => setNewQuestion(p => ({ ...p, survey_id: s.id, correct_option: e.target.value }))} className="w-full glass-input rounded-lg px-3 py-2 text-[12px] bg-transparent">
-                        <option value="">Select Correct Option</option>
-                        {(newQuestion.survey_id === s.id ? newQuestion.options : []).map((o, i) => o && <option key={i} value={o}>{o}</option>)}
-                      </select>
-                      <GlassButton variant="primary" onClick={handleCreateQuestion} className="w-full py-1.5 text-[11px]" disabled={newQuestion.survey_id !== s.id || !newQuestion.question_text || !newQuestion.correct_option}>Add Question to Survey</GlassButton>
-                    </div>
-                  </div>
-
-                  {pendingResponses.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      <p className="text-[11px] text-primary font-semibold">Pending Survey Approvals ({pendingResponses.length})</p>
-                      {pendingResponses.map(pr => {
-                        const userEmail = profiles.find(p => p.id === pr.user_id)?.email || pr.user_id.slice(0, 8);
-                        const screenshotUrl = getPublicScreenshotUrl(pr.screenshot_url, "survey_screenshots");
-                        return (
-                          <div key={pr.id} className="flex items-center justify-between glass rounded-xl p-2">
-                            <div className="flex flex-col">
-                              <span className="text-[11px] text-muted-foreground">{userEmail}</span>
-                              {screenshotUrl && (
-                                <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5">
-                                  <ExternalLink className="w-2.5 h-2.5" /> View Screenshot
-                                </a>
-                              )}
-                            </div>
-                            <GlassButton variant="primary" onClick={() => handleApproveSurvey(pr.id, s.id, pr.user_id)} className="px-3 py-1 text-[10px]">
-                              <Check className="w-3 h-3 mr-1 inline" /> Approve
-                            </GlassButton>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </GlassCard>
-              );
-            })}
           </div>
         )}
 
