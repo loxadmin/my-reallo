@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
-import { Award, CheckSquare, ExternalLink, Clock, Upload, X, History, Zap } from "lucide-react";
+import SocialMediaFlow from "./SocialMediaFlow";
+import { Award, CheckSquare, ExternalLink, Clock, Upload, X, History, Zap, Video, CheckCircle2, ChevronRight, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface DecisionApp {
@@ -51,6 +52,7 @@ const DecisionFlow = () => {
   const [submitting, setSubmitting] = useState(false);
   const [earnTab, setEarnTab] = useState<EarnTab>("earn");
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+  const [earnMode, setEarnMode] = useState<"tasks" | "social" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Sequential interaction state
@@ -302,6 +304,58 @@ const DecisionFlow = () => {
   };
 
   if (!user) return null;
+
+  if (earnMode === "social") {
+    return <SocialMediaFlow onBack={() => setEarnMode(null)} />;
+  }
+
+  if (earnMode === null) {
+    return (
+      <div className="space-y-4">
+        <GlassCard variant="strong" className="p-6">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Award className="w-8 h-8 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">Earn Rewards</h3>
+              <p className="text-[13px] text-muted-foreground mt-1">Choose how you want to earn points and bonuses today.</p>
+            </div>
+
+            <div className="w-full grid grid-cols-1 gap-3 pt-4">
+              <button
+                onClick={() => setEarnMode("social")}
+                className="w-full glass rounded-2xl p-4 flex items-center gap-4 transition-all hover:bg-primary/5 text-left border border-transparent hover:border-primary/20"
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Video className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground text-[14px]">Post videos on social media</p>
+                  <p className="text-[11px] text-muted-foreground">Earn cash bonuses up to ₦30k+</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+
+              <button
+                onClick={() => setEarnMode("tasks")}
+                className="w-full glass rounded-2xl p-4 flex items-center gap-4 transition-all hover:bg-primary/5 text-left border border-transparent hover:border-primary/20"
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground text-[14px]">Completing tasks</p>
+                  <p className="text-[11px] text-muted-foreground">Answer questions & switch apps for points</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+          </div>
+        </GlassCard>
+      </div>
+    );
+  }
 
   const fileInput = (
     <input
@@ -614,6 +668,9 @@ const DecisionFlow = () => {
   return (
     <div className="space-y-4">
       {fileInput}
+      <GlassButton variant="outline" onClick={() => setEarnMode(null)} className="h-9 px-3 text-[12px] gap-1.5">
+        <ArrowLeft className="w-3.5 h-3.5" /> Back to Choice
+      </GlassButton>
       <GlassCard variant="strong">
         <div className="flex items-center gap-2 mb-3">
           <CheckSquare className="w-4 h-4 text-primary" />
