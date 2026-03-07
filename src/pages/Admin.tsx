@@ -21,28 +21,11 @@ interface DecisionAppRow {
   switch_link: string | null; referral_message: string | null; referral_link: string | null;
   referral_points: number; is_active: boolean; switch_to_referral_app_ids: string[] | null;
 }
-
-interface SurveyRow {
-  id: string; title: string; description: string | null; points_reward: number;
-  completion_link: string | null; is_active: boolean; created_at: string;
-}
-
-interface SurveyQuestionRow {
-  id: string; survey_id: string; question_text: string; options: string[];
-  correct_answer: string; order_index: number;
-}
-
-interface SurveyResponseRow {
-  id: string; user_id: string; survey_id: string; status: string;
-  screenshot_url: string | null; points_awarded: number; created_at: string;
-}
-
 interface DecisionResponseRow {
   id: string; user_id: string; app_id: string; has_app: boolean; would_switch: boolean | null;
   switch_completed: boolean; referral_clicked: boolean; referral_screenshot_url: string | null;
   referral_approved: boolean; points_awarded: number; created_at: string;
 }
-
 interface VerificationTx {
   id: string; verification_id: string; user_id: string; transaction_id: string;
   is_verified: boolean; verified_amount: number | null; submitted_at: string;
@@ -51,11 +34,8 @@ interface VerificationTx {
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
-const fromSurveys = () => supabase.from("surveys" as any);
-const fromQuestions = () => supabase.from("survey_questions" as any);
-const fromSResponses = () => supabase.from("survey_responses" as any);
 
-type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "surveys" | "analytics" | "verification" | "settings";
+type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings";
 
 const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
@@ -74,9 +54,6 @@ const Admin = () => {
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [decisionApps, setDecisionApps] = useState<DecisionAppRow[]>([]);
   const [decisionResponses, setDecisionResponses] = useState<DecisionResponseRow[]>([]);
-  const [surveys, setSurveys] = useState<SurveyRow[]>([]);
-  const [surveyQuestions, setSurveyQuestions] = useState<SurveyQuestionRow[]>([]);
-  const [surveyResponses, setSurveyResponses] = useState<SurveyResponseRow[]>([]);
 
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [verifyPageActive, setVerifyPageActive] = useState(true);
@@ -96,21 +73,13 @@ const Admin = () => {
 
   const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0 });
 
-  const [newSurvey, setNewSurvey] = useState({
-    title: "", description: "", points_reward: 1000, completion_link: "",
-  });
-
-  const [newQuestion, setNewQuestion] = useState({
-    survey_id: "", question_text: "", options: ["", "", "", ""], correct_answer: "",
-  });
-
   useEffect(() => {
     if (!loading && !isAdmin) navigate("/");
   }, [loading, isAdmin, navigate]);
 
   const fetchData = async () => {
     setRefreshing(true);
-    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, sRes, qRes, srRes] = await Promise.all([
+    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes] = await Promise.all([
       supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
       supabase.from("ghost_users").select("id", { count: "exact", head: true }),
       supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
@@ -119,9 +88,6 @@ const Admin = () => {
       supabase.from("verification_transactions").select("*").order("submitted_at", { ascending: false }).limit(200),
       fromApps().select("*").order("created_at", { ascending: false }),
       fromDResponses().select("*").order("created_at", { ascending: false }),
-      fromSurveys().select("*").order("created_at", { ascending: false }),
-      fromQuestions().select("*").order("order_index", { ascending: true }),
-      fromSResponses().select("*").order("created_at", { ascending: false }),
     ]);
 
     const profs = (profilesRes.data as ProfileRow[]) || [];
@@ -132,9 +98,6 @@ const Admin = () => {
     setVerificationTxs((vtRes.data as VerificationTx[]) || []);
     setDecisionApps((daRes.data || []) as unknown as DecisionAppRow[]);
     setDecisionResponses((drRes.data || []) as unknown as DecisionResponseRow[]);
-    setSurveys((sRes.data || []) as unknown as SurveyRow[]);
-    setSurveyQuestions((qRes.data || []) as unknown as SurveyQuestionRow[]);
-    setSurveyResponses((srRes.data || []) as unknown as SurveyResponseRow[]);
     setEditedGoals({});
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
@@ -251,105 +214,33 @@ const Admin = () => {
         return;
       }
 
-      await supabase.rpc("recalculate_user_points", { target_user_id: userId });
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("points_balance")
+        .eq("id", userId)
+        .single();
+
+      if (profileError || !profile) {
+        toast({ title: "Error fetching profile", description: profileError?.message || "Profile not found" });
+        return;
+      }
+
+      const newBalance = (profile.points_balance || 0) + app.referral_points;
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ points_balance: newBalance })
+        .eq("id", userId);
+
+      if (updateError) {
+        toast({ title: "Error updating points", description: updateError.message });
+        return;
+      }
 
       toast({ title: "Referral approved", description: `${app.referral_points} points awarded to user` });
       await fetchData();
     } catch (error) {
       toast({ title: "Approval failed", description: (error as Error).message });
     }
-  };
-
-  const handleCreateSurvey = async () => {
-    if (!newSurvey.title) return;
-    await fromSurveys().insert({
-      title: newSurvey.title,
-      description: newSurvey.description || null,
-      points_reward: newSurvey.points_reward,
-      completion_link: newSurvey.completion_link || null,
-    });
-    toast({ title: "Survey created" });
-    setNewSurvey({ title: "", description: "", points_reward: 1000, completion_link: "" });
-    await fetchData();
-  };
-
-  const handleDeleteSurvey = async (id: string) => {
-    await fromSurveys().delete().eq("id", id);
-    toast({ title: "Survey deleted" });
-    await fetchData();
-  };
-
-  const handleToggleSurvey = async (id: string, active: boolean) => {
-    await fromSurveys().update({ is_active: !active }).eq("id", id);
-    await fetchData();
-  };
-
-  const handleCreateQuestion = async () => {
-    if (!newQuestion.survey_id || !newQuestion.question_text || !newQuestion.correct_answer) return;
-
-    // Check if options are valid
-    const validOptions = newQuestion.options.filter(o => o.trim());
-    if (validOptions.length < 2) {
-      toast({ title: "Error", description: "At least 2 options are required" });
-      return;
-    }
-
-    const { data: existingQs } = await fromQuestions().select("order_index").eq("survey_id", newQuestion.survey_id).order("order_index", { ascending: false }).limit(1);
-    const nextIdx = (existingQs?.[0]?.order_index ?? -1) + 1;
-
-    await fromQuestions().insert({
-      survey_id: newQuestion.survey_id,
-      question_text: newQuestion.question_text,
-      options: validOptions,
-      correct_answer: newQuestion.correct_answer,
-      order_index: nextIdx,
-    });
-    toast({ title: "Question added" });
-    setNewQuestion(p => ({ ...p, question_text: "", options: ["", "", "", ""], correct_answer: "" }));
-    await fetchData();
-  };
-
-  const handleDeleteQuestion = async (id: string) => {
-    await fromQuestions().delete().eq("id", id);
-    toast({ title: "Question deleted" });
-    await fetchData();
-  };
-
-  const handleApproveSurvey = async (responseId: string, userId: string, points: number) => {
-    try {
-      await fromSResponses().update({
-        status: "approved",
-        points_awarded: points,
-        completed_at: new Date().toISOString(),
-      }).eq("id", responseId);
-
-      await supabase.rpc("recalculate_user_points", { target_user_id: userId });
-
-      toast({ title: "Survey approved", description: `${points} points awarded to user` });
-      await fetchData();
-    } catch (error) {
-      toast({ title: "Approval failed", description: (error as Error).message });
-    }
-  };
-
-  const handleSyncPoints = async (userId: string) => {
-    const { error } = await supabase.rpc("recalculate_user_points", { target_user_id: userId });
-    if (error) toast({ title: "Sync failed", description: error.message });
-    else {
-      toast({ title: "Points synced" });
-      await fetchData();
-    }
-  };
-
-  const handleSyncAllPoints = async () => {
-    setSaving(true);
-    const { error } = await supabase.rpc("recalculate_all_users_points");
-    if (error) toast({ title: "Sync all failed", description: error.message });
-    else {
-      toast({ title: "All points synced" });
-      await fetchData();
-    }
-    setSaving(false);
   };
 
   const getPublicScreenshotUrl = (path: string | null) => {
@@ -453,8 +344,7 @@ const Admin = () => {
     { id: "activity", label: "Activity", icon: Activity, count: activities.length },
     { id: "goals", label: "Goals", icon: Settings, count: goalCategories.length },
     { id: "decisions", label: "Decisions", icon: Smartphone, count: decisionApps.length },
-    { id: "surveys", label: "Surveys", icon: MessageSquare, count: surveys.length },
-    { id: "analytics", label: "Analytics", icon: BarChart3, count: decisionResponses.length + surveyResponses.length },
+    { id: "analytics", label: "Analytics", icon: BarChart3, count: decisionResponses.length },
     { id: "verification", label: "Verify", icon: CheckCircle2, count: verificationTxs.length },
     { id: "settings", label: "Settings", icon: Link, count: 0 },
   ];
@@ -517,14 +407,7 @@ const Admin = () => {
                       <td className="py-2 px-2 text-foreground truncate max-w-[120px]">{p.email}</td>
                       <td className="py-2 px-2 text-right text-primary">{formatNaira(p.total_annual_spend || 0)}</td>
                       <td className="py-2 px-2 text-right font-bold text-foreground">{p.queue_position}</td>
-                      <td className="py-2 px-2 text-right text-primary">
-                        <div className="flex items-center justify-end gap-1">
-                          {p.points_balance || 0}
-                          <button onClick={() => handleSyncPoints(p.id)} className="p-1 hover:text-primary transition-colors">
-                            <RefreshCw className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </td>
+                      <td className="py-2 px-2 text-right text-primary">{p.points_balance || 0}</td>
                       <td className="py-2 px-2 text-right text-foreground">{referralCounts[p.id] || 0}</td>
                     </tr>
                   ))}
@@ -790,134 +673,6 @@ const Admin = () => {
           </div>
         )}
 
-        {/* Surveys */}
-        {activeTab === "surveys" && (
-          <div className="space-y-4">
-            <GlassCard animate={false}>
-              <h3 className="font-semibold text-foreground text-[13px] mb-4 flex items-center gap-2">
-                <Plus className="w-4 h-4 text-primary" /> Create New Survey
-              </h3>
-              <div className="space-y-3">
-                <input value={newSurvey.title} onChange={e => setNewSurvey(p => ({ ...p, title: e.target.value }))} placeholder="Survey Title" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
-                <textarea value={newSurvey.description} onChange={e => setNewSurvey(p => ({ ...p, description: e.target.value }))} placeholder="Description (optional)" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] min-h-[60px] resize-none" />
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-[11px] text-muted-foreground mb-1">Points Reward</p>
-                    <input type="number" value={newSurvey.points_reward} onChange={e => setNewSurvey(p => ({ ...p, points_reward: parseInt(e.target.value) || 0 }))} className="w-full glass-input rounded-xl px-3 py-2 text-foreground text-[13px]" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-muted-foreground mb-1">Completion Link (External)</p>
-                    <input value={newSurvey.completion_link} onChange={e => setNewSurvey(p => ({ ...p, completion_link: e.target.value }))} placeholder="https://..." className="w-full glass-input rounded-xl px-3 py-2 text-foreground text-[13px]" />
-                  </div>
-                </div>
-                <GlassButton variant="primary" onClick={handleCreateSurvey} className="w-full text-[13px]">Create Survey</GlassButton>
-              </div>
-            </GlassCard>
-
-            {surveys.map(s => {
-              const qs = surveyQuestions.filter(q => q.survey_id === s.id);
-              const pendingS = surveyResponses.filter(r => r.survey_id === s.id && r.status === "screenshot_uploaded");
-              return (
-                <GlassCard key={s.id} animate={false}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h4 className="font-semibold text-foreground text-[13px]">{s.title}</h4>
-                      <p className="text-[11px] text-muted-foreground">{s.points_reward} pts • {qs.length} questions • {s.is_active ? "Active" : "Inactive"}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <GlassButton variant="outline" onClick={() => handleToggleSurvey(s.id, s.is_active)} className="px-3 py-1 text-[11px]">
-                        {s.is_active ? "Deactivate" : "Activate"}
-                      </GlassButton>
-                      <button onClick={() => handleDeleteSurvey(s.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 border-t border-border/30 pt-4">
-                    <p className="text-[11px] font-semibold text-foreground mb-2">Add Question</p>
-                    <div className="space-y-2">
-                      <input
-                        value={newQuestion.survey_id === s.id ? newQuestion.question_text : ""}
-                        onChange={e => setNewQuestion(p => ({ ...p, survey_id: s.id, question_text: e.target.value }))}
-                        placeholder="Question Text"
-                        className="w-full glass-input rounded-lg px-3 py-2 text-[12px] text-foreground"
-                      />
-                      <div className="grid grid-cols-2 gap-2">
-                        {newQuestion.options.map((opt, i) => (
-                          <input
-                            key={i}
-                            value={newQuestion.survey_id === s.id ? newQuestion.options[i] : ""}
-                            onChange={e => {
-                              const next = [...newQuestion.options];
-                              next[i] = e.target.value;
-                              setNewQuestion(p => ({ ...p, survey_id: s.id, options: next }));
-                            }}
-                            placeholder={`Option ${i + 1}`}
-                            className="w-full glass-input rounded-lg px-3 py-2 text-[12px] text-foreground"
-                          />
-                        ))}
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground mb-1">Correct Answer</p>
-                        <select
-                          value={newQuestion.survey_id === s.id ? newQuestion.correct_answer : ""}
-                          onChange={e => setNewQuestion(p => ({ ...p, survey_id: s.id, correct_answer: e.target.value }))}
-                          className="w-full glass-input rounded-lg px-3 py-2 text-[12px] text-foreground bg-transparent"
-                        >
-                          <option value="" className="bg-background text-foreground">Select Correct Answer...</option>
-                          {newQuestion.options.filter(o => o.trim()).map((opt, i) => (
-                            <option key={i} value={opt} className="bg-background text-foreground">{opt}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <GlassButton variant="outline" onClick={handleCreateQuestion} className="w-full text-[11px]">Add Question</GlassButton>
-                    </div>
-                  </div>
-
-                  {qs.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      <p className="text-[11px] font-semibold text-foreground">Existing Questions:</p>
-                      {qs.map((q, idx) => (
-                        <div key={q.id} className="glass rounded-lg p-2 flex items-center justify-between">
-                          <div>
-                            <p className="text-[12px] text-foreground">{idx + 1}. {q.question_text}</p>
-                            <p className="text-[10px] text-primary">Correct: {q.correct_answer}</p>
-                          </div>
-                          <button onClick={() => handleDeleteQuestion(q.id)} className="text-destructive p-1"><Trash2 className="w-3 h-3" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {pendingS.length > 0 && (
-                    <div className="mt-4 border-t border-border/30 pt-4 space-y-2">
-                      <p className="text-[11px] text-primary font-semibold">Pending Approvals ({pendingS.length})</p>
-                      {pendingS.map(pr => {
-                        const userEmail = profiles.find(p => p.id === pr.user_id)?.email || pr.user_id.slice(0, 8);
-                        const screenshotUrl = getPublicScreenshotUrl(pr.screenshot_url);
-                        return (
-                          <div key={pr.id} className="flex items-center justify-between glass rounded-xl p-2">
-                            <div className="flex flex-col">
-                              <span className="text-[11px] text-muted-foreground">{userEmail}</span>
-                              {screenshotUrl && (
-                                <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5">
-                                  <ExternalLink className="w-2.5 h-2.5" /> View Screenshot
-                                </a>
-                              )}
-                            </div>
-                            <GlassButton variant="primary" onClick={() => handleApproveSurvey(pr.id, pr.user_id, s.points_reward)} className="px-3 py-1 text-[10px]">
-                              <Check className="w-3 h-3 mr-1 inline" /> Approve
-                            </GlassButton>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </GlassCard>
-              );
-            })}
-          </div>
-        )}
-
         {/* Analytics - Decision analytics */}
         {activeTab === "analytics" && (
           <div className="space-y-4">
@@ -1025,9 +780,8 @@ const Admin = () => {
 
         {/* Settings */}
         {activeTab === "settings" && (
-          <>
-            <GlassCard animate={false}>
-              <h3 className="font-semibold text-foreground text-[13px] mb-4">App Settings</h3>
+          <GlassCard animate={false}>
+            <h3 className="font-semibold text-foreground text-[13px] mb-4">App Settings</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 glass rounded-xl">
                 <div>
@@ -1076,17 +830,6 @@ const Admin = () => {
               </GlassButton>
             </div>
           </GlassCard>
-
-            <GlassCard animate={false} className="border-primary/20 bg-primary/5">
-              <h3 className="font-semibold text-foreground text-[13px] mb-2 flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 text-primary" /> Maintenance
-              </h3>
-              <p className="text-[11px] text-muted-foreground mb-4">Reconcile all user point balances based on current activity data.</p>
-              <GlassButton variant="outline" onClick={handleSyncAllPoints} disabled={saving} className="w-full text-[12px]">
-                {saving ? "Syncing..." : "Sync All Balances"}
-              </GlassButton>
-            </GlassCard>
-          </>
         )}
       </div>
     </div>
