@@ -151,7 +151,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               <p className="text-foreground text-[13px] font-medium mb-3">
                 Welcome back, {user?.email?.split("@")[0] || "User"} 👋
               </p>
-              <p className="text-muted-foreground uppercase tracking-[0.15em] text-[10px] font-medium mb-1">Goal Balance</p>
+              <p className="text-muted-foreground uppercase tracking-[0.15em] text-[10px] font-medium mb-1">Annual Utility Spend</p>
               <div className="flex items-baseline gap-3 mb-1">
                 <h2 className="font-display text-2xl font-bold gradient-text tabular-nums leading-none">
                   {formatNaira(targetAmount)}
@@ -164,7 +164,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               {/* Goal Progress */}
               <div className="space-y-1.5 mb-5">
                 <div className="flex justify-between items-end">
-                  <p className="font-medium text-foreground text-[12px]">{goalLabels[goal] || goal}</p>
+                  <p className="font-medium text-foreground text-[12px]">GOAL - {goalLabels[goal] || goal}</p>
                   <p className="text-muted-foreground text-[11px]">{Math.round((nairaValue / targetAmount) * 100)}%</p>
                 </div>
                 <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
@@ -323,7 +323,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-muted-foreground uppercase tracking-widest text-[10px]">Your Goal</p>
-                  <p className="font-semibold text-foreground text-[13px]">{goalLabels[goal] || goal}</p>
+                  <p className="font-semibold text-foreground text-[13px]">GOAL - {goalLabels[goal] || goal}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-muted-foreground uppercase tracking-widest text-[10px]">Claimable</p>
