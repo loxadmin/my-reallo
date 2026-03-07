@@ -30,12 +30,27 @@ interface VerificationTx {
   id: string; verification_id: string; user_id: string; transaction_id: string;
   is_verified: boolean; verified_amount: number | null; submitted_at: string;
 }
+interface SocialAccount {
+  id: string; user_id: string; account_link: string; status: 'pending' | 'verified' | 'rejected'; created_at: string;
+}
+interface SocialChallenge {
+  id: string; title: string; description: string; hashtag: string | null; action_required: string | null;
+  words_to_say: string | null; reward_naira: number; is_active: boolean; created_at: string;
+}
+interface SocialSubmission {
+  id: string; user_id: string; challenge_id: string; video_link: string; status: 'pending' | 'approved' | 'rejected';
+  reward_naira: number; created_at: string;
+}
+interface SocialWithdrawal {
+  id: string; user_id: string; amount_naira: number; bank_name: string; account_number: string; account_name: string;
+  status: 'pending' | 'completed' | 'rejected'; created_at: string;
+}
 
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings";
+type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "social" | "settings";
 
 const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
@@ -54,6 +69,10 @@ const Admin = () => {
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [decisionApps, setDecisionApps] = useState<DecisionAppRow[]>([]);
   const [decisionResponses, setDecisionResponses] = useState<DecisionResponseRow[]>([]);
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
+  const [socialChallenges, setSocialChallenges] = useState<SocialChallenge[]>([]);
+  const [socialSubmissions, setSocialSubmissions] = useState<SocialSubmission[]>([]);
+  const [socialWithdrawals, setSocialWithdrawals] = useState<SocialWithdrawal[]>([]);
 
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [verifyPageActive, setVerifyPageActive] = useState(true);
@@ -73,13 +92,17 @@ const Admin = () => {
 
   const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0 });
 
+  const [newChallenge, setNewChallenge] = useState({
+    title: "", description: "", hashtag: "", action_required: "", words_to_say: "", reward_naira: 0
+  });
+
   useEffect(() => {
     if (!loading && !isAdmin) navigate("/");
   }, [loading, isAdmin, navigate]);
 
   const fetchData = async () => {
     setRefreshing(true);
-    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes] = await Promise.all([
+    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, saRes, scRes, ssRes, swRes] = await Promise.all([
       supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
       supabase.from("ghost_users").select("id", { count: "exact", head: true }),
       supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
@@ -88,6 +111,10 @@ const Admin = () => {
       supabase.from("verification_transactions").select("*").order("submitted_at", { ascending: false }).limit(200),
       fromApps().select("*").order("created_at", { ascending: false }),
       fromDResponses().select("*").order("created_at", { ascending: false }),
+      supabase.from("social_media_accounts").select("*").order("created_at", { ascending: false }),
+      supabase.from("social_media_challenges").select("*").order("created_at", { ascending: false }),
+      supabase.from("social_media_submissions").select("*").order("created_at", { ascending: false }),
+      supabase.from("social_withdrawals").select("*").order("created_at", { ascending: false }),
     ]);
 
     const profs = (profilesRes.data as ProfileRow[]) || [];
@@ -98,6 +125,10 @@ const Admin = () => {
     setVerificationTxs((vtRes.data as VerificationTx[]) || []);
     setDecisionApps((daRes.data || []) as unknown as DecisionAppRow[]);
     setDecisionResponses((drRes.data || []) as unknown as DecisionResponseRow[]);
+    setSocialAccounts(saRes.data as SocialAccount[] || []);
+    setSocialChallenges(scRes.data as SocialChallenge[] || []);
+    setSocialSubmissions(ssRes.data as SocialSubmission[] || []);
+    setSocialWithdrawals(swRes.data as SocialWithdrawal[] || []);
     setEditedGoals({});
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
@@ -346,6 +377,7 @@ const Admin = () => {
     { id: "decisions", label: "Decisions", icon: Smartphone, count: decisionApps.length },
     { id: "analytics", label: "Analytics", icon: BarChart3, count: decisionResponses.length },
     { id: "verification", label: "Verify", icon: CheckCircle2, count: verificationTxs.length },
+    { id: "social", label: "Social", icon: Video, count: socialSubmissions.filter(s => s.status === 'pending').length + socialWithdrawals.filter(w => w.status === 'pending').length },
     { id: "settings", label: "Settings", icon: Link, count: 0 },
   ];
 
@@ -510,6 +542,50 @@ const Admin = () => {
                 <input type="number" value={newGoal.max_price} onChange={e => setNewGoal(p => ({ ...p, max_price: parseInt(e.target.value) || 0 }))} placeholder="Max price" className="glass-input rounded-xl px-3 py-2 text-[12px] text-foreground" />
               </div>
               <GlassButton variant="primary" onClick={handleCreateGoal} className="w-full text-[12px]">Add Goal</GlassButton>
+              </div>
+            </GlassCard>
+
+            {/* Withdrawal Requests */}
+            <GlassCard animate={false}>
+              <h3 className="font-semibold text-foreground text-[14px] mb-4">Pending Withdrawals</h3>
+              <div className="space-y-3">
+                {socialWithdrawals.filter(w => w.status === 'pending').map(w => {
+                  const prof = profiles.find(p => p.id === w.user_id);
+                  return (
+                    <div key={w.id} className="glass rounded-xl p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-semibold text-foreground">{prof?.email || w.user_id}</p>
+                          <p className="text-[13px] font-bold text-primary">{formatNaira(w.amount_naira)}</p>
+                        </div>
+                      </div>
+                      <div className="bg-muted/20 p-3 rounded-lg space-y-1">
+                        <p className="text-[11px] text-foreground"><span className="text-muted-foreground">Bank:</span> {w.bank_name}</p>
+                        <p className="text-[11px] text-foreground font-mono"><span className="text-muted-foreground">Account:</span> {w.account_number}</p>
+                        <p className="text-[11px] text-foreground"><span className="text-muted-foreground">Name:</span> {w.account_name}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <GlassButton variant="primary" className="flex-1 h-9 text-[11px]" onClick={async () => {
+                          await supabase.from("social_withdrawals").update({ status: 'completed' }).eq("id", w.id);
+                          toast({ title: "Withdrawal completed" });
+                          fetchData();
+                        }}>Mark Paid</GlassButton>
+                        <GlassButton variant="outline" className="flex-1 h-9 text-[11px]" onClick={async () => {
+                          // Return funds to user bonus balance
+                          const currentBonus = Number((prof as any)?.social_bonus_balance || 0);
+                          await Promise.all([
+                            supabase.from("social_withdrawals").update({ status: 'rejected' }).eq("id", w.id),
+                            supabase.from("profiles").update({ social_bonus_balance: currentBonus + Number(w.amount_naira) }).eq("id", w.user_id)
+                          ]);
+                          toast({ title: "Withdrawal rejected", description: "Funds returned to user bonus balance." });
+                          fetchData();
+                        }}>Reject</GlassButton>
+                      </div>
+                    </div>
+                  );
+                })}
+                {socialWithdrawals.filter(w => w.status === 'pending').length === 0 && <p className="text-center py-4 text-muted-foreground text-[12px]">No pending withdrawals.</p>}
+              </div>
             </GlassCard>
           </div>
         )}
@@ -723,6 +799,133 @@ const Admin = () => {
                   </div>
                 );
               })}
+            </GlassCard>
+          </div>
+        )}
+
+        {/* Social */}
+        {activeTab === "social" && (
+          <div className="space-y-6">
+            {/* Account Verifications */}
+            <GlassCard animate={false}>
+              <h3 className="font-semibold text-foreground text-[14px] mb-4">Pending Account Verifications</h3>
+              <div className="space-y-2">
+                {socialAccounts.filter(a => a.status === 'pending').map(acc => {
+                  const prof = profiles.find(p => p.id === acc.user_id);
+                  return (
+                    <div key={acc.id} className="glass rounded-xl p-3 flex items-center justify-between">
+                      <div className="flex flex-col min-w-0 mr-4">
+                        <span className="text-[12px] font-semibold text-foreground truncate">{prof?.email || acc.user_id}</span>
+                        <a href={acc.account_link} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline">
+                          <ExternalLink className="w-2 h-2" /> {acc.account_link}
+                        </a>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <GlassButton variant="primary" className="h-8 px-3 text-[10px]" onClick={async () => {
+                          await supabase.from("social_media_accounts").update({ status: 'verified' }).eq("id", acc.id);
+                          toast({ title: "Account verified" });
+                          fetchData();
+                        }}>Verify</GlassButton>
+                        <GlassButton variant="outline" className="h-8 px-3 text-[10px]" onClick={async () => {
+                          await supabase.from("social_media_accounts").update({ status: 'rejected' }).eq("id", acc.id);
+                          toast({ title: "Account rejected" });
+                          fetchData();
+                        }}>Reject</GlassButton>
+                      </div>
+                    </div>
+                  );
+                })}
+                {socialAccounts.filter(a => a.status === 'pending').length === 0 && <p className="text-center py-4 text-muted-foreground text-[12px]">No pending accounts.</p>}
+              </div>
+            </GlassCard>
+
+            {/* Submission Reviews */}
+            <GlassCard animate={false}>
+              <h3 className="font-semibold text-foreground text-[14px] mb-4">Pending Submission Reviews</h3>
+              <div className="space-y-3">
+                {socialSubmissions.filter(s => s.status === 'pending').map(sub => {
+                  const prof = profiles.find(p => p.id === sub.user_id);
+                  const chall = socialChallenges.find(c => c.id === sub.challenge_id);
+                  return (
+                    <div key={sub.id} className="glass rounded-xl p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-semibold text-foreground">{prof?.email || sub.user_id}</p>
+                          <p className="text-[11px] text-muted-foreground">Challenge: {chall?.title}</p>
+                        </div>
+                        <p className="text-[12px] font-bold text-primary">{formatNaira(sub.reward_naira)}</p>
+                      </div>
+                      <a href={sub.video_link} target="_blank" rel="noopener noreferrer" className="block w-full clay-primary text-primary-foreground text-center py-2 rounded-xl text-[12px] font-medium">
+                        <ExternalLink className="w-3.5 h-3.5 mr-1.5 inline" /> View Submission Video
+                      </a>
+                      <div className="flex gap-2">
+                        <GlassButton variant="primary" className="flex-1 h-9 text-[11px]" onClick={async () => {
+                          // Award bonus
+                          const bonusAmount = Number(sub.reward_naira);
+                          const currentBonus = Number((prof as any)?.social_bonus_balance || 0);
+                          await Promise.all([
+                            supabase.from("social_media_submissions").update({ status: 'approved' }).eq("id", sub.id),
+                            supabase.from("profiles").update({ social_bonus_balance: currentBonus + bonusAmount }).eq("id", sub.user_id)
+                          ]);
+                          toast({ title: "Submission approved", description: `${formatNaira(bonusAmount)} awarded.` });
+                          fetchData();
+                        }}>Approve & Award</GlassButton>
+                        <GlassButton variant="outline" className="flex-1 h-9 text-[11px]" onClick={async () => {
+                          await supabase.from("social_media_submissions").update({ status: 'rejected' }).eq("id", sub.id);
+                          toast({ title: "Submission rejected" });
+                          fetchData();
+                        }}>Reject</GlassButton>
+                      </div>
+                    </div>
+                  );
+                })}
+                {socialSubmissions.filter(s => s.status === 'pending').length === 0 && <p className="text-center py-4 text-muted-foreground text-[12px]">No pending submissions.</p>}
+              </div>
+            </GlassCard>
+
+            {/* Challenge Management */}
+            <GlassCard animate={false}>
+              <h3 className="font-semibold text-foreground text-[14px] mb-4">Manage Challenges</h3>
+              <div className="space-y-4 mb-6 pt-2 border-t border-border/30">
+                <p className="text-[12px] font-bold text-foreground">Create New Challenge</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={newChallenge.title} onChange={e => setNewChallenge(p => ({ ...p, title: e.target.value }))} placeholder="Title" className="glass-input rounded-xl px-3 py-2 text-[12px]" />
+                  <input type="number" value={newChallenge.reward_naira} onChange={e => setNewChallenge(p => ({ ...p, reward_naira: Number(e.target.value) }))} placeholder="Reward Naira" className="glass-input rounded-xl px-3 py-2 text-[12px]" />
+                  <input value={newChallenge.hashtag} onChange={e => setNewChallenge(p => ({ ...p, hashtag: e.target.value }))} placeholder="Hashtag (optional)" className="glass-input rounded-xl px-3 py-2 text-[12px]" />
+                  <input value={newChallenge.action_required} onChange={e => setNewChallenge(p => ({ ...p, action_required: e.target.value }))} placeholder="Action Required (optional)" className="glass-input rounded-xl px-3 py-2 text-[12px]" />
+                  <input value={newChallenge.words_to_say} onChange={e => setNewChallenge(p => ({ ...p, words_to_say: e.target.value }))} placeholder="Words to Say (optional)" className="glass-input rounded-xl px-3 py-2 text-[12px]" />
+                  <textarea value={newChallenge.description} onChange={e => setNewChallenge(p => ({ ...p, description: e.target.value }))} placeholder="Description" className="md:col-span-2 glass-input rounded-xl px-3 py-2 text-[12px] min-h-[60px]" />
+                </div>
+                <GlassButton variant="primary" className="w-full h-10 text-[12px]" onClick={async () => {
+                  if (!newChallenge.title || !newChallenge.description) return;
+                  await supabase.from("social_media_challenges").insert(newChallenge);
+                  setNewChallenge({ title: "", description: "", hashtag: "", action_required: "", words_to_say: "", reward_naira: 0 });
+                  toast({ title: "Challenge created" });
+                  fetchData();
+                }}>Create Challenge</GlassButton>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-[12px] font-bold text-foreground">Active Challenges</p>
+                {socialChallenges.map(chall => (
+                  <div key={chall.id} className="glass rounded-xl p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-[12px] font-semibold text-foreground">{chall.title}</p>
+                      <p className="text-[10px] text-primary">{formatNaira(chall.reward_naira)}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <GlassButton variant="outline" className="h-8 px-2 text-[10px]" onClick={async () => {
+                        await supabase.from("social_media_challenges").update({ is_active: !chall.is_active }).eq("id", chall.id);
+                        fetchData();
+                      }}>{chall.is_active ? 'Deactivate' : 'Activate'}</GlassButton>
+                      <button className="text-destructive p-1" onClick={async () => {
+                        await supabase.from("social_media_challenges").delete().eq("id", chall.id);
+                        fetchData();
+                      }}><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </GlassCard>
           </div>
         )}
