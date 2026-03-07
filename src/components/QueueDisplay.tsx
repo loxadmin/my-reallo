@@ -38,6 +38,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   const [nextUnlock, setNextUnlock] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [claimedTotal, setClaimedTotal] = useState(0);
   const [spendVerified, setSpendVerified] = useState(false);
+  const [isVerifyActive, setIsVerifyActive] = useState(true);
 
   const position = profile?.queue_position ?? 201;
   const referralLink = profile?.referral_code
@@ -68,16 +69,18 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   useEffect(() => {
     const fetchStats = async () => {
       if (!profile || !user) return;
-      const [refRes, actRes, settingsRes, voucherRes, verifyRes] = await Promise.all([
+      const [refRes, actRes, settingsRes, voucherRes, verifyRes, activeRes] = await Promise.all([
         supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", profile.id),
         supabase.from("waitlist_activity").select("positions_moved").eq("user_id", profile.id).gte("created_at", new Date().toISOString().split("T")[0]),
         supabase.from("admin_settings").select("value").eq("key", "verify_expense_link").single(),
         supabase.from("vouchers").select("amount_naira").eq("user_id", user.id),
         supabase.from("spend_verifications").select("status").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+        supabase.from("admin_settings").select("value").eq("key", "verify_page_active").single(),
       ]);
       setReferralCount(refRes.count || 0);
       setTodaySkipped((actRes.data || []).reduce((sum, a) => sum + (a.positions_moved || 0), 0));
       setVerifyLink(settingsRes.data?.value || "");
+      setIsVerifyActive(activeRes.data?.value === "false" ? false : true);
       setClaimedTotal((voucherRes.data || []).reduce((sum, v) => sum + Number(v.amount_naira || 0), 0));
       const vStatus = (verifyRes.data || [])[0] as any;
       setSpendVerified(vStatus?.status === "verified" || vStatus?.status === "completed");
@@ -347,13 +350,29 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {/* ═══ VERIFY VIEW ═══ */}
         {view === "verify" && isOffQueue && (
           <motion.div key="verify" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <VerifySpendFlow />
-            {verifyLink && (
-              <a href={verifyLink} target="_blank" rel="noopener noreferrer">
-                <GlassButton variant="outline" className="w-full">
-                  <ExternalLink className="inline w-4 h-4" /> Verify Expense
-                </GlassButton>
-              </a>
+            {isVerifyActive ? (
+              <>
+                <VerifySpendFlow />
+                {verifyLink && (
+                  <a href={verifyLink} target="_blank" rel="noopener noreferrer">
+                    <GlassButton variant="outline" className="w-full">
+                      <ExternalLink className="inline w-4 h-4" /> Verify Expense
+                    </GlassButton>
+                  </a>
+                )}
+              </>
+            ) : (
+              <GlassCard variant="strong" className="py-12 flex flex-col items-center justify-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <AlertCircle className="w-8 h-8 text-primary animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Coming Soon</h3>
+                  <p className="text-[13px] text-muted-foreground max-w-[240px] mx-auto mt-1">
+                    Spend verification is currently being updated. Check back soon to verify your spend.
+                  </p>
+                </div>
+              </GlassCard>
             )}
           </motion.div>
         )}
