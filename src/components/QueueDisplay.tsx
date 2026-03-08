@@ -11,6 +11,7 @@ import DecisionFlow from "./DecisionFlow";
 import VerifySpendFlow from "./VerifySpendFlow";
 import InfluencerPanel from "./InfluencerPanel";
 import NotificationsPanel from "./NotificationsPanel";
+import LeaderboardTicker from "./LeaderboardTicker";
 import WalletCarousel from "./WalletCarousel";
 import ActivateWalletModal from "./ActivateWalletModal";
 import type { WalletType } from "./WalletCarousel";
