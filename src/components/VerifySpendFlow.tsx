@@ -330,44 +330,99 @@ const VerifySpendFlow = () => {
           {txInputs.map((val, idx) => {
             const existingTx = transactions[idx];
             const isSubmitted = !!existingTx;
+            const isDuplicate = existingTx?.is_duplicate;
+            const canEdit = isDuplicate && (existingTx?.edit_count || 0) === 0;
+            const isEditing = editingTxId === existingTx?.id;
             return (
-              <div key={idx} className="flex gap-2 items-center">
-                <span className="text-[10px] text-muted-foreground w-6 text-right">{idx + 1}.</span>
-                <div className="flex-1">
-                  <GlassInput
-                    value={isSubmitted ? existingTx.transaction_id : val}
-                    onChange={e => {
-                      if (!isSubmitted) {
-                        const next = [...txInputs];
-                        next[idx] = e.target.value;
-                        setTxInputs(next);
-                      }
-                    }}
-                    placeholder={`Transaction ID #${idx + 1}`}
-                    disabled={isSubmitted}
-                    className="text-[12px]"
-                  />
-                </div>
-                {isSubmitted ? (
-                  existingTx.is_verified ? (
-                    <div className="flex items-center gap-1 text-primary min-w-[60px]">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span className="text-[10px]">₦{existingTx.verified_amount?.toLocaleString("en-NG")}</span>
+              <div key={idx} className="space-y-1">
+                <div className="flex gap-2 items-center">
+                  <span className="text-[10px] text-muted-foreground w-6 text-right">{idx + 1}.</span>
+                  <div className="flex-1">
+                    {isEditing ? (
+                      <GlassInput
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        placeholder="Enter new Transaction ID"
+                        className="text-[12px] border-destructive/50"
+                        autoFocus
+                      />
+                    ) : (
+                      <GlassInput
+                        value={isSubmitted ? existingTx.transaction_id : val}
+                        onChange={e => {
+                          if (!isSubmitted) {
+                            const next = [...txInputs];
+                            next[idx] = e.target.value;
+                            setTxInputs(next);
+                          }
+                        }}
+                        placeholder={`Transaction ID #${idx + 1}`}
+                        disabled={isSubmitted}
+                        className={`text-[12px] ${isDuplicate ? "border-destructive/50" : ""}`}
+                      />
+                    )}
+                  </div>
+                  {isEditing ? (
+                    <div className="flex gap-1">
+                      <GlassButton
+                        variant="primary"
+                        onClick={() => handleEditDuplicateTx(existingTx)}
+                        disabled={submitting || !editValue.trim()}
+                        className="px-2 py-2 text-[10px] min-w-[50px]"
+                      >
+                        Save
+                      </GlassButton>
+                      <GlassButton
+                        variant="outline"
+                        onClick={() => { setEditingTxId(null); setEditValue(""); }}
+                        className="px-2 py-2 text-[10px]"
+                      >
+                        ✕
+                      </GlassButton>
                     </div>
+                  ) : isSubmitted ? (
+                    existingTx.is_verified ? (
+                      <div className="flex items-center gap-1 text-primary min-w-[60px]">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span className="text-[10px]">₦{existingTx.verified_amount?.toLocaleString("en-NG")}</span>
+                      </div>
+                    ) : isDuplicate ? (
+                      <div className="flex items-center gap-1 min-w-[60px]">
+                        {canEdit ? (
+                          <GlassButton
+                            variant="outline"
+                            onClick={() => { setEditingTxId(existingTx.id); setEditValue(""); }}
+                            className="px-2 py-2 text-[10px] text-destructive border-destructive/30"
+                          >
+                            Edit
+                          </GlassButton>
+                        ) : (
+                          <span className="text-[10px] text-destructive">Duplicate</span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 text-muted-foreground min-w-[60px]">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        <span className="text-[10px]">Pending</span>
+                      </div>
+                    )
                   ) : (
-                    <div className="flex items-center gap-1 text-muted-foreground min-w-[60px]">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      <span className="text-[10px]">Pending</span>
-                    </div>
-                  )
-                ) : (
-                  <GlassButton
-                    variant="primary"
-                    onClick={() => handleSubmitTx(idx)}
-                    disabled={submitting || !val.trim()}
-                    className="px-3 py-2 text-[10px] min-w-[60px]"
-                  >
-                    Submit
+                    <GlassButton
+                      variant="primary"
+                      onClick={() => handleSubmitTx(idx)}
+                      disabled={submitting || !val.trim()}
+                      className="px-3 py-2 text-[10px] min-w-[60px]"
+                    >
+                      Submit
+                    </GlassButton>
+                  )}
+                </div>
+                {isDuplicate && !isEditing && canEdit && (
+                  <p className="text-[9px] text-destructive ml-8">⚠ Duplicate detected — edit once or face a ban</p>
+                )}
+              </div>
+            );
+          })}
                   </GlassButton>
                 )}
               </div>
