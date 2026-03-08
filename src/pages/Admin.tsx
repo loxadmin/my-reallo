@@ -1461,7 +1461,7 @@ const Admin = () => {
                         <div className="flex items-center gap-2">
                           <StatusBadge status={app.is_active ? "active" : "rejected"} />
                           <Btn variant="outline" onClick={() => handleToggleDecisionApp(app.id, app.is_active)}>{app.is_active ? "Deactivate" : "Activate"}</Btn>
-                          <button onClick={() => handleDeleteDecisionApp(app.id)} className="text-destructive/60 hover:text-destructive p-1"><Trash2 className="w-4 h-4" /></button>
+                          <Btn variant="destructive" onClick={() => handleDeleteDecisionApp(app.id)}><Trash2 className="w-3 h-3" /></Btn>
                         </div>
                       </div>
                       {app.category === "robust" && (app.switch_to_referral_app_ids || []).length > 0 && (
