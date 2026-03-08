@@ -972,27 +972,37 @@ const Admin = () => {
             </GlassCard>
             <GlassCard animate={false}>
               <h3 className="font-semibold text-foreground text-[13px] mb-4">User Transactions</h3>
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-3 gap-3 mb-4">
                 <div className="glass rounded-xl p-3 text-center">
                   <p className="text-xl font-bold text-primary">{verificationTxs.filter(t => t.is_verified).length}</p>
                   <p className="text-[10px] text-muted-foreground">Verified</p>
                 </div>
                 <div className="glass rounded-xl p-3 text-center">
-                  <p className="text-xl font-bold text-foreground">{verificationTxs.filter(t => !t.is_verified).length}</p>
+                  <p className="text-xl font-bold text-foreground">{verificationTxs.filter(t => !t.is_verified && !t.is_duplicate).length}</p>
                   <p className="text-[10px] text-muted-foreground">Pending</p>
+                </div>
+                <div className="glass rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-destructive">{verificationTxs.filter(t => t.is_duplicate).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Duplicates</p>
                 </div>
               </div>
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {verificationTxs.map(tx => {
                   const userEmail = profiles.find(p => p.id === tx.user_id)?.email || tx.user_id.slice(0, 8);
                   return (
-                    <div key={tx.id} className="flex items-center justify-between glass rounded-xl p-3">
+                    <div key={tx.id} className={`flex items-center justify-between glass rounded-xl p-3 ${tx.is_duplicate ? 'border border-destructive/30' : ''}`}>
                       <div>
                         <p className="text-[11px] text-muted-foreground">{userEmail}</p>
                         <p className="text-[13px] font-mono text-foreground">{tx.transaction_id}</p>
+                        {tx.is_duplicate && <p className="text-[9px] text-destructive">{tx.duplicate_note || 'Duplicate'}</p>}
                       </div>
                       <div className="text-right">
-                        {tx.is_verified ? (
+                        {tx.is_duplicate ? (
+                          <div className="flex items-center gap-1 text-destructive">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            <span className="text-[10px]">Duplicate</span>
+                          </div>
+                        ) : tx.is_verified ? (
                           <div className="flex items-center gap-1 text-primary">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span className="text-[11px]">₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
@@ -1006,6 +1016,44 @@ const Admin = () => {
               </div>
             </GlassCard>
           </div>
+        )}
+
+        {/* Warnings Tab */}
+        {activeTab === "warnings" && (
+          <GlassCard animate={false}>
+            <h3 className="font-semibold text-foreground text-[13px] mb-4 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-primary" /> User Warnings & Bans
+            </h3>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="glass rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-primary">{userWarnings.length}</p>
+                <p className="text-[10px] text-muted-foreground">Total Warnings</p>
+              </div>
+              <div className="glass rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-destructive">{profiles.filter(p => p.is_banned).length}</p>
+                <p className="text-[10px] text-muted-foreground">Banned Users</p>
+              </div>
+              <div className="glass rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-foreground">{verificationTxs.filter(t => t.is_duplicate).length}</p>
+                <p className="text-[10px] text-muted-foreground">Dup TX IDs</p>
+              </div>
+            </div>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {userWarnings.map(w => {
+                const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id.slice(0, 8);
+                return (
+                  <div key={w.id} className="glass rounded-xl p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                      <p className="text-[10px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1">{w.reason}</p>
+                  </div>
+                );
+              })}
+              {userWarnings.length === 0 && <p className="text-center py-8 text-muted-foreground text-[13px]">No warnings issued yet</p>}
+            </div>
+          </GlassCard>
         )}
 
         {/* Influencer Applications */}
