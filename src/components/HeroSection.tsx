@@ -151,7 +151,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
             <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1.5" />
-            <p className="font-display text-lg sm:text-xl font-bold text-primary">₦0</p>
+            <p className="font-display text-lg sm:text-xl font-bold text-primary"><CyclingFreeLabel /></p>
             <p className="text-[10px] text-muted-foreground mt-0.5">To Join</p>
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
