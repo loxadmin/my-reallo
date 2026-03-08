@@ -6,7 +6,7 @@ import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import GlassInput from "./GlassInput";
 import { Switch } from "./ui/switch";
-import { Wallet, UtensilsCrossed, Bus, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Wallet, UtensilsCrossed, Bus, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
