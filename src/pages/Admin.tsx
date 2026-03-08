@@ -9,6 +9,7 @@ import {
   Wallet, ArrowDownToLine, Ban, AlertTriangle, Eye, X, Bell, LayoutDashboard,
   ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "@/hooks/use-toast";
 import { sendNotification } from "@/lib/notifications";
 import WaterBackground from "@/components/WaterBackground";
@@ -91,7 +92,7 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
   const collapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar">
+    <Sidebar collapsible="icon" className="border-r border-primary/20" style={{ background: 'hsla(160, 45%, 25%, 0.12)', backdropFilter: 'blur(20px)' } as React.CSSProperties}>
       <SidebarHeader className="px-4 py-5 border-b border-border/30">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -224,15 +225,15 @@ const TableCard = ({ children, className }: { children: React.ReactNode; classNa
 );
 
 const TableHeader = ({ children }: { children: React.ReactNode }) => (
-  <div className="px-5 py-3.5 border-b border-border/40 bg-muted/30">
-    <div className="flex items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider gap-4">
+  <div className="px-5 py-3.5 border-b border-border/40 bg-muted/30 overflow-x-auto">
+    <div className="flex items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider gap-4 min-w-[600px]">
       {children}
     </div>
   </div>
 );
 
 const TableRow = ({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) => (
-  <div onClick={onClick} className={`px-5 py-3 border-b border-border/20 last:border-0 flex items-center gap-4 hover:bg-muted/20 transition-colors ${onClick ? "cursor-pointer" : ""} ${className || ""}`}>
+  <div onClick={onClick} className={`px-5 py-3 border-b border-border/20 last:border-0 flex items-center gap-4 hover:bg-muted/20 transition-colors min-w-[600px] ${onClick ? "cursor-pointer" : ""} ${className || ""}`}>
     {children}
   </div>
 );
@@ -683,6 +684,7 @@ const Admin = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <Btn variant="outline" onClick={fetchData} disabled={refreshing}>
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
                 {!refreshing && "Refresh"}
@@ -697,7 +699,7 @@ const Admin = () => {
             {/* Page title */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-bold text-foreground">{activeTab === "overview" ? "Welcome Back" : tabTitle[activeTab]}</h1>
+                <p className="text-lg font-bold text-foreground">{activeTab === "overview" ? "Welcome Back" : tabTitle[activeTab]}</p>
                 <p className="text-[12px] text-muted-foreground mt-0.5">
                   {activeTab === "overview" ? "Here's what's happening with your platform today" : `Manage ${tabTitle[activeTab].toLowerCase()}`}
                 </p>
@@ -801,14 +803,15 @@ const Admin = () => {
                 <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
                   <h3 className="text-[13px] font-semibold text-foreground">Registered Users ({filteredProfiles.length})</h3>
                 </div>
+                <div className="overflow-x-auto">
                 <TableHeader>
-                  <span className="flex-1 min-w-[180px]">User</span>
-                  <span className="w-28">Spend</span>
-                  <span className="w-20">Queue</span>
-                  <span className="w-20">Points</span>
-                  <span className="w-16">Refs</span>
+                  <span className="flex-1 min-w-[160px]">User</span>
+                  <span className="w-24">Spend</span>
+                  <span className="w-16">Queue</span>
+                  <span className="w-16">Points</span>
+                  <span className="w-14">Refs</span>
                   <span className="w-20">Status</span>
-                  <span className="w-12"></span>
+                  <span className="w-10"></span>
                 </TableHeader>
                 <div className="max-h-[600px] overflow-y-auto">
                   {filteredProfiles.map((p) => {
@@ -818,18 +821,18 @@ const Admin = () => {
                     return (
                       <div key={p.id}>
                         <TableRow onClick={() => { setSelectedUserId(isSelected ? null : p.id); setEditingProfile(null); }}>
-                          <div className="flex-1 min-w-[180px]">
-                            <p className="text-[12px] font-medium text-foreground">{p.email}</p>
+                          <div className="flex-1 min-w-[160px] overflow-hidden">
+                            <p className="text-[12px] font-medium text-foreground truncate">{p.email}</p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">Joined {new Date(p.created_at).toLocaleDateString()}</p>
                           </div>
-                          <span className="w-28 text-[12px] text-foreground">{formatNaira(p.total_annual_spend || 0)}</span>
-                          <span className="w-20 text-[12px] text-muted-foreground">#{p.queue_position}</span>
-                          <span className="w-20 text-[12px] text-foreground">{p.points_balance.toLocaleString()}</span>
-                          <span className="w-16 text-[12px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
+                          <span className="w-24 text-[11px] text-foreground truncate">{formatNaira(p.total_annual_spend || 0)}</span>
+                          <span className="w-16 text-[11px] text-muted-foreground">#{p.queue_position}</span>
+                          <span className="w-16 text-[11px] text-foreground">{p.points_balance.toLocaleString()}</span>
+                          <span className="w-14 text-[11px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
                           <span className="w-20">
                             {p.is_banned ? <StatusBadge status="BANNED" /> : pDuplicates.length > 0 ? <span className="text-[9px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full border border-destructive/20">{pDuplicates.length} dup</span> : <StatusBadge status="active" />}
                           </span>
-                          <span className="w-12 flex justify-end">
+                          <span className="w-10 flex justify-end">
                             {isSelected ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                           </span>
                         </TableRow>
@@ -900,6 +903,7 @@ const Admin = () => {
                       </div>
                     );
                   })}
+                </div>
                 </div>
               </TableCard>
             )}
