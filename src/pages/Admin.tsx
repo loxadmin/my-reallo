@@ -547,33 +547,104 @@ const Admin = () => {
 
         {/* Users */}
         {activeTab === "users" && (
-          <GlassCard animate={false}>
-            <h3 className="font-semibold text-foreground text-[13px] mb-4">Registered Users</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-[12px]">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2 px-2 text-muted-foreground text-[11px]">Email</th>
-                    <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Spend</th>
-                    <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Queue #</th>
-                    <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Points</th>
-                    <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Referrals</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {profiles.map((p) => (
-                    <tr key={p.id} className="border-b border-border/50">
-                      <td className="py-2 px-2 text-foreground truncate max-w-[120px]">{p.email}</td>
-                      <td className="py-2 px-2 text-right text-primary">{formatNaira(p.total_annual_spend || 0)}</td>
-                      <td className="py-2 px-2 text-right font-bold text-foreground">{p.queue_position}</td>
-                      <td className="py-2 px-2 text-right text-primary">{p.points_balance || 0}</td>
-                      <td className="py-2 px-2 text-right text-foreground">{referralCounts[p.id] || 0}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </GlassCard>
+          <div className="space-y-4">
+            <GlassCard animate={false}>
+              <h3 className="font-semibold text-foreground text-[13px] mb-4">Registered Users ({profiles.length})</h3>
+              <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                {profiles.map((p) => {
+                  const isSelected = selectedUserId === p.id;
+                  const pWarnings = userWarnings.filter(w => w.user_id === p.id);
+                  const pDuplicates = verificationTxs.filter(t => t.user_id === p.id && t.is_duplicate);
+                  return (
+                    <div key={p.id} className={`glass rounded-xl p-3 ${p.is_banned ? 'border border-destructive/30' : ''}`}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[12px] font-semibold text-foreground">{p.email}</p>
+                            {p.is_banned && <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full">BANNED</span>}
+                            {pDuplicates.length > 0 && <span className="text-[9px] bg-yellow-500/10 text-yellow-600 px-1.5 py-0.5 rounded-full">{pDuplicates.length} dup</span>}
+                            {pWarnings.length > 0 && <span className="text-[9px] bg-orange-500/10 text-orange-600 px-1.5 py-0.5 rounded-full">{pWarnings.length} warn</span>}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            Spend: {formatNaira(p.total_annual_spend || 0)} • Queue: #{p.queue_position} • Points: {p.points_balance} • Refs: {referralCounts[p.id] || 0}
+                          </p>
+                        </div>
+                        <button onClick={() => { setSelectedUserId(isSelected ? null : p.id); setEditingProfile(null); }} className="text-muted-foreground hover:text-foreground">
+                          {isSelected ? <X className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+
+                      {isSelected && (
+                        <div className="mt-3 space-y-3 border-t border-border/30 pt-3">
+                          <p className="text-[10px] text-muted-foreground">ID: {p.id}</p>
+                          <p className="text-[10px] text-muted-foreground">Joined: {new Date(p.created_at).toLocaleDateString()}</p>
+                          <p className="text-[10px] text-muted-foreground">Goal: {p.selected_goal || 'None'} • Referral Code: {p.referral_code || 'None'}</p>
+
+                          {/* Duplicate TXs for this user */}
+                          {pDuplicates.length > 0 && (
+                            <div className="glass rounded-lg p-2">
+                              <p className="text-[10px] text-yellow-600 font-semibold mb-1">Duplicate Transactions:</p>
+                              {pDuplicates.map(d => (
+                                <p key={d.id} className="text-[10px] text-muted-foreground font-mono">{d.transaction_id} — {d.duplicate_note}</p>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Edit profile */}
+                          {editingProfile ? (
+                            <div className="space-y-2">
+                              <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                  <p className="text-[9px] text-muted-foreground">Points</p>
+                                  <input type="number" value={editingProfile.points_balance} onChange={e => setEditingProfile(prev => prev ? { ...prev, points_balance: parseInt(e.target.value) || 0 } : null)} className="w-full glass-input rounded-lg px-2 py-1 text-[11px] text-foreground" />
+                                </div>
+                                <div>
+                                  <p className="text-[9px] text-muted-foreground">Queue #</p>
+                                  <input type="number" value={editingProfile.queue_position} onChange={e => setEditingProfile(prev => prev ? { ...prev, queue_position: parseInt(e.target.value) || 0 } : null)} className="w-full glass-input rounded-lg px-2 py-1 text-[11px] text-foreground" />
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <GlassButton variant="primary" onClick={() => handleUpdateProfile(p.id, { points_balance: editingProfile.points_balance, queue_position: editingProfile.queue_position })} className="flex-1 text-[10px]"><Check className="w-3 h-3 mr-1" /> Save</GlassButton>
+                                <GlassButton variant="outline" onClick={() => setEditingProfile(null)} className="text-[10px]">Cancel</GlassButton>
+                              </div>
+                            </div>
+                          ) : (
+                            <GlassButton variant="outline" onClick={() => setEditingProfile({ email: p.email, points_balance: p.points_balance, queue_position: p.queue_position })} className="w-full text-[10px]"><Edit2 className="w-3 h-3 mr-1" /> Edit Profile</GlassButton>
+                          )}
+
+                          {/* Warning */}
+                          <div className="flex gap-2">
+                            <input value={selectedUserId === p.id ? warningText : ""} onChange={e => setWarningText(e.target.value)} placeholder="Warning reason..." className="flex-1 glass-input rounded-lg px-2 py-1.5 text-[11px] text-foreground" />
+                            <GlassButton variant="outline" onClick={() => { if (warningText.trim()) handleIssueWarning(p.id, warningText); }} disabled={!warningText.trim()} className="text-[10px]"><AlertTriangle className="w-3 h-3 mr-1" /> Warn</GlassButton>
+                          </div>
+
+                          {/* Ban/Unban */}
+                          {p.is_banned ? (
+                            <GlassButton variant="primary" onClick={() => handleUnbanUser(p.id)} className="w-full text-[10px]"><Check className="w-3 h-3 mr-1" /> Unban User</GlassButton>
+                          ) : (
+                            <div className="flex gap-2">
+                              <input value={selectedUserId === p.id ? banReason : ""} onChange={e => setBanReason(e.target.value)} placeholder="Ban reason..." className="flex-1 glass-input rounded-lg px-2 py-1.5 text-[11px] text-foreground" />
+                              <GlassButton variant="outline" onClick={() => { if (banReason.trim()) handleBanUser(p.id, banReason); }} disabled={!banReason.trim()} className="text-[10px] text-destructive"><Ban className="w-3 h-3 mr-1" /> Ban</GlassButton>
+                            </div>
+                          )}
+
+                          {/* Warnings history */}
+                          {pWarnings.length > 0 && (
+                            <div className="glass rounded-lg p-2">
+                              <p className="text-[10px] font-semibold text-orange-600 mb-1">Warning History:</p>
+                              {pWarnings.map(w => (
+                                <p key={w.id} className="text-[10px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()} — {w.reason}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </GlassCard>
+          </div>
         )}
 
         {/* Ghosts */}
