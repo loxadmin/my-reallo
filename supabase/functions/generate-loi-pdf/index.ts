@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
     // Process advertiser signature (remove background) — always re-process
     let advertiserSigBytes: Uint8Array | null = null;
     if (submission.signature_url) {
-      const cleanedBytes = await removeSignatureBg(submission.signature_url);
+      const cleanedBytes = await removeSignatureBg(submission.signature_url, "advertiser");
       if (cleanedBytes) {
         const sigPath = `signatures/processed_${submission_id}.png`;
         await supabase.storage.from("advertiser-uploads").upload(sigPath, cleanedBytes, {
