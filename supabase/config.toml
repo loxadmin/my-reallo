@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.check-signup-limit]
 verify_jwt = false
+
+[functions.advertiser-verify-email]
+verify_jwt = false
+
+[functions.generate-loi-pdf]
+verify_jwt = false

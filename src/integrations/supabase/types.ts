@@ -32,6 +32,130 @@ export type Database = {
         }
         Relationships: []
       }
+      advertiser_email_verifications: {
+        Row: {
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          token_id: string
+          verified: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          token_id: string
+          verified?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          token_id?: string
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertiser_email_verifications_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "advertiser_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advertiser_submissions: {
+        Row: {
+          admin_notes: string | null
+          brand_logo_url: string | null
+          brand_name: string
+          ceo_name: string
+          contact_number: string
+          created_at: string
+          email: string
+          id: string
+          loi_pdf_url: string | null
+          processed_signature_url: string | null
+          reviewed_at: string | null
+          signature_url: string | null
+          status: string
+          token_id: string
+          website_url: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          brand_logo_url?: string | null
+          brand_name: string
+          ceo_name: string
+          contact_number: string
+          created_at?: string
+          email: string
+          id?: string
+          loi_pdf_url?: string | null
+          processed_signature_url?: string | null
+          reviewed_at?: string | null
+          signature_url?: string | null
+          status?: string
+          token_id: string
+          website_url: string
+        }
+        Update: {
+          admin_notes?: string | null
+          brand_logo_url?: string | null
+          brand_name?: string
+          ceo_name?: string
+          contact_number?: string
+          created_at?: string
+          email?: string
+          id?: string
+          loi_pdf_url?: string | null
+          processed_signature_url?: string | null
+          reviewed_at?: string | null
+          signature_url?: string | null
+          status?: string
+          token_id?: string
+          website_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertiser_submissions_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "advertiser_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advertiser_tokens: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          status: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          status?: string
+          token?: string
+        }
+        Relationships: []
+      }
       decision_apps: {
         Row: {
           app_logo_url: string | null

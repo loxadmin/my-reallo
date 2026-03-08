@@ -7,7 +7,7 @@ import {
   BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet,
   Smartphone, Check, ExternalLink, CreditCard as Edit2, Download, Star,
   Wallet, ArrowDownToLine, Ban, AlertTriangle, Eye, X, Bell, LayoutDashboard,
-  ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown, DollarSign
+  ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown, DollarSign, Building
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -15,6 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { sendNotification } from "@/lib/notifications";
 import WaterBackground from "@/components/WaterBackground";
 import UserProfileDrawer from "@/components/UserProfileDrawer";
+import AdvertiserManagement from "@/components/admin/AdvertiserManagement";
 import PageSkeleton from "@/components/PageSkeleton";
 import {
   SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
@@ -75,7 +76,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "warnings";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "warnings" | "advertisers";
 
 const navGroups = [
   {
@@ -99,6 +100,12 @@ const navGroups = [
       { id: "inf_withdrawals" as AdminTab, label: "Withdrawals", icon: ArrowDownToLine },
       { id: "inf_challenges" as AdminTab, label: "Challenges", icon: Upload },
       { id: "inf_submissions" as AdminTab, label: "Submissions", icon: Eye },
+    ],
+  },
+  {
+    label: "ADVERTISERS",
+    items: [
+      { id: "advertisers" as AdminTab, label: "Advertisers", icon: Building },
     ],
   },
   {
@@ -747,6 +754,7 @@ const Admin = () => {
     verification: "Verification", settings: "Settings", inf_apps: "Influencer Applications",
     inf_wallets: "Influencer Wallets", inf_referrals: "Influencer Referrals",
     inf_withdrawals: "Influencer Withdrawals", inf_challenges: "Influencer Challenges", inf_submissions: "Challenge Submissions", warnings: "Warnings",
+    advertisers: "Advertisers",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
@@ -2253,6 +2261,11 @@ const Admin = () => {
                   <Btn variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full"><Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save Settings"}</Btn>
                 </div>
               </div>
+            )}
+
+            {/* ═══ ADVERTISERS ═══ */}
+            {activeTab === "advertisers" && (
+              <AdvertiserManagement onRefresh={fetchData} />
             )}
 
           </main>
