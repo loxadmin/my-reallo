@@ -312,6 +312,7 @@ const Admin = () => {
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
   const [searchQuery, setSearchQuery] = useState("");
   const [adminCurrency, setAdminCurrency] = useState<AdminCurrency>("NGN");
+  const [chartView, setChartView] = useState<"bar" | "line" | "area" | "pie">("bar");
   const adminRates: Record<AdminCurrency, number> = useMemo(() => ({
     NGN: 1,
     USD: Number(currencyRateUsd) || ADMIN_CURRENCY_DEFAULTS.USD,
