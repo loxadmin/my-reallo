@@ -285,12 +285,74 @@ const InfluencerPanel = () => {
   }
 
   // Step 2b: Rejected
-  if (application.status === "rejected") {
+  if (application.status === "rejected" || application.status === "appeal_rejected") {
+    const reviewedAt = (application as any).reviewed_at ? new Date((application as any).reviewed_at) : null;
+    const canAppealAfter = reviewedAt ? new Date(reviewedAt.getTime() + 24 * 60 * 60 * 1000) : null;
+    const canAppealNow = canAppealAfter ? new Date() >= canAppealAfter : false;
+    const hasAppealed = application.status === "appeal_rejected";
+
     return (
       <GlassCard className="p-5 text-center">
         <AlertCircle className="w-10 h-10 text-destructive/40 mx-auto mb-3" />
-        <h3 className="font-semibold text-foreground text-[15px] mb-2">Application Rejected</h3>
-        <p className="text-muted-foreground text-[12px]">Your influencer application was not approved. Please ensure your social media profile is public and contains your registered email.</p>
+        <h3 className="font-semibold text-foreground text-[15px] mb-2">
+          {hasAppealed ? "Appeal Rejected" : "Application Rejected"}
+        </h3>
+        <p className="text-muted-foreground text-[12px]">
+          {hasAppealed
+            ? "Your appeal has been reviewed and was not approved. No further appeals are allowed."
+            : "Your influencer application was not approved. Please ensure your social media profile is public and contains your registered email."}
+        </p>
+        {!hasAppealed && canAppealNow && (
+          <div className="mt-4 space-y-3">
+            <p className="text-[11px] text-primary">You can submit one appeal with an updated profile link.</p>
+            <div>
+              <label className="text-[11px] text-muted-foreground mb-1 block">Select Platform</label>
+              <select value={socialPlatform} onChange={e => { setSocialPlatform(e.target.value); setSocialLink(""); }} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] bg-transparent">
+                <option value="" className="bg-background">Choose a platform...</option>
+                <option value="instagram" className="bg-background">Instagram</option>
+                <option value="tiktok" className="bg-background">TikTok</option>
+                <option value="facebook" className="bg-background">Facebook</option>
+                <option value="linkedin" className="bg-background">LinkedIn</option>
+              </select>
+            </div>
+            {socialPlatform && (
+              <input value={socialLink} onChange={e => setSocialLink(e.target.value)} placeholder={
+                socialPlatform === "instagram" ? "https://instagram.com/yourprofile" :
+                socialPlatform === "tiktok" ? "https://tiktok.com/@yourprofile" :
+                socialPlatform === "facebook" ? "https://facebook.com/yourprofile" :
+                "https://linkedin.com/in/yourprofile"
+              } className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
+            )}
+            <GlassButton variant="primary" onClick={async () => {
+              if (!socialLink.trim() || !socialPlatform) return;
+              setApplying(true);
+              await supabase.from("influencer_applications" as any).update({
+                social_link: socialLink.trim(),
+                status: "pending_appeal",
+                reviewed_at: null,
+              } as any).eq("id", application.id);
+              toast({ title: "Appeal Submitted", description: "Your appeal is under review." });
+              setApplying(false);
+              await fetchData();
+            }} disabled={applying || !socialLink.trim() || !socialPlatform} className="w-full text-[13px]">
+              {applying ? "Submitting..." : "Submit Appeal"}
+            </GlassButton>
+          </div>
+        )}
+        {!hasAppealed && !canAppealNow && canAppealAfter && (
+          <p className="text-[10px] text-muted-foreground mt-3">You can appeal after {canAppealAfter.toLocaleString()}</p>
+        )}
+      </GlassCard>
+    );
+  }
+
+  // Step 2c: Appeal pending
+  if (application.status === "pending_appeal") {
+    return (
+      <GlassCard className="p-5 text-center">
+        <Clock className="w-10 h-10 text-primary/40 mx-auto mb-3" />
+        <h3 className="font-semibold text-foreground text-[15px] mb-2">Appeal Under Review</h3>
+        <p className="text-muted-foreground text-[12px]">Your appeal is being reviewed. You'll be notified when a decision is made.</p>
       </GlassCard>
     );
   }
