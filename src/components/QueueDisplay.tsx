@@ -96,11 +96,27 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
       setIsVerifyActive(activeRes.data?.value === "false" ? false : true);
       setClaimedTotal((voucherRes.data || []).reduce((sum, v) => sum + Number(v.amount_naira || 0), 0));
       const verifs = (verifyRes.data || []) as { status: string; spend_type: string }[];
-      const dataV = verifs.find(v => (v as any).spend_type === "data");
-      const elecV = verifs.find(v => (v as any).spend_type === "electricity");
-      const dataOk = dataV?.status === "verified" || dataV?.status === "completed";
-      const elecOk = elecV?.status === "verified" || elecV?.status === "completed";
-      setSpendVerified(dataOk && elecOk);
+      
+      // Fetch per-category toggles
+      const [dataToggle, elecToggle, foodToggle, transToggle] = await Promise.all([
+        supabase.from("admin_settings").select("value").eq("key", "verify_data_active").single(),
+        supabase.from("admin_settings").select("value").eq("key", "verify_electricity_active").single(),
+        supabase.from("admin_settings").select("value").eq("key", "verify_food_active").single(),
+        supabase.from("admin_settings").select("value").eq("key", "verify_transport_active").single(),
+      ]);
+      
+      const isVerifRequired = (type: string, toggleRes: any) => {
+        if (toggleRes.data?.value === "false") return true; // disabled = skip = considered verified
+        const v = verifs.find(v => v.spend_type === type);
+        return v?.status === "verified" || v?.status === "completed";
+      };
+      
+      setSpendVerified(
+        isVerifRequired("data", dataToggle) &&
+        isVerifRequired("electricity", elecToggle) &&
+        isVerifRequired("food", foodToggle) &&
+        isVerifRequired("transport", transToggle)
+      );
     };
     fetchStats();
   }, [profile, user]);
