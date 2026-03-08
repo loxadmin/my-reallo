@@ -187,6 +187,19 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
             </div>
           </div>
 
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="text-[11px] text-muted-foreground font-medium">Branded Email Required</label>
+              <p className="text-[10px] text-muted-foreground">When enabled, advertiser email must match their website domain.</p>
+            </div>
+            <button
+              onClick={() => setBrandedEmailRequired(!brandedEmailRequired)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${brandedEmailRequired ? "bg-primary" : "bg-input"}`}
+            >
+              <span className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${brandedEmailRequired ? "translate-x-5" : "translate-x-0"}`} />
+            </button>
+          </div>
+
           <hr className="border-border/30" />
           <h4 className="text-[13px] font-semibold text-foreground">User Milestone Notification</h4>
           <p className="text-[11px] text-muted-foreground -mt-2">When updated, advertisers will see the count on their dashboard.</p>
