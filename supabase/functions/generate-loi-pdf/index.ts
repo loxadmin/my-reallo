@@ -253,23 +253,21 @@ Deno.serve(async (req) => {
     // Advertiser signature (left)
     page.drawText("Advertiser:", { x: 50, y: sigY, size: 10, font: helveticaBold, color: black });
 
-    // Try to embed advertiser signature image
-    if (processedSigUrl) {
-      try {
-        const sigBytes = await fetchImageBytes(processedSigUrl);
-        if (sigBytes) {
-          let sigImage;
-          try {
-            sigImage = await pdfDoc.embedPng(sigBytes);
-          } catch {
-            sigImage = await pdfDoc.embedJpg(sigBytes);
-          }
-          const sigDims = sigImage.scaleToFit(120, 40);
-          page.drawImage(sigImage, { x: 50, y: sigY - 50, width: sigDims.width, height: sigDims.height });
+    // Try to embed advertiser signature image (use cleaned bytes or fall back to original)
+    try {
+      const sigBytes = advertiserSigBytes || await fetchImageBytes(submission.signature_url);
+      if (sigBytes) {
+        let sigImage;
+        try {
+          sigImage = await pdfDoc.embedPng(sigBytes);
+        } catch {
+          sigImage = await pdfDoc.embedJpg(sigBytes);
         }
-      } catch (e) {
-        console.error("Failed to embed advertiser signature:", e);
+        const sigDims = sigImage.scaleToFit(120, 40);
+        page.drawImage(sigImage, { x: 50, y: sigY - 50, width: sigDims.width, height: sigDims.height });
       }
+    } catch (e) {
+      console.error("Failed to embed advertiser signature:", e);
     }
     page.drawLine({ start: { x: 50, y: sigY - 55 }, end: { x: 200, y: sigY - 55 }, thickness: 0.5, color: black });
     page.drawText(submission.ceo_name, { x: 50, y: sigY - 68, size: 10, font: helvetica, color: black });
@@ -280,22 +278,18 @@ Deno.serve(async (req) => {
 
     if (founderSigUrl) {
       try {
-        // Remove background from founder signature programmatically
-        const cleanedFounderBytes = await removeSignatureBgProgrammatic(founderSigUrl);
-        let founderSigBytes: Uint8Array | null = null;
-
-        if (cleanedFounderBytes) {
-          const fSigPath = `signatures/processed_founder.png`;
-          await supabase.storage.from("advertiser-uploads").upload(fSigPath, cleanedFounderBytes, {
-            contentType: "image/png",
-            upsert: true,
-          });
-          founderSigBytes = cleanedFounderBytes;
-        } else {
-          founderSigBytes = await fetchImageBytes(founderSigUrl);
-        }
+        // Remove background from founder signature via AI
+        const cleanedFounderBytes = await removeSignatureBg(founderSigUrl);
+        const founderSigBytes = cleanedFounderBytes || await fetchImageBytes(founderSigUrl);
 
         if (founderSigBytes) {
+          if (cleanedFounderBytes) {
+            const fSigPath = `signatures/processed_founder.png`;
+            await supabase.storage.from("advertiser-uploads").upload(fSigPath, cleanedFounderBytes, {
+              contentType: "image/png",
+              upsert: true,
+            });
+          }
           let fSigImage;
           try {
             fSigImage = await pdfDoc.embedPng(founderSigBytes);
