@@ -26,6 +26,9 @@ interface Transaction {
   submitted_at: string;
   is_verified: boolean;
   verified_amount: number | null;
+  is_duplicate: boolean;
+  duplicate_note: string | null;
+  edit_count: number;
 }
 
 const VerifySpendFlow = () => {
@@ -96,6 +99,9 @@ const VerifySpendFlow = () => {
     await fetchData();
   };
 
+  const [editingTxId, setEditingTxId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+
   const handleSubmitTx = async (index: number) => {
     const txId = txInputs[index]?.trim();
     if (!txId || !verification || !user) return;
@@ -107,20 +113,94 @@ const VerifySpendFlow = () => {
     }
 
     setSubmitting(true);
+
+    // Check for duplicate across all users
+    const { data: dupCheck } = await supabase
+      .from("verification_transactions")
+      .select("id")
+      .eq("transaction_id", txId)
+      .limit(1);
+
+    const isDuplicate = (dupCheck || []).length > 0;
+
     await supabase.from("verification_transactions").insert({
       verification_id: verification.id,
       user_id: user.id,
       transaction_id: txId,
+      is_duplicate: isDuplicate,
+      duplicate_note: isDuplicate ? "Duplicate detected on initial submission" : null,
     });
 
-    // After first submission, calculate initial verified spend
-    const updatedTxCount = transactions.length + 1;
-    if (updatedTxCount === 1) {
-      // First transaction - calculate initial annual spend
-      // Will be recalculated once verified by admin CSV
+    if (isDuplicate) {
+      toast({
+        title: "Duplicate Transaction ID",
+        description: "This transaction ID already exists. You can edit it once — a second duplicate will result in a ban.",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Transaction ID submitted" });
     }
 
-    toast({ title: "Transaction ID submitted" });
+    setSubmitting(false);
+    await fetchData();
+    await refreshProfile();
+  };
+
+  const handleEditDuplicateTx = async (tx: Transaction & { edit_count?: number }) => {
+    const newTxId = editValue.trim();
+    if (!newTxId || !user) return;
+
+    setSubmitting(true);
+
+    // Check if the new ID is also a duplicate
+    const { data: dupCheck } = await supabase
+      .from("verification_transactions")
+      .select("id")
+      .eq("transaction_id", newTxId)
+      .neq("id", tx.id)
+      .limit(1);
+
+    const isStillDuplicate = (dupCheck || []).length > 0;
+
+    if (isStillDuplicate) {
+      // Second duplicate = auto-ban
+      await supabase.from("verification_transactions").update({
+        transaction_id: newTxId,
+        edit_count: (tx.edit_count || 0) + 1,
+        is_duplicate: true,
+        duplicate_note: "Second duplicate — auto-banned",
+      } as any).eq("id", tx.id);
+
+      await supabase.from("profiles").update({
+        is_banned: true,
+        ban_reason: "Submitted duplicate transaction IDs twice during spend verification",
+      }).eq("id", user.id);
+
+      await supabase.from("user_warnings").insert({
+        user_id: user.id,
+        reason: "Auto-banned: submitted duplicate transaction ID twice (original: " + tx.transaction_id + ", edit: " + newTxId + ")",
+        issued_by: user.id,
+      } as any);
+
+      toast({
+        title: "Account Banned",
+        description: "Your account has been banned for submitting duplicate transaction IDs twice.",
+        variant: "destructive",
+      });
+    } else {
+      // Edit successful — clear duplicate flag
+      await supabase.from("verification_transactions").update({
+        transaction_id: newTxId,
+        edit_count: (tx.edit_count || 0) + 1,
+        is_duplicate: false,
+        duplicate_note: "Edited from duplicate: " + tx.transaction_id,
+      } as any).eq("id", tx.id);
+
+      toast({ title: "Transaction ID updated", description: "Your edited transaction ID has been accepted." });
+    }
+
+    setEditingTxId(null);
+    setEditValue("");
     setSubmitting(false);
     await fetchData();
     await refreshProfile();
@@ -250,45 +330,95 @@ const VerifySpendFlow = () => {
           {txInputs.map((val, idx) => {
             const existingTx = transactions[idx];
             const isSubmitted = !!existingTx;
+            const isDuplicate = existingTx?.is_duplicate;
+            const canEdit = isDuplicate && (existingTx?.edit_count || 0) === 0;
+            const isEditing = editingTxId === existingTx?.id;
             return (
-              <div key={idx} className="flex gap-2 items-center">
-                <span className="text-[10px] text-muted-foreground w-6 text-right">{idx + 1}.</span>
-                <div className="flex-1">
-                  <GlassInput
-                    value={isSubmitted ? existingTx.transaction_id : val}
-                    onChange={e => {
-                      if (!isSubmitted) {
-                        const next = [...txInputs];
-                        next[idx] = e.target.value;
-                        setTxInputs(next);
-                      }
-                    }}
-                    placeholder={`Transaction ID #${idx + 1}`}
-                    disabled={isSubmitted}
-                    className="text-[12px]"
-                  />
-                </div>
-                {isSubmitted ? (
-                  existingTx.is_verified ? (
-                    <div className="flex items-center gap-1 text-primary min-w-[60px]">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span className="text-[10px]">₦{existingTx.verified_amount?.toLocaleString("en-NG")}</span>
+              <div key={idx} className="space-y-1">
+                <div className="flex gap-2 items-center">
+                  <span className="text-[10px] text-muted-foreground w-6 text-right">{idx + 1}.</span>
+                  <div className="flex-1">
+                    {isEditing ? (
+                      <GlassInput
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        placeholder="Enter new Transaction ID"
+                        className="text-[12px] border-destructive/50"
+                        autoFocus
+                      />
+                    ) : (
+                      <GlassInput
+                        value={isSubmitted ? existingTx.transaction_id : val}
+                        onChange={e => {
+                          if (!isSubmitted) {
+                            const next = [...txInputs];
+                            next[idx] = e.target.value;
+                            setTxInputs(next);
+                          }
+                        }}
+                        placeholder={`Transaction ID #${idx + 1}`}
+                        disabled={isSubmitted}
+                        className={`text-[12px] ${isDuplicate ? "border-destructive/50" : ""}`}
+                      />
+                    )}
+                  </div>
+                  {isEditing ? (
+                    <div className="flex gap-1">
+                      <GlassButton
+                        variant="primary"
+                        onClick={() => handleEditDuplicateTx(existingTx)}
+                        disabled={submitting || !editValue.trim()}
+                        className="px-2 py-2 text-[10px] min-w-[50px]"
+                      >
+                        Save
+                      </GlassButton>
+                      <GlassButton
+                        variant="outline"
+                        onClick={() => { setEditingTxId(null); setEditValue(""); }}
+                        className="px-2 py-2 text-[10px]"
+                      >
+                        ✕
+                      </GlassButton>
                     </div>
+                  ) : isSubmitted ? (
+                    existingTx.is_verified ? (
+                      <div className="flex items-center gap-1 text-primary min-w-[60px]">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span className="text-[10px]">₦{existingTx.verified_amount?.toLocaleString("en-NG")}</span>
+                      </div>
+                    ) : isDuplicate ? (
+                      <div className="flex items-center gap-1 min-w-[60px]">
+                        {canEdit ? (
+                          <GlassButton
+                            variant="outline"
+                            onClick={() => { setEditingTxId(existingTx.id); setEditValue(""); }}
+                            className="px-2 py-2 text-[10px] text-destructive border-destructive/30"
+                          >
+                            Edit
+                          </GlassButton>
+                        ) : (
+                          <span className="text-[10px] text-destructive">Duplicate</span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 text-muted-foreground min-w-[60px]">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        <span className="text-[10px]">Pending</span>
+                      </div>
+                    )
                   ) : (
-                    <div className="flex items-center gap-1 text-muted-foreground min-w-[60px]">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      <span className="text-[10px]">Pending</span>
-                    </div>
-                  )
-                ) : (
-                  <GlassButton
-                    variant="primary"
-                    onClick={() => handleSubmitTx(idx)}
-                    disabled={submitting || !val.trim()}
-                    className="px-3 py-2 text-[10px] min-w-[60px]"
-                  >
-                    Submit
-                  </GlassButton>
+                    <GlassButton
+                      variant="primary"
+                      onClick={() => handleSubmitTx(idx)}
+                      disabled={submitting || !val.trim()}
+                      className="px-3 py-2 text-[10px] min-w-[60px]"
+                    >
+                      Submit
+                    </GlassButton>
+                  )}
+                </div>
+                {isDuplicate && !isEditing && canEdit && (
+                  <p className="text-[9px] text-destructive ml-8">⚠ Duplicate detected — edit once or face a ban</p>
                 )}
               </div>
             );

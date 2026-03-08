@@ -1093,6 +1093,58 @@ const Admin = () => {
                   <MetricCard label="Banned Users" value={profiles.filter(p => p.is_banned).length} icon={Ban} variant="destructive" />
                   <MetricCard label="Dup TX IDs" value={verificationTxs.filter(t => t.is_duplicate).length} icon={Activity} />
                 </div>
+
+                {/* Duplicate TX Users Section */}
+                {(() => {
+                  const dupTxs = verificationTxs.filter(t => t.is_duplicate);
+                  const dupUserIds = [...new Set(dupTxs.map(t => t.user_id))];
+                  if (dupUserIds.length === 0) return null;
+                  return (
+                    <div className="mb-4">
+                      <p className="text-[12px] font-semibold text-foreground mb-2">🚩 Users with Duplicate Transaction IDs</p>
+                      <div className="space-y-2">
+                        {dupUserIds.map(uid => {
+                          const prof = profiles.find(p => p.id === uid);
+                          const userDups = dupTxs.filter(t => t.user_id === uid);
+                          return (
+                            <div key={uid} className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                              <div className="flex items-center justify-between mb-1">
+                                <div>
+                                  <p className="text-[12px] font-semibold text-foreground">{prof?.email || uid.slice(0, 8)}</p>
+                                  <p className="text-[10px] text-muted-foreground">
+                                    Queue: #{prof?.queue_position} • Points: {prof?.points_balance} • Spend: ₦{(prof?.total_annual_spend || 0).toLocaleString("en-NG")}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {prof?.is_banned && <StatusBadge status="BANNED" className="bg-destructive/10 text-destructive" />}
+                                  <span className="text-[10px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">{userDups.length} dup{userDups.length > 1 ? "s" : ""}</span>
+                                </div>
+                              </div>
+                              <div className="mt-2 space-y-1">
+                                {userDups.map(dt => (
+                                  <div key={dt.id} className="flex items-center justify-between text-[10px] bg-background/50 rounded px-2 py-1">
+                                    <span className="text-foreground font-mono">{dt.transaction_id}</span>
+                                    <span className="text-muted-foreground">{dt.duplicate_note || "Duplicate"}</span>
+                                  </div>
+                                ))}
+                              </div>
+                              {prof && !prof.is_banned && (
+                                <Btn variant="destructive" className="mt-2" onClick={async () => {
+                                  await supabase.from("profiles").update({ is_banned: true, ban_reason: "Duplicate transaction IDs in spend verification" }).eq("id", uid);
+                                  await sendNotification({ userId: uid, type: "warning", title: "Account Banned", message: "Your account has been banned due to duplicate transaction IDs." });
+                                  toast({ title: "User banned" });
+                                  await fetchData();
+                                }}><Ban className="w-3 h-3" /> Ban User</Btn>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <p className="text-[12px] font-semibold text-foreground mb-2">Warning History</p>
                 <div className="space-y-1 max-h-[400px] overflow-y-auto">
                   {userWarnings.map(w => {
                     const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id.slice(0, 8);
