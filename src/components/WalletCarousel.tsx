@@ -13,6 +13,7 @@ interface WalletCarouselProps {
   goal: string;
   goalLabel: string;
   onActivateWallet: (type: "food" | "transport") => void;
+  onActiveWalletChange?: (isActive: boolean) => void;
   children?: React.ReactNode;
 }
 
