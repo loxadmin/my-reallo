@@ -113,6 +113,9 @@ const InfluencerPanel = () => {
       supabase.from("influencer_bank_accounts" as any).select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("influencer_referrals" as any).select("*").eq("influencer_id", user.id).order("created_at", { ascending: false }),
       supabase.from("influencer_withdrawals" as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("influencer_challenges" as any).select("*").eq("is_active", true).order("created_at", { ascending: false }),
+      supabase.from("influencer_challenge_enrollments" as any).select("*").eq("user_id", user.id),
+      supabase.from("influencer_challenge_submissions" as any).select("*").eq("user_id", user.id).order("submitted_at", { ascending: false }),
     ]);
     setApplication((appRes.data as any) || null);
     setWallet((walletRes.data as any) || null);
@@ -121,6 +124,9 @@ const InfluencerPanel = () => {
     setIdDocUrl(ba?.id_document_url || null);
     setReferrals(((refRes.data as any) || []) as InfluencerReferral[]);
     setWithdrawals(((wdRes.data as any) || []) as Withdrawal[]);
+    setChallenges(((chRes.data as any) || []) as Challenge[]);
+    setEnrollments(((enRes.data as any) || []) as ChallengeEnrollment[]);
+    setSubmissions(((subRes.data as any) || []) as ChallengeSubmission[]);
     setLoading(false);
   };
 
