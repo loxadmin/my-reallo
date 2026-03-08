@@ -173,12 +173,12 @@ const MetricCard = ({ label, value, icon: Icon, trend, trendLabel }: {
   label: string; value: string | number; icon: any; trend?: "up" | "down" | "neutral"; trendLabel?: string;
 }) => (
   <div className="rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-5 space-y-2.5 hover:shadow-md transition-shadow overflow-hidden">
-    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider truncate">{label}</p>
-    <p className="text-xl font-bold text-foreground leading-none truncate">{value}</p>
+    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{label}</p>
+    <p className="text-xl font-bold text-foreground leading-none">{value}</p>
     {trend && trendLabel && (
       <div className="flex items-center gap-1.5">
         {trend === "up" ? <TrendingUp className="w-3 h-3 text-primary shrink-0" /> : trend === "down" ? <TrendingDown className="w-3 h-3 text-destructive shrink-0" /> : null}
-        <span className={`text-[10px] font-medium truncate ${trend === "up" ? "text-primary" : trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>{trendLabel}</span>
+        <span className={`text-[10px] font-medium ${trend === "up" ? "text-primary" : trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>{trendLabel}</span>
       </div>
     )}
   </div>
