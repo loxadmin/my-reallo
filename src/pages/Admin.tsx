@@ -1869,7 +1869,7 @@ const Admin = () => {
                     {infReferrals.map((r: any) => {
                       return (
                         <TableRow key={r.id}>
-                          <span className="flex-1 min-w-0 flex items-center gap-1 text-[11px]"><button onClick={() => setDrawerUserId(r.influencer_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8)}</button> → <button onClick={() => setDrawerUserId(r.referred_user_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8)}</button></span>
+                          <span className="flex-1 min-w-0 flex items-center gap-1 text-[11px]"><UserLink userId={r.influencer_id} /> → <UserLink userId={r.referred_user_id} /></span>
                           <span className="w-20 shrink-0 text-right text-[11px] text-primary font-semibold">{formatNaira(r.reward_amount)}</span>
                           <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
                         </TableRow>
