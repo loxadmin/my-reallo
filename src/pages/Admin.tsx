@@ -363,12 +363,7 @@ const Admin = () => {
                 duplicate_note: `Duplicate submission. Already verified for user ${firstMatch.user_id.slice(0, 8)}.`
               } as any).eq("id", matches[i].id);
 
-              await supabase.from("notifications" as any).insert({
-                user_id: matches[i].user_id,
-                type: "warning",
-                title: "Duplicate Transaction ID Detected",
-                message: `Your transaction ID "${row.transaction_id}" was flagged as a duplicate and could not be verified.`,
-              } as any);
+              await sendNotification({ userId: matches[i].user_id, type: "warning", title: "Duplicate Transaction ID Detected", message: `Your transaction ID "${row.transaction_id}" was flagged as a duplicate and could not be verified.` });
 
               duplicateCount++;
             }
