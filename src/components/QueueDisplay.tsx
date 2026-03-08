@@ -308,6 +308,29 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 <p className="text-[10px] text-foreground font-mono bg-muted/30 rounded-lg p-2 truncate">{referralLink}</p>
               </GlassCard>
             )}
+
+            {/* Referred Users List */}
+            {referredUsers.length > 0 && (
+              <GlassCard className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Share2 className="w-3.5 h-3.5 text-primary" />
+                  <p className="text-[11px] text-muted-foreground font-medium">Your Referred Users ({referredUsers.length})</p>
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {referredUsers.map((ru, i) => {
+                    const username = ru.email.split("@")[0];
+                    return (
+                      <div key={i} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2">
+                        <span className="text-[11px] text-foreground font-medium">{username}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(ru.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </GlassCard>
+            )}
           </motion.div>
         )}
 
