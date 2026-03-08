@@ -388,22 +388,6 @@ const VerifySpendFlow = () => {
           getMultiplier={tab.type === "electricity" ? () => 12 : getMultiplier}
         />
       ))}
-          frequency={"monthly"}
-          setFrequency={() => {}}
-          verifySettings={verifySettings}
-          starting={starting}
-          submitting={submitting}
-          editingTxId={editingTxId}
-          editValue={editValue}
-          setEditingTxId={setEditingTxId}
-          setEditValue={setEditValue}
-          onStart={() => handleStartVerification("electricity")}
-          onSubmitTx={(idx) => handleSubmitTx(idx, "electricity")}
-          onEditTx={handleEditDuplicateTx}
-          getMaxBoxes={() => 1}
-          getMultiplier={() => 12}
-        />
-      )}
     </GlassCard>
   );
 };
