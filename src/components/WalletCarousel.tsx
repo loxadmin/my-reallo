@@ -38,6 +38,7 @@ const WalletCarousel = ({
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: "center" });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [currentWalletActive, setCurrentWalletActive] = useState(true);
+  const [showSpendPopup, setShowSpendPopup] = useState(false);
 
   const utilitySpend = (profile?.annual_data_spend ?? 0) + (profile?.annual_electricity_spend ?? 0);
   const foodSpend = profile?.annual_food_spend ?? 0;
