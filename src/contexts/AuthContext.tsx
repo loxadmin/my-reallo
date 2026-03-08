@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       // Check inactivity before restoring session
       if (session?.user && isSessionExpiredByInactivity()) {
         supabase.auth.signOut();
@@ -155,8 +155,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         updateLastActivity();
-        fetchProfile(session.user.id);
-        checkAdmin(session.user.id);
+        await fetchProfile(session.user.id);
+        await checkAdmin(session.user.id);
       }
       setLoading(false);
     });
