@@ -39,6 +39,7 @@ type CategoryVerifStatus = Record<string, boolean>; // spend_type -> verified
 
 const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange }: QueueDisplayProps) => {
   const { user, profile, refreshProfile } = useAuth();
+  const { formatCurrency: formatNaira } = useCurrency();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
