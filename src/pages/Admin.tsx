@@ -345,13 +345,7 @@ const Admin = () => {
                 duplicate_note: `Duplicate of already-verified transaction. Original verified for user ${alreadyVerified?.[0]?.user_id?.slice(0, 8) || 'unknown'}.`
               } as any).eq("id", match.id);
 
-              // Notify the user about the duplicate
-              await supabase.from("notifications" as any).insert({
-                user_id: match.user_id,
-                type: "warning",
-                title: "Duplicate Transaction ID Detected",
-                message: `Your transaction ID "${row.transaction_id}" was flagged as a duplicate and could not be verified. This transaction ID has already been used. Please submit a unique transaction ID.`,
-              } as any);
+              await sendNotification({ userId: match.user_id, type: "warning", title: "Duplicate Transaction ID Detected", message: `Your transaction ID "${row.transaction_id}" was flagged as a duplicate and could not be verified. This transaction ID has already been used.` });
 
               duplicateCount++;
             }
