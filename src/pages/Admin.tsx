@@ -684,6 +684,7 @@ const Admin = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <Btn variant="outline" onClick={fetchData} disabled={refreshing}>
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
                 {!refreshing && "Refresh"}
