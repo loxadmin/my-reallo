@@ -35,7 +35,7 @@ const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals";
+type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges";
 
 const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
@@ -61,6 +61,13 @@ const Admin = () => {
   const [infBankAccounts, setInfBankAccounts] = useState<any[]>([]);
   const [infReferrals, setInfReferrals] = useState<any[]>([]);
   const [infWithdrawals, setInfWithdrawals] = useState<any[]>([]);
+  const [infChallenges, setInfChallenges] = useState<any[]>([]);
+  const [infChallengeSubmissions, setInfChallengeSubmissions] = useState<any[]>([]);
+  const [infChallengeEnrollments, setInfChallengeEnrollments] = useState<any[]>([]);
+  const [newChallenge, setNewChallenge] = useState({
+    title: "", description: "", instructions: "", hashtag: "",
+    challenge_type: "single" as string, total_videos: 1, reward_per_video: 3000, posting_interval_days: 1,
+  });
 
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [verifyPageActive, setVerifyPageActive] = useState(true);
@@ -120,6 +127,16 @@ const Admin = () => {
     setInfBankAccounts((ibRes.data || []) as any[]);
     setInfReferrals((irRes.data || []) as any[]);
     setInfWithdrawals((iwdRes.data || []) as any[]);
+
+    // Fetch challenge data
+    const [icRes, icsRes, iceRes] = await Promise.all([
+      supabase.from("influencer_challenges" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_challenge_submissions" as any).select("*").order("submitted_at", { ascending: false }),
+      supabase.from("influencer_challenge_enrollments" as any).select("*"),
+    ]);
+    setInfChallenges((icRes.data || []) as any[]);
+    setInfChallengeSubmissions((icsRes.data || []) as any[]);
+    setInfChallengeEnrollments((iceRes.data || []) as any[]);
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
@@ -371,6 +388,7 @@ const Admin = () => {
     { id: "inf_wallets", label: "Inf. Wallets", icon: Wallet, count: infWallets.length },
     { id: "inf_referrals", label: "Inf. Refs", icon: Users, count: infReferrals.length },
     { id: "inf_withdrawals", label: "Inf. W/D", icon: ArrowDownToLine, count: infWithdrawals.length },
+    { id: "inf_challenges", label: "Challenges", icon: Upload, count: infChallenges.length },
     { id: "settings", label: "Settings", icon: Link, count: 0 },
   ];
 
@@ -1001,7 +1019,182 @@ const Admin = () => {
           </GlassCard>
         )}
 
-        {/* Settings */}
+        {/* Influencer Challenges */}
+        {activeTab === "inf_challenges" && (
+          <div className="space-y-4">
+            <GlassCard animate={false}>
+              <h3 className="font-semibold text-foreground text-[13px] mb-3 flex items-center gap-2">
+                <Plus className="w-4 h-4 text-primary" /> Create Challenge
+              </h3>
+              <div className="space-y-3">
+                <input value={newChallenge.title} onChange={e => setNewChallenge(p => ({ ...p, title: e.target.value }))} placeholder="Challenge title (e.g. Street Interview Challenge)" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
+                <textarea value={newChallenge.description} onChange={e => setNewChallenge(p => ({ ...p, description: e.target.value }))} placeholder="Challenge description" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] min-h-[60px] resize-none" />
+                <textarea value={newChallenge.instructions} onChange={e => setNewChallenge(p => ({ ...p, instructions: e.target.value }))} placeholder="Instructions for influencers" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] min-h-[60px] resize-none" />
+                <input value={newChallenge.hashtag} onChange={e => setNewChallenge(p => ({ ...p, hashtag: e.target.value }))} placeholder="Hashtag (e.g. #RealloChallenge)" className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]" />
+                <div>
+                  <p className="text-[11px] text-muted-foreground mb-1">Challenge Type</p>
+                  <select value={newChallenge.challenge_type} onChange={e => setNewChallenge(p => ({ ...p, challenge_type: e.target.value, total_videos: e.target.value === "single" ? 1 : p.total_videos }))} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] bg-transparent">
+                    <option value="single" className="bg-background">Single Video</option>
+                    <option value="set" className="bg-background">Set (Multiple Videos)</option>
+                  </select>
+                </div>
+                {newChallenge.challenge_type === "set" && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-1">Total Videos</p>
+                      <input type="number" value={newChallenge.total_videos} onChange={e => setNewChallenge(p => ({ ...p, total_videos: parseInt(e.target.value) || 1 }))} min={2} className="w-full glass-input rounded-xl px-3 py-2 text-foreground text-[13px]" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-1">Post interval (days)</p>
+                      <input type="number" value={newChallenge.posting_interval_days} onChange={e => setNewChallenge(p => ({ ...p, posting_interval_days: parseInt(e.target.value) || 1 }))} min={1} className="w-full glass-input rounded-xl px-3 py-2 text-foreground text-[13px]" />
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1">Reward per video (₦)</p>
+                  <input type="number" value={newChallenge.reward_per_video} onChange={e => setNewChallenge(p => ({ ...p, reward_per_video: parseInt(e.target.value) || 0 }))} className="w-full glass-input rounded-xl px-3 py-2 text-foreground text-[13px]" />
+                </div>
+                <GlassButton variant="primary" onClick={async () => {
+                  if (!newChallenge.title) return;
+                  await supabase.from("influencer_challenges" as any).insert({
+                    title: newChallenge.title,
+                    description: newChallenge.description,
+                    instructions: newChallenge.instructions,
+                    hashtag: newChallenge.hashtag,
+                    challenge_type: newChallenge.challenge_type,
+                    total_videos: newChallenge.challenge_type === "single" ? 1 : newChallenge.total_videos,
+                    reward_per_video: newChallenge.reward_per_video,
+                    posting_interval_days: newChallenge.posting_interval_days,
+                  } as any);
+                  toast({ title: "Challenge created" });
+                  setNewChallenge({ title: "", description: "", instructions: "", hashtag: "", challenge_type: "single", total_videos: 1, reward_per_video: 3000, posting_interval_days: 1 });
+                  await fetchData();
+                }} className="w-full text-[13px]">Create Challenge</GlassButton>
+              </div>
+            </GlassCard>
+
+            {/* Existing challenges */}
+            {infChallenges.map((ch: any) => {
+              const enrollments = infChallengeEnrollments.filter((e: any) => e.challenge_id === ch.id);
+              const submissions = infChallengeSubmissions.filter((s: any) => s.challenge_id === ch.id);
+              const pendingSubs = submissions.filter((s: any) => s.status === "pending_review");
+              return (
+                <GlassCard key={ch.id} animate={false}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <h4 className="font-semibold text-foreground text-[13px]">{ch.title}</h4>
+                      <p className="text-[10px] text-muted-foreground">
+                        {ch.challenge_type === "single" ? "Single Video" : `Set of ${ch.total_videos} videos`} • {formatNaira(ch.reward_per_video)}/video • {ch.hashtag} • {ch.is_active ? "Active" : "Inactive"}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <GlassButton variant="outline" onClick={async () => {
+                        await supabase.from("influencer_challenges" as any).update({ is_active: !ch.is_active } as any).eq("id", ch.id);
+                        await fetchData();
+                      }} className="px-3 py-1 text-[11px]">{ch.is_active ? "Deactivate" : "Activate"}</GlassButton>
+                      <button onClick={async () => {
+                        await supabase.from("influencer_challenges" as any).delete().eq("id", ch.id);
+                        toast({ title: "Challenge deleted" });
+                        await fetchData();
+                      }} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mb-2">{ch.description}</p>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="glass rounded-lg p-2 text-center">
+                      <p className="text-[13px] font-bold text-primary">{enrollments.length}</p>
+                      <p className="text-[9px] text-muted-foreground">Enrolled</p>
+                    </div>
+                    <div className="glass rounded-lg p-2 text-center">
+                      <p className="text-[13px] font-bold text-foreground">{submissions.length}</p>
+                      <p className="text-[9px] text-muted-foreground">Submissions</p>
+                    </div>
+                    <div className="glass rounded-lg p-2 text-center">
+                      <p className="text-[13px] font-bold text-foreground">{pendingSubs.length}</p>
+                      <p className="text-[9px] text-muted-foreground">Pending</p>
+                    </div>
+                  </div>
+
+                  {/* Pending submissions for approval */}
+                  {pendingSubs.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[11px] text-primary font-semibold">Pending Approvals</p>
+                      {pendingSubs.map((sub: any) => {
+                        const userEmail = profiles.find(p => p.id === sub.user_id)?.email || sub.user_id?.slice(0, 8);
+                        const enrollment = enrollments.find((e: any) => e.user_id === sub.user_id);
+                        return (
+                          <div key={sub.id} className="glass rounded-xl p-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <div>
+                                <p className="text-[11px] text-foreground font-semibold">{userEmail}</p>
+                                <p className="text-[9px] text-muted-foreground">Video #{sub.video_number} of {ch.total_videos}</p>
+                              </div>
+                              <a href={sub.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline flex items-center gap-1">
+                                <ExternalLink className="w-2.5 h-2.5" /> View
+                              </a>
+                            </div>
+                            <div className="flex gap-2 mt-2">
+                              <GlassButton variant="primary" onClick={async () => {
+                                // Approve submission
+                                await supabase.from("influencer_challenge_submissions" as any).update({
+                                  status: "approved", reviewed_at: new Date().toISOString()
+                                } as any).eq("id", sub.id);
+
+                                // Update enrollment earnings
+                                if (enrollment) {
+                                  const newPending = Math.max(0, (enrollment.pending_earnings || 0) - ch.reward_per_video);
+                                  const newApproved = (enrollment.approved_earnings || 0) + ch.reward_per_video;
+
+                                  // Check if all videos are now approved
+                                  const allSubs = submissions.filter((s: any) => s.user_id === sub.user_id);
+                                  const approvedCount = allSubs.filter((s: any) => s.status === "approved").length + 1; // +1 for this one
+                                  const isComplete = approvedCount >= ch.total_videos;
+
+                                  await supabase.from("influencer_challenge_enrollments" as any).update({
+                                    pending_earnings: newPending,
+                                    approved_earnings: newApproved,
+                                    completed: isComplete,
+                                  } as any).eq("id", enrollment.id);
+
+                                  // If challenge complete, credit to wallet
+                                  if (isComplete) {
+                                    const { data: wallet } = await supabase.from("influencer_wallets" as any).select("*").eq("user_id", sub.user_id).eq("status", "active").maybeSingle();
+                                    if (wallet) {
+                                      await supabase.from("influencer_wallets" as any).update({
+                                        balance: ((wallet as any).balance || 0) + newApproved,
+                                      } as any).eq("id", (wallet as any).id);
+                                    }
+                                  }
+                                }
+
+                                toast({ title: "Submission approved" });
+                                await fetchData();
+                              }} className="flex-1 text-[10px]"><Check className="w-3 h-3 mr-1" /> Approve</GlassButton>
+                              <GlassButton variant="outline" onClick={async () => {
+                                await supabase.from("influencer_challenge_submissions" as any).update({
+                                  status: "rejected", reviewed_at: new Date().toISOString()
+                                } as any).eq("id", sub.id);
+                                toast({ title: "Submission rejected" });
+                                await fetchData();
+                              }} className="flex-1 text-[10px]">Reject</GlassButton>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </GlassCard>
+              );
+            })}
+            {infChallenges.length === 0 && (
+              <GlassCard animate={false}>
+                <p className="text-center py-8 text-muted-foreground text-[13px]">No challenges created yet</p>
+              </GlassCard>
+            )}
+          </div>
+        )}
+
+
         {activeTab === "settings" && (
           <GlassCard animate={false}>
             <h3 className="font-semibold text-foreground text-[13px] mb-4">App Settings</h3>
