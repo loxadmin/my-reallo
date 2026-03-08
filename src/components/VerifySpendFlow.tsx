@@ -96,6 +96,9 @@ const VerifySpendFlow = () => {
     await fetchData();
   };
 
+  const [editingTxId, setEditingTxId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+
   const handleSubmitTx = async (index: number) => {
     const txId = txInputs[index]?.trim();
     if (!txId || !verification || !user) return;
@@ -107,20 +110,94 @@ const VerifySpendFlow = () => {
     }
 
     setSubmitting(true);
+
+    // Check for duplicate across all users
+    const { data: dupCheck } = await supabase
+      .from("verification_transactions")
+      .select("id")
+      .eq("transaction_id", txId)
+      .limit(1);
+
+    const isDuplicate = (dupCheck || []).length > 0;
+
     await supabase.from("verification_transactions").insert({
       verification_id: verification.id,
       user_id: user.id,
       transaction_id: txId,
+      is_duplicate: isDuplicate,
+      duplicate_note: isDuplicate ? "Duplicate detected on initial submission" : null,
     });
 
-    // After first submission, calculate initial verified spend
-    const updatedTxCount = transactions.length + 1;
-    if (updatedTxCount === 1) {
-      // First transaction - calculate initial annual spend
-      // Will be recalculated once verified by admin CSV
+    if (isDuplicate) {
+      toast({
+        title: "Duplicate Transaction ID",
+        description: "This transaction ID already exists. You can edit it once — a second duplicate will result in a ban.",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Transaction ID submitted" });
     }
 
-    toast({ title: "Transaction ID submitted" });
+    setSubmitting(false);
+    await fetchData();
+    await refreshProfile();
+  };
+
+  const handleEditDuplicateTx = async (tx: Transaction & { edit_count?: number }) => {
+    const newTxId = editValue.trim();
+    if (!newTxId || !user) return;
+
+    setSubmitting(true);
+
+    // Check if the new ID is also a duplicate
+    const { data: dupCheck } = await supabase
+      .from("verification_transactions")
+      .select("id")
+      .eq("transaction_id", newTxId)
+      .neq("id", tx.id)
+      .limit(1);
+
+    const isStillDuplicate = (dupCheck || []).length > 0;
+
+    if (isStillDuplicate) {
+      // Second duplicate = auto-ban
+      await supabase.from("verification_transactions").update({
+        transaction_id: newTxId,
+        edit_count: (tx.edit_count || 0) + 1,
+        is_duplicate: true,
+        duplicate_note: "Second duplicate — auto-banned",
+      } as any).eq("id", tx.id);
+
+      await supabase.from("profiles").update({
+        is_banned: true,
+        ban_reason: "Submitted duplicate transaction IDs twice during spend verification",
+      }).eq("id", user.id);
+
+      await supabase.from("user_warnings").insert({
+        user_id: user.id,
+        reason: "Auto-banned: submitted duplicate transaction ID twice (original: " + tx.transaction_id + ", edit: " + newTxId + ")",
+        issued_by: user.id,
+      } as any);
+
+      toast({
+        title: "Account Banned",
+        description: "Your account has been banned for submitting duplicate transaction IDs twice.",
+        variant: "destructive",
+      });
+    } else {
+      // Edit successful — clear duplicate flag
+      await supabase.from("verification_transactions").update({
+        transaction_id: newTxId,
+        edit_count: (tx.edit_count || 0) + 1,
+        is_duplicate: false,
+        duplicate_note: "Edited from duplicate: " + tx.transaction_id,
+      } as any).eq("id", tx.id);
+
+      toast({ title: "Transaction ID updated", description: "Your edited transaction ID has been accepted." });
+    }
+
+    setEditingTxId(null);
+    setEditValue("");
     setSubmitting(false);
     await fetchData();
     await refreshProfile();
