@@ -904,6 +904,7 @@ const Admin = () => {
                     );
                   })}
                 </div>
+                </div>
               </TableCard>
             )}
 
