@@ -70,6 +70,7 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
       supabase.from("admin_settings").upsert({ key: "founder_signature_url", value: sigUrl, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "advertiser_user_count", value: advUserCount, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "advertiser_user_count_link", value: advUserCountLink, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "advertiser_branded_email_required", value: brandedEmailRequired ? "true" : "false", updated_at: new Date().toISOString() }),
     ]);
 
     toast({ title: "Advertiser settings saved" });
