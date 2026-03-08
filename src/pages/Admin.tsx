@@ -1148,11 +1148,13 @@ const Admin = () => {
                           if (bank) {
                             await supabase.from("influencer_bank_accounts" as any).update({ verification_status: "verified" }).eq("id", bank.id);
                           }
+                          await sendNotification({ userId: w.user_id, type: "wallet_activated", title: "Wallet Activated!", message: "Your influencer wallet has been activated. You can now receive earnings and request withdrawals." });
                           toast({ title: "Wallet activated" });
                           await fetchData();
                         }} className="flex-1 text-[11px]"><Check className="w-3 h-3 mr-1" /> Approve Wallet</GlassButton>
                         <GlassButton variant="outline" onClick={async () => {
                           await supabase.from("influencer_wallets" as any).update({ status: "rejected" }).eq("id", w.id);
+                          await sendNotification({ userId: w.user_id, type: "rejection", title: "Wallet Activation Rejected", message: "Your wallet activation request has been rejected. Please review your submitted documents." });
                           toast({ title: "Wallet rejected" });
                           await fetchData();
                         }} className="flex-1 text-[11px]">Reject</GlassButton>
