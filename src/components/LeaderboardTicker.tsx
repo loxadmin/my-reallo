@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, ArrowDownToLine } from "lucide-react";
+import { ArrowDownToLine, Gift, TrendingUp, Users, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
@@ -8,8 +8,16 @@ interface LeaderEntry {
   id: string;
   label: string;
   amount: number;
-  type: "saver" | "influencer";
+  action: string;
 }
+
+const actionConfig: Record<string, { icon: typeof Wallet; verb: string }> = {
+  saved: { icon: Wallet, verb: "saved" },
+  withdrew: { icon: ArrowDownToLine, verb: "withdrew" },
+  claimed: { icon: Gift, verb: "claimed" },
+  earned: { icon: TrendingUp, verb: "earned" },
+  "earned from referral": { icon: Users, verb: "earned from referral" },
+};
 
 const LeaderboardTicker = () => {
   const { formatCurrency } = useCurrency();
@@ -18,61 +26,19 @@ const LeaderboardTicker = () => {
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
-      const [profilesRes, withdrawalsRes] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id, email, total_annual_spend, points_balance")
-          .gt("total_annual_spend", 0)
-          .order("total_annual_spend", { ascending: false })
-          .limit(10),
-        supabase
-          .from("influencer_withdrawals")
-          .select("id, user_id, amount, status, profiles!influencer_withdrawals_user_id_fkey(email)")
-          .eq("status", "approved")
-          .order("amount", { ascending: false })
-          .limit(10),
-      ]);
-
-      const saverEntries: LeaderEntry[] = (profilesRes.data || []).map((p: any) => {
-        const claimable = Math.floor((p.points_balance || 0) * 0.5);
-        const username = p.email?.split("@")[0] || "User";
-        // Mask: show first 2 chars + *** + last char
-        const masked = username.length > 3
-          ? username.slice(0, 2) + "***" + username.slice(-1)
-          : username.slice(0, 1) + "***";
-        return {
-          id: `saver-${p.id}`,
-          label: masked,
-          amount: claimable,
-          type: "saver" as const,
-        };
-      }).filter((e: LeaderEntry) => e.amount > 0);
-
-      const influencerEntries: LeaderEntry[] = (withdrawalsRes.data || []).map((w: any) => {
-        const email = (w.profiles as any)?.email || "";
-        const username = email.split("@")[0] || "Influencer";
-        const masked = username.length > 3
-          ? username.slice(0, 2) + "***" + username.slice(-1)
-          : username.slice(0, 1) + "***";
-        return {
-          id: `inf-${w.id}`,
-          label: masked,
-          amount: w.amount,
-          type: "influencer" as const,
-        };
-      });
-
-      // Interleave savers and influencers
-      const merged: LeaderEntry[] = [];
-      const maxLen = Math.max(saverEntries.length, influencerEntries.length);
-      for (let i = 0; i < maxLen; i++) {
-        if (i < saverEntries.length) merged.push(saverEntries[i]);
-        if (i < influencerEntries.length) merged.push(influencerEntries[i]);
+      try {
+        const { data, error } = await supabase.functions.invoke("leaderboard-feed");
+        if (!error && Array.isArray(data)) {
+          setEntries(data.filter((e: LeaderEntry) => e.amount > 0));
+        }
+      } catch (err) {
+        console.error("Leaderboard fetch error:", err);
       }
-      setEntries(merged);
     };
 
     fetchLeaderboard();
+    const interval = setInterval(fetchLeaderboard, 60000); // refresh every minute
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -86,6 +52,8 @@ const LeaderboardTicker = () => {
   if (entries.length === 0) return null;
 
   const current = entries[currentIndex];
+  const config = actionConfig[current.action] || actionConfig.saved;
+  const Icon = config.icon;
 
   return (
     <div
@@ -106,20 +74,10 @@ const LeaderboardTicker = () => {
           transition={{ duration: 0.35, ease: "easeInOut" }}
           className="flex items-center gap-2"
         >
-          {current.type === "saver" ? (
-            <>
-              <span className="text-[11px] text-foreground font-medium">{current.label}</span>
-              <span className="text-[10px] text-muted-foreground">saved</span>
-              <span className="text-[11px] text-primary font-bold">{formatCurrency(current.amount)}</span>
-            </>
-          ) : (
-            <>
-              <ArrowDownToLine className="w-3 h-3 text-primary shrink-0" />
-              <span className="text-[11px] text-foreground font-medium">{current.label}</span>
-              <span className="text-[10px] text-muted-foreground">withdrew</span>
-              <span className="text-[11px] text-primary font-bold">{formatCurrency(current.amount)}</span>
-            </>
-          )}
+          <Icon className="w-3 h-3 text-primary shrink-0" />
+          <span className="text-[11px] text-foreground font-medium">{current.label}</span>
+          <span className="text-[10px] text-muted-foreground">{config.verb}</span>
+          <span className="text-[11px] text-primary font-bold">{formatCurrency(current.amount)}</span>
         </motion.div>
       </AnimatePresence>
     </div>
