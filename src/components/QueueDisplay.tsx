@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import InfluencerPanel from "./InfluencerPanel";
 import NotificationsPanel from "./NotificationsPanel";
 import WalletCarousel from "./WalletCarousel";
 import ActivateWalletModal from "./ActivateWalletModal";
+import type { WalletType } from "./WalletCarousel";
 import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2, Star } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
@@ -32,6 +33,8 @@ const goalLabels: Record<string, string> = {
   rent: "Rent Support",
 };
 
+type CategoryVerifStatus = Record<string, boolean>; // spend_type -> verified
+
 const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange }: QueueDisplayProps) => {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
@@ -45,6 +48,16 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   const [spendVerified, setSpendVerified] = useState(false);
   const [isVerifyActive, setIsVerifyActive] = useState(true);
   const [activateWallet, setActivateWallet] = useState<"food" | "transport" | null>(null);
+  const [categoryVerified, setCategoryVerified] = useState<CategoryVerifStatus>({
+    data: false, electricity: false, food: false, transport: false,
+  });
+  const [categoryToggles, setCategoryToggles] = useState<Record<string, boolean>>({
+    data: true, electricity: true, food: true, transport: true,
+  });
+  // Current wallet context from carousel
+  const [walletContext, setWalletContext] = useState<{ walletType: WalletType; showTotal: boolean }>({
+    walletType: "utility", showTotal: false,
+  });
 
   const position = profile?.queue_position ?? 201;
   const referralLink = profile?.referral_code
@@ -96,7 +109,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
       setIsVerifyActive(activeRes.data?.value === "false" ? false : true);
       setClaimedTotal((voucherRes.data || []).reduce((sum, v) => sum + Number(v.amount_naira || 0), 0));
       const verifs = (verifyRes.data || []) as { status: string; spend_type: string }[];
-      
+
       // Fetch per-category toggles
       const [dataToggle, elecToggle, foodToggle, transToggle] = await Promise.all([
         supabase.from("admin_settings").select("value").eq("key", "verify_data_active").single(),
@@ -104,19 +117,30 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         supabase.from("admin_settings").select("value").eq("key", "verify_food_active").single(),
         supabase.from("admin_settings").select("value").eq("key", "verify_transport_active").single(),
       ]);
-      
-      const isVerifRequired = (type: string, toggleRes: any) => {
-        if (toggleRes.data?.value === "false") return true; // disabled = skip = considered verified
+
+      const toggles: Record<string, boolean> = {
+        data: dataToggle.data?.value !== "false",
+        electricity: elecToggle.data?.value !== "false",
+        food: foodToggle.data?.value !== "false",
+        transport: transToggle.data?.value !== "false",
+      };
+      setCategoryToggles(toggles);
+
+      const isVerifDone = (type: string) => {
+        if (!toggles[type]) return true; // disabled = skip = verified
         const v = verifs.find(v => v.spend_type === type);
         return v?.status === "verified" || v?.status === "completed";
       };
-      
-      setSpendVerified(
-        isVerifRequired("data", dataToggle) &&
-        isVerifRequired("electricity", elecToggle) &&
-        isVerifRequired("food", foodToggle) &&
-        isVerifRequired("transport", transToggle)
-      );
+
+      const catVerif: CategoryVerifStatus = {
+        data: isVerifDone("data"),
+        electricity: isVerifDone("electricity"),
+        food: isVerifDone("food"),
+        transport: isVerifDone("transport"),
+      };
+      setCategoryVerified(catVerif);
+
+      setSpendVerified(catVerif.data && catVerif.electricity && catVerif.food && catVerif.transport);
     };
     fetchStats();
   }, [profile, user]);
@@ -135,24 +159,68 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
     }
   };
 
-  // 4-step claim check
+  // Check if current wallet's categories are verified
+  const isCurrentWalletVerified = (): boolean => {
+    const { walletType, showTotal } = walletContext;
+    if (showTotal) {
+      // Total mode: ALL must be verified
+      return spendVerified;
+    }
+    // Per-wallet verification
+    switch (walletType) {
+      case "utility":
+        return categoryVerified.data && categoryVerified.electricity;
+      case "food":
+        return categoryVerified.food;
+      case "transport":
+        return categoryVerified.transport;
+      default:
+        return false;
+    }
+  };
+
+  // Get the claimable cap for the current wallet
+  const getCurrentWalletSpend = (): number => {
+    const { walletType, showTotal } = walletContext;
+    if (showTotal) return totalAnnualSpend;
+    switch (walletType) {
+      case "utility":
+        return (profile?.annual_data_spend ?? 0) + (profile?.annual_electricity_spend ?? 0);
+      case "food":
+        return profile?.annual_food_spend ?? 0;
+      case "transport":
+        return profile?.annual_transport_spend ?? 0;
+      default:
+        return 0;
+    }
+  };
+
+  const getWalletLabel = (): string => {
+    const { walletType, showTotal } = walletContext;
+    if (showTotal) return "Total";
+    switch (walletType) {
+      case "utility": return "Utility";
+      case "food": return "Food";
+      case "transport": return "Transport";
+      default: return "";
+    }
+  };
+
+  // 4-step claim check (wallet-aware)
   const handleClaimClick = () => {
-    // Check 1: Has points?
     if (pointsBalance <= 0) {
       toast({ title: "No Points", description: "You need to earn points before you can claim. Go to the Earn page." });
       return;
     }
-    // Check 2: Spend verified?
-    if (!spendVerified) {
-      toast({ title: "Verify Your Spend", description: "You need to verify your spend before claiming. Go to the Verify page." });
+    if (!isCurrentWalletVerified()) {
+      const label = getWalletLabel();
+      toast({ title: "Verify Your Spend", description: `Your ${label} spend is not verified yet. Go to the Verify page.` });
       return;
     }
-    // Check 3: Min 50k naira (100k points)?
     if (nairaValue < 50000) {
       toast({ title: "Not Enough Points", description: `You need at least 100,000 points (₦50,000). You have ${pointsBalance.toLocaleString()} points (₦${nairaValue.toLocaleString()}). Earn more points!` });
       return;
     }
-    // Check 4: Off queue for 6 months?
     const offQueueAt = (profile as any)?.off_queue_at;
     if (offQueueAt) {
       const offDate = new Date(offQueueAt);
@@ -164,14 +232,19 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         return;
       }
     } else if (isOffQueue) {
-      // Off queue but no off_queue_at recorded - set it now
       supabase.from("profiles").update({ off_queue_at: new Date().toISOString() }).eq("id", user!.id);
       toast({ title: "Goal Not Matured", description: "Your goal savings is less than 6 months and has not reached maturity." });
       return;
     }
-    // All checks passed
-    navigate("/vouchers");
+    // Pass wallet context to vouchers page
+    const walletSpend = getCurrentWalletSpend();
+    const label = getWalletLabel();
+    navigate(`/vouchers?wallet=${walletContext.walletType}&total=${walletContext.showTotal}&spend=${walletSpend}&label=${label}`);
   };
+
+  const handleWalletContext = useCallback((ctx: { walletType: WalletType; showTotal: boolean }) => {
+    setWalletContext(ctx);
+  }, []);
 
   return (
     <section className="min-h-screen flex items-start justify-center px-4 pt-4 pb-12 lg:pt-8 lg:pb-8">
@@ -179,7 +252,6 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-            {/* Goal Balance Hero Card with Wallet Carousel */}
             <GlassCard variant="glow" className="relative overflow-hidden p-5">
               <p className="text-foreground text-[13px] font-medium mb-3">
                 Welcome back, {user?.email?.split("@")[0] || "User"} 👋
@@ -192,8 +264,8 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 goal={goal}
                 goalLabel={goalLabels[goal] || goal}
                 onActivateWallet={(type) => setActivateWallet(type)}
+                onWalletContext={handleWalletContext}
               >
-                {/* Action Buttons */}
                 <div className="flex gap-3 mt-4">
                   <GlassButton
                     variant="primary"
@@ -214,21 +286,16 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               </WalletCarousel>
             </GlassCard>
 
-            {/* Activate Wallet Modal */}
             <AnimatePresence>
               {activateWallet && (
                 <ActivateWalletModal
                   type={activateWallet}
                   onClose={() => setActivateWallet(null)}
-                  onComplete={() => {
-                    setActivateWallet(null);
-                    refreshProfile();
-                  }}
+                  onComplete={() => { setActivateWallet(null); refreshProfile(); }}
                 />
               )}
             </AnimatePresence>
 
-            {/* Queue & Stats - Interactive */}
             {!isOffQueue && (
               <GlassCard className="p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -276,7 +343,6 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               </GlassCard>
             )}
 
-            {/* Services Grid */}
             <div className="space-y-3">
               <p className="text-foreground font-semibold text-[13px] px-1">Services</p>
               <div className="grid grid-cols-2 gap-3">
@@ -317,7 +383,6 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               </div>
             </div>
 
-            {/* Referral Link Card */}
             {referralLink && (
               <GlassCard className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -330,7 +395,6 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               </GlassCard>
             )}
 
-            {/* Referred Users List */}
             {referredUsers.length > 0 && (
               <GlassCard className="p-4">
                 <div className="flex items-center gap-2 mb-3">

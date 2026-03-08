@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -24,37 +24,87 @@ const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 const Vouchers = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [pointsToUse, setPointsToUse] = useState("");
   const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [spendVerified, setSpendVerified] = useState(false);
+  const [walletVerified, setWalletVerified] = useState(false);
+  const [categoryToggles, setCategoryToggles] = useState<Record<string, boolean>>({
+    data: true, electricity: true, food: true, transport: true,
+  });
+
+  // Read wallet context from URL params
+  const walletType = searchParams.get("wallet") || "utility";
+  const showTotal = searchParams.get("total") === "true";
+  const walletSpendParam = Number(searchParams.get("spend") || 0);
+  const walletLabel = searchParams.get("label") || "Utility";
 
   useEffect(() => { if (!loading && !user) navigate("/auth"); }, [loading, user, navigate]);
   useEffect(() => { if (user) fetchData(); }, [user]);
 
   const fetchData = async () => {
-    const [vRes, verifyRes] = await Promise.all([
+    const [vRes, verifyRes, settingsRes] = await Promise.all([
       supabase.from("vouchers").select("*").eq("user_id", user!.id).order("created_at", { ascending: false }),
-      supabase.from("spend_verifications").select("status").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(1),
+      supabase.from("spend_verifications").select("status, spend_type").eq("user_id", user!.id),
+      supabase.from("admin_settings").select("*"),
     ]);
     setVouchers((vRes.data || []) as Voucher[]);
-    const vStatus = (verifyRes.data || [])[0] as any;
-    setSpendVerified(vStatus?.status === "verified" || vStatus?.status === "completed");
+
+    const verifs = (verifyRes.data || []) as { status: string; spend_type: string }[];
+    const settings = (settingsRes.data || []) as { key: string; value: string }[];
+
+    const toggles: Record<string, boolean> = {
+      data: settings.find(s => s.key === "verify_data_active")?.value !== "false",
+      electricity: settings.find(s => s.key === "verify_electricity_active")?.value !== "false",
+      food: settings.find(s => s.key === "verify_food_active")?.value !== "false",
+      transport: settings.find(s => s.key === "verify_transport_active")?.value !== "false",
+    };
+    setCategoryToggles(toggles);
+
+    const isDone = (type: string) => {
+      if (!toggles[type]) return true;
+      const v = verifs.find(v => v.spend_type === type);
+      return v?.status === "verified" || v?.status === "completed";
+    };
+
+    if (showTotal) {
+      // All must be verified
+      setWalletVerified(isDone("data") && isDone("electricity") && isDone("food") && isDone("transport"));
+    } else {
+      // Per-wallet
+      switch (walletType) {
+        case "utility":
+          setWalletVerified(isDone("data") && isDone("electricity"));
+          break;
+        case "food":
+          setWalletVerified(isDone("food"));
+          break;
+        case "transport":
+          setWalletVerified(isDone("transport"));
+          break;
+        default:
+          setWalletVerified(false);
+      }
+    }
   };
 
   const pointsBalance = profile?.points_balance ?? 0;
-  const totalAnnualSpend = profile?.total_annual_spend ?? 0;
+
+  // Use wallet-specific spend as cap
+  const walletSpend = walletSpendParam > 0
+    ? walletSpendParam
+    : (profile?.total_annual_spend ?? 0);
+
   const claimedTotal = vouchers.reduce((sum, v) => sum + Number(v.amount_naira || 0), 0);
-  const claimableAmount = Math.max(0, totalAnnualSpend - claimedTotal);
+  const claimableAmount = Math.max(0, walletSpend - claimedTotal);
   const isOffQueue = (profile?.queue_position ?? 999) <= 0;
   const nairaValue = Math.floor(Number(pointsToUse || 0) * 0.5);
 
-  // 4-step claim validation
   const getClaimBlockMessage = (): string | null => {
     if (!isOffQueue) return "You must complete the queue before claiming vouchers.";
     if (pointsBalance <= 0) return "You need to earn points before you can claim. Go to the Earn page.";
-    if (!spendVerified) return "You need to verify your spend before claiming. Go to the Verify page.";
+    if (!walletVerified) return `Your ${walletLabel} spend is not verified yet. Go to the Verify page.`;
     if (Math.floor(pointsBalance * 0.5) < 50000) return `You need at least 100,000 points (₦50,000). You have ${pointsBalance.toLocaleString()} points.`;
     const offQueueAt = (profile as any)?.off_queue_at;
     if (offQueueAt) {
@@ -117,10 +167,13 @@ const Vouchers = () => {
         <div className="w-full max-w-md space-y-4">
           <GlassCard variant="glow" className="text-center">
             <Wallet className="w-7 h-7 text-primary mx-auto mb-2" />
-            <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Points Balance</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
+              {showTotal ? "Total" : walletLabel} Wallet
+            </p>
             <motion.p key={pointsBalance} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="font-display text-3xl font-bold gradient-text">
               {pointsBalance.toLocaleString()}
             </motion.p>
+            <p className="text-[10px] text-muted-foreground mt-1">points</p>
             <div className="flex items-center justify-center gap-6 mt-3">
               <div>
                 <p className="text-[10px] text-muted-foreground">Claimable</p>
@@ -131,6 +184,9 @@ const Vouchers = () => {
                 <p className="text-[13px] font-semibold text-foreground">{formatNaira(claimedTotal)}</p>
               </div>
             </div>
+            <p className="text-[10px] text-muted-foreground mt-2">
+              Wallet spend cap: {formatNaira(walletSpend)}
+            </p>
           </GlassCard>
 
           {blockMessage && (
