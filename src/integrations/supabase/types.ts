@@ -784,6 +784,30 @@ export type Database = {
           },
         ]
       }
+      signup_devices: {
+        Row: {
+          created_at: string
+          device_fingerprint: string
+          id: string
+          ip_address: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint: string
+          id?: string
+          ip_address: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: string
+          id?: string
+          ip_address?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       spend_verifications: {
         Row: {
           created_at: string
