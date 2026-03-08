@@ -232,16 +232,13 @@ const VerifySpendFlow = () => {
         )}
       </div>
 
-      {firstVerifiedAmount > 0 && (
+      {verifiedTxs.length > 0 && calculatedAnnualSpend > 0 && (
         <div className="glass rounded-xl p-3">
-          <p className="text-[11px] text-muted-foreground">Initial Verified Annual Spend</p>
-          <p className="text-[13px] font-semibold text-primary">₦{initialAnnualSpend.toLocaleString("en-NG")}</p>
-          {recalculatedSpend !== null && (
-            <>
-              <p className="text-[11px] text-muted-foreground mt-2">Final Recalculated Annual Spend</p>
-              <p className="text-[13px] font-semibold text-primary">₦{recalculatedSpend.toLocaleString("en-NG")}</p>
-            </>
-          )}
+          <p className="text-[11px] text-muted-foreground">Calculated Annual Spend</p>
+          <p className="text-[13px] font-semibold text-primary">₦{calculatedAnnualSpend.toLocaleString("en-NG")}</p>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            {verifiedTxs.length} verified tx × {getMultiplier(verification?.frequency || "daily")}
+          </p>
         </div>
       )}
 
