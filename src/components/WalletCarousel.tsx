@@ -118,7 +118,7 @@ const WalletCarousel = ({
                       </h2>
                     </div>
                     <p className="text-[11px] text-muted-foreground mb-4">
-                      Claimable: <span className="text-primary font-semibold">{formatNaira(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
+                      Claimable: <span className="text-primary font-semibold">{formatCurrency(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
                     </p>
 
                     <div className="space-y-1.5 mb-5">
