@@ -45,6 +45,7 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
     setFounderSigUrl(settings.find(s => s.key === "founder_signature_url")?.value || "");
     setAdvUserCount(settings.find(s => s.key === "advertiser_user_count")?.value || "");
     setAdvUserCountLink(settings.find(s => s.key === "advertiser_user_count_link")?.value || "");
+    setBrandedEmailRequired(settings.find(s => s.key === "advertiser_branded_email_required")?.value !== "false");
   };
 
   useEffect(() => { fetchData(); }, []);
