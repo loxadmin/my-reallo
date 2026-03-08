@@ -8,6 +8,7 @@ import SpendCalculator from "@/components/SpendCalculator";
 import GoalSelector from "@/components/GoalSelector";
 import QueueDisplay from "@/components/QueueDisplay";
 import WaterBackground from "@/components/WaterBackground";
+import PageSkeleton from "@/components/PageSkeleton";
 import { LayoutDashboard, Award, ShieldCheck, Star, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -113,30 +114,8 @@ const Dashboard = () => {
         <WaterBackground />
         <Navbar />
         <div className="flex pt-14">
-          <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-8 space-y-6">
-            {/* Header skeleton */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-1/3 rounded-lg bg-muted animate-pulse" />
-                <div className="h-3 w-1/2 rounded-lg bg-muted animate-pulse" />
-              </div>
-            </div>
-            {/* Card skeleton */}
-            <div className="glass-card rounded-2xl p-6 space-y-4">
-              <div className="h-5 w-2/5 rounded-lg bg-muted animate-pulse" />
-              <div className="h-24 w-full rounded-xl bg-muted animate-pulse" />
-              <div className="grid grid-cols-2 gap-3">
-                <div className="h-16 rounded-xl bg-muted animate-pulse" />
-                <div className="h-16 rounded-xl bg-muted animate-pulse" />
-              </div>
-            </div>
-            {/* Second card skeleton */}
-            <div className="glass-card rounded-2xl p-6 space-y-3">
-              <div className="h-4 w-1/4 rounded-lg bg-muted animate-pulse" />
-              <div className="h-10 w-full rounded-xl bg-muted animate-pulse" />
-              <div className="h-10 w-full rounded-xl bg-muted animate-pulse" />
-            </div>
+          <main className="flex-1 w-full">
+            <PageSkeleton />
           </main>
         </div>
       </div>

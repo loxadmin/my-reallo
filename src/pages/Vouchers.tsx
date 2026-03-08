@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import WaterBackground from "@/components/WaterBackground";
+import PageSkeleton from "@/components/PageSkeleton";
 import { Gift, Wallet, Copy, Check, Lock, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -158,7 +159,7 @@ const Vouchers = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  if (loading || !user) return null;
+  if (loading || !user) return <PageSkeleton />;
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
