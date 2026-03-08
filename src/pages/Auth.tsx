@@ -222,13 +222,8 @@ const Auth = () => {
               </button>
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
+              <div
                 key={mode}
-                initial={{ opacity: 0, x: mode === "login" ? -20 : 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: mode === "login" ? 20 : -20 }}
-                transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
                 <div>
