@@ -646,144 +646,175 @@ const InfluencerPanel = () => {
 
           {tab === "challenges" && (
             <div className="space-y-4">
-              {challenges.length === 0 && (
-                <div className="text-center py-6">
-                  <Video className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                  <p className="text-muted-foreground text-[12px]">No active challenges right now. Check back later!</p>
-                </div>
-              )}
-              {challenges.map(ch => {
-                const enrollment = enrollments.find(e => e.challenge_id === ch.id);
-                const mySubs = submissions.filter(s => s.challenge_id === ch.id);
-                const approvedCount = mySubs.filter(s => s.status === "approved").length;
-                const pendingCount = mySubs.filter(s => s.status === "pending_review").length;
-                const nextVideoNumber = mySubs.length + 1;
-                const canSubmitNext = nextVideoNumber <= ch.total_videos;
-                const isComplete = enrollment?.completed || false;
-                const totalPossibleEarnings = ch.total_videos * ch.reward_per_video;
+              {/* Sub-tabs */}
+              <div className="flex gap-1 bg-muted/30 rounded-lg p-1">
+                {(["new", "ongoing", "past"] as const).map(st => (
+                  <button key={st} onClick={() => setChallengeSubTab(st)}
+                    className={`flex-1 py-1.5 rounded-md text-[11px] font-medium transition-all capitalize ${challengeSubTab === st ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>
+                    {st === "new" ? "New Challenges" : st === "ongoing" ? "Ongoing" : "Past"}
+                  </button>
+                ))}
+              </div>
 
-                // For set challenges, check posting interval
-                const lastSub = mySubs[0]; // sorted by submitted_at desc
-                const lastSubTime = lastSub ? new Date(lastSub.submitted_at).getTime() : 0;
-                const nextAllowedTime = lastSubTime + (ch.posting_interval_days * 24 * 60 * 60 * 1000);
-                const canPostNow = ch.challenge_type === "single" || !lastSub || Date.now() >= nextAllowedTime;
-                const nextPostDate = !canPostNow ? new Date(nextAllowedTime) : null;
+              {(() => {
+                // Categorize challenges
+                const newChallenges = challenges.filter(ch => !enrollments.find(e => e.challenge_id === ch.id));
+                const ongoingChallenges = challenges.filter(ch => {
+                  const enr = enrollments.find(e => e.challenge_id === ch.id);
+                  return enr && !enr.completed;
+                });
+                const pastChallenges = challenges.filter(ch => {
+                  const enr = enrollments.find(e => e.challenge_id === ch.id);
+                  return enr && enr.completed;
+                });
 
-                return (
-                  <div key={ch.id} className="glass rounded-xl p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h4 className="font-semibold text-foreground text-[13px]">{ch.title}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-primary font-semibold flex items-center gap-1"><Hash className="w-3 h-3" />{ch.hashtag}</span>
-                          <span className="text-[10px] text-muted-foreground">{formatNaira(ch.reward_per_video)}/video</span>
+                const currentList = challengeSubTab === "new" ? newChallenges : challengeSubTab === "ongoing" ? ongoingChallenges : pastChallenges;
+                const emptyMessages = {
+                  new: "No new challenges available right now.",
+                  ongoing: "You have no ongoing challenges.",
+                  past: "No completed challenges yet.",
+                };
+
+                if (currentList.length === 0) {
+                  return (
+                    <div className="text-center py-6">
+                      <Video className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                      <p className="text-muted-foreground text-[12px]">{emptyMessages[challengeSubTab]}</p>
+                    </div>
+                  );
+                }
+
+                return currentList.map(ch => {
+                  const enrollment = enrollments.find(e => e.challenge_id === ch.id);
+                  const mySubs = submissions.filter(s => s.challenge_id === ch.id);
+                  const approvedCount = mySubs.filter(s => s.status === "approved").length;
+                  const nextVideoNumber = mySubs.length + 1;
+                  const canSubmitNext = nextVideoNumber <= ch.total_videos;
+                  const isComplete = enrollment?.completed || false;
+                  const totalPossibleEarnings = ch.total_videos * ch.reward_per_video;
+
+                  // For set challenges, check posting interval
+                  const lastSub = mySubs[0];
+                  const lastSubTime = lastSub ? new Date(lastSub.submitted_at).getTime() : 0;
+                  const nextAllowedTime = lastSubTime + (ch.posting_interval_days * 24 * 60 * 60 * 1000);
+                  const canPostNow = ch.challenge_type === "single" || !lastSub || Date.now() >= nextAllowedTime;
+                  const nextPostDate = !canPostNow ? new Date(nextAllowedTime) : null;
+
+                  return (
+                    <div key={ch.id} className="glass rounded-xl p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h4 className="font-semibold text-foreground text-[13px]">{ch.title}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-primary font-semibold flex items-center gap-1"><Hash className="w-3 h-3" />{ch.hashtag}</span>
+                            <span className="text-[10px] text-muted-foreground">{formatNaira(ch.reward_per_video)}/video</span>
+                          </div>
                         </div>
+                        {isComplete && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">Completed ✓</span>}
                       </div>
-                      {isComplete && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">Completed ✓</span>}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground mb-2">{ch.description}</p>
+                      <p className="text-[11px] text-muted-foreground mb-2">{ch.description}</p>
 
-                    {/* Instructions */}
-                    {ch.instructions && (
-                      <div className="glass rounded-lg p-3 mb-3">
-                        <p className="text-[10px] text-muted-foreground font-semibold mb-1">Instructions</p>
-                        <p className="text-[11px] text-foreground whitespace-pre-wrap">{ch.instructions}</p>
+                      {ch.instructions && (
+                        <div className="glass rounded-lg p-3 mb-3">
+                          <p className="text-[10px] text-muted-foreground font-semibold mb-1">Instructions</p>
+                          <p className="text-[11px] text-foreground whitespace-pre-wrap">{ch.instructions}</p>
+                        </div>
+                      )}
+
+                      {/* Progress bar */}
+                      <div className="mb-3">
+                        <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+                          <span>{approvedCount}/{ch.total_videos} approved</span>
+                          <span>{isComplete ? formatNaira(enrollment?.approved_earnings || 0) + " earned" : formatNaira(enrollment?.pending_earnings || 0) + " pending"}</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(approvedCount / ch.total_videos) * 100}%` }} />
+                        </div>
+                        <p className="text-[9px] text-muted-foreground mt-1">
+                          Total possible: {formatNaira(totalPossibleEarnings)}
+                          {ch.challenge_type === "set" && !isComplete && ` • ${ch.total_videos - mySubs.length} videos remaining`}
+                        </p>
                       </div>
-                    )}
 
-                    {/* Progress bar */}
-                    <div className="mb-3">
-                      <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-                        <span>{approvedCount}/{ch.total_videos} approved</span>
-                        <span>{isComplete ? formatNaira(enrollment?.approved_earnings || 0) + " earned" : formatNaira(enrollment?.pending_earnings || 0) + " pending"}</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(approvedCount / ch.total_videos) * 100}%` }} />
-                      </div>
-                      <p className="text-[9px] text-muted-foreground mt-1">
-                        Total possible: {formatNaira(totalPossibleEarnings)}
-                        {ch.challenge_type === "set" && !isComplete && ` • ${ch.total_videos - mySubs.length} videos remaining`}
-                      </p>
-                    </div>
+                      {/* Enroll (new challenges only) */}
+                      {!enrollment && !isComplete && (
+                        <GlassButton variant="primary" onClick={async () => {
+                          if (!user) return;
+                          await supabase.from("influencer_challenge_enrollments" as any).insert({
+                            challenge_id: ch.id, user_id: user.id,
+                          } as any);
+                          toast({ title: "Enrolled!", description: `You've joined "${ch.title}"` });
+                          await fetchData();
+                        }} className="w-full text-[12px]">
+                          <Play className="w-3.5 h-3.5 mr-1" /> Join Challenge
+                        </GlassButton>
+                      )}
 
-                    {/* Enroll or submit */}
-                    {!enrollment && !isComplete && (
-                      <GlassButton variant="primary" onClick={async () => {
-                        if (!user) return;
-                        await supabase.from("influencer_challenge_enrollments" as any).insert({
-                          challenge_id: ch.id, user_id: user.id,
-                        } as any);
-                        toast({ title: "Enrolled!", description: `You've joined "${ch.title}"` });
-                        await fetchData();
-                      }} className="w-full text-[12px]">
-                        <Play className="w-3.5 h-3.5 mr-1" /> Join Challenge
-                      </GlassButton>
-                    )}
-
-                    {enrollment && !isComplete && canSubmitNext && (
-                      <div className="space-y-2">
-                        {!canPostNow && nextPostDate && (
-                          <p className="text-[10px] text-primary text-center">Next video can be submitted after {nextPostDate.toLocaleString()}</p>
-                        )}
-                        {canPostNow && (
-                          <>
-                            <div>
-                              <label className="text-[10px] text-muted-foreground mb-1 block">Video #{nextVideoNumber} Link (social media post URL)</label>
-                              <input
-                                value={videoLinks[ch.id] || ""}
-                                onChange={e => setVideoLinks(p => ({ ...p, [ch.id]: e.target.value }))}
-                                placeholder="https://..."
-                                className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]"
-                              />
-                            </div>
-                            <GlassButton variant="primary" onClick={async () => {
-                              const url = videoLinks[ch.id]?.trim();
-                              if (!url || !user) return;
-                              const { error } = await supabase.from("influencer_challenge_submissions" as any).insert({
-                                challenge_id: ch.id, user_id: user.id,
-                                video_url: url, video_number: nextVideoNumber,
-                              } as any);
-                              if (error) {
-                                toast({ title: "Error", description: error.message });
-                                return;
-                              }
-                              // Update pending earnings on enrollment
-                              await supabase.from("influencer_challenge_enrollments" as any).update({
-                                pending_earnings: (enrollment.pending_earnings || 0) + ch.reward_per_video,
-                              } as any).eq("id", enrollment.id);
-                              setVideoLinks(p => ({ ...p, [ch.id]: "" }));
-                              toast({ title: "Video submitted!", description: `Video #${nextVideoNumber} is pending review.` });
-                              await fetchData();
-                            }} disabled={!videoLinks[ch.id]?.trim()} className="w-full text-[12px]">
-                              <Upload className="w-3.5 h-3.5 mr-1" /> Submit Video #{nextVideoNumber}
-                            </GlassButton>
-                          </>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Submission history */}
-                    {mySubs.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-[10px] text-muted-foreground font-semibold mb-1">Your Submissions</p>
-                        <div className="space-y-1 max-h-[150px] overflow-y-auto">
-                          {mySubs.map(s => (
-                            <div key={s.id} className="flex items-center justify-between glass rounded-lg p-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-muted-foreground">#{s.video_number}</span>
-                                <a href={s.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline truncate max-w-[120px]">{s.video_url}</a>
+                      {/* Submit (ongoing only) */}
+                      {enrollment && !isComplete && canSubmitNext && (
+                        <div className="space-y-2">
+                          {!canPostNow && nextPostDate && (
+                            <p className="text-[10px] text-primary text-center">Next video can be submitted after {nextPostDate.toLocaleString()}</p>
+                          )}
+                          {canPostNow && (
+                            <>
+                              <div>
+                                <label className="text-[10px] text-muted-foreground mb-1 block">Video #{nextVideoNumber} Link (social media post URL)</label>
+                                <input
+                                  value={videoLinks[ch.id] || ""}
+                                  onChange={e => setVideoLinks(p => ({ ...p, [ch.id]: e.target.value }))}
+                                  placeholder="https://..."
+                                  className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]"
+                                />
                               </div>
-                              <span className={`text-[9px] px-2 py-0.5 rounded-full ${s.status === "approved" ? "bg-primary/10 text-primary" : s.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
-                                {s.status === "pending_review" ? "pending" : s.status}
-                              </span>
-                            </div>
-                          ))}
+                              <GlassButton variant="primary" onClick={async () => {
+                                const url = videoLinks[ch.id]?.trim();
+                                if (!url || !user) return;
+                                const { error } = await supabase.from("influencer_challenge_submissions" as any).insert({
+                                  challenge_id: ch.id, user_id: user.id,
+                                  video_url: url, video_number: nextVideoNumber,
+                                } as any);
+                                if (error) {
+                                  toast({ title: "Error", description: error.message });
+                                  return;
+                                }
+                                await supabase.from("influencer_challenge_enrollments" as any).update({
+                                  pending_earnings: (enrollment.pending_earnings || 0) + ch.reward_per_video,
+                                } as any).eq("id", enrollment.id);
+                                setVideoLinks(p => ({ ...p, [ch.id]: "" }));
+                                toast({ title: "Video submitted!", description: `Video #${nextVideoNumber} is pending review.` });
+                                await fetchData();
+                              }} disabled={!videoLinks[ch.id]?.trim()} className="w-full text-[12px]">
+                                <Upload className="w-3.5 h-3.5 mr-1" /> Submit Video #{nextVideoNumber}
+                              </GlassButton>
+                            </>
+                          )}
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      )}
+
+                      {/* Submission history */}
+                      {mySubs.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-[10px] text-muted-foreground font-semibold mb-1">Your Submissions</p>
+                          <div className="space-y-1 max-h-[150px] overflow-y-auto">
+                            {mySubs.map(s => (
+                              <div key={s.id} className="flex items-center justify-between glass rounded-lg p-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] text-muted-foreground">#{s.video_number}</span>
+                                  <a href={s.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline truncate max-w-[120px]">{s.video_url}</a>
+                                </div>
+                                <span className={`text-[9px] px-2 py-0.5 rounded-full ${s.status === "approved" ? "bg-primary/10 text-primary" : s.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+                                  {s.status === "pending_review" ? "pending" : s.status}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           )}
         </GlassCard>
