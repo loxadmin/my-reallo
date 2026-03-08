@@ -1614,6 +1614,20 @@ const Admin = () => {
                     </div>
                     <input type="checkbox" checked={verifyPageActive} onChange={e => setVerifyPageActive(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer rounded" />
                   </div>
+                  <p className="text-[12px] font-medium text-foreground">Per-Category Verification Toggles</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {([
+                      { key: "data", label: "Data", state: verifyDataActive, setter: setVerifyDataActive },
+                      { key: "electricity", label: "Electricity", state: verifyElectricityActive, setter: setVerifyElectricityActive },
+                      { key: "food", label: "Food", state: verifyFoodActive, setter: setVerifyFoodActive },
+                      { key: "transport", label: "Transport", state: verifyTransportActive, setter: setVerifyTransportActive },
+                    ] as const).map(item => (
+                      <div key={item.key} className="flex items-center justify-between rounded-lg border border-border/40 p-3">
+                        <label className="text-[11px] font-medium text-foreground">{item.label}</label>
+                        <input type="checkbox" checked={item.state} onChange={e => item.setter(e.target.checked)} className="w-4 h-4 accent-primary cursor-pointer rounded" />
+                      </div>
+                    ))}
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div><label className="text-[11px] text-muted-foreground font-medium">Verify Expense Button Link</label><input value={verifyExpenseLink} onChange={e => setVerifyExpenseLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1.5`} /></div>
                     <div><label className="text-[11px] text-muted-foreground font-medium">Post-Queue Referral Points</label><input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className={`${inputCls} mt-1.5`} /></div>
