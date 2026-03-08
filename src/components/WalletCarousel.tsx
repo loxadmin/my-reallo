@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -38,6 +38,7 @@ const WalletCarousel = ({
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: "center" });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [currentWalletActive, setCurrentWalletActive] = useState(true);
+  const [showSpendPopup, setShowSpendPopup] = useState(false);
 
   const utilitySpend = (profile?.annual_data_spend ?? 0) + (profile?.annual_electricity_spend ?? 0);
   const foodSpend = profile?.annual_food_spend ?? 0;
@@ -160,9 +161,12 @@ const WalletCarousel = ({
                       Claimable: <span className="text-primary font-semibold">{formatCurrency(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
                     </p>
 
-                    <div className="space-y-1.5 mb-5">
+                    <button
+                      onClick={() => setShowSpendPopup(true)}
+                      className="w-full text-left space-y-1.5 mb-5 cursor-pointer group/goal"
+                    >
                       <div className="flex justify-between items-end">
-                        <p className="font-medium text-foreground text-[12px]">GOAL - {goalLabel}</p>
+                        <p className="font-medium text-foreground text-[12px] group-hover/goal:text-primary transition-colors">GOAL - {goalLabel}</p>
                         <p className="text-muted-foreground text-[11px]">
                           {targetAmount > 0 ? Math.round((nairaValue / targetAmount) * 100) : 0}%
                         </p>
@@ -175,7 +179,7 @@ const WalletCarousel = ({
                           transition={{ duration: 1.2, ease: "easeOut" }}
                         />
                       </div>
-                    </div>
+                    </button>
                   </>
                 ) : (
                   <div className="py-4 text-center">
@@ -210,6 +214,87 @@ const WalletCarousel = ({
       </div>
 
       {currentWalletActive && children}
+
+      {/* Spend popup on goal click */}
+      <AnimatePresence>
+        {showSpendPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            onClick={() => setShowSpendPopup(false)}
+          >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-background/40 backdrop-blur-sm" />
+
+            {/* Circle card */}
+            <motion.div
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.7, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative z-10 w-56 h-56 rounded-full flex flex-col items-center justify-center glass-card border border-border/20 shadow-[0_8px_40px_hsl(var(--primary)/0.15)]"
+            >
+              <p className="text-muted-foreground uppercase tracking-[0.15em] text-[9px] font-medium mb-2">
+                {showTotal ? "Total Annual Spend" : "Annual Utility Spend"}
+              </p>
+              <p className="font-display text-2xl font-bold gradient-text tabular-nums">
+                {formatCurrency(showTotal ? totalAllSpend : utilitySpend)}
+              </p>
+
+              {/* Total toggle */}
+              <div className="flex items-center gap-1.5 mt-4">
+                <span className="text-[9px] text-muted-foreground">Total</span>
+                <button
+                  onClick={() => setShowTotal(!showTotal)}
+                  className={cn(
+                    "relative w-8 h-[18px] rounded-full transition-all duration-300 overflow-hidden",
+                    "border border-border/40 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)]",
+                    showTotal
+                      ? "bg-primary/20 border-primary/30"
+                      : "bg-muted/50 dark:bg-muted/30"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute inset-0 rounded-full opacity-60 transition-opacity duration-300",
+                      showTotal ? "opacity-80" : "opacity-40"
+                    )}
+                    style={{
+                      background: showTotal
+                        ? "linear-gradient(135deg, hsl(160 60% 40% / 0.5), hsl(160 45% 55% / 0.3))"
+                        : "linear-gradient(135deg, hsl(160 50% 35% / 0.2), hsl(160 40% 50% / 0.1))",
+                      animation: "waterFlow 4s ease-in-out infinite",
+                    }}
+                  />
+                  <span
+                    className={cn(
+                      "absolute top-[2px] w-[14px] h-[14px] rounded-full transition-all duration-300",
+                      "shadow-[0_1px_4px_rgba(0,0,0,0.15),inset_0_1px_2px_rgba(255,255,255,0.3)]",
+                      "overflow-hidden",
+                      showTotal ? "left-[14px]" : "left-[2px]"
+                    )}
+                    style={{
+                      background: "linear-gradient(180deg, hsl(160 50% 45% / 0.9), hsl(160 60% 30% / 0.8))",
+                      boxShadow: "0 1px 4px hsl(160 50% 25% / 0.3), inset 0 1px 2px hsl(160 40% 60% / 0.4), inset 0 -1px 2px hsl(160 60% 15% / 0.3)",
+                    }}
+                  >
+                    <span
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: "radial-gradient(circle at 40% 35%, hsl(160 50% 70% / 0.5) 0%, transparent 60%)",
+                      }}
+                    />
+                  </span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
