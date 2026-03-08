@@ -49,12 +49,17 @@ const WalletCarousel = ({
     ? Math.min(totalAllSpend, targetAmount)
     : Math.min(utilitySpend, targetAmount);
 
-  emblaApi?.on("select", () => {
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
     setSelectedIndex(emblaApi.selectedScrollSnap());
-  });
+  }, [emblaApi]);
 
-  const scrollPrev = () => emblaApi?.scrollPrev();
-  const scrollNext = () => emblaApi?.scrollNext();
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    return () => { emblaApi.off("select", onSelect); };
+  }, [emblaApi, onSelect]);
 
   const wallets = [
     {
