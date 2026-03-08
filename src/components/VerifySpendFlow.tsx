@@ -138,15 +138,12 @@ const VerifySpendFlow = () => {
   const verifiedTxs = transactions.filter(t => t.is_verified);
   const totalVerifiedAmount = verifiedTxs.reduce((sum, t) => sum + Number(t.verified_amount || 0), 0);
   
-  const getMultiplier = (freq: string) => freq === "daily" ? 365 : freq === "weekly" ? 52 : 12;
-  const getRecalcMultiplier = (freq: string) => freq === "daily" ? 12 : freq === "weekly" ? 13 : 12;
+  // Daily: sum × 12, Weekly: sum × 13, Monthly: single tx × 12
+  const getMultiplier = (freq: string) => freq === "daily" ? 12 : freq === "weekly" ? 13 : 12;
   
-  const firstVerifiedAmount = verifiedTxs.length > 0 ? Number(verifiedTxs[0].verified_amount || 0) : 0;
-  const initialAnnualSpend = firstVerifiedAmount * getMultiplier(verification?.frequency || "daily");
-
-  // If verification ended and not monthly, recalculate
-  const shouldRecalculate = verification && verificationEnded && verification.frequency !== "monthly";
-  const recalculatedSpend = shouldRecalculate ? totalVerifiedAmount * getRecalcMultiplier(verification!.frequency) : null;
+  const calculatedAnnualSpend = verification?.frequency === "monthly"
+    ? (verifiedTxs.length > 0 ? Number(verifiedTxs[0].verified_amount || 0) * 12 : 0)
+    : totalVerifiedAmount * getMultiplier(verification?.frequency || "daily");
 
   // Show "already verified" if complete
   if (isComplete || (verification && verification.status === "verified")) {
