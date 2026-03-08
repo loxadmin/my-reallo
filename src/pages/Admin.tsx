@@ -158,7 +158,7 @@ function AdminSidebar({ activeTab, setActiveTab, counts }: { activeTab: AdminTab
       </SidebarHeader>
       <SidebarContent className="px-2 py-2">
         {navGroups.map((group) => (
-          <SidebarGroup key={group.label} defaultOpen>
+          <SidebarGroup key={group.label}>
             <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
               {group.label}
             </SidebarGroupLabel>
