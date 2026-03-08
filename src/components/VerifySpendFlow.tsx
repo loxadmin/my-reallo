@@ -513,6 +513,7 @@ const VerificationActivePanel = ({
   setEditingTxId, setEditValue, onSubmitTx, onEditTx,
   getMaxBoxes, getMultiplier, isMonthlyType,
 }: ActivePanelProps) => {
+  const { formatCurrency } = useCurrency();
   const meta = spendMeta[type];
   const now = new Date();
   const daysLeft = Math.max(0, Math.ceil((new Date(verification.ends_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
