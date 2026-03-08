@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Wifi, Zap, UtensilsCrossed, Car, ChevronLeft, ChevronRight } from "lucide-react";
+import { Wifi, UtensilsCrossed, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 
