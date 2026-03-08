@@ -15,6 +15,9 @@ interface InfluencerWallet { id: string; balance: number; status: string; }
 interface BankAccount { id: string; bank_name: string; bank_code: string; account_number: string; account_name: string; verification_status: string; id_document_url: string | null; }
 interface InfluencerReferral { id: string; referred_user_id: string; reward_amount: number; created_at: string; }
 interface Withdrawal { id: string; amount: number; status: string; created_at: string; }
+interface Challenge { id: string; title: string; description: string; instructions: string; hashtag: string; challenge_type: string; total_videos: number; reward_per_video: number; posting_interval_days: number; is_active: boolean; }
+interface ChallengeEnrollment { id: string; challenge_id: string; user_id: string; completed: boolean; pending_earnings: number; approved_earnings: number; enrolled_at: string; }
+interface ChallengeSubmission { id: string; challenge_id: string; user_id: string; video_url: string; video_number: number; status: string; submitted_at: string; }
 
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 
