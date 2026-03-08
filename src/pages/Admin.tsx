@@ -92,7 +92,7 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
   const collapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar">
+    <Sidebar collapsible="icon" className="border-r border-primary/20" style={{ background: 'hsla(160, 45%, 25%, 0.12)', backdropFilter: 'blur(20px)' } as React.CSSProperties}>
       <SidebarHeader className="px-4 py-5 border-b border-border/30">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
