@@ -1,0 +1,1 @@
+ALTER TABLE public.spend_verifications ADD COLUMN spend_type text NOT NULL DEFAULT 'data' CHECK (spend_type IN ('data', 'electricity'));

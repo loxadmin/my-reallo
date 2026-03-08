@@ -77,7 +77,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         supabase.from("waitlist_activity").select("positions_moved").eq("user_id", profile.id).gte("created_at", new Date().toISOString().split("T")[0]),
         supabase.from("admin_settings").select("value").eq("key", "verify_expense_link").single(),
         supabase.from("vouchers").select("amount_naira").eq("user_id", user.id),
-        supabase.from("spend_verifications").select("status").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+        supabase.from("spend_verifications").select("status, spend_type").eq("user_id", user.id),
         supabase.from("admin_settings").select("value").eq("key", "verify_page_active").single(),
         supabase.from("referrals").select("referred_user_id, created_at, profiles!referrals_referred_user_id_fkey(email)").eq("referrer_id", profile.id).order("created_at", { ascending: false }),
       ]);
@@ -92,8 +92,12 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
       setVerifyLink(settingsRes.data?.value || "");
       setIsVerifyActive(activeRes.data?.value === "false" ? false : true);
       setClaimedTotal((voucherRes.data || []).reduce((sum, v) => sum + Number(v.amount_naira || 0), 0));
-      const vStatus = (verifyRes.data || [])[0] as any;
-      setSpendVerified(vStatus?.status === "verified" || vStatus?.status === "completed");
+      const verifs = (verifyRes.data || []) as { status: string; spend_type: string }[];
+      const dataV = verifs.find(v => (v as any).spend_type === "data");
+      const elecV = verifs.find(v => (v as any).spend_type === "electricity");
+      const dataOk = dataV?.status === "verified" || dataV?.status === "completed";
+      const elecOk = elecV?.status === "verified" || elecV?.status === "completed";
+      setSpendVerified(dataOk && elecOk);
     };
     fetchStats();
   }, [profile, user]);
