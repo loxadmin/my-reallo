@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import RealloLogo from "./RealloLogo";
 
 const Footer = () => {
   const [content, setContent] = useState({
@@ -30,6 +31,10 @@ const Footer = () => {
           {content.about_us && (
             <div>
               <h4 className="text-[13px] font-semibold text-foreground mb-2">About Us</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <RealloLogo size={24} />
+                <span className="text-[13px] font-semibold text-foreground">Reallo</span>
+              </div>
               <p className="text-[12px] text-muted-foreground leading-relaxed whitespace-pre-line">{content.about_us}</p>
             </div>
           )}

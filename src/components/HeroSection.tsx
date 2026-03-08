@@ -4,6 +4,32 @@ import GlassButton from "./GlassButton";
 import CountUpAnimation from "./CountUpAnimation";
 import { supabase } from "@/integrations/supabase/client";
 import { MoveRight, TrendingUp, Users, Shield } from "lucide-react";
+import { useCurrency, CurrencyCode } from "@/contexts/CurrencyContext";
+
+const CURRENCIES: CurrencyCode[] = ["NGN", "USD", "EUR", "GBP"];
+const SYMBOLS: Record<CurrencyCode, string> = { NGN: "₦", USD: "$", EUR: "€", GBP: "£" };
+
+const CyclingFreeLabel = () => {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setIndex((i) => (i + 1) % CURRENCIES.length), 2800);
+    return () => clearInterval(id);
+  }, []);
+  const code = CURRENCIES[index];
+  return (
+    <AnimatePresence mode="wait">
+      <motion.span
+        key={index}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.3 }}
+      >
+        {SYMBOLS[code]}0
+      </motion.span>
+    </AnimatePresence>
+  );
+};
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -125,7 +151,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
             <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1.5" />
-            <p className="font-display text-lg sm:text-xl font-bold text-primary">₦0</p>
+            <p className="font-display text-lg sm:text-xl font-bold text-primary"><CyclingFreeLabel /></p>
             <p className="text-[10px] text-muted-foreground mt-0.5">To Join</p>
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
