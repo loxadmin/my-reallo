@@ -35,7 +35,7 @@ const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings";
+type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals";
 
 const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
