@@ -58,9 +58,11 @@ const Dashboard = () => {
     if (profile) {
       if (profile.selected_goal && profile.total_annual_spend > 0) {
         setSpendResult({
-          weeklyData: 0, monthlyElectricity: 0,
+          weeklyData: 0, monthlyElectricity: 0, weeklyFood: 0, weeklyTransport: 0,
           annualData: profile.annual_data_spend,
           annualElectricity: profile.annual_electricity_spend,
+          annualFood: profile.annual_food_spend ?? 0,
+          annualTransport: profile.annual_transport_spend ?? 0,
           totalAnnual: profile.total_annual_spend,
         });
         setStep("queue");
