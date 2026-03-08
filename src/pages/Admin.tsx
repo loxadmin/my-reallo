@@ -49,6 +49,12 @@ interface UserWarning {
 }
 
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
+const formatCompact = (n: number): string => {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1) + "K";
+  return String(n);
+};
+const formatNairaCompact = (n: number): string => "₦" + formatCompact(n);
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
