@@ -21,8 +21,6 @@ interface WalletCarouselProps {
   children?: React.ReactNode;
 }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG"); // fallback only
-
 const WalletCarousel = ({
   targetAmount,
   nairaValue,
@@ -35,6 +33,7 @@ const WalletCarousel = ({
   children,
 }: WalletCarouselProps) => {
   const { profile } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [showTotal, setShowTotal] = useState(false);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: "center" });
   const [selectedIndex, setSelectedIndex] = useState(0);
