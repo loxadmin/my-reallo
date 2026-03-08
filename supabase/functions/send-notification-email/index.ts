@@ -1,8 +1,6 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 async function sendSmtpEmail({
@@ -11,9 +9,18 @@ async function sendSmtpEmail({
   host: string; port: number; username: string; password: string;
   from: string; to: string; subject: string; html: string;
 }) {
-  const conn = await Deno.connectTls({ hostname: host, port });
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
+
+  let conn: Deno.TlsConn | Deno.Conn;
+
+  if (port === 465) {
+    // Implicit TLS
+    conn = await Deno.connectTls({ hostname: host, port });
+  } else {
+    // Plain connect first, then STARTTLS (port 587 or 25)
+    conn = await Deno.connect({ hostname: host, port });
+  }
 
   const read = async (): Promise<string> => {
     const buf = new Uint8Array(4096);
@@ -21,19 +28,27 @@ async function sendSmtpEmail({
     return n ? decoder.decode(buf.subarray(0, n)) : "";
   };
 
-  const write = async (cmd: string) => {
-    await conn.write(encoder.encode(cmd + "\r\n"));
-  };
-
   const send = async (cmd: string): Promise<string> => {
-    await write(cmd);
+    await conn.write(encoder.encode(cmd + "\r\n"));
     return await read();
   };
 
   // Read greeting
   await read();
+  await send("EHLO localhost");
 
-  await send(`EHLO localhost`);
+  // If not implicit TLS, upgrade via STARTTLS
+  if (port !== 465) {
+    const starttlsRes = await send("STARTTLS");
+    if (!starttlsRes.startsWith("220")) {
+      conn.close();
+      throw new Error("STARTTLS not supported: " + starttlsRes.trim());
+    }
+    // Upgrade connection to TLS
+    conn = await Deno.startTls(conn as Deno.TcpConn, { hostname: host });
+    // Re-send EHLO after TLS upgrade
+    await send("EHLO localhost");
+  }
 
   // AUTH LOGIN
   await send("AUTH LOGIN");
@@ -48,7 +63,6 @@ async function sendSmtpEmail({
   await send(`RCPT TO:<${to}>`);
   await send("DATA");
 
-  const boundary = "----=_Part_" + crypto.randomUUID().replace(/-/g, "");
   const message = [
     `From: ${from}`,
     `To: ${to}`,
@@ -76,19 +90,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-
     const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      if (error || !user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { to, subject, body } = await req.json();
@@ -100,7 +106,7 @@ Deno.serve(async (req) => {
     }
 
     const smtpHost = Deno.env.get("SMTP_HOST");
-    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "465");
+    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587");
     const smtpUser = Deno.env.get("SMTP_USER");
     const smtpPass = Deno.env.get("SMTP_PASS");
     const smtpFrom = Deno.env.get("SMTP_FROM") || `noreply@reallo.app`;
