@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
-import { Award, CheckSquare, ExternalLink, Clock, Upload, X, History, Zap } from "lucide-react";
+import SocialMediaFlow from "./SocialMediaFlow";
+import { Award, CheckSquare, ExternalLink, Clock, Upload, X, History, Zap, Video, ClipboardList } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface DecisionApp {
@@ -47,6 +48,7 @@ const DecisionFlow = () => {
   const [apps, setApps] = useState<DecisionApp[]>([]);
   const [responses, setResponses] = useState<DecisionResponse[]>([]);
   const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
+  const [mainStep, setMainStep] = useState<"choice" | "social" | "tasks">("choice");
   const [step, setStep] = useState<FlowStep>("checklist");
   const [submitting, setSubmitting] = useState(false);
   const [earnTab, setEarnTab] = useState<EarnTab>("earn");
@@ -303,6 +305,46 @@ const DecisionFlow = () => {
 
   if (!user) return null;
 
+  if (mainStep === "choice") {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-foreground font-semibold text-[13px] px-1">How would you like to earn?</h3>
+        <div className="grid grid-cols-1 gap-3">
+          <button onClick={() => setMainStep("social")} className="layout-grid-item group flex flex-row items-center gap-4 p-5">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+              <Video className="w-6 h-6 text-primary" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-foreground text-[14px] mb-0.5">Posting videos on social media</p>
+              <p className="text-muted-foreground text-[11px] leading-relaxed">Earn cash rewards for creating content</p>
+            </div>
+          </button>
+
+          <button onClick={() => setMainStep("tasks")} className="layout-grid-item group flex flex-row items-center gap-4 p-5">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+              <ClipboardList className="w-6 h-6 text-primary" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-foreground text-[14px] mb-0.5">Completing tasks</p>
+              <p className="text-muted-foreground text-[11px] leading-relaxed">Earn points by making app decisions</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (mainStep === "social") {
+    return (
+      <div className="space-y-4">
+        <GlassButton variant="outline" onClick={() => setMainStep("choice")} className="mb-2 text-[11px]">
+          ← Back to Choice
+        </GlassButton>
+        <SocialMediaFlow />
+      </div>
+    );
+  }
+
   const fileInput = (
     <input
       ref={fileInputRef}
@@ -464,6 +506,9 @@ const DecisionFlow = () => {
 
     return (
       <div className="space-y-3">
+        <GlassButton variant="outline" onClick={() => setMainStep("choice")} className="mb-2 text-[11px]">
+          ← Back to Choice
+        </GlassButton>
         {fileInput}
         <div className="flex gap-1 p-1 rounded-xl glass">
           {([
@@ -601,10 +646,15 @@ const DecisionFlow = () => {
 
   // ═══ CHECKLIST VIEW ═══
   if (unansweredApps.length === 0) return (
-    <GlassCard className="text-center py-8">
-      <Award className="w-6 h-6 text-primary mx-auto mb-2" />
-      <p className="text-muted-foreground text-[12px]">No new apps to review. Check back later!</p>
-    </GlassCard>
+    <div className="space-y-4">
+      <GlassButton variant="outline" onClick={() => setMainStep("choice")} className="mb-2 text-[11px]">
+        ← Back to Choice
+      </GlassButton>
+      <GlassCard className="text-center py-8">
+        <Award className="w-6 h-6 text-primary mx-auto mb-2" />
+        <p className="text-muted-foreground text-[12px]">No new apps to review. Check back later!</p>
+      </GlassCard>
+    </div>
   );
 
   const questionText = unansweredApps.length === 1
@@ -613,6 +663,9 @@ const DecisionFlow = () => {
 
   return (
     <div className="space-y-4">
+      <GlassButton variant="outline" onClick={() => setMainStep("choice")} className="mb-2 text-[11px]">
+        ← Back to Choice
+      </GlassButton>
       {fileInput}
       <GlassCard variant="strong">
         <div className="flex items-center gap-2 mb-3">

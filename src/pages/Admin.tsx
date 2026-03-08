@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import WaterBackground from "@/components/WaterBackground";
-import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, ChartBar as BarChart3, Plus, Trash2, Link, Upload, CircleCheck as CheckCircle2, FileSpreadsheet, Smartphone, Check, ExternalLink, CreditCard as Edit2, Download } from "lucide-react";
+import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, ChartBar as BarChart3, Plus, Trash2, Link, Upload, CircleCheck as CheckCircle2, FileSpreadsheet, Smartphone, Check, ExternalLink, CreditCard as Edit2, Download, Video, CheckSquare, X, DollarSign } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ProfileRow {
@@ -35,7 +35,7 @@ const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings";
+type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "social" | "settings";
 
 const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
@@ -54,6 +54,14 @@ const Admin = () => {
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [decisionApps, setDecisionApps] = useState<DecisionAppRow[]>([]);
   const [decisionResponses, setDecisionResponses] = useState<DecisionResponseRow[]>([]);
+
+  // Social Media State
+  const [socialTab, setSocialTab] = useState<'accounts' | 'challenges' | 'submissions' | 'withdrawals'>('accounts');
+  const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
+  const [socialChallenges, setSocialChallenges] = useState<any[]>([]);
+  const [socialSubmissions, setSocialSubmissions] = useState<any[]>([]);
+  const [socialWithdrawals, setSocialWithdrawals] = useState<any[]>([]);
+  const [newChallenge, setNewChallenge] = useState({ title: "", description: "", reward_naira: 0 });
 
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [verifyPageActive, setVerifyPageActive] = useState(true);
@@ -79,7 +87,7 @@ const Admin = () => {
 
   const fetchData = async () => {
     setRefreshing(true);
-    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes] = await Promise.all([
+    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, saRes, scRes, ssRes, swRes] = await Promise.all([
       supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
       supabase.from("ghost_users").select("id", { count: "exact", head: true }),
       supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
@@ -88,6 +96,10 @@ const Admin = () => {
       supabase.from("verification_transactions").select("*").order("submitted_at", { ascending: false }).limit(200),
       fromApps().select("*").order("created_at", { ascending: false }),
       fromDResponses().select("*").order("created_at", { ascending: false }),
+      supabase.from("social_media_accounts").select("*").order("created_at", { ascending: false }),
+      supabase.from("social_media_challenges").select("*").order("created_at", { ascending: false }),
+      supabase.from("social_media_submissions").select("*").order("created_at", { ascending: false }),
+      supabase.from("social_withdrawals").select("*").order("created_at", { ascending: false }),
     ]);
 
     const profs = (profilesRes.data as ProfileRow[]) || [];
@@ -98,6 +110,10 @@ const Admin = () => {
     setVerificationTxs((vtRes.data as VerificationTx[]) || []);
     setDecisionApps((daRes.data || []) as unknown as DecisionAppRow[]);
     setDecisionResponses((drRes.data || []) as unknown as DecisionResponseRow[]);
+    setSocialAccounts(saRes.data || []);
+    setSocialChallenges(scRes.data || []);
+    setSocialSubmissions(ssRes.data || []);
+    setSocialWithdrawals(swRes.data || []);
     setEditedGoals({});
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
@@ -311,6 +327,58 @@ const Admin = () => {
   };
 
   // Decision analytics
+  const handleVerifyAccount = async (id: string, verify: boolean) => {
+    await supabase.from("social_media_accounts").update({ is_verified: verify }).eq("id", id);
+    toast({ title: `Account ${verify ? "verified" : "unverified"}` });
+    fetchData();
+  };
+
+  const handleCreateChallenge = async () => {
+    if (!newChallenge.title) return;
+    await supabase.from("social_media_challenges").insert(newChallenge);
+    toast({ title: "Challenge created" });
+    setNewChallenge({ title: "", description: "", reward_naira: 0 });
+    fetchData();
+  };
+
+  const handleApproveSubmission = async (submission: any, approve: boolean) => {
+    const status = approve ? "approved" : "rejected";
+    const { error } = await supabase.from("social_media_submissions").update({
+      status,
+      reward_paid_naira: approve ? socialChallenges.find(c => c.id === submission.challenge_id)?.reward_naira : 0
+    }).eq("id", submission.id);
+
+    if (!error && approve) {
+      const reward = socialChallenges.find(c => c.id === submission.challenge_id)?.reward_naira || 0;
+      const { data: profile } = await supabase.from("profiles").select("social_bonus_balance").eq("id", submission.user_id).single();
+      await supabase.from("profiles").update({
+        social_bonus_balance: (profile?.social_bonus_balance || 0) + reward
+      }).eq("id", submission.user_id);
+    }
+
+    toast({ title: `Submission ${status}` });
+    fetchData();
+  };
+
+  const handleProcessWithdrawal = async (id: string, complete: boolean) => {
+    const status = complete ? "completed" : "rejected";
+
+    if (!complete) {
+      // Refund user if rejected
+      const { data: withdrawal } = await supabase.from("social_withdrawals").select("user_id, amount_naira").eq("id", id).single();
+      if (withdrawal) {
+        const { data: profile } = await supabase.from("profiles").select("social_bonus_balance").eq("id", withdrawal.user_id).single();
+        await supabase.from("profiles").update({
+          social_bonus_balance: (profile?.social_bonus_balance || 0) + withdrawal.amount_naira
+        }).eq("id", withdrawal.user_id);
+      }
+    }
+
+    await supabase.from("social_withdrawals").update({ status }).eq("id", id);
+    toast({ title: `Withdrawal ${status}` });
+    fetchData();
+  };
+
   const downloadDecisionAnalytics = () => {
     const rows = [["App Name", "Category", "Total Responses", "Has App", "Doesn't Have", "Would Switch", "Switch Completed", "Referral Clicked", "Referral Approved", "% Selected"]];
     for (const app of decisionApps) {
@@ -346,6 +414,7 @@ const Admin = () => {
     { id: "decisions", label: "Decisions", icon: Smartphone, count: decisionApps.length },
     { id: "analytics", label: "Analytics", icon: BarChart3, count: decisionResponses.length },
     { id: "verification", label: "Verify", icon: CheckCircle2, count: verificationTxs.length },
+    { id: "social", label: "Social", icon: Video, count: socialSubmissions.filter(s => s.status === 'pending').length },
     { id: "settings", label: "Settings", icon: Link, count: 0 },
   ];
 
@@ -775,6 +844,142 @@ const Admin = () => {
                 {verificationTxs.length === 0 && <p className="text-center py-8 text-muted-foreground text-[13px]">No transactions submitted yet</p>}
               </div>
             </GlassCard>
+          </div>
+        )}
+
+        {/* Social Media */}
+        {activeTab === "social" && (
+          <div className="space-y-4">
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {[
+                { id: 'accounts', label: 'Accounts', icon: Users, count: socialAccounts.filter(a => !a.is_verified).length },
+                { id: 'challenges', label: 'Challenges', icon: Plus, count: socialChallenges.length },
+                { id: 'submissions', label: 'Submissions', icon: Video, count: socialSubmissions.filter(s => s.status === 'pending').length },
+                { id: 'withdrawals', label: 'Withdrawals', icon: DollarSign, count: socialWithdrawals.filter(w => w.status === 'pending').length },
+              ].map(sub => (
+                <button key={sub.id} onClick={() => setSocialTab(sub.id as any)} className="flex-shrink-0">
+                  <GlassCard animate={false} variant={socialTab === sub.id ? "glow" : "default"} className="text-center p-3 cursor-pointer min-w-[100px]">
+                    <sub.icon className="w-3.5 h-3.5 text-primary mx-auto mb-1" />
+                    <p className="font-semibold text-foreground text-[13px]">{sub.count}</p>
+                    <p className="text-[9px] text-muted-foreground">{sub.label}</p>
+                  </GlassCard>
+                </button>
+              ))}
+            </div>
+
+            {socialTab === 'accounts' && (
+              <GlassCard animate={false}>
+                <h3 className="font-semibold text-foreground text-[13px] mb-4">Pending Social Accounts</h3>
+                <div className="space-y-3">
+                  {socialAccounts.filter(a => !a.is_verified).map(acc => {
+                    const userEmail = profiles.find(p => p.id === acc.user_id)?.email || acc.user_id;
+                    return (
+                      <div key={acc.id} className="glass rounded-xl p-4 flex items-center justify-between">
+                        <div>
+                          <p className="text-[13px] font-semibold text-foreground">{acc.platform}</p>
+                          <p className="text-[11px] text-muted-foreground mb-1">{userEmail}</p>
+                          <a href={acc.account_link} target="_blank" rel="noopener noreferrer" className="text-[11px] text-primary flex items-center gap-1 hover:underline">
+                            <Link className="w-2.5 h-2.5" /> View Profile
+                          </a>
+                        </div>
+                        <div className="flex gap-2">
+                          <GlassButton variant="primary" onClick={() => handleVerifyAccount(acc.id, true)} className="px-3 py-1 text-[11px]">Verify</GlassButton>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {socialAccounts.filter(a => !a.is_verified).length === 0 && <p className="text-center py-8 text-muted-foreground text-[13px]">No pending accounts</p>}
+                </div>
+              </GlassCard>
+            )}
+
+            {socialTab === 'challenges' && (
+              <div className="space-y-4">
+                <GlassCard animate={false}>
+                  <h3 className="font-semibold text-foreground text-[13px] mb-4">Create New Challenge</h3>
+                  <div className="space-y-3">
+                    <input value={newChallenge.title} onChange={e => setNewChallenge(p => ({ ...p, title: e.target.value }))} placeholder="Challenge Title" className="w-full glass-input rounded-xl px-4 py-2 text-[13px]" />
+                    <textarea value={newChallenge.description} onChange={e => setNewChallenge(p => ({ ...p, description: e.target.value }))} placeholder="Description & Instructions" className="w-full glass-input rounded-xl px-4 py-2 text-[13px] min-h-[100px]" />
+                    <input type="number" value={newChallenge.reward_naira} onChange={e => setNewChallenge(p => ({ ...p, reward_naira: Number(e.target.value) }))} placeholder="Reward (₦)" className="w-full glass-input rounded-xl px-4 py-2 text-[13px]" />
+                    <GlassButton variant="primary" onClick={handleCreateChallenge} className="w-full text-[13px]">Create Challenge</GlassButton>
+                  </div>
+                </GlassCard>
+
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-foreground text-[13px]">Existing Challenges</h3>
+                  {socialChallenges.map(chal => (
+                    <GlassCard key={chal.id} className="p-4">
+                      <div className="flex justify-between">
+                        <h4 className="font-semibold text-foreground text-[13px]">{chal.title}</h4>
+                        <span className="text-primary font-bold text-[13px]">₦{chal.reward_naira.toLocaleString()}</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1">{chal.description}</p>
+                    </GlassCard>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {socialTab === 'submissions' && (
+              <GlassCard animate={false}>
+                <h3 className="font-semibold text-foreground text-[13px] mb-4">Pending Submissions</h3>
+                <div className="space-y-3">
+                  {socialSubmissions.filter(s => s.status === 'pending').map(sub => {
+                    const userEmail = profiles.find(p => p.id === sub.user_id)?.email || sub.user_id;
+                    const chalTitle = socialChallenges.find(c => c.id === sub.challenge_id)?.title || "Unknown";
+                    return (
+                      <div key={sub.id} className="glass rounded-xl p-4 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[13px] font-semibold text-foreground">{chalTitle}</p>
+                            <p className="text-[11px] text-muted-foreground">{userEmail}</p>
+                          </div>
+                          <a href={sub.video_link} target="_blank" rel="noopener noreferrer" className="text-[11px] text-primary flex items-center gap-1 hover:underline">
+                            <Video className="w-2.5 h-2.5" /> View Video
+                          </a>
+                        </div>
+                        <div className="flex gap-2">
+                          <GlassButton variant="primary" onClick={() => handleApproveSubmission(sub, true)} className="flex-1 text-[11px]"><CheckSquare className="w-3 h-3 mr-1 inline" /> Approve</GlassButton>
+                          <GlassButton variant="outline" onClick={() => handleApproveSubmission(sub, false)} className="flex-1 text-[11px] text-destructive"><X className="w-3 h-3 mr-1 inline" /> Reject</GlassButton>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {socialSubmissions.filter(s => s.status === 'pending').length === 0 && <p className="text-center py-8 text-muted-foreground text-[13px]">No pending submissions</p>}
+                </div>
+              </GlassCard>
+            )}
+
+            {socialTab === 'withdrawals' && (
+              <GlassCard animate={false}>
+                <h3 className="font-semibold text-foreground text-[13px] mb-4">Withdrawal Requests</h3>
+                <div className="space-y-3">
+                  {socialWithdrawals.filter(w => w.status === 'pending').map(w => {
+                    const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id;
+                    return (
+                      <div key={w.id} className="glass rounded-xl p-4 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[14px] font-bold text-primary">₦{w.amount_naira.toLocaleString()}</p>
+                            <p className="text-[11px] text-muted-foreground">{userEmail}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[12px] font-semibold text-foreground">{w.bank_name}</p>
+                            <p className="text-[11px] text-muted-foreground">{w.account_number}</p>
+                            <p className="text-[11px] text-muted-foreground">{w.account_name}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <GlassButton variant="primary" onClick={() => handleProcessWithdrawal(w.id, true)} className="flex-1 text-[11px]"><CheckSquare className="w-3 h-3 mr-1 inline" /> Mark Paid</GlassButton>
+                          <GlassButton variant="outline" onClick={() => handleProcessWithdrawal(w.id, false)} className="flex-1 text-[11px] text-destructive"><X className="w-3 h-3 mr-1 inline" /> Reject</GlassButton>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {socialWithdrawals.filter(w => w.status === 'pending').length === 0 && <p className="text-center py-8 text-muted-foreground text-[13px]">No pending withdrawals</p>}
+                </div>
+              </GlassCard>
+            )}
           </div>
         )}
 
