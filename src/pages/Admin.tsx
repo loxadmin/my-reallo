@@ -368,28 +368,51 @@ const Admin = () => {
               duplicateCount++;
             }
 
-            // Verification calculation logic (same as before)
+            // Verification calculation logic — also update target_amount (goal balance)
             const { data: allTxs } = await supabase.from("verification_transactions").select("is_verified, verified_amount").eq("verification_id", firstMatch.verification_id);
             const { data: verif } = await supabase.from("spend_verifications").select("frequency").eq("id", firstMatch.verification_id).single();
             if (allTxs && verif) {
               const verifiedTxs = allTxs.filter(t => t.is_verified);
               const totalAmount = verifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
               const freq = (verif as any).frequency;
+
+              // Helper to update profile with recalculated target_amount
+              const updateProfileSpend = async (userId: string, annualSpend: number, markVerified = false) => {
+                // Fetch user's selected goal to recalculate target_amount
+                const { data: userProfile } = await supabase.from("profiles").select("selected_goal").eq("id", userId).single();
+                let newTarget: number | undefined;
+                if (userProfile?.selected_goal) {
+                  const goalType = (userProfile.selected_goal as string).split(":")[0];
+                  const goalSub = (userProfile.selected_goal as string).includes(":") ? (userProfile.selected_goal as string).split(":")[1] : null;
+                  let query = supabase.from("goal_categories").select("max_price").eq("goal_type", goalType);
+                  if (goalSub) query = query.eq("subcategory", goalSub);
+                  else query = query.is("subcategory", null);
+                  const { data: goalCat } = await query.limit(1).maybeSingle();
+                  if (goalCat) {
+                    newTarget = Math.min(annualSpend, (goalCat as any).max_price);
+                  }
+                }
+                const updateData: Record<string, any> = { total_annual_spend: annualSpend };
+                if (markVerified) updateData.spend_verified = true;
+                if (newTarget !== undefined) updateData.target_amount = newTarget;
+                await supabase.from("profiles").update(updateData).eq("id", userId);
+              };
+
               if (freq === "monthly" && verifiedTxs.length >= 1) {
                 const annualAmount = Math.round(Number(verifiedTxs[0].verified_amount || 0) * 12);
                 await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: annualAmount }).eq("id", firstMatch.verification_id);
-                await supabase.from("profiles").update({ total_annual_spend: annualAmount, spend_verified: true }).eq("id", firstMatch.user_id);
+                await updateProfileSpend(firstMatch.user_id, annualAmount, true);
               } else if (verifiedTxs.length === 1) {
                 const multiplier = freq === "daily" ? 365 : 52;
                 const initialAnnual = Math.round(Number(verifiedTxs[0].verified_amount || 0) * multiplier);
-                await supabase.from("profiles").update({ total_annual_spend: initialAnnual }).eq("id", firstMatch.user_id);
+                await updateProfileSpend(firstMatch.user_id, initialAnnual);
               }
               const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", firstMatch.verification_id).single();
               if (vData && new Date() >= new Date((vData as any).ends_at) && freq !== "monthly") {
                 const recalcMultiplier = freq === "daily" ? 12 : 13;
                 const finalAnnual = Math.round(totalAmount * recalcMultiplier);
                 await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: finalAnnual }).eq("id", firstMatch.verification_id);
-                await supabase.from("profiles").update({ total_annual_spend: finalAnnual, spend_verified: true }).eq("id", firstMatch.user_id);
+                await updateProfileSpend(firstMatch.user_id, finalAnnual, true);
               }
             }
           }
