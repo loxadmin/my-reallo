@@ -86,6 +86,8 @@ const Dashboard = () => {
       await supabase.from("profiles").update({
         annual_data_spend: result.annualData,
         annual_electricity_spend: result.annualElectricity,
+        annual_food_spend: result.annualFood,
+        annual_transport_spend: result.annualTransport,
         total_annual_spend: result.totalAnnual,
       }).eq("id", user.id);
       await refreshProfile();
