@@ -37,8 +37,16 @@ const Dashboard = () => {
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const { view: urlView } = useParams<{ view?: string }>();
-  const [step, setStep] = useState<DashStep>("calculator");
+  // Derive initial step from profile to prevent flash
+  const getInitialStep = (): DashStep => {
+    if (profile?.selected_goal && profile?.total_annual_spend > 0) return "queue";
+    if (profile?.total_annual_spend > 0) return "goal";
+    return "calculator";
+  };
+
+  const [step, setStep] = useState<DashStep>(getInitialStep);
   const [spendResult, setSpendResult] = useState<SpendResult | null>(null);
+  const [profileReady, setProfileReady] = useState(false);
 
   // Derive activeView from URL param
   const activeView: DashView = urlView && validViews.includes(urlView as DashView)
