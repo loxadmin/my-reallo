@@ -12,7 +12,7 @@ import { LayoutDashboard, Award, ShieldCheck, Star, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
-export type DashView = "home" | "earn" | "goal" | "verify" | "influencer";
+export type DashView = "home" | "earn" | "goal" | "verify" | "influencer" | "notifications";
 
 type DashStep = "calculator" | "goal" | "queue";
 
