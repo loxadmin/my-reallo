@@ -61,6 +61,13 @@ const Admin = () => {
   const [infBankAccounts, setInfBankAccounts] = useState<any[]>([]);
   const [infReferrals, setInfReferrals] = useState<any[]>([]);
   const [infWithdrawals, setInfWithdrawals] = useState<any[]>([]);
+  const [infChallenges, setInfChallenges] = useState<any[]>([]);
+  const [infChallengeSubmissions, setInfChallengeSubmissions] = useState<any[]>([]);
+  const [infChallengeEnrollments, setInfChallengeEnrollments] = useState<any[]>([]);
+  const [newChallenge, setNewChallenge] = useState({
+    title: "", description: "", instructions: "", hashtag: "",
+    challenge_type: "single" as string, total_videos: 1, reward_per_video: 3000, posting_interval_days: 1,
+  });
 
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [verifyPageActive, setVerifyPageActive] = useState(true);
