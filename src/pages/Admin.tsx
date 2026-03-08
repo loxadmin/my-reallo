@@ -1991,10 +1991,10 @@ const Admin = () => {
                             await supabase.from("influencer_challenges" as any).update({ is_active: !ch.is_active } as any).eq("id", ch.id);
                             await fetchData();
                           }}>{ch.is_active ? "Deactivate" : "Activate"}</Btn>
-                          <button onClick={async () => {
+                          <Btn variant="destructive" onClick={async () => {
                             await supabase.from("influencer_challenges" as any).delete().eq("id", ch.id);
                             toast({ title: "Challenge deleted" }); await fetchData();
-                          }} className="text-destructive/60 hover:text-destructive p-1"><Trash2 className="w-4 h-4" /></button>
+                          }}><Trash2 className="w-3 h-3" /></Btn>
                         </div>
                       </div>
                       <div className="px-5 py-3 border-b border-border/20">
