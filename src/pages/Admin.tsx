@@ -151,6 +151,10 @@ const Admin = () => {
     setInfChallengeSubmissions((icsRes.data || []) as any[]);
     setInfChallengeEnrollments((iceRes.data || []) as any[]);
 
+    // Fetch warnings
+    const { data: warningsData } = await supabase.from("user_warnings" as any).select("*").order("created_at", { ascending: false });
+    setUserWarnings((warningsData || []) as UserWarning[]);
+
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
     setVerifyPageActive(settings.find(s => s.key === "verify_page_active")?.value === "false" ? false : true);
