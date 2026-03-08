@@ -739,7 +739,7 @@ const Admin = () => {
 
   const tabTitle: Record<AdminTab, string> = {
     overview: "Dashboard", users: "Users", ghosts: "Ghost Users", activity: "Activity Log",
-    goals: "Goal Categories", decisions: "Decision Apps", analytics: "Analytics",
+    goals: "Goal Categories", decisions: "Decision Apps", dec_submissions: "Decision Submissions", analytics: "Analytics",
     verification: "Verification", settings: "Settings", inf_apps: "Influencer Applications",
     inf_wallets: "Influencer Wallets", inf_referrals: "Influencer Referrals",
     inf_withdrawals: "Influencer Withdrawals", inf_challenges: "Influencer Challenges", inf_submissions: "Challenge Submissions", warnings: "Warnings",
