@@ -464,9 +464,9 @@ const VerificationPanel = ({
             </p>
           </div>
         )}
-        {type === "electricity" && (
+        {(type === "electricity" || type === "food" || type === "transport") && (
           <p className="text-[10px] text-muted-foreground">
-            Electricity is verified monthly — submit 1 transaction ID (tx × 12 = annual).
+            {label} is verified monthly — submit 1 transaction ID (tx × {type === "food" || type === "transport" ? 52 : 12} = annual).
           </p>
         )}
         <GlassButton variant="primary" className="w-full text-[13px]" onClick={onStart} disabled={starting}>
