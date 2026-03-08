@@ -161,22 +161,23 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-            {/* Goal Balance Hero Card */}
-            <GlassCard variant="glow" className="relative overflow-hidden p-5">
-              <p className="text-foreground text-[13px] font-medium mb-3">
-                Welcome back, {user?.email?.split("@")[0] || "User"} 👋
-              </p>
-              <p className="text-muted-foreground uppercase tracking-[0.15em] text-[10px] font-medium mb-1">Annual Utility Spend</p>
-              <div className="flex items-baseline gap-3 mb-1">
-                <h2 className="font-display text-2xl font-bold gradient-text tabular-nums leading-none">
-                  {formatNaira(targetAmount)}
-                </h2>
-              </div>
-              <p className="text-[11px] text-muted-foreground mb-4">
+            {/* Welcome */}
+            <p className="text-foreground text-[13px] font-medium px-1">
+              Welcome back, {user?.email?.split("@")[0] || "User"} 👋
+            </p>
+
+            {/* Wallet Carousel */}
+            <WalletCarousel pointsBalance={pointsBalance} nairaValue={nairaValue} />
+
+            {/* Claimable info */}
+            <div className="px-1">
+              <p className="text-[11px] text-muted-foreground">
                 Claimable: <span className="text-primary font-semibold">{formatNaira(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
               </p>
+            </div>
 
-              {/* Goal Progress */}
+            {/* Goal Progress */}
+            <GlassCard variant="glow" className="relative overflow-hidden p-5">
               <div className="space-y-1.5 mb-5">
                 <div className="flex justify-between items-end">
                   <p className="font-medium text-foreground text-[12px]">GOAL - {goalLabels[goal] || goal}</p>
