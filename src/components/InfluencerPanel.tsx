@@ -522,6 +522,9 @@ const InfluencerPanel = () => {
             <button onClick={() => setTab("withdraw")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "withdraw" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
               Withdraw
             </button>
+            <button onClick={() => setTab("challenges")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "challenges" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
+              Challenges
+            </button>
           </div>
 
           {tab === "overview" && (
