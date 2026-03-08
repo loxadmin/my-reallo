@@ -40,7 +40,6 @@ const WalletCarousel = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [currentWalletActive, setCurrentWalletActive] = useState(true);
   const [showSpendPopup, setShowSpendPopup] = useState(false);
-  const [popupIndex, setPopupIndex] = useState(0);
 
   const utilitySpend = (profile?.annual_data_spend ?? 0) + (profile?.annual_electricity_spend ?? 0);
   const foodSpend = profile?.annual_food_spend ?? 0;
@@ -164,7 +163,7 @@ const WalletCarousel = ({
                     </p>
 
                     <button
-                      onClick={() => { setPopupIndex(selectedIndex); setShowSpendPopup(true); }}
+                      onClick={() => setShowSpendPopup(true)}
                       className="w-full text-left space-y-1.5 mb-5 cursor-pointer group/goal"
                     >
                       <div className="flex justify-between items-end">
