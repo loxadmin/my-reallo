@@ -18,24 +18,25 @@ async function fetchImageBytes(url: string): Promise<Uint8Array | null> {
 
 /** AI-based signature background removal via Lovable AI Gateway.
  *  Returns cleaned PNG bytes, or null on failure. */
-async function removeSignatureBg(imageUrl: string): Promise<Uint8Array | null> {
+async function removeSignatureBg(imageUrl: string, label = "signature"): Promise<Uint8Array | null> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) {
-    console.error("BG removal: LOVABLE_API_KEY not set");
+    console.error(`BG removal [${label}]: LOVABLE_API_KEY not set`);
     return null;
   }
 
-  console.log("BG removal: starting for URL:", imageUrl?.substring(0, 80));
+  console.log(`BG removal [${label}]: starting for URL:`, imageUrl);
 
   try {
     // Fetch image and convert to base64 data URL
     const imgRes = await fetch(imageUrl);
     if (!imgRes.ok) {
-      console.error("BG removal: failed to fetch image, status:", imgRes.status);
+      console.error(`BG removal [${label}]: failed to fetch image, status:`, imgRes.status);
       return null;
     }
     const imgBytes = new Uint8Array(await imgRes.arrayBuffer());
     const contentType = imgRes.headers.get("content-type") || "image/png";
+    console.log(`BG removal [${label}]: fetched image, ${imgBytes.length} bytes, type: ${contentType}`);
     
     // Convert to base64 in chunks to avoid stack overflow
     let binary = '';
@@ -45,7 +46,7 @@ async function removeSignatureBg(imageUrl: string): Promise<Uint8Array | null> {
       binary += String.fromCharCode(...chunk);
     }
     const imageInput = `data:${contentType};base64,${btoa(binary)}`;
-    console.log("BG removal: converted to base64, length:", imageInput.length);
+    console.log(`BG removal [${label}]: base64 length: ${imageInput.length}`);
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -58,7 +59,7 @@ async function removeSignatureBg(imageUrl: string): Promise<Uint8Array | null> {
         messages: [{
           role: "user",
           content: [
-            { type: "text", text: "Remove the background from this signature image completely. Output ONLY the signature ink strokes on a pure white background. Remove any paper texture, shadows, or coloring. The result should be a clean signature on white." },
+            { type: "text", text: "This is a photo of a handwritten signature on paper. Extract ONLY the ink signature strokes and place them on a completely pure white (#FFFFFF) background. Remove ALL paper texture, shadows, lighting, background color, and any non-signature elements. The output must be a clean black/dark signature on a perfectly white background, suitable for placing on a PDF document." },
             { type: "image_url", image_url: { url: imageInput } },
           ],
         }],
@@ -66,11 +67,11 @@ async function removeSignatureBg(imageUrl: string): Promise<Uint8Array | null> {
       }),
     });
 
-    console.log("BG removal: AI response status:", res.status);
+    console.log(`BG removal [${label}]: AI response status: ${res.status}`);
     
     if (!res.ok) {
       const errText = await res.text();
-      console.error("BG removal: AI error:", errText.substring(0, 500));
+      console.error(`BG removal [${label}]: AI error:`, errText.substring(0, 500));
       return null;
     }
 
@@ -78,11 +79,11 @@ async function removeSignatureBg(imageUrl: string): Promise<Uint8Array | null> {
     const resultDataUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url || null;
     
     if (!resultDataUrl) {
-      console.error("BG removal: no image in response");
+      console.error(`BG removal [${label}]: no image in response. Text:`, data.choices?.[0]?.message?.content?.substring(0, 200));
       return null;
     }
 
-    console.log("BG removal: success, result length:", resultDataUrl.length);
+    console.log(`BG removal [${label}]: success, result length: ${resultDataUrl.length}`);
 
     // Convert base64 data URL to Uint8Array
     const base64Data = resultDataUrl.replace(/^data:image\/\w+;base64,/, "");
@@ -92,7 +93,7 @@ async function removeSignatureBg(imageUrl: string): Promise<Uint8Array | null> {
     
     return resultBytes;
   } catch (e) {
-    console.error("BG removal error:", e);
+    console.error(`BG removal [${label}] error:`, e);
     return null;
   }
 }
@@ -161,7 +162,7 @@ Deno.serve(async (req) => {
     // Process advertiser signature (remove background) — always re-process
     let advertiserSigBytes: Uint8Array | null = null;
     if (submission.signature_url) {
-      const cleanedBytes = await removeSignatureBg(submission.signature_url);
+      const cleanedBytes = await removeSignatureBg(submission.signature_url, "advertiser");
       if (cleanedBytes) {
         const sigPath = `signatures/processed_${submission_id}.png`;
         await supabase.storage.from("advertiser-uploads").upload(sigPath, cleanedBytes, {
@@ -279,7 +280,7 @@ Deno.serve(async (req) => {
     if (founderSigUrl) {
       try {
         // Remove background from founder signature via AI
-        const cleanedFounderBytes = await removeSignatureBg(founderSigUrl);
+        const cleanedFounderBytes = await removeSignatureBg(founderSigUrl, "founder");
         const founderSigBytes = cleanedFounderBytes || await fetchImageBytes(founderSigUrl);
 
         if (founderSigBytes) {
