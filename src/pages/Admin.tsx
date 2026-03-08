@@ -1536,10 +1536,9 @@ const Admin = () => {
                   </TableHeader>
                   <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                     {verificationTxs.map(tx => {
-                      const userEmail = profiles.find(p => p.id === tx.user_id)?.email || tx.user_id.slice(0, 8);
                       return (
                         <TableRow key={tx.id} className={tx.is_duplicate ? "bg-destructive/5" : ""}>
-                          <span className="flex-1 min-w-0 text-[11px] text-muted-foreground truncate">{userEmail}</span>
+                          <span className="flex-1 min-w-0"><UserLink userId={tx.user_id} /></span>
                           <div className="flex-1 min-w-0 overflow-hidden">
                             <p className="text-[11px] font-mono text-foreground truncate">{tx.transaction_id}</p>
                             {tx.is_duplicate && <p className="text-[9px] text-destructive truncate">{tx.duplicate_note || 'Duplicate'}</p>}
