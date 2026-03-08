@@ -635,19 +635,7 @@ const Admin = () => {
     const a = document.createElement("a"); a.href = url; a.download = "decision_analytics.csv"; a.click();
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p className="text-muted-foreground text-[13px]">Loading...</p></div>;
-  if (!isAdmin) return null;
-
-  const referralApps = decisionApps.filter(a => a.category === "referral");
-  const totalSpend = profiles.reduce((s, p) => s + (p.total_annual_spend || 0), 0);
-  const totalPoints = profiles.reduce((s, p) => s + (p.points_balance || 0), 0);
-  const totalRevenue = verificationTxs.filter(t => t.is_verified).reduce((s, t) => s + Number(t.verified_amount || 0), 0);
-  const pendingWithdrawals = infWithdrawals.filter((w: any) => w.status === "pending").length;
-  const pendingApps = infApps.filter((a: any) => a.status === "pending_review" || a.status === "pending_appeal").length;
-  const bannedCount = profiles.filter(p => p.is_banned).length;
-  const activeUsers = profiles.filter(p => !p.is_banned).length;
-
-  // Build event graph data (last 30 days)
+  // Build event graph data (last 30 days) - must be before early returns
   const eventGraphData = useMemo(() => {
     const days: Record<string, { date: string; signups: number; referrals: number; verifications: number; points: number }> = {};
     const now = new Date();
@@ -674,6 +662,18 @@ const Admin = () => {
     }
     return Object.values(days);
   }, [profiles, activities, verificationTxs]);
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p className="text-muted-foreground text-[13px]">Loading...</p></div>;
+  if (!isAdmin) return null;
+
+  const referralApps = decisionApps.filter(a => a.category === "referral");
+  const totalSpend = profiles.reduce((s, p) => s + (p.total_annual_spend || 0), 0);
+  const totalPoints = profiles.reduce((s, p) => s + (p.points_balance || 0), 0);
+  const totalRevenue = verificationTxs.filter(t => t.is_verified).reduce((s, t) => s + Number(t.verified_amount || 0), 0);
+  const pendingWithdrawals = infWithdrawals.filter((w: any) => w.status === "pending").length;
+  const pendingApps = infApps.filter((a: any) => a.status === "pending_review" || a.status === "pending_appeal").length;
+  const bannedCount = profiles.filter(p => p.is_banned).length;
+  const activeUsers = profiles.filter(p => !p.is_banned).length;
 
   const counts: Record<string, number> = {
     users: profiles.length,
