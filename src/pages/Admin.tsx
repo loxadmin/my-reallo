@@ -937,52 +937,136 @@ const Admin = () => {
 
                 {/* Events Graph */}
                 <TableCard className="overflow-hidden">
-                  <div className="px-6 py-5 flex items-center justify-between">
+                  <div className="px-6 py-5 flex items-center justify-between flex-wrap gap-3">
                     <div>
                       <h3 className="text-[14px] font-bold text-foreground">Platform Activity</h3>
                       <p className="text-[11px] text-muted-foreground mt-0.5">Last 30 days overview</p>
                     </div>
-                    <div className="flex items-center gap-5 text-[11px]">
-                      {[
-                        { label: "Signups", color: "hsl(var(--primary))" },
-                        { label: "Referrals", color: "hsl(262 80% 60%)" },
-                        { label: "Verifications", color: "hsl(200 80% 55%)" },
-                      ].map(item => (
-                        <span key={item.label} className="flex items-center gap-1.5 text-muted-foreground">
-                          <span className="w-2.5 h-2.5 rounded-md inline-block" style={{ background: item.color }} />
-                          {item.label}
-                        </span>
-                      ))}
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-5 text-[11px] mr-4">
+                        {[
+                          { label: "Signups", color: "hsl(var(--primary))" },
+                          { label: "Referrals", color: "hsl(262 80% 60%)" },
+                          { label: "Verifications", color: "hsl(200 80% 55%)" },
+                        ].map(item => (
+                          <span key={item.label} className="flex items-center gap-1.5 text-muted-foreground">
+                            <span className="w-2.5 h-2.5 rounded-md inline-block" style={{ background: item.color }} />
+                            {item.label}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex rounded-lg border border-border/40 overflow-hidden">
+                        {(["bar", "line", "area", "pie"] as const).map(v => (
+                          <button
+                            key={v}
+                            onClick={() => setChartView(v)}
+                            className={`px-3 py-1.5 text-[10px] font-medium capitalize transition-colors ${
+                              chartView === v
+                                ? "bg-primary text-primary-foreground"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                            }`}
+                          >
+                            {v === "area" ? "Wave" : v === "pie" ? "Pie" : v === "line" ? "Line" : "Bar"}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <div className="px-4 pb-5" style={{ height: 320 }}>
+                  <div className="px-4 pb-5" style={{ height: 360 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={eventGraphData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }} barCategoryGap="20%">
-                        <defs>
-                          <linearGradient id="gradSignups" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
-                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                          </linearGradient>
-                          <linearGradient id="gradReferrals" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(262 80% 60%)" stopOpacity={0.85} />
-                            <stop offset="100%" stopColor="hsl(262 80% 60%)" stopOpacity={0.35} />
-                          </linearGradient>
-                          <linearGradient id="gradVerifications" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(200 80% 55%)" stopOpacity={0.85} />
-                            <stop offset="100%" stopColor="hsl(200 80% 55%)" stopOpacity={0.35} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(0 0% 50% / 0.08)" />
-                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 50% / 0.5)" }} interval="preserveStartEnd" />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 50% / 0.5)" }} allowDecimals={false} />
-                        <Tooltip
-                          cursor={{ fill: "hsl(0 0% 50% / 0.06)", radius: 6 }}
-                          contentStyle={{ fontSize: 11, borderRadius: 12, border: "1px solid hsl(0 0% 50% / 0.15)", background: "hsl(var(--card))", color: "hsl(var(--foreground))", boxShadow: "0 8px 32px -8px hsl(0 0% 0% / 0.15)", padding: "10px 14px" }}
-                        />
-                        <Bar dataKey="signups" fill="url(#gradSignups)" radius={[6, 6, 0, 0]} name="Signups" />
-                        <Bar dataKey="referrals" fill="url(#gradReferrals)" radius={[6, 6, 0, 0]} name="Referrals" />
-                        <Bar dataKey="verifications" fill="url(#gradVerifications)" radius={[6, 6, 0, 0]} name="Verifications" />
-                      </BarChart>
+                      {chartView === "pie" ? (
+                        (() => {
+                          const totals = [
+                            { name: "Signups", value: eventGraphData.reduce((s, d) => s + d.signups, 0), color: "hsl(var(--primary))" },
+                            { name: "Referrals", value: eventGraphData.reduce((s, d) => s + d.referrals, 0), color: "hsl(262 80% 60%)" },
+                            { name: "Verifications", value: eventGraphData.reduce((s, d) => s + d.verifications, 0), color: "hsl(200 80% 55%)" },
+                          ];
+                          return (
+                            <PieChart>
+                              <Pie
+                                data={totals}
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={130}
+                                innerRadius={60}
+                                dataKey="value"
+                                nameKey="name"
+                                strokeWidth={3}
+                                stroke="hsl(var(--card))"
+                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                              >
+                                {totals.map((entry, i) => (
+                                  <Cell key={i} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                contentStyle={{ fontSize: 11, borderRadius: 12, border: "1px solid hsl(0 0% 50% / 0.15)", background: "hsl(var(--card))", color: "hsl(var(--foreground))", boxShadow: "0 8px 32px -8px hsl(0 0% 0% / 0.15)", padding: "10px 14px" }}
+                              />
+                            </PieChart>
+                          );
+                        })()
+                      ) : chartView === "line" ? (
+                        <LineChart data={eventGraphData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(0 0% 50% / 0.08)" />
+                          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 50% / 0.5)" }} interval="preserveStartEnd" />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 50% / 0.5)" }} allowDecimals={false} />
+                          <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12, border: "1px solid hsl(0 0% 50% / 0.15)", background: "hsl(var(--card))", color: "hsl(var(--foreground))", boxShadow: "0 8px 32px -8px hsl(0 0% 0% / 0.15)", padding: "10px 14px" }} />
+                          <Line type="monotone" dataKey="signups" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 4, fill: "hsl(var(--primary))" }} activeDot={{ r: 6 }} name="Signups" />
+                          <Line type="monotone" dataKey="referrals" stroke="hsl(262 80% 60%)" strokeWidth={3} dot={{ r: 4, fill: "hsl(262 80% 60%)" }} activeDot={{ r: 6 }} name="Referrals" />
+                          <Line type="monotone" dataKey="verifications" stroke="hsl(200 80% 55%)" strokeWidth={3} dot={{ r: 4, fill: "hsl(200 80% 55%)" }} activeDot={{ r: 6 }} name="Verifications" />
+                        </LineChart>
+                      ) : chartView === "area" ? (
+                        <AreaChart data={eventGraphData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="waveSignups" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                            </linearGradient>
+                            <linearGradient id="waveReferrals" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="hsl(262 80% 60%)" stopOpacity={0.35} />
+                              <stop offset="100%" stopColor="hsl(262 80% 60%)" stopOpacity={0.02} />
+                            </linearGradient>
+                            <linearGradient id="waveVerifications" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="hsl(200 80% 55%)" stopOpacity={0.35} />
+                              <stop offset="100%" stopColor="hsl(200 80% 55%)" stopOpacity={0.02} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(0 0% 50% / 0.08)" />
+                          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 50% / 0.5)" }} interval="preserveStartEnd" />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 50% / 0.5)" }} allowDecimals={false} />
+                          <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12, border: "1px solid hsl(0 0% 50% / 0.15)", background: "hsl(var(--card))", color: "hsl(var(--foreground))", boxShadow: "0 8px 32px -8px hsl(0 0% 0% / 0.15)", padding: "10px 14px" }} />
+                          <Area type="natural" dataKey="signups" stroke="hsl(var(--primary))" fill="url(#waveSignups)" strokeWidth={2.5} name="Signups" />
+                          <Area type="natural" dataKey="referrals" stroke="hsl(262 80% 60%)" fill="url(#waveReferrals)" strokeWidth={2.5} name="Referrals" />
+                          <Area type="natural" dataKey="verifications" stroke="hsl(200 80% 55%)" fill="url(#waveVerifications)" strokeWidth={2.5} name="Verifications" />
+                        </AreaChart>
+                      ) : (
+                        <BarChart data={eventGraphData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }} barCategoryGap="12%" barGap={2}>
+                          <defs>
+                            <linearGradient id="gradSignups" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+                            </linearGradient>
+                            <linearGradient id="gradReferrals" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="hsl(262 80% 60%)" stopOpacity={1} />
+                              <stop offset="100%" stopColor="hsl(262 80% 60%)" stopOpacity={0.55} />
+                            </linearGradient>
+                            <linearGradient id="gradVerifications" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="hsl(200 80% 55%)" stopOpacity={1} />
+                              <stop offset="100%" stopColor="hsl(200 80% 55%)" stopOpacity={0.55} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(0 0% 50% / 0.08)" />
+                          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 50% / 0.5)" }} interval="preserveStartEnd" />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 50% / 0.5)" }} allowDecimals={false} />
+                          <Tooltip
+                            cursor={{ fill: "hsl(0 0% 50% / 0.06)", radius: 6 }}
+                            contentStyle={{ fontSize: 11, borderRadius: 12, border: "1px solid hsl(0 0% 50% / 0.15)", background: "hsl(var(--card))", color: "hsl(var(--foreground))", boxShadow: "0 8px 32px -8px hsl(0 0% 0% / 0.15)", padding: "10px 14px" }}
+                          />
+                          <Bar dataKey="signups" fill="url(#gradSignups)" radius={[6, 6, 0, 0]} name="Signups" maxBarSize={28} />
+                          <Bar dataKey="referrals" fill="url(#gradReferrals)" radius={[6, 6, 0, 0]} name="Referrals" maxBarSize={28} />
+                          <Bar dataKey="verifications" fill="url(#gradVerifications)" radius={[6, 6, 0, 0]} name="Verifications" maxBarSize={28} />
+                        </BarChart>
+                      )}
                     </ResponsiveContainer>
                   </div>
                 </TableCard>
