@@ -750,34 +750,76 @@ const Admin = () => {
     const totalInfluencerPayouts = infWithdrawals.filter((w: any) => w.status === "approved").reduce((s: number, w: any) => s + (w.amount || 0), 0);
     const totalVoucherValue = 0; // placeholder if vouchers data available
 
+    // Computed stats for statement
+    const totalReferrals = activities.filter(a => a.action_type === "referral").length;
+    const avgSpendPerUser = profiles.length > 0 ? totalSpend / profiles.length : 0;
+    const usersWithGoals = profiles.filter(p => p.selected_goal).length;
+    const usersOffQueue = profiles.filter(p => (p.queue_position ?? 999) <= 0).length;
+    const usersOnQueue = profiles.filter(p => (p.queue_position ?? 0) > 0).length;
+    const totalInfluencerReferralEarnings = infReferrals.reduce((s: number, r: any) => s + (r.reward_amount || 0), 0);
+    const pendingInfluencerPayouts = infWithdrawals.filter((w: any) => w.status === "pending").reduce((s: number, w: any) => s + (w.amount || 0), 0);
+    const activeInfluencers = infWallets.filter((w: any) => w.status === "active").length;
+    const totalInfluencerBalance = infWallets.reduce((s: number, w: any) => s + (w.balance || 0), 0);
+    const duplicateTxs = verificationTxs.filter(t => t.is_duplicate).length;
+    const unverifiedTxs = verificationTxs.filter(t => !t.is_verified && !t.is_duplicate).length;
+    const decisionTotalResponses = decisionResponses.length;
+    const decisionSwitchCompleted = decisionResponses.filter(r => r.switch_completed).length;
+    const goalBreakdown: Record<string, number> = {};
+    profiles.forEach(p => { if (p.selected_goal) goalBreakdown[p.selected_goal] = (goalBreakdown[p.selected_goal] || 0) + 1; });
+
     const lines = [
-      ["Reallo Financial Statement"],
-      [`Generated: ${today}`, `Currency: ${adminCurrency}`],
+      ["REALLO PLATFORM — FINANCIAL STATEMENT"],
+      [`Report Date: ${today}`, `Currency: ${adminCurrency}`, `Exchange Rate: 1 ${adminCurrency} = ${sym}${rate === 1 ? "1" : rate.toLocaleString()} NGN`],
       [],
-      ["PLATFORM OVERVIEW"],
+      ["═══ 1. PLATFORM OVERVIEW ═══"],
       ["Metric", "Value"],
-      ["Total Users", String(profiles.length)],
+      ["Total Registered Users", String(profiles.length)],
       ["Active Users", String(activeUsers)],
       ["Banned Users", String(bannedCount)],
+      ["Users On Queue", String(usersOnQueue)],
+      ["Users Off Queue (Eligible)", String(usersOffQueue)],
+      ["Users With Goals Set", String(usersWithGoals)],
+      ["Total Referrals Made", String(totalReferrals)],
+      ["Total Warnings Issued", String(userWarnings.length)],
+      ["Ghost Users (Seeded)", String(ghostCount)],
       [],
-      ["REVENUE"],
+      ["═══ 2. REVENUE & SPEND ═══"],
       ["Metric", `Amount (${sym})`],
       ["Total Annual Spend (all users)", `${sym}${fmtVal(totalSpend)}`],
-      ["Processed Revenue (verified txns)", `${sym}${fmtVal(totalRevenue)}`],
+      ["Average Spend Per User", `${sym}${fmtVal(avgSpendPerUser)}`],
+      ["Processed Revenue (verified txns)", `${sym}${fmtVal(totalVerified)}`],
       ["Verified Transactions Count", String(verifiedTxs.length)],
+      ["Unverified Transactions", String(unverifiedTxs)],
+      ["Duplicate Transactions Flagged", String(duplicateTxs)],
       [],
-      ["POINTS ECONOMY"],
+      ["═══ 3. POINTS ECONOMY ═══"],
       ["Metric", "Value"],
-      ["Total Points in Circulation", String(totalPoints)],
-      [`Points Value (${sym})`, `${sym}${fmtVal(totalPoints * 0.5)}`],
+      ["Total Points in Circulation", totalPoints.toLocaleString()],
+      [`Points Monetary Value (${sym})`, `${sym}${fmtVal(totalPoints * 0.5)}`],
+      ["Average Points Per User", profiles.length > 0 ? Math.round(totalPoints / profiles.length).toLocaleString() : "0"],
       [],
-      ["INFLUENCER PAYOUTS"],
+      ["═══ 4. GOAL DISTRIBUTION ═══"],
+      ["Goal Type", "Users"],
+      ...Object.entries(goalBreakdown).map(([g, c]) => [g, String(c)]),
+      [],
+      ["═══ 5. INFLUENCER PROGRAM ═══"],
       ["Metric", `Amount (${sym})`],
-      ["Total Influencer Referral Earnings", `${sym}${fmtVal(infReferrals.reduce((s: number, r: any) => s + (r.reward_amount || 0), 0))}`],
-      ["Total Approved Withdrawals", `${sym}${fmtVal(totalInfluencerPayouts)}`],
-      ["Pending Withdrawals", String(pendingWithdrawals)],
+      ["Active Influencers", String(activeInfluencers)],
+      ["Total Influencer Wallet Balance", `${sym}${fmtVal(totalInfluencerBalance)}`],
+      ["Total Referral Earnings", `${sym}${fmtVal(totalInfluencerReferralEarnings)}`],
+      ["Approved Withdrawals", `${sym}${fmtVal(totalInfluencerPayouts)}`],
+      ["Pending Withdrawal Amount", `${sym}${fmtVal(pendingInfluencerPayouts)}`],
+      ["Pending Withdrawal Count", String(pendingWithdrawals)],
+      ["Influencer Applications (pending)", String(pendingApps)],
+      ["Total Challenges", String(infChallenges.length)],
       [],
-      ["VERIFIED TRANSACTIONS"],
+      ["═══ 6. DECISION APPS ═══"],
+      ["Metric", "Value"],
+      ["Total Decision Responses", String(decisionTotalResponses)],
+      ["Switches Completed", String(decisionSwitchCompleted)],
+      ["Total Decision Apps", String(decisionApps.length)],
+      [],
+      ["═══ 7. VERIFIED TRANSACTION LOG ═══"],
       ["Transaction ID", `Amount (${sym})`, "Date", "User ID"],
       ...verifiedTxs.slice(0, 500).map(t => [
         t.transaction_id,
@@ -893,42 +935,53 @@ const Admin = () => {
                 </div>
 
                 {/* Events Graph */}
-                <TableCard>
-                  <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
-                    <h3 className="text-[13px] font-semibold text-foreground">Platform Activity (30 Days)</h3>
-                    <div className="flex items-center gap-4 text-[10px]">
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary inline-block" /> Signups</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: "hsl(160 40% 50%)" }} /> Referrals</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: "hsl(200 60% 50%)" }} /> Verifications</span>
+                <TableCard className="overflow-hidden">
+                  <div className="px-6 py-5 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-[14px] font-bold text-foreground">Platform Activity</h3>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Last 30 days overview</p>
+                    </div>
+                    <div className="flex items-center gap-5 text-[11px]">
+                      {[
+                        { label: "Signups", color: "hsl(var(--primary))" },
+                        { label: "Referrals", color: "hsl(262 80% 60%)" },
+                        { label: "Verifications", color: "hsl(200 80% 55%)" },
+                      ].map(item => (
+                        <span key={item.label} className="flex items-center gap-1.5 text-muted-foreground">
+                          <span className="w-2.5 h-2.5 rounded-md inline-block" style={{ background: item.color }} />
+                          {item.label}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                  <div className="p-5" style={{ height: 280 }}>
+                  <div className="px-4 pb-5" style={{ height: 320 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={eventGraphData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                      <BarChart data={eventGraphData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }} barCategoryGap="20%">
                         <defs>
                           <linearGradient id="gradSignups" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(160 60% 18%)" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="hsl(160 60% 18%)" stopOpacity={0} />
+                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
+                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
                           </linearGradient>
                           <linearGradient id="gradReferrals" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(160 40% 50%)" stopOpacity={0.2} />
-                            <stop offset="95%" stopColor="hsl(160 40% 50%)" stopOpacity={0} />
+                            <stop offset="0%" stopColor="hsl(262 80% 60%)" stopOpacity={0.85} />
+                            <stop offset="100%" stopColor="hsl(262 80% 60%)" stopOpacity={0.35} />
                           </linearGradient>
                           <linearGradient id="gradVerifications" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(200 60% 50%)" stopOpacity={0.2} />
-                            <stop offset="95%" stopColor="hsl(200 60% 50%)" stopOpacity={0} />
+                            <stop offset="0%" stopColor="hsl(200 80% 55%)" stopOpacity={0.85} />
+                            <stop offset="100%" stopColor="hsl(200 80% 55%)" stopOpacity={0.35} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 50% / 0.1)" />
-                        <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(0 0% 50% / 0.3)" interval="preserveStartEnd" />
-                        <YAxis tick={{ fontSize: 10 }} stroke="hsl(0 0% 50% / 0.3)" allowDecimals={false} />
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(0 0% 50% / 0.08)" />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 50% / 0.5)" }} interval="preserveStartEnd" />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 50% / 0.5)" }} allowDecimals={false} />
                         <Tooltip
-                          contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid hsl(0 0% 50% / 0.2)", background: "hsl(var(--card))", color: "hsl(var(--foreground))" }}
+                          cursor={{ fill: "hsl(0 0% 50% / 0.06)", radius: 6 }}
+                          contentStyle={{ fontSize: 11, borderRadius: 12, border: "1px solid hsl(0 0% 50% / 0.15)", background: "hsl(var(--card))", color: "hsl(var(--foreground))", boxShadow: "0 8px 32px -8px hsl(0 0% 0% / 0.15)", padding: "10px 14px" }}
                         />
-                        <Area type="monotone" dataKey="signups" stroke="hsl(160 60% 18%)" fill="url(#gradSignups)" strokeWidth={2} name="Signups" />
-                        <Area type="monotone" dataKey="referrals" stroke="hsl(160 40% 50%)" fill="url(#gradReferrals)" strokeWidth={1.5} name="Referrals" />
-                        <Area type="monotone" dataKey="verifications" stroke="hsl(200 60% 50%)" fill="url(#gradVerifications)" strokeWidth={1.5} name="Verifications" />
-                      </AreaChart>
+                        <Bar dataKey="signups" fill="url(#gradSignups)" radius={[6, 6, 0, 0]} name="Signups" />
+                        <Bar dataKey="referrals" fill="url(#gradReferrals)" radius={[6, 6, 0, 0]} name="Referrals" />
+                        <Bar dataKey="verifications" fill="url(#gradVerifications)" radius={[6, 6, 0, 0]} name="Verifications" />
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </TableCard>
