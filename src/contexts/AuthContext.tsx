@@ -16,6 +16,10 @@ interface Profile {
   last_active: string;
   created_at: string;
   points_balance: number;
+  social_bonus_balance?: number;
+  bank_name?: string;
+  account_number?: string;
+  account_name?: string;
 }
 
 interface AuthContextType {

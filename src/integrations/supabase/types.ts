@@ -205,6 +205,10 @@ export type Database = {
           spend_verified: boolean | null
           target_amount: number | null
           total_annual_spend: number | null
+          social_bonus_balance: number | null
+          bank_name: string | null
+          account_number: string | null
+          account_name: string | null
         }
         Insert: {
           annual_data_spend?: number | null
@@ -222,6 +226,10 @@ export type Database = {
           spend_verified?: boolean | null
           target_amount?: number | null
           total_annual_spend?: number | null
+          social_bonus_balance?: number | null
+          bank_name?: string | null
+          account_number?: string | null
+          account_name?: string | null
         }
         Update: {
           annual_data_spend?: number | null
@@ -239,11 +247,163 @@ export type Database = {
           spend_verified?: boolean | null
           target_amount?: number | null
           total_annual_spend?: number | null
+          social_bonus_balance?: number | null
+          bank_name?: string | null
+          account_number?: string | null
+          account_name?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "profiles_referred_by_fkey"
             columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_media_accounts: {
+        Row: {
+          account_link: string
+          created_at: string
+          id: string
+          is_verified: boolean
+          platform: string
+          user_id: string
+        }
+        Insert: {
+          account_link: string
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          platform: string
+          user_id: string
+        }
+        Update: {
+          account_link?: string
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          platform?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_media_challenges: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          reward_naira: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          reward_naira?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          reward_naira?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      social_media_submissions: {
+        Row: {
+          challenge_id: string
+          created_at: string
+          id: string
+          reward_paid_naira: number | null
+          status: string
+          user_id: string
+          video_link: string
+        }
+        Insert: {
+          challenge_id: string
+          created_at?: string
+          id?: string
+          reward_paid_naira?: number | null
+          status?: string
+          user_id: string
+          video_link: string
+        }
+        Update: {
+          challenge_id?: string
+          created_at?: string
+          id?: string
+          reward_paid_naira?: number | null
+          status?: string
+          user_id?: string
+          video_link?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_submissions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "social_media_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_media_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_withdrawals: {
+        Row: {
+          account_name: string
+          account_number: string
+          amount_naira: number
+          bank_name: string
+          created_at: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          amount_naira: number
+          bank_name: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          amount_naira?: number
+          bank_name?: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_withdrawals_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
