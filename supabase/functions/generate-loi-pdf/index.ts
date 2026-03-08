@@ -18,9 +18,35 @@ async function fetchImageBytes(url: string): Promise<Uint8Array | null> {
 
 async function removeSignatureBg(imageUrl: string): Promise<string | null> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!apiKey) return null;
+  if (!apiKey) {
+    console.error("BG removal: LOVABLE_API_KEY not set");
+    return null;
+  }
+
+  console.log("BG removal: starting for URL:", imageUrl?.substring(0, 80));
 
   try {
+    // First fetch the image and convert to base64 data URL for the AI
+    let imageInput = imageUrl;
+    if (!imageUrl.startsWith("data:")) {
+      const imgRes = await fetch(imageUrl);
+      if (!imgRes.ok) {
+        console.error("BG removal: failed to fetch image, status:", imgRes.status);
+        return null;
+      }
+      const imgBytes = new Uint8Array(await imgRes.arrayBuffer());
+      const contentType = imgRes.headers.get("content-type") || "image/png";
+      // Convert to base64 in chunks
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < imgBytes.length; i += chunkSize) {
+        const chunk = imgBytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode(...chunk);
+      }
+      imageInput = `data:${contentType};base64,${btoa(binary)}`;
+      console.log("BG removal: converted image to base64, length:", imageInput.length);
+    }
+
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -32,16 +58,30 @@ async function removeSignatureBg(imageUrl: string): Promise<string | null> {
         messages: [{
           role: "user",
           content: [
-            { type: "text", text: "Remove the background from this signature image. Keep only the signature ink on a transparent/white background. Output a clean signature." },
-            { type: "image_url", image_url: { url: imageUrl } },
+            { type: "text", text: "Remove the background from this signature image completely. Output ONLY the signature ink strokes on a pure white background. Remove any paper texture, shadows, or coloring. The result should be a clean signature on white." },
+            { type: "image_url", image_url: { url: imageInput } },
           ],
         }],
         modalities: ["image", "text"],
       }),
     });
 
+    console.log("BG removal: AI response status:", res.status);
     const data = await res.json();
-    return data.choices?.[0]?.message?.images?.[0]?.image_url?.url || null;
+    console.log("BG removal: AI response has images:", !!data.choices?.[0]?.message?.images?.length);
+    
+    if (!res.ok) {
+      console.error("BG removal: AI error response:", JSON.stringify(data).substring(0, 500));
+      return null;
+    }
+
+    const resultUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url || null;
+    if (resultUrl) {
+      console.log("BG removal: success, result length:", resultUrl.length);
+    } else {
+      console.error("BG removal: no image in response, keys:", JSON.stringify(Object.keys(data.choices?.[0]?.message || {})));
+    }
+    return resultUrl;
   } catch (e) {
     console.error("BG removal error:", e);
     return null;
