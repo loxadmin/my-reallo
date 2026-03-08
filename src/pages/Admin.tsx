@@ -134,7 +134,7 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
           {!collapsed && <span className="text-[14px] font-bold text-sidebar-foreground tracking-tight">Reallo Admin</span>}
         </div>
       </SidebarHeader>
-      <SidebarContent className="px-4 py-4 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <SidebarContent className={`${collapsed ? "px-1" : "px-4"} py-4 overflow-y-auto scrollbar-hide transition-all`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {navGroups.map((group) => (
           <SidebarGroup key={group.label} className="mb-3">
             <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.18em] text-sidebar-foreground/40 font-semibold mb-2 px-3">
