@@ -603,7 +603,7 @@ const VerificationActivePanel = ({
                     existingTx.is_verified ? (
                       <div className="flex items-center gap-1 text-primary shrink-0">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-medium">₦{existingTx.verified_amount?.toLocaleString("en-NG")}</span>
+                        <span className="text-[10px] font-medium">{formatCurrency(existingTx.verified_amount ?? 0)}</span>
                       </div>
                     ) : isDuplicate ? (
                       canEdit ? (
