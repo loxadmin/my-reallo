@@ -837,18 +837,19 @@ const Admin = () => {
                         {app.status}
                       </span>
                     </div>
-                    {app.status === "pending_review" && (
+                    {(app.status === "pending_review" || app.status === "pending_appeal") && (
                       <div className="flex gap-2 mt-2">
+                        {app.status === "pending_appeal" && <p className="text-[10px] text-primary w-full mb-1">⚡ This is an appeal</p>}
                         <GlassButton variant="primary" onClick={async () => {
                           await supabase.from("influencer_applications" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", app.id);
-                          // Remove user from queue
                           await supabase.from("profiles").update({ queue_position: 0, off_queue_at: new Date().toISOString() }).eq("id", app.user_id);
                           toast({ title: "Application approved" });
                           await fetchData();
                         }} className="flex-1 text-[11px]"><Check className="w-3 h-3 mr-1" /> Approve</GlassButton>
                         <GlassButton variant="outline" onClick={async () => {
-                          await supabase.from("influencer_applications" as any).update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", app.id);
-                          toast({ title: "Application rejected" });
+                          const newStatus = app.status === "pending_appeal" ? "appeal_rejected" : "rejected";
+                          await supabase.from("influencer_applications" as any).update({ status: newStatus, reviewed_at: new Date().toISOString() }).eq("id", app.id);
+                          toast({ title: app.status === "pending_appeal" ? "Appeal rejected" : "Application rejected" });
                           await fetchData();
                         }} className="flex-1 text-[11px]">Reject</GlassButton>
                       </div>
