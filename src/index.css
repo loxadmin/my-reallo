@@ -344,3 +344,34 @@
   background-size: 200% 100%;
   animation: shimmer 3s linear infinite;
 }
+
+/* ── Liquid glass popup ── */
+@keyframes liquidBlob1 {
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  20% { transform: translate(30px, -20px) scale(1.1) rotate(15deg); }
+  40% { transform: translate(-20px, 30px) scale(0.95) rotate(-10deg); }
+  60% { transform: translate(25px, 15px) scale(1.05) rotate(20deg); }
+  80% { transform: translate(-30px, -10px) scale(0.9) rotate(-15deg); }
+}
+@keyframes liquidBlob2 {
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  25% { transform: translate(-35px, 20px) scale(1.15) rotate(-20deg); }
+  50% { transform: translate(20px, -30px) scale(0.9) rotate(10deg); }
+  75% { transform: translate(-15px, -20px) scale(1.1) rotate(-5deg); }
+}
+@keyframes liquidBlob3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  30% { transform: translate(20px, 25px) scale(1.2); }
+  60% { transform: translate(-25px, -15px) scale(0.85); }
+  90% { transform: translate(10px, -25px) scale(1.05); }
+}
+@keyframes liquidSurface {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  25% { transform: translateY(-3px) scaleY(1.02); }
+  50% { transform: translateY(2px) scaleY(0.98); }
+  75% { transform: translateY(-1px) scaleY(1.01); }
+}
+@keyframes glassShine {
+  0% { transform: translateX(-100%) rotate(25deg); }
+  100% { transform: translateX(200%) rotate(25deg); }
+}
