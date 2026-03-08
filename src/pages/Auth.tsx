@@ -181,14 +181,12 @@ const Auth = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md z-10"
       >
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <RealloLogo size={48} />
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <RealloLogo size={28} />
+            <h1 className="font-display text-xl font-bold gradient-text">Reallo</h1>
           </div>
-          <h1 className="font-display text-2xl font-bold text-foreground mb-2">
-            <span className="gradient-text">Reallo</span>
-          </h1>
-          <p className="text-[13px] text-muted-foreground">Reclaim what's yours</p>
+          <p className="text-[12px] text-muted-foreground">Reclaim what's yours</p>
         </div>
 
         {signupSuccess ? (
@@ -224,13 +222,8 @@ const Auth = () => {
               </button>
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
+              <div
                 key={mode}
-                initial={{ opacity: 0, x: mode === "login" ? -20 : 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: mode === "login" ? 20 : -20 }}
-                transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
                 <div>
@@ -293,18 +286,18 @@ const Auth = () => {
                 </div>
 
                 {mode === "signup" && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+                  <div>
                     <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
                     <p className="text-[11px] text-primary/60 mt-1 flex items-center gap-1">
                       <Gift className="w-3 h-3" /> You and your referrer both benefit
                     </p>
-                  </motion.div>
+                  </div>
                 )}
 
                 {error && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[13px] text-destructive font-medium">
+                  <p className="text-[13px] text-destructive font-medium">
                     {error}
-                  </motion.p>
+                  </p>
                 )}
 
                 <GlassButton variant="primary" className="w-full mt-4 text-[13px] py-3.5" onClick={handleSubmit} disabled={loading || !email || !password}>
@@ -333,8 +326,7 @@ const Auth = () => {
                   </svg>
                   Google
                 </button>
-              </motion.div>
-            </AnimatePresence>
+              </div>
           </GlassCard>
         )}
       </motion.div>
