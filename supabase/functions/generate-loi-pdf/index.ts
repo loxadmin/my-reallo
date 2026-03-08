@@ -116,7 +116,9 @@ Deno.serve(async (req) => {
       if (processedSigUrl) {
         // Upload processed signature to storage
         const base64Data = processedSigUrl.replace(/^data:image\/\w+;base64,/, "");
-        const sigBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+        const rawStr = atob(base64Data);
+        const sigBytes = new Uint8Array(rawStr.length);
+        for (let i = 0; i < rawStr.length; i++) sigBytes[i] = rawStr.charCodeAt(i);
         const sigPath = `signatures/processed_${submission_id}.png`;
         await supabase.storage.from("advertiser-uploads").upload(sigPath, sigBytes, {
           contentType: "image/png",
@@ -240,7 +242,9 @@ Deno.serve(async (req) => {
         if (cleanedFounderSig) {
           // Upload processed founder signature
           const base64Data = cleanedFounderSig.replace(/^data:image\/\w+;base64,/, "");
-          const sigBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+          const rawStr = atob(base64Data);
+          const sigBytes = new Uint8Array(rawStr.length);
+          for (let i = 0; i < rawStr.length; i++) sigBytes[i] = rawStr.charCodeAt(i);
           const fSigPath = `signatures/processed_founder.png`;
           await supabase.storage.from("advertiser-uploads").upload(fSigPath, sigBytes, {
             contentType: "image/png",
