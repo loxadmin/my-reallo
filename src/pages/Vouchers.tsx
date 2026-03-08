@@ -24,6 +24,7 @@ interface Voucher {
 
 const Vouchers = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
+  const { formatCurrency: formatNaira } = useCurrency();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
