@@ -280,7 +280,7 @@ const AdvertiserOnboard = () => {
           {/* Email */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-1.5">
-              <Mail className="w-4 h-4 text-primary" /> Official Email * <span className="text-[10px] text-muted-foreground">(must match website domain)</span>
+              <Mail className="w-4 h-4 text-primary" /> Official Email * {brandedEmailRequired && <span className="text-[10px] text-muted-foreground">(must match website domain)</span>}
             </label>
             <div className="flex gap-2">
               <input
