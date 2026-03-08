@@ -461,7 +461,7 @@ const VerificationPanel = ({
             </GlassButton>
           </a>
         )}
-        {type === "data" && (
+        {(type === "data" || type === "food" || type === "transport") && (
           <div>
             <p className="text-[11px] text-muted-foreground mb-2">Select submission frequency:</p>
             <div className="flex gap-2">
