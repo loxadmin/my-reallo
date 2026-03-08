@@ -101,7 +101,8 @@ const InfluencerPanel = () => {
   const [withdrawing, setWithdrawing] = useState(false);
 
   // Tab
-  const [tab, setTab] = useState<"overview" | "withdraw">("overview");
+  const [tab, setTab] = useState<"overview" | "withdraw" | "challenges">("overview");
+  const [videoLinks, setVideoLinks] = useState<Record<string, string>>({});
 
   const fetchData = async () => {
     if (!user) return;
