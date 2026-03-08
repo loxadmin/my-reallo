@@ -314,7 +314,7 @@ const AdvertiserOnboard = () => {
                 className={`${inputCls} mt-2`}
               />
             )}
-            {email && websiteUrl && !emailMatchesWebsite() && !emailVerified && (
+            {brandedEmailRequired && email && websiteUrl && !emailMatchesWebsite() && !emailVerified && (
               <p className="text-destructive text-xs mt-1">Email domain must match website: @{getDomain(websiteUrl)}</p>
             )}
           </div>
