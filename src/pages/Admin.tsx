@@ -7,14 +7,15 @@ import {
   BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet,
   Smartphone, Check, ExternalLink, CreditCard as Edit2, Download, Star,
   Wallet, ArrowDownToLine, Ban, AlertTriangle, Eye, X, Bell, LayoutDashboard,
-  ChevronDown, ChevronRight, Menu
+  ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { sendNotification } from "@/lib/notifications";
+import WaterBackground from "@/components/WaterBackground";
 import {
   SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
   SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton,
-  SidebarHeader, SidebarTrigger, useSidebar,
+  SidebarHeader, SidebarFooter, SidebarTrigger, useSidebar,
 } from "@/components/ui/sidebar";
 
 // ── Types ──
@@ -51,34 +52,20 @@ const fromDResponses = () => supabase.from("decision_responses" as any);
 
 type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "warnings";
 
-// ── Nav config ──
 const navGroups = [
   {
-    label: "Dashboard",
+    label: "GENERAL",
     items: [
-      { id: "overview" as AdminTab, label: "Overview", icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: "User Management",
-    items: [
+      { id: "overview" as AdminTab, label: "Dashboard", icon: LayoutDashboard },
       { id: "users" as AdminTab, label: "Users", icon: Users },
-      { id: "warnings" as AdminTab, label: "Warnings", icon: AlertTriangle },
-      { id: "ghosts" as AdminTab, label: "Ghost Users", icon: Ghost },
-      { id: "activity" as AdminTab, label: "Activity Log", icon: Activity },
-    ],
-  },
-  {
-    label: "Product",
-    items: [
-      { id: "goals" as AdminTab, label: "Goal Categories", icon: Settings },
+      { id: "goals" as AdminTab, label: "Goals", icon: Settings },
       { id: "decisions" as AdminTab, label: "Decision Apps", icon: Smartphone },
-      { id: "analytics" as AdminTab, label: "Analytics", icon: BarChart3 },
       { id: "verification" as AdminTab, label: "Verification", icon: CheckCircle2 },
+      { id: "warnings" as AdminTab, label: "Warnings", icon: AlertTriangle },
     ],
   },
   {
-    label: "Influencer",
+    label: "INFLUENCER",
     items: [
       { id: "inf_apps" as AdminTab, label: "Applications", icon: Star },
       { id: "inf_wallets" as AdminTab, label: "Wallets", icon: Wallet },
@@ -88,110 +75,167 @@ const navGroups = [
     ],
   },
   {
-    label: "System",
+    label: "ACCOUNT",
     items: [
-      { id: "settings" as AdminTab, label: "App Settings", icon: Link },
+      { id: "settings" as AdminTab, label: "Settings", icon: Link },
+      { id: "analytics" as AdminTab, label: "Analytics", icon: BarChart3 },
+      { id: "ghosts" as AdminTab, label: "Ghost Users", icon: Ghost },
+      { id: "activity" as AdminTab, label: "Activity Log", icon: Activity },
     ],
   },
 ];
 
-// ── Metric Card ──
-const MetricCard = ({ label, value, icon: Icon, variant = "default" }: { label: string; value: string | number; icon: any; variant?: "default" | "primary" | "destructive" }) => (
-  <div className="rounded-xl border border-border bg-card p-4 flex items-start gap-3">
-    <div className={`rounded-lg p-2 ${variant === "primary" ? "bg-primary/10" : variant === "destructive" ? "bg-destructive/10" : "bg-muted"}`}>
-      <Icon className={`w-4 h-4 ${variant === "primary" ? "text-primary" : variant === "destructive" ? "text-destructive" : "text-muted-foreground"}`} />
-    </div>
-    <div>
-      <p className="text-[11px] text-muted-foreground">{label}</p>
-      <p className="text-lg font-bold text-foreground leading-tight">{value}</p>
-    </div>
-  </div>
-);
-
-// ── Section header ──
-const SectionHeader = ({ title, action }: { title: string; action?: React.ReactNode }) => (
-  <div className="flex items-center justify-between mb-4">
-    <h2 className="text-base font-semibold text-foreground">{title}</h2>
-    {action}
-  </div>
-);
-
-// ── Pill badge ──
-const StatusBadge = ({ status, className }: { status: string; className?: string }) => {
-  const colors: Record<string, string> = {
-    active: "bg-primary/10 text-primary",
-    approved: "bg-primary/10 text-primary",
-    pending: "bg-muted text-muted-foreground",
-    pending_review: "bg-muted text-muted-foreground",
-    pending_activation: "bg-muted text-muted-foreground",
-    pending_appeal: "bg-accent/10 text-accent",
-    rejected: "bg-destructive/10 text-destructive",
-    appeal_rejected: "bg-destructive/10 text-destructive",
-  };
-  return <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${colors[status] || "bg-muted text-muted-foreground"} ${className || ""}`}>{status.replace(/_/g, " ")}</span>;
-};
-
-// ── Small button ──
-const Btn = ({ children, variant = "default", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "primary" | "outline" | "destructive" }) => {
-  const base = "inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none";
-  const variants: Record<string, string> = {
-    default: "bg-muted text-foreground hover:bg-muted/80",
-    primary: "bg-primary text-primary-foreground hover:bg-primary/90",
-    outline: "border border-border text-foreground hover:bg-muted",
-    destructive: "bg-destructive/10 text-destructive hover:bg-destructive/20",
-  };
-  return <button className={`${base} ${variants[variant]}`} {...props}>{children}</button>;
-};
-
-// ── Sidebar nav component ──
-function AdminSidebar({ activeTab, setActiveTab, counts }: { activeTab: AdminTab; setActiveTab: (t: AdminTab) => void; counts: Record<string, number> }) {
+// ── Sidebar ──
+function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab: AdminTab; setActiveTab: (t: AdminTab) => void; counts: Record<string, number>; onLogout: () => void }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border">
-      <SidebarHeader className="px-3 py-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-primary shrink-0" />
-          {!collapsed && <span className="text-sm font-bold text-foreground">Reallo Admin</span>}
+    <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar">
+      <SidebarHeader className="px-4 py-5 border-b border-border/30">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <Shield className="w-4 h-4 text-primary-foreground" />
+          </div>
+          {!collapsed && <span className="text-[13px] font-bold text-sidebar-foreground tracking-tight">Reallo Admin</span>}
         </div>
       </SidebarHeader>
-      <SidebarContent className="px-2 py-2">
+      <SidebarContent className="px-3 py-3">
         {navGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">
+          <SidebarGroup key={group.label} className="mb-1">
+            <SidebarGroupLabel className="text-[9px] uppercase tracking-[0.15em] text-sidebar-foreground/40 font-semibold mb-1 px-2">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton
-                      isActive={activeTab === item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      tooltip={item.label}
-                      className={activeTab === item.id ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground"}
-                    >
-                      <item.icon className="w-4 h-4 shrink-0" />
-                      {!collapsed && (
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[12px]">{item.label}</span>
-                          {counts[item.id] !== undefined && counts[item.id] > 0 && (
-                            <span className="text-[9px] bg-muted rounded-full px-1.5 py-0.5 font-medium">{counts[item.id]}</span>
-                          )}
-                        </div>
-                      )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {group.items.map((item) => {
+                  const count = counts[item.id];
+                  const isActive = activeTab === item.id;
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        onClick={() => setActiveTab(item.id)}
+                        tooltip={item.label}
+                        className={`rounded-lg transition-all duration-200 ${isActive
+                          ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                        }`}
+                      >
+                        <item.icon className="w-4 h-4 shrink-0" />
+                        {!collapsed && (
+                          <div className="flex items-center justify-between w-full">
+                            <span className="text-[12px]">{item.label}</span>
+                            {count !== undefined && count > 0 && (
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary"}`}>
+                                {count > 99 ? "99+" : count}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
       </SidebarContent>
+      <SidebarFooter className="px-3 py-3 border-t border-border/30">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={onLogout}
+              tooltip="Logout"
+              className="text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10 rounded-lg"
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              {!collapsed && <span className="text-[12px]">Logout</span>}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
+
+// ── Metric Card (reference-style) ──
+const MetricCard = ({ label, value, icon: Icon, trend, trendLabel }: {
+  label: string; value: string | number; icon: any; trend?: "up" | "down" | "neutral"; trendLabel?: string;
+}) => (
+  <div className="rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm p-5 space-y-3 hover:shadow-md transition-shadow">
+    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
+    <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
+    {trend && trendLabel && (
+      <div className="flex items-center gap-1.5">
+        {trend === "up" ? <TrendingUp className="w-3 h-3 text-primary" /> : trend === "down" ? <TrendingDown className="w-3 h-3 text-destructive" /> : null}
+        <span className={`text-[10px] font-medium ${trend === "up" ? "text-primary" : trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>{trendLabel}</span>
+      </div>
+    )}
+  </div>
+);
+
+// ── Section header ──
+const SectionHeader = ({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) => (
+  <div className="flex items-center justify-between mb-5">
+    <div>
+      <h2 className="text-lg font-bold text-foreground">{title}</h2>
+      {subtitle && <p className="text-[12px] text-muted-foreground mt-0.5">{subtitle}</p>}
+    </div>
+    {action}
+  </div>
+);
+
+// ── Status badge ──
+const StatusBadge = ({ status, className }: { status: string; className?: string }) => {
+  const colors: Record<string, string> = {
+    active: "bg-primary/15 text-primary border-primary/20",
+    approved: "bg-primary/15 text-primary border-primary/20",
+    verified: "bg-primary/15 text-primary border-primary/20",
+    pending: "bg-accent/10 text-accent-foreground border-accent/20",
+    pending_review: "bg-accent/10 text-accent-foreground border-accent/20",
+    pending_activation: "bg-accent/10 text-accent-foreground border-accent/20",
+    pending_appeal: "bg-accent/10 text-accent-foreground border-accent/20",
+    rejected: "bg-destructive/10 text-destructive border-destructive/20",
+    appeal_rejected: "bg-destructive/10 text-destructive border-destructive/20",
+    BANNED: "bg-destructive/10 text-destructive border-destructive/20",
+  };
+  return <span className={`text-[10px] px-2.5 py-1 rounded-full font-medium border ${colors[status] || "bg-muted text-muted-foreground border-border"} ${className || ""}`}>{status.replace(/_/g, " ")}</span>;
+};
+
+// ── Button ──
+const Btn = ({ children, variant = "default", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "primary" | "outline" | "destructive" }) => {
+  const base = "inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-[11px] font-medium transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+  const variants: Record<string, string> = {
+    default: "bg-muted text-foreground hover:bg-muted/80",
+    primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+    outline: "border border-border text-foreground hover:bg-muted/50",
+    destructive: "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20",
+  };
+  return <button className={`${base} ${variants[variant]}`} {...props}>{children}</button>;
+};
+
+// ── Table wrapper ──
+const TableCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <div className={`rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm overflow-hidden ${className || ""}`}>
+    {children}
+  </div>
+);
+
+const TableHeader = ({ children }: { children: React.ReactNode }) => (
+  <div className="px-5 py-3.5 border-b border-border/40 bg-muted/30">
+    <div className="flex items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider gap-4">
+      {children}
+    </div>
+  </div>
+);
+
+const TableRow = ({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) => (
+  <div onClick={onClick} className={`px-5 py-3 border-b border-border/20 last:border-0 flex items-center gap-4 hover:bg-muted/20 transition-colors ${onClick ? "cursor-pointer" : ""} ${className || ""}`}>
+    {children}
+  </div>
+);
 
 // ── Main Admin ──
 const Admin = () => {
@@ -236,6 +280,7 @@ const Admin = () => {
   const [footerContactUs, setFooterContactUs] = useState("");
   const [footerAboutUs, setFooterAboutUs] = useState("");
   const [footerInvestWithUs, setFooterInvestWithUs] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [newApp, setNewApp] = useState({
     app_name: "", app_logo_url: "", category: "yes_no" as string,
     points_select: 500, points_switch_intent: 2000, points_switch_complete: 10000,
@@ -463,7 +508,6 @@ const Admin = () => {
               const verifiedTxs = allTxs.filter(t => t.is_verified);
               const totalAmount = verifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
               const freq = (verif as any).frequency;
-              const spendType = (verif as any).spend_type || "data";
 
               const recalcForVerification = async (verId: string, userId: string) => {
                 const multiplier = freq === "daily" ? 12 : freq === "weekly" ? 13 : 12;
@@ -480,8 +524,6 @@ const Admin = () => {
                     await supabase.from("spend_verifications").update({ status: "verified" }).eq("id", verId);
                   }
                 }
-
-                // Now recalculate total: data + electricity
                 const { data: allVerifs } = await supabase.from("spend_verifications")
                   .select("spend_type, recalculated_amount, status")
                   .eq("user_id", userId);
@@ -577,11 +619,12 @@ const Admin = () => {
   if (!isAdmin) return null;
 
   const referralApps = decisionApps.filter(a => a.category === "referral");
-
   const totalSpend = profiles.reduce((s, p) => s + (p.total_annual_spend || 0), 0);
   const totalPoints = profiles.reduce((s, p) => s + (p.points_balance || 0), 0);
   const pendingWithdrawals = infWithdrawals.filter((w: any) => w.status === "pending").length;
   const pendingApps = infApps.filter((a: any) => a.status === "pending_review" || a.status === "pending_appeal").length;
+  const bannedCount = profiles.filter(p => p.is_banned).length;
+  const activeUsers = profiles.filter(p => !p.is_banned).length;
 
   const counts: Record<string, number> = {
     users: profiles.length,
@@ -599,21 +642,45 @@ const Admin = () => {
     inf_challenges: infChallenges.length,
   };
 
-  // Common input styles
-  const inputCls = "w-full rounded-lg border border-border bg-card px-3 py-2 text-[12px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
-  const cardCls = "rounded-xl border border-border bg-card p-5";
+  const inputCls = "w-full rounded-lg border border-border/60 bg-background/50 backdrop-blur-sm px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all";
+  const cardCls = "rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm p-6";
+
+  const filteredProfiles = searchQuery
+    ? profiles.filter(p => p.email.toLowerCase().includes(searchQuery.toLowerCase()) || p.id.includes(searchQuery))
+    : profiles;
+
+  const tabTitle: Record<AdminTab, string> = {
+    overview: "Dashboard", users: "Users", ghosts: "Ghost Users", activity: "Activity Log",
+    goals: "Goal Categories", decisions: "Decision Apps", analytics: "Analytics",
+    verification: "Verification", settings: "Settings", inf_apps: "Influencer Applications",
+    inf_wallets: "Influencer Wallets", inf_referrals: "Influencer Referrals",
+    inf_withdrawals: "Influencer Withdrawals", inf_challenges: "Influencer Challenges", warnings: "Warnings",
+  };
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-background">
-        <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} counts={counts} />
+      <div className="min-h-screen flex w-full bg-background relative">
+        {/* Water background behind everything */}
+        <div className="fixed inset-0 z-0 opacity-30 pointer-events-none">
+          <WaterBackground />
+        </div>
 
-        <div className="flex-1 flex flex-col min-w-0">
+        <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} counts={counts} onLogout={signOut} />
+
+        <div className="flex-1 flex flex-col min-w-0 relative z-10">
           {/* Top bar */}
-          <header className="sticky top-0 z-40 h-14 flex items-center justify-between border-b border-border bg-card/80 backdrop-blur-sm px-4">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger />
-              <h1 className="text-sm font-semibold text-foreground capitalize">{activeTab === "overview" ? "Dashboard Overview" : activeTab.replace(/_/g, " ")}</h1>
+          <header className="sticky top-0 z-40 h-14 flex items-center justify-between border-b border-border/40 bg-background/70 backdrop-blur-xl px-6">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
+                <input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search users, IDs..."
+                  className="pl-9 pr-4 py-1.5 rounded-lg border border-border/40 bg-muted/30 text-[12px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 w-[240px]"
+                />
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Btn variant="outline" onClick={fetchData} disabled={refreshing}>
@@ -621,144 +688,164 @@ const Admin = () => {
                 {!refreshing && "Refresh"}
               </Btn>
               <Btn variant="outline" onClick={() => navigate("/")}>Home</Btn>
-              <Btn variant="outline" onClick={signOut}><LogOut className="w-3.5 h-3.5" /></Btn>
             </div>
           </header>
 
-          {/* Content area */}
-          <main className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Content */}
+          <main className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
+
+            {/* Page title */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-foreground">{activeTab === "overview" ? "Welcome Back" : tabTitle[activeTab]}</h1>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  {activeTab === "overview" ? "Here's what's happening with your platform today" : `Manage ${tabTitle[activeTab].toLowerCase()}`}
+                </p>
+              </div>
+            </div>
 
             {/* ═══ OVERVIEW ═══ */}
             {activeTab === "overview" && (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <MetricCard label="Total Users" value={profiles.length} icon={Users} variant="primary" />
-                  <MetricCard label="Annual Spend" value={formatNaira(totalSpend)} icon={Wallet} />
-                  <MetricCard label="Total Points" value={totalPoints.toLocaleString()} icon={Star} />
-                  <MetricCard label="Ghost Users" value={ghostCount} icon={Ghost} />
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                  <MetricCard label="Total Users" value={profiles.length} icon={Users} trend="up" trendLabel={`${activeUsers} active`} />
+                  <MetricCard label="Annual Spend" value={formatNaira(totalSpend)} icon={Wallet} trend="up" trendLabel="Total verified" />
+                  <MetricCard label="Total Points" value={totalPoints.toLocaleString()} icon={Star} trend="neutral" trendLabel="In circulation" />
+                  <MetricCard label="Banned Users" value={bannedCount} icon={Ban} trend={bannedCount > 0 ? "down" : "neutral"} trendLabel={`${userWarnings.length} warnings`} />
+                  <MetricCard label="Ghost Users" value={ghostCount} icon={Ghost} trend="neutral" trendLabel="Seeded" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Pending actions */}
-                  <div className={cardCls}>
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Pending Actions</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between py-1.5 border-b border-border/50">
-                        <span className="text-[12px] text-muted-foreground">Influencer Applications</span>
-                        <span className="text-[12px] font-semibold text-foreground">{pendingApps}</span>
-                      </div>
-                      <div className="flex items-center justify-between py-1.5 border-b border-border/50">
-                        <span className="text-[12px] text-muted-foreground">Pending Withdrawals</span>
-                        <span className="text-[12px] font-semibold text-foreground">{pendingWithdrawals}</span>
-                      </div>
-                      <div className="flex items-center justify-between py-1.5 border-b border-border/50">
-                        <span className="text-[12px] text-muted-foreground">Wallet Activations</span>
-                        <span className="text-[12px] font-semibold text-foreground">{infWallets.filter((w: any) => w.status === "pending_activation").length}</span>
-                      </div>
-                      <div className="flex items-center justify-between py-1.5">
-                        <span className="text-[12px] text-muted-foreground">Unverified Transactions</span>
-                        <span className="text-[12px] font-semibold text-foreground">{verificationTxs.filter(t => !t.is_verified && !t.is_duplicate).length}</span>
-                      </div>
+                  <TableCard>
+                    <div className="px-5 py-4 border-b border-border/30">
+                      <h3 className="text-[13px] font-semibold text-foreground">Pending Actions</h3>
                     </div>
-                  </div>
+                    <div className="divide-y divide-border/20">
+                      {[
+                        { label: "Influencer Applications", value: pendingApps, onClick: () => setActiveTab("inf_apps") },
+                        { label: "Pending Withdrawals", value: pendingWithdrawals, onClick: () => setActiveTab("inf_withdrawals") },
+                        { label: "Wallet Activations", value: infWallets.filter((w: any) => w.status === "pending_activation").length, onClick: () => setActiveTab("inf_wallets") },
+                        { label: "Unverified Transactions", value: verificationTxs.filter(t => !t.is_verified && !t.is_duplicate).length, onClick: () => setActiveTab("verification") },
+                      ].map((item) => (
+                        <div key={item.label} onClick={item.onClick} className="px-5 py-3 flex items-center justify-between hover:bg-muted/20 cursor-pointer transition-colors">
+                          <span className="text-[12px] text-muted-foreground">{item.label}</span>
+                          <span className={`text-[13px] font-bold ${item.value > 0 ? "text-primary" : "text-foreground"}`}>{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </TableCard>
 
                   {/* User breakdown */}
-                  <div className={cardCls}>
-                    <h3 className="text-sm font-semibold text-foreground mb-3">User Breakdown</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between py-1.5 border-b border-border/50">
-                        <span className="text-[12px] text-muted-foreground">Active Users</span>
-                        <span className="text-[12px] font-semibold text-primary">{profiles.filter(p => !p.is_banned).length}</span>
-                      </div>
-                      <div className="flex items-center justify-between py-1.5 border-b border-border/50">
-                        <span className="text-[12px] text-muted-foreground">Banned Users</span>
-                        <span className="text-[12px] font-semibold text-destructive">{profiles.filter(p => p.is_banned).length}</span>
-                      </div>
-                      <div className="flex items-center justify-between py-1.5 border-b border-border/50">
-                        <span className="text-[12px] text-muted-foreground">Warnings Issued</span>
-                        <span className="text-[12px] font-semibold text-foreground">{userWarnings.length}</span>
-                      </div>
-                      <div className="flex items-center justify-between py-1.5">
-                        <span className="text-[12px] text-muted-foreground">Duplicate Transactions</span>
-                        <span className="text-[12px] font-semibold text-foreground">{verificationTxs.filter(t => t.is_duplicate).length}</span>
-                      </div>
+                  <TableCard>
+                    <div className="px-5 py-4 border-b border-border/30">
+                      <h3 className="text-[13px] font-semibold text-foreground">User Breakdown</h3>
                     </div>
-                  </div>
+                    <div className="divide-y divide-border/20">
+                      {[
+                        { label: "Active Users", value: activeUsers, color: "text-primary" },
+                        { label: "Banned Users", value: bannedCount, color: "text-destructive" },
+                        { label: "Warnings Issued", value: userWarnings.length, color: "text-foreground" },
+                        { label: "Duplicate Transactions", value: verificationTxs.filter(t => t.is_duplicate).length, color: "text-destructive" },
+                      ].map((item) => (
+                        <div key={item.label} className="px-5 py-3 flex items-center justify-between">
+                          <span className="text-[12px] text-muted-foreground">{item.label}</span>
+                          <span className={`text-[13px] font-bold ${item.color}`}>{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </TableCard>
 
                   {/* Quick actions */}
-                  <div className={cardCls}>
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Quick Actions</h3>
-                    <div className="space-y-2">
-                      <Btn variant="outline" onClick={() => setActiveTab("users")} className="w-full justify-start"><Users className="w-3.5 h-3.5" /> Manage Users</Btn>
-                      <Btn variant="outline" onClick={() => setActiveTab("verification")} className="w-full justify-start"><CheckCircle2 className="w-3.5 h-3.5" /> Upload CSV</Btn>
-                      <Btn variant="outline" onClick={() => setActiveTab("inf_apps")} className="w-full justify-start"><Star className="w-3.5 h-3.5" /> Review Applications</Btn>
-                      <Btn variant="outline" onClick={() => setActiveTab("analytics")} className="w-full justify-start"><BarChart3 className="w-3.5 h-3.5" /> View Analytics</Btn>
+                  <TableCard>
+                    <div className="px-5 py-4 border-b border-border/30">
+                      <h3 className="text-[13px] font-semibold text-foreground">Quick Actions</h3>
                     </div>
-                  </div>
+                    <div className="p-4 space-y-2">
+                      <Btn variant="outline" onClick={() => setActiveTab("users")} className="w-full justify-start"><Users className="w-3.5 h-3.5" /> Manage Users</Btn>
+                      <Btn variant="outline" onClick={() => setActiveTab("verification")} className="w-full justify-start"><FileSpreadsheet className="w-3.5 h-3.5" /> Upload CSV</Btn>
+                      <Btn variant="outline" onClick={() => setActiveTab("inf_apps")} className="w-full justify-start"><Star className="w-3.5 h-3.5" /> Review Applications</Btn>
+                      <Btn variant="primary" onClick={() => setActiveTab("analytics")} className="w-full justify-start"><BarChart3 className="w-3.5 h-3.5" /> View Analytics</Btn>
+                    </div>
+                  </TableCard>
                 </div>
 
-                {/* Recent activity */}
-                <div className={cardCls}>
-                  <h3 className="text-sm font-semibold text-foreground mb-3">Recent Activity</h3>
-                  <div className="space-y-1">
-                    {activities.slice(0, 8).map((a) => (
-                      <div key={a.id} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
-                        <div className="flex items-center gap-2">
-                          <Activity className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-[11px] text-muted-foreground font-mono">{a.user_id.slice(0, 8)}...</span>
-                          <span className="text-[12px] text-foreground capitalize">{a.action_type}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[11px] font-semibold text-primary">+{a.positions_moved}</span>
-                          <span className="text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    ))}
-                    {activities.length === 0 && <p className="text-center py-4 text-muted-foreground text-[12px]">No activity yet</p>}
+                {/* Recent Activity table */}
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                    <h3 className="text-[13px] font-semibold text-foreground">Recent Activity</h3>
+                    <Btn variant="outline" onClick={() => setActiveTab("activity")}>View All</Btn>
                   </div>
-                </div>
+                  <TableHeader>
+                    <span className="flex-1">User</span>
+                    <span className="w-32">Action</span>
+                    <span className="w-24 text-right">Positions</span>
+                    <span className="w-28 text-right">Date</span>
+                  </TableHeader>
+                  {activities.slice(0, 6).map((a) => (
+                    <TableRow key={a.id}>
+                      <span className="flex-1 text-[12px] text-muted-foreground font-mono">{a.user_id.slice(0, 12)}...</span>
+                      <span className="w-32 text-[12px] text-foreground capitalize">{a.action_type}</span>
+                      <span className="w-24 text-right text-[12px] font-semibold text-primary">+{a.positions_moved}</span>
+                      <span className="w-28 text-right text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
+                    </TableRow>
+                  ))}
+                  {activities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No activity yet</div>}
+                </TableCard>
               </>
             )}
 
             {/* ═══ USERS ═══ */}
             {activeTab === "users" && (
-              <div className={cardCls}>
-                <SectionHeader title={`Registered Users (${profiles.length})`} />
-                <div className="space-y-2 max-h-[700px] overflow-y-auto">
-                  {profiles.map((p) => {
+              <TableCard>
+                <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                  <h3 className="text-[13px] font-semibold text-foreground">Registered Users ({filteredProfiles.length})</h3>
+                </div>
+                <TableHeader>
+                  <span className="flex-1 min-w-[180px]">User</span>
+                  <span className="w-28">Spend</span>
+                  <span className="w-20">Queue</span>
+                  <span className="w-20">Points</span>
+                  <span className="w-16">Refs</span>
+                  <span className="w-20">Status</span>
+                  <span className="w-12"></span>
+                </TableHeader>
+                <div className="max-h-[600px] overflow-y-auto">
+                  {filteredProfiles.map((p) => {
                     const isSelected = selectedUserId === p.id;
                     const pWarnings = userWarnings.filter(w => w.user_id === p.id);
                     const pDuplicates = verificationTxs.filter(t => t.user_id === p.id && t.is_duplicate);
                     return (
-                      <div key={p.id} className={`rounded-lg border p-3 ${p.is_banned ? 'border-destructive/30 bg-destructive/5' : 'border-border bg-background'}`}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-[12px] font-semibold text-foreground">{p.email}</p>
-                              {p.is_banned && <StatusBadge status="BANNED" className="bg-destructive/10 text-destructive" />}
-                              {pDuplicates.length > 0 && <span className="text-[9px] bg-accent/10 text-accent px-1.5 py-0.5 rounded-full">{pDuplicates.length} dup</span>}
-                              {pWarnings.length > 0 && <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full">{pWarnings.length} warn</span>}
-                            </div>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                              Spend: {formatNaira(p.total_annual_spend || 0)} · Queue: #{p.queue_position} · Points: {p.points_balance} · Refs: {referralCounts[p.id] || 0}
-                            </p>
+                      <div key={p.id}>
+                        <TableRow onClick={() => { setSelectedUserId(isSelected ? null : p.id); setEditingProfile(null); }}>
+                          <div className="flex-1 min-w-[180px]">
+                            <p className="text-[12px] font-medium text-foreground">{p.email}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">Joined {new Date(p.created_at).toLocaleDateString()}</p>
                           </div>
-                          <button onClick={() => { setSelectedUserId(isSelected ? null : p.id); setEditingProfile(null); }} className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted">
-                            {isSelected ? <X className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
+                          <span className="w-28 text-[12px] text-foreground">{formatNaira(p.total_annual_spend || 0)}</span>
+                          <span className="w-20 text-[12px] text-muted-foreground">#{p.queue_position}</span>
+                          <span className="w-20 text-[12px] text-foreground">{p.points_balance.toLocaleString()}</span>
+                          <span className="w-16 text-[12px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
+                          <span className="w-20">
+                            {p.is_banned ? <StatusBadge status="BANNED" /> : pDuplicates.length > 0 ? <span className="text-[9px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full border border-destructive/20">{pDuplicates.length} dup</span> : <StatusBadge status="active" />}
+                          </span>
+                          <span className="w-12 flex justify-end">
+                            {isSelected ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                          </span>
+                        </TableRow>
 
                         {isSelected && (
-                          <div className="mt-3 space-y-3 border-t border-border/50 pt-3">
-                            <div className="grid grid-cols-3 gap-2 text-[10px] text-muted-foreground">
-                              <span>ID: {p.id.slice(0, 12)}...</span>
-                              <span>Joined: {new Date(p.created_at).toLocaleDateString()}</span>
+                          <div className="px-5 py-4 bg-muted/10 border-b border-border/20 space-y-3">
+                            <div className="grid grid-cols-4 gap-3 text-[10px] text-muted-foreground">
+                              <span>ID: {p.id.slice(0, 16)}...</span>
                               <span>Goal: {p.selected_goal || 'None'}</span>
+                              <span>Warnings: {pWarnings.length}</span>
+                              <span>Duplicates: {pDuplicates.length}</span>
                             </div>
 
                             {pDuplicates.length > 0 && (
-                              <div className="rounded-lg bg-accent/5 border border-accent/20 p-2">
-                                <p className="text-[10px] text-accent font-semibold mb-1">Duplicate Transactions:</p>
+                              <div className="rounded-lg bg-destructive/5 border border-destructive/20 p-3">
+                                <p className="text-[10px] text-destructive font-semibold mb-1">Duplicate Transactions:</p>
                                 {pDuplicates.map(d => (
                                   <p key={d.id} className="text-[10px] text-muted-foreground font-mono">{d.transaction_id} — {d.duplicate_note}</p>
                                 ))}
@@ -767,13 +854,13 @@ const Admin = () => {
 
                             {editingProfile ? (
                               <div className="space-y-2">
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-2 gap-3">
                                   <div>
-                                    <p className="text-[9px] text-muted-foreground mb-1">Points</p>
+                                    <p className="text-[10px] text-muted-foreground mb-1">Points</p>
                                     <input type="number" value={editingProfile.points_balance} onChange={e => setEditingProfile(prev => prev ? { ...prev, points_balance: parseInt(e.target.value) || 0 } : null)} className={inputCls} />
                                   </div>
                                   <div>
-                                    <p className="text-[9px] text-muted-foreground mb-1">Queue #</p>
+                                    <p className="text-[10px] text-muted-foreground mb-1">Queue #</p>
                                     <input type="number" value={editingProfile.queue_position} onChange={e => setEditingProfile(prev => prev ? { ...prev, queue_position: parseInt(e.target.value) || 0 } : null)} className={inputCls} />
                                   </div>
                                 </div>
@@ -783,7 +870,7 @@ const Admin = () => {
                                 </div>
                               </div>
                             ) : (
-                              <Btn variant="outline" onClick={() => setEditingProfile({ email: p.email, points_balance: p.points_balance, queue_position: p.queue_position })} className="w-full"><Edit2 className="w-3 h-3" /> Edit Profile</Btn>
+                              <Btn variant="outline" onClick={() => setEditingProfile({ email: p.email, points_balance: p.points_balance, queue_position: p.queue_position })}><Edit2 className="w-3 h-3" /> Edit Profile</Btn>
                             )}
 
                             <div className="flex gap-2">
@@ -801,7 +888,7 @@ const Admin = () => {
                             )}
 
                             {pWarnings.length > 0 && (
-                              <div className="rounded-lg bg-destructive/5 border border-destructive/20 p-2">
+                              <div className="rounded-lg bg-destructive/5 border border-destructive/20 p-3">
                                 <p className="text-[10px] font-semibold text-destructive mb-1">Warning History:</p>
                                 {pWarnings.map(w => (
                                   <p key={w.id} className="text-[10px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()} — {w.reason}</p>
@@ -814,15 +901,16 @@ const Admin = () => {
                     );
                   })}
                 </div>
-              </div>
+              </TableCard>
             )}
 
             {/* ═══ GHOSTS ═══ */}
             {activeTab === "ghosts" && (
               <div className={cardCls}>
-                <SectionHeader title="Ghost Users" />
-                <div className="text-center py-12">
-                  <Ghost className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                    <Ghost className="w-8 h-8 text-muted-foreground/40" />
+                  </div>
                   <p className="text-4xl font-bold text-foreground">{ghostCount}</p>
                   <p className="text-[12px] text-muted-foreground mt-2">Ghost users seeded in the waitlist queue</p>
                 </div>
@@ -831,94 +919,89 @@ const Admin = () => {
 
             {/* ═══ ACTIVITY ═══ */}
             {activeTab === "activity" && (
-              <div className={cardCls}>
-                <SectionHeader title="Recent Activity" />
-                <div className="space-y-1">
-                  {activities.map((a) => (
-                    <div key={a.id} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
-                      <div>
-                        <p className="text-[11px] text-muted-foreground font-mono">{a.user_id.slice(0, 8)}...</p>
-                        <p className="text-[12px] capitalize text-foreground">{a.action_type}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[12px] font-semibold text-primary">+{a.positions_moved} skip</p>
-                        <p className="text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {activities.length === 0 && <p className="text-center py-8 text-muted-foreground text-[12px]">No activity yet</p>}
+              <TableCard>
+                <div className="px-5 py-4 border-b border-border/30">
+                  <h3 className="text-[13px] font-semibold text-foreground">Activity Log ({activities.length})</h3>
                 </div>
-              </div>
+                <TableHeader>
+                  <span className="flex-1">User</span>
+                  <span className="w-32">Action</span>
+                  <span className="w-24 text-right">Positions</span>
+                  <span className="w-28 text-right">Date</span>
+                </TableHeader>
+                <div className="max-h-[600px] overflow-y-auto">
+                  {activities.map((a) => (
+                    <TableRow key={a.id}>
+                      <span className="flex-1 text-[12px] text-muted-foreground font-mono">{a.user_id.slice(0, 12)}...</span>
+                      <span className="w-32 text-[12px] text-foreground capitalize">{a.action_type}</span>
+                      <span className="w-24 text-right text-[12px] font-semibold text-primary">+{a.positions_moved}</span>
+                      <span className="w-28 text-right text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
+                    </TableRow>
+                  ))}
+                  {activities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No activity yet</div>}
+                </div>
+              </TableCard>
             )}
 
             {/* ═══ GOALS ═══ */}
             {activeTab === "goals" && (
-              <div className="space-y-4">
-                <div className={cardCls}>
-                  <SectionHeader title="Goal Categories" action={
-                    Object.keys(editedGoals).length > 0 ? (
+              <div className="space-y-6">
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                    <h3 className="text-[13px] font-semibold text-foreground">Goal Categories</h3>
+                    {Object.keys(editedGoals).length > 0 && (
                       <Btn variant="primary" onClick={handleSaveGoals} disabled={saving}><Save className="w-3 h-3" /> {saving ? "Saving..." : "Save All"}</Btn>
-                    ) : undefined
-                  } />
-                  <div className="space-y-3">
-                    {goalCategories.map((cat) => {
-                      const edited = editedGoals[cat.id] || {};
-                      return (
-                        <div key={cat.id} className="rounded-lg border border-border p-4 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Edit2 className="w-3 h-3 text-muted-foreground" />
-                            <button onClick={() => handleDeleteGoal(cat.id)} className="text-destructive hover:text-destructive/80"><Trash2 className="w-3.5 h-3.5" /></button>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <p className="text-[10px] text-muted-foreground mb-1">Type</p>
-                              <input value={edited.goal_type ?? cat.goal_type} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], goal_type: e.target.value } }))} className={inputCls} />
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-muted-foreground mb-1">Subcategory</p>
-                              <input value={edited.subcategory ?? (cat.subcategory || "")} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], subcategory: e.target.value || null } }))} className={inputCls} />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <p className="text-[10px] text-muted-foreground mb-1">Label</p>
-                              <input value={edited.label ?? cat.label} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], label: e.target.value } }))} className={inputCls} />
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-muted-foreground mb-1">Max Price ₦</p>
-                              <input type="number" value={edited.max_price ?? cat.max_price} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], max_price: parseInt(e.target.value) || 0 } }))} className={inputCls} />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    )}
                   </div>
-                </div>
+                  <TableHeader>
+                    <span className="w-32">Type</span>
+                    <span className="w-32">Subcategory</span>
+                    <span className="flex-1">Label</span>
+                    <span className="w-28">Max Price</span>
+                    <span className="w-12"></span>
+                  </TableHeader>
+                  {goalCategories.map((cat) => {
+                    const edited = editedGoals[cat.id] || {};
+                    return (
+                      <div key={cat.id} className="px-5 py-3 border-b border-border/20 last:border-0">
+                        <div className="flex items-center gap-4">
+                          <input value={edited.goal_type ?? cat.goal_type} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], goal_type: e.target.value } }))} className={`w-32 ${inputCls}`} />
+                          <input value={edited.subcategory ?? (cat.subcategory || "")} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], subcategory: e.target.value || null } }))} className={`w-32 ${inputCls}`} />
+                          <input value={edited.label ?? cat.label} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], label: e.target.value } }))} className={`flex-1 ${inputCls}`} />
+                          <input type="number" value={edited.max_price ?? cat.max_price} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], max_price: parseInt(e.target.value) || 0 } }))} className={`w-28 ${inputCls}`} />
+                          <button onClick={() => handleDeleteGoal(cat.id)} className="w-12 flex justify-center text-destructive/60 hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </TableCard>
 
                 <div className={cardCls}>
                   <SectionHeader title="Add Goal Category" />
-                  <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                     <input value={newGoal.goal_type} onChange={e => setNewGoal(p => ({ ...p, goal_type: e.target.value }))} placeholder="Type (e.g. education)" className={inputCls} />
                     <input value={newGoal.subcategory} onChange={e => setNewGoal(p => ({ ...p, subcategory: e.target.value }))} placeholder="Subcategory (optional)" className={inputCls} />
                     <input value={newGoal.label} onChange={e => setNewGoal(p => ({ ...p, label: e.target.value }))} placeholder="Label" className={inputCls} />
                     <input type="number" value={newGoal.max_price} onChange={e => setNewGoal(p => ({ ...p, max_price: parseInt(e.target.value) || 0 }))} placeholder="Max price" className={inputCls} />
                   </div>
-                  <Btn variant="primary" onClick={handleCreateGoal} className="w-full"><Plus className="w-3 h-3" /> Add Goal</Btn>
+                  <Btn variant="primary" onClick={handleCreateGoal}><Plus className="w-3 h-3" /> Add Goal</Btn>
                 </div>
               </div>
             )}
 
             {/* ═══ DECISIONS ═══ */}
             {activeTab === "decisions" && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className={cardCls}>
                   <SectionHeader title="Add App to Checklist" />
                   <div className="space-y-3">
-                    <input value={newApp.app_name} onChange={e => setNewApp(p => ({ ...p, app_name: e.target.value }))} placeholder="App name (e.g. OPay, Temu)" className={inputCls} />
-                    <input value={newApp.app_logo_url} onChange={e => setNewApp(p => ({ ...p, app_logo_url: e.target.value }))} placeholder="Logo URL (optional)" className={inputCls} />
+                    <div className="grid grid-cols-2 gap-3">
+                      <input value={newApp.app_name} onChange={e => setNewApp(p => ({ ...p, app_name: e.target.value }))} placeholder="App name" className={inputCls} />
+                      <input value={newApp.app_logo_url} onChange={e => setNewApp(p => ({ ...p, app_logo_url: e.target.value }))} placeholder="Logo URL (optional)" className={inputCls} />
+                    </div>
                     <div>
                       <p className="text-[10px] text-muted-foreground mb-1">Category</p>
-                      <select value={newApp.category} onChange={e => setNewApp(p => ({ ...p, category: e.target.value }))} className={`${inputCls} bg-card`}>
+                      <select value={newApp.category} onChange={e => setNewApp(p => ({ ...p, category: e.target.value }))} className={inputCls}>
                         <option value="yes_no">Yes/No (Switch Offer)</option>
                         <option value="referral">Referral (Try It Out)</option>
                         <option value="robust">Robust (Advanced Switch)</option>
@@ -926,7 +1009,7 @@ const Admin = () => {
                     </div>
                     {(newApp.category === "yes_no" || newApp.category === "robust") && (
                       <>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-3 gap-3">
                           <div><p className="text-[10px] text-muted-foreground mb-1">Select pts</p><input type="number" value={newApp.points_select} onChange={e => setNewApp(p => ({ ...p, points_select: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
                           <div><p className="text-[10px] text-muted-foreground mb-1">Switch intent pts</p><input type="number" value={newApp.points_switch_intent} onChange={e => setNewApp(p => ({ ...p, points_switch_intent: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
                           <div><p className="text-[10px] text-muted-foreground mb-1">Switch complete pts</p><input type="number" value={newApp.points_switch_complete} onChange={e => setNewApp(p => ({ ...p, points_switch_complete: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
@@ -940,7 +1023,7 @@ const Admin = () => {
                         {referralApps.length === 0 && <p className="text-[10px] text-muted-foreground">Create referral apps first.</p>}
                         <div className="space-y-1 max-h-[150px] overflow-y-auto">
                           {referralApps.map(ra => (
-                            <label key={ra.id} className="flex items-center gap-2 rounded-lg border border-border p-2 cursor-pointer hover:bg-muted/50">
+                            <label key={ra.id} className="flex items-center gap-2 rounded-lg border border-border/40 p-2 cursor-pointer hover:bg-muted/30">
                               <input type="checkbox" checked={newApp.switch_to_referral_app_ids.includes(ra.id)} onChange={e => {
                                 if (e.target.checked) setNewApp(p => ({ ...p, switch_to_referral_app_ids: [...p.switch_to_referral_app_ids, ra.id] }));
                                 else setNewApp(p => ({ ...p, switch_to_referral_app_ids: p.switch_to_referral_app_ids.filter(id => id !== ra.id) }));
@@ -958,7 +1041,7 @@ const Admin = () => {
                         <div><p className="text-[10px] text-muted-foreground mb-1">Referral points</p><input type="number" value={newApp.referral_points} onChange={e => setNewApp(p => ({ ...p, referral_points: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
                       </>
                     )}
-                    <Btn variant="primary" onClick={handleCreateDecisionApp} className="w-full"><Plus className="w-3 h-3" /> Add App</Btn>
+                    <Btn variant="primary" onClick={handleCreateDecisionApp}><Plus className="w-3 h-3" /> Add App</Btn>
                   </div>
                 </div>
 
@@ -966,45 +1049,40 @@ const Admin = () => {
                   const appResponses = decisionResponses.filter(r => r.app_id === app.id);
                   const pendingApprovals = appResponses.filter(r => r.referral_screenshot_url && !r.referral_approved);
                   return (
-                    <div key={app.id} className={cardCls}>
-                      <div className="flex items-center justify-between mb-2">
+                    <TableCard key={app.id}>
+                      <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           {app.app_logo_url ? (
                             <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">{app.app_name.charAt(0)}</div>
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary">{app.app_name.charAt(0)}</div>
                           )}
                           <div>
                             <h4 className="font-semibold text-foreground text-[13px]">{app.app_name}</h4>
-                            <p className="text-[11px] text-muted-foreground capitalize">{app.category === "yes_no" ? "Yes/No" : app.category === "referral" ? "Referral" : "Robust"} · {app.is_active ? "Active" : "Inactive"}</p>
+                            <p className="text-[10px] text-muted-foreground capitalize">{app.category === "yes_no" ? "Yes/No" : app.category === "referral" ? "Referral" : "Robust"} · {appResponses.length} responses</p>
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-2">
+                          <StatusBadge status={app.is_active ? "active" : "rejected"} />
                           <Btn variant="outline" onClick={() => handleToggleDecisionApp(app.id, app.is_active)}>{app.is_active ? "Deactivate" : "Activate"}</Btn>
-                          <button onClick={() => handleDeleteDecisionApp(app.id)} className="text-destructive hover:text-destructive/80"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDeleteDecisionApp(app.id)} className="text-destructive/60 hover:text-destructive p-1"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        Responses: {appResponses.length} ·
-                        {app.category === "yes_no" || app.category === "robust"
-                          ? ` Select: ${app.points_select}pts | Intent: ${app.points_switch_intent}pts | Complete: ${app.points_switch_complete}pts`
-                          : ` Referral: ${app.referral_points}pts`}
-                      </p>
                       {app.category === "robust" && (app.switch_to_referral_app_ids || []).length > 0 && (
-                        <p className="text-[10px] text-primary mt-1">Linked: {(app.switch_to_referral_app_ids || []).map(id => decisionApps.find(a => a.id === id)?.app_name).filter(Boolean).join(", ")}</p>
+                        <div className="px-5 py-2 border-b border-border/20 text-[10px] text-primary">Linked: {(app.switch_to_referral_app_ids || []).map(id => decisionApps.find(a => a.id === id)?.app_name).filter(Boolean).join(", ")}</div>
                       )}
                       {pendingApprovals.length > 0 && (
-                        <div className="mt-3 space-y-2">
-                          <p className="text-[11px] text-primary font-semibold">Pending Approvals ({pendingApprovals.length})</p>
+                        <div className="p-4 space-y-2">
+                          <p className="text-[11px] text-primary font-semibold mb-2">Pending Approvals ({pendingApprovals.length})</p>
                           {pendingApprovals.map(pr => {
                             const userEmail = profiles.find(p => p.id === pr.user_id)?.email || pr.user_id.slice(0, 8);
                             const screenshotUrl = getPublicScreenshotUrl(pr.referral_screenshot_url);
                             return (
-                              <div key={pr.id} className="flex items-center justify-between rounded-lg border border-border p-2">
-                                <div className="flex flex-col">
-                                  <span className="text-[11px] text-muted-foreground">{userEmail}</span>
+                              <div key={pr.id} className="flex items-center justify-between rounded-lg border border-border/40 p-3">
+                                <div>
+                                  <span className="text-[11px] text-foreground">{userEmail}</span>
                                   {screenshotUrl && pr.referral_screenshot_url !== "pending_review" && (
-                                    <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5"><ExternalLink className="w-2.5 h-2.5" /> View Screenshot</a>
+                                    <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5"><ExternalLink className="w-2.5 h-2.5" /> Screenshot</a>
                                   )}
                                 </div>
                                 <Btn variant="primary" onClick={() => handleApproveReferral(pr.id, pr.app_id, pr.user_id)}><Check className="w-3 h-3" /> Approve</Btn>
@@ -1013,7 +1091,7 @@ const Admin = () => {
                           })}
                         </div>
                       )}
-                    </div>
+                    </TableCard>
                   );
                 })}
               </div>
@@ -1021,177 +1099,194 @@ const Admin = () => {
 
             {/* ═══ ANALYTICS ═══ */}
             {activeTab === "analytics" && (
-              <div className={cardCls}>
-                <SectionHeader title="Decision Analytics" action={<Btn variant="outline" onClick={downloadDecisionAnalytics}><Download className="w-3 h-3" /> Download CSV</Btn>} />
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <MetricCard label="Total Responses" value={decisionResponses.length} icon={BarChart3} variant="primary" />
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-4">
+                  <MetricCard label="Total Responses" value={decisionResponses.length} icon={BarChart3} trend="up" trendLabel="All time" />
                   <MetricCard label="Has App" value={decisionResponses.filter(r => r.has_app).length} icon={CheckCircle2} />
                   <MetricCard label="Referrals Approved" value={decisionResponses.filter(r => r.referral_approved).length} icon={Check} />
                 </div>
-                {decisionApps.map(app => {
-                  const appResps = decisionResponses.filter(r => r.app_id === app.id);
-                  const hasApp = appResps.filter(r => r.has_app).length;
-                  const wouldSwitch = appResps.filter(r => r.would_switch === true).length;
-                  const switched = appResps.filter(r => r.switch_completed).length;
-                  const pct = appResps.length > 0 ? Math.round((hasApp / appResps.length) * 100) : 0;
-                  return (
-                    <div key={app.id} className="rounded-lg border border-border p-4 mb-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="font-semibold text-foreground text-[13px]">{app.app_name}</p>
-                        <span className="text-[10px] text-muted-foreground capitalize">{app.category}</span>
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                    <h3 className="text-[13px] font-semibold text-foreground">Decision Analytics</h3>
+                    <Btn variant="outline" onClick={downloadDecisionAnalytics}><Download className="w-3 h-3" /> Download CSV</Btn>
+                  </div>
+                  {decisionApps.map(app => {
+                    const appResps = decisionResponses.filter(r => r.app_id === app.id);
+                    const hasApp = appResps.filter(r => r.has_app).length;
+                    const wouldSwitch = appResps.filter(r => r.would_switch === true).length;
+                    const switched = appResps.filter(r => r.switch_completed).length;
+                    const pct = appResps.length > 0 ? Math.round((hasApp / appResps.length) * 100) : 0;
+                    return (
+                      <div key={app.id} className="px-5 py-4 border-b border-border/20 last:border-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-semibold text-foreground text-[13px]">{app.app_name}</p>
+                          <span className="text-[10px] text-muted-foreground capitalize">{app.category}</span>
+                        </div>
+                        <div className="w-full h-2 bg-muted/50 rounded-full overflow-hidden mb-2">
+                          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                        <div className="flex gap-6 text-[11px]">
+                          <span className="text-primary font-medium">{hasApp} selected ({pct}%)</span>
+                          <span className="text-muted-foreground">{wouldSwitch} would switch</span>
+                          <span className="text-muted-foreground">{switched} switched</span>
+                          <span className="text-muted-foreground">{appResps.length} total</span>
+                        </div>
                       </div>
-                      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-2">
-                        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
-                      </div>
-                      <div className="flex gap-4 text-[11px]">
-                        <span className="text-primary">{hasApp} selected ({pct}%)</span>
-                        <span className="text-muted-foreground">{wouldSwitch} would switch</span>
-                        <span className="text-muted-foreground">{switched} switched</span>
-                        <span className="text-muted-foreground">{appResps.length} total</span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </TableCard>
               </div>
             )}
 
             {/* ═══ VERIFICATION ═══ */}
             {activeTab === "verification" && (
-              <div className="space-y-4">
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-4">
+                  <MetricCard label="Verified" value={verificationTxs.filter(t => t.is_verified).length} icon={CheckCircle2} trend="up" trendLabel="Confirmed" />
+                  <MetricCard label="Pending" value={verificationTxs.filter(t => !t.is_verified && !t.is_duplicate).length} icon={Activity} />
+                  <MetricCard label="Duplicates" value={verificationTxs.filter(t => t.is_duplicate).length} icon={AlertTriangle} trend="down" trendLabel="Flagged" />
+                </div>
                 <div className={cardCls}>
-                  <SectionHeader title="Upload Transaction CSV" />
-                  <p className="text-[11px] text-muted-foreground mb-3">CSV columns: <span className="font-mono">transaction_id, amount</span></p>
+                  <SectionHeader title="Upload Transaction CSV" subtitle="CSV columns: transaction_id, amount" />
                   <input ref={csvInputRef} type="file" accept=".csv" onChange={handleCsvUpload} className="hidden" />
-                  <Btn variant="primary" onClick={() => csvInputRef.current?.click()} disabled={csvUploading} className="w-full">
+                  <Btn variant="primary" onClick={() => csvInputRef.current?.click()} disabled={csvUploading}>
                     <FileSpreadsheet className="w-3.5 h-3.5" /> {csvUploading ? "Processing..." : "Upload CSV"}
                   </Btn>
                 </div>
-                <div className={cardCls}>
-                  <SectionHeader title="User Transactions" />
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    <MetricCard label="Verified" value={verificationTxs.filter(t => t.is_verified).length} icon={CheckCircle2} variant="primary" />
-                    <MetricCard label="Pending" value={verificationTxs.filter(t => !t.is_verified && !t.is_duplicate).length} icon={Activity} />
-                    <MetricCard label="Duplicates" value={verificationTxs.filter(t => t.is_duplicate).length} icon={AlertTriangle} variant="destructive" />
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30">
+                    <h3 className="text-[13px] font-semibold text-foreground">User Transactions</h3>
                   </div>
-                  <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                  <TableHeader>
+                    <span className="flex-1">User</span>
+                    <span className="flex-1">Transaction ID</span>
+                    <span className="w-24 text-right">Status</span>
+                  </TableHeader>
+                  <div className="max-h-[500px] overflow-y-auto">
                     {verificationTxs.map(tx => {
                       const userEmail = profiles.find(p => p.id === tx.user_id)?.email || tx.user_id.slice(0, 8);
                       return (
-                        <div key={tx.id} className={`flex items-center justify-between rounded-lg border p-3 ${tx.is_duplicate ? 'border-destructive/30 bg-destructive/5' : 'border-border'}`}>
-                          <div>
-                            <p className="text-[11px] text-muted-foreground">{userEmail}</p>
+                        <TableRow key={tx.id} className={tx.is_duplicate ? "bg-destructive/5" : ""}>
+                          <span className="flex-1 text-[12px] text-muted-foreground">{userEmail}</span>
+                          <div className="flex-1">
                             <p className="text-[12px] font-mono text-foreground">{tx.transaction_id}</p>
                             {tx.is_duplicate && <p className="text-[9px] text-destructive">{tx.duplicate_note || 'Duplicate'}</p>}
                           </div>
-                          <div className="text-right">
+                          <span className="w-24 flex justify-end">
                             {tx.is_duplicate ? (
-                              <div className="flex items-center gap-1 text-destructive"><AlertTriangle className="w-3.5 h-3.5" /><span className="text-[10px]">Duplicate</span></div>
+                              <span className="flex items-center gap-1 text-destructive text-[10px]"><AlertTriangle className="w-3 h-3" /> Duplicate</span>
                             ) : tx.is_verified ? (
-                              <div className="flex items-center gap-1 text-primary"><CheckCircle2 className="w-3.5 h-3.5" /><span className="text-[11px]">₦{tx.verified_amount?.toLocaleString("en-NG")}</span></div>
+                              <span className="flex items-center gap-1 text-primary text-[11px]"><CheckCircle2 className="w-3 h-3" /> ₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
                             ) : <span className="text-[11px] text-muted-foreground">Pending</span>}
-                          </div>
-                        </div>
+                          </span>
+                        </TableRow>
                       );
                     })}
-                    {verificationTxs.length === 0 && <p className="text-center py-8 text-muted-foreground text-[12px]">No transactions submitted yet</p>}
+                    {verificationTxs.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No transactions submitted yet</div>}
                   </div>
-                </div>
+                </TableCard>
               </div>
             )}
 
             {/* ═══ WARNINGS ═══ */}
             {activeTab === "warnings" && (
-              <div className={cardCls}>
-                <SectionHeader title="User Warnings & Bans" />
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <MetricCard label="Total Warnings" value={userWarnings.length} icon={AlertTriangle} variant="primary" />
-                  <MetricCard label="Banned Users" value={profiles.filter(p => p.is_banned).length} icon={Ban} variant="destructive" />
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-4">
+                  <MetricCard label="Total Warnings" value={userWarnings.length} icon={AlertTriangle} trend="neutral" trendLabel="All time" />
+                  <MetricCard label="Banned Users" value={bannedCount} icon={Ban} trend={bannedCount > 0 ? "down" : "neutral"} trendLabel={`of ${profiles.length}`} />
                   <MetricCard label="Dup TX IDs" value={verificationTxs.filter(t => t.is_duplicate).length} icon={Activity} />
                 </div>
 
-                {/* Duplicate TX Users Section */}
+                {/* Duplicate TX Users */}
                 {(() => {
                   const dupTxs = verificationTxs.filter(t => t.is_duplicate);
                   const dupUserIds = [...new Set(dupTxs.map(t => t.user_id))];
                   if (dupUserIds.length === 0) return null;
                   return (
-                    <div className="mb-4">
-                      <p className="text-[12px] font-semibold text-foreground mb-2">🚩 Users with Duplicate Transaction IDs</p>
-                      <div className="space-y-2">
-                        {dupUserIds.map(uid => {
-                          const prof = profiles.find(p => p.id === uid);
-                          const userDups = dupTxs.filter(t => t.user_id === uid);
-                          return (
-                            <div key={uid} className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-                              <div className="flex items-center justify-between mb-1">
-                                <div>
-                                  <p className="text-[12px] font-semibold text-foreground">{prof?.email || uid.slice(0, 8)}</p>
-                                  <p className="text-[10px] text-muted-foreground">
-                                    Queue: #{prof?.queue_position} • Points: {prof?.points_balance} • Spend: ₦{(prof?.total_annual_spend || 0).toLocaleString("en-NG")}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {prof?.is_banned && <StatusBadge status="BANNED" className="bg-destructive/10 text-destructive" />}
-                                  <span className="text-[10px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">{userDups.length} dup{userDups.length > 1 ? "s" : ""}</span>
-                                </div>
-                              </div>
-                              <div className="mt-2 space-y-1">
-                                {userDups.map(dt => (
-                                  <div key={dt.id} className="flex items-center justify-between text-[10px] bg-background/50 rounded px-2 py-1">
-                                    <span className="text-foreground font-mono">{dt.transaction_id}</span>
-                                    <span className="text-muted-foreground">{dt.duplicate_note || "Duplicate"}</span>
-                                  </div>
-                                ))}
-                              </div>
-                              {prof && !prof.is_banned && (
-                                <Btn variant="destructive" className="mt-2" onClick={async () => {
-                                  await supabase.from("profiles").update({ is_banned: true, ban_reason: "Duplicate transaction IDs in spend verification" }).eq("id", uid);
-                                  await sendNotification({ userId: uid, type: "warning", title: "Account Banned", message: "Your account has been banned due to duplicate transaction IDs." });
-                                  toast({ title: "User banned" });
-                                  await fetchData();
-                                }}><Ban className="w-3 h-3" /> Ban User</Btn>
-                              )}
-                            </div>
-                          );
-                        })}
+                    <TableCard>
+                      <div className="px-5 py-4 border-b border-border/30">
+                        <h3 className="text-[13px] font-semibold text-foreground">🚩 Users with Duplicate Transaction IDs</h3>
                       </div>
-                    </div>
+                      {dupUserIds.map(uid => {
+                        const prof = profiles.find(p => p.id === uid);
+                        const userDups = dupTxs.filter(t => t.user_id === uid);
+                        return (
+                          <div key={uid} className="px-5 py-4 border-b border-border/20 last:border-0">
+                            <div className="flex items-center justify-between mb-2">
+                              <div>
+                                <p className="text-[12px] font-semibold text-foreground">{prof?.email || uid.slice(0, 8)}</p>
+                                <p className="text-[10px] text-muted-foreground">Queue: #{prof?.queue_position} • Points: {prof?.points_balance} • Spend: {formatNaira(prof?.total_annual_spend || 0)}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {prof?.is_banned && <StatusBadge status="BANNED" />}
+                                <span className="text-[10px] bg-destructive/10 text-destructive px-2.5 py-1 rounded-full border border-destructive/20 font-medium">{userDups.length} dup{userDups.length > 1 ? "s" : ""}</span>
+                              </div>
+                            </div>
+                            <div className="space-y-1 mb-3">
+                              {userDups.map(dt => (
+                                <div key={dt.id} className="flex items-center justify-between text-[10px] bg-muted/30 rounded-lg px-3 py-2">
+                                  <span className="text-foreground font-mono">{dt.transaction_id}</span>
+                                  <span className="text-muted-foreground">{dt.duplicate_note || "Duplicate"}</span>
+                                </div>
+                              ))}
+                            </div>
+                            {prof && !prof.is_banned && (
+                              <Btn variant="destructive" onClick={async () => {
+                                await supabase.from("profiles").update({ is_banned: true, ban_reason: "Duplicate transaction IDs in spend verification" }).eq("id", uid);
+                                await sendNotification({ userId: uid, type: "warning", title: "Account Banned", message: "Your account has been banned due to duplicate transaction IDs." });
+                                toast({ title: "User banned" });
+                                await fetchData();
+                              }}><Ban className="w-3 h-3" /> Ban User</Btn>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </TableCard>
                   );
                 })()}
 
-                <p className="text-[12px] font-semibold text-foreground mb-2">Warning History</p>
-                <div className="space-y-1 max-h-[400px] overflow-y-auto">
-                  {userWarnings.map(w => {
-                    const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id.slice(0, 8);
-                    return (
-                      <div key={w.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                        <div>
-                          <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">{w.reason}</p>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</p>
-                      </div>
-                    );
-                  })}
-                  {userWarnings.length === 0 && <p className="text-center py-8 text-muted-foreground text-[12px]">No warnings issued yet</p>}
-                </div>
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30">
+                    <h3 className="text-[13px] font-semibold text-foreground">Warning History</h3>
+                  </div>
+                  <TableHeader>
+                    <span className="flex-1">User</span>
+                    <span className="flex-[2]">Reason</span>
+                    <span className="w-28 text-right">Date</span>
+                  </TableHeader>
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {userWarnings.map(w => {
+                      const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id.slice(0, 8);
+                      return (
+                        <TableRow key={w.id}>
+                          <span className="flex-1 text-[12px] font-medium text-foreground">{userEmail}</span>
+                          <span className="flex-[2] text-[11px] text-muted-foreground">{w.reason}</span>
+                          <span className="w-28 text-right text-[10px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</span>
+                        </TableRow>
+                      );
+                    })}
+                    {userWarnings.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No warnings issued yet</div>}
+                  </div>
+                </TableCard>
               </div>
             )}
 
             {/* ═══ INFLUENCER APPS ═══ */}
             {activeTab === "inf_apps" && (
-              <div className={cardCls}>
-                <SectionHeader title="Influencer Applications" />
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <MetricCard label="Pending" value={infApps.filter(a => a.status === "pending_review").length} icon={Activity} variant="primary" />
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-4">
+                  <MetricCard label="Pending" value={infApps.filter(a => a.status === "pending_review").length} icon={Activity} trend="neutral" trendLabel="Awaiting review" />
                   <MetricCard label="Approved" value={infApps.filter(a => a.status === "approved").length} icon={CheckCircle2} />
-                  <MetricCard label="Rejected" value={infApps.filter(a => a.status === "rejected").length} icon={X} variant="destructive" />
+                  <MetricCard label="Rejected" value={infApps.filter(a => a.status === "rejected").length} icon={X} />
                 </div>
-                <div className="space-y-2">
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30">
+                    <h3 className="text-[13px] font-semibold text-foreground">Applications</h3>
+                  </div>
                   {infApps.map((app: any) => {
                     const userEmail = profiles.find(p => p.id === app.user_id)?.email || app.user_id?.slice(0, 8);
                     return (
-                      <div key={app.id} className="rounded-lg border border-border p-3">
+                      <div key={app.id} className="px-5 py-4 border-b border-border/20 last:border-0">
                         <div className="flex items-center justify-between mb-2">
                           <div>
                             <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
@@ -1201,175 +1296,187 @@ const Admin = () => {
                         </div>
                         {(app.status === "pending_review" || app.status === "pending_appeal") && (
                           <div className="flex gap-2 mt-2">
-                            {app.status === "pending_appeal" && <p className="text-[10px] text-primary w-full mb-1">⚡ This is an appeal</p>}
+                            {app.status === "pending_appeal" && <p className="text-[10px] text-primary w-full mb-1">⚡ Appeal</p>}
                             <Btn variant="primary" onClick={async () => {
                               await supabase.from("influencer_applications" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", app.id);
                               await supabase.from("profiles").update({ queue_position: 0, off_queue_at: new Date().toISOString() }).eq("id", app.user_id);
                               await sendNotification({ userId: app.user_id, type: "influencer_approved", title: "Influencer Application Approved!", message: "Congratulations! Your influencer application has been approved." });
-                              toast({ title: "Application approved" });
-                              await fetchData();
+                              toast({ title: "Application approved" }); await fetchData();
                             }} className="flex-1"><Check className="w-3 h-3" /> Approve</Btn>
                             <Btn variant="outline" onClick={async () => {
                               const newStatus = app.status === "pending_appeal" ? "appeal_rejected" : "rejected";
                               await supabase.from("influencer_applications" as any).update({ status: newStatus, reviewed_at: new Date().toISOString() }).eq("id", app.id);
                               await sendNotification({ userId: app.user_id, type: "influencer_rejected", title: "Influencer Application Update", message: app.status === "pending_appeal" ? "Your appeal has been reviewed and was not approved." : "Your influencer application was not approved." });
-                              toast({ title: app.status === "pending_appeal" ? "Appeal rejected" : "Application rejected" });
-                              await fetchData();
+                              toast({ title: app.status === "pending_appeal" ? "Appeal rejected" : "Application rejected" }); await fetchData();
                             }} className="flex-1">Reject</Btn>
                           </div>
                         )}
                       </div>
                     );
                   })}
-                  {infApps.length === 0 && <p className="text-center py-8 text-muted-foreground text-[12px]">No applications yet</p>}
-                </div>
+                  {infApps.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No applications yet</div>}
+                </TableCard>
               </div>
             )}
 
             {/* ═══ INF WALLETS ═══ */}
             {activeTab === "inf_wallets" && (
-              <div className={cardCls}>
-                <SectionHeader title="Influencer Wallet Activations" />
-                <div className="space-y-2">
-                  {infWallets.map((w: any) => {
-                    const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id?.slice(0, 8);
-                    const bank = infBankAccounts.find((b: any) => b.user_id === w.user_id);
-                    return (
-                      <div key={w.id} className="rounded-lg border border-border p-3">
-                        <div className="flex items-center justify-between mb-2">
+              <TableCard>
+                <div className="px-5 py-4 border-b border-border/30">
+                  <h3 className="text-[13px] font-semibold text-foreground">Influencer Wallet Activations</h3>
+                </div>
+                {infWallets.map((w: any) => {
+                  const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id?.slice(0, 8);
+                  const bank = infBankAccounts.find((b: any) => b.user_id === w.user_id);
+                  return (
+                    <div key={w.id} className="px-5 py-4 border-b border-border/20 last:border-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
                           <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                          {bank && <p className="text-[10px] text-muted-foreground">{bank.bank_name} · {bank.account_number} · {bank.account_name}</p>}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-semibold text-foreground">{formatNaira(w.balance || 0)}</span>
                           <StatusBadge status={w.status} />
                         </div>
-                        {bank && (
-                          <div className="text-[11px] text-muted-foreground mb-2">
-                            <p>Bank: {bank.bank_name} · Acct: {bank.account_number}</p>
-                            <p>Name: {bank.account_name}</p>
-                            {bank.id_document_url && (
-                              <button onClick={async () => {
-                                const { data, error } = await supabase.storage.from("id-documents").createSignedUrl(bank.id_document_url!, 3600);
-                                if (error || !data?.signedUrl) { alert("Failed to load document"); return; }
-                                window.open(data.signedUrl, "_blank");
-                              }} className="text-primary hover:underline flex items-center gap-1 mt-1"><ExternalLink className="w-2.5 h-2.5" /> View ID Document</button>
-                            )}
-                          </div>
-                        )}
-                        {w.status === "pending_activation" && (
-                          <div className="flex gap-2">
-                            <Btn variant="primary" onClick={async () => {
-                              await supabase.from("influencer_wallets" as any).update({ status: "active" }).eq("id", w.id);
-                              if (bank) await supabase.from("influencer_bank_accounts" as any).update({ verification_status: "verified" }).eq("id", bank.id);
-                              await sendNotification({ userId: w.user_id, type: "wallet_activated", title: "Wallet Activated!", message: "Your influencer wallet has been activated." });
-                              toast({ title: "Wallet activated" }); await fetchData();
-                            }} className="flex-1"><Check className="w-3 h-3" /> Approve Wallet</Btn>
-                            <Btn variant="outline" onClick={async () => {
-                              await supabase.from("influencer_wallets" as any).update({ status: "rejected" }).eq("id", w.id);
-                              await sendNotification({ userId: w.user_id, type: "rejection", title: "Wallet Activation Rejected", message: "Your wallet activation request has been rejected." });
-                              toast({ title: "Wallet rejected" }); await fetchData();
-                            }} className="flex-1">Reject</Btn>
-                          </div>
-                        )}
-                        <p className="text-[10px] text-muted-foreground mt-1">Balance: {formatNaira(w.balance || 0)}</p>
                       </div>
-                    );
-                  })}
-                  {infWallets.length === 0 && <p className="text-center py-8 text-muted-foreground text-[12px]">No wallet activations yet</p>}
-                </div>
-              </div>
+                      {bank?.id_document_url && (
+                        <button onClick={async () => {
+                          const { data, error } = await supabase.storage.from("id-documents").createSignedUrl(bank.id_document_url!, 3600);
+                          if (error || !data?.signedUrl) { alert("Failed to load document"); return; }
+                          window.open(data.signedUrl, "_blank");
+                        }} className="text-primary hover:underline text-[10px] flex items-center gap-1 mb-2"><ExternalLink className="w-2.5 h-2.5" /> View ID Document</button>
+                      )}
+                      {w.status === "pending_activation" && (
+                        <div className="flex gap-2 mt-1">
+                          <Btn variant="primary" onClick={async () => {
+                            await supabase.from("influencer_wallets" as any).update({ status: "active" }).eq("id", w.id);
+                            if (bank) await supabase.from("influencer_bank_accounts" as any).update({ verification_status: "verified" }).eq("id", bank.id);
+                            await sendNotification({ userId: w.user_id, type: "wallet_activated", title: "Wallet Activated!", message: "Your influencer wallet has been activated." });
+                            toast({ title: "Wallet activated" }); await fetchData();
+                          }} className="flex-1"><Check className="w-3 h-3" /> Approve</Btn>
+                          <Btn variant="outline" onClick={async () => {
+                            await supabase.from("influencer_wallets" as any).update({ status: "rejected" }).eq("id", w.id);
+                            await sendNotification({ userId: w.user_id, type: "rejection", title: "Wallet Activation Rejected", message: "Your wallet activation request has been rejected." });
+                            toast({ title: "Wallet rejected" }); await fetchData();
+                          }} className="flex-1">Reject</Btn>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {infWallets.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No wallet activations yet</div>}
+              </TableCard>
             )}
 
             {/* ═══ INF REFERRALS ═══ */}
             {activeTab === "inf_referrals" && (
-              <div className={cardCls}>
-                <SectionHeader title="Influencer Referrals" />
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <MetricCard label="Total Referrals" value={infReferrals.length} icon={Users} variant="primary" />
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <MetricCard label="Total Referrals" value={infReferrals.length} icon={Users} trend="up" trendLabel="All time" />
                   <MetricCard label="Total Earnings" value={formatNaira(infReferrals.reduce((s: number, r: any) => s + (r.reward_amount || 0), 0))} icon={Wallet} />
                 </div>
-                <div className="space-y-1 max-h-[400px] overflow-y-auto">
-                  {infReferrals.map((r: any) => {
-                    const infEmail = profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8);
-                    const refEmail = profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8);
-                    return (
-                      <div key={r.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                        <div>
-                          <p className="text-[11px] text-foreground">{infEmail} → {refEmail}</p>
-                          <p className="text-[9px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <p className="text-[11px] text-primary font-semibold">{formatNaira(r.reward_amount)}</p>
-                      </div>
-                    );
-                  })}
-                  {infReferrals.length === 0 && <p className="text-center py-8 text-muted-foreground text-[12px]">No influencer referrals yet</p>}
-                </div>
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30">
+                    <h3 className="text-[13px] font-semibold text-foreground">Referral History</h3>
+                  </div>
+                  <TableHeader>
+                    <span className="flex-1">Influencer → Referred</span>
+                    <span className="w-24 text-right">Reward</span>
+                    <span className="w-28 text-right">Date</span>
+                  </TableHeader>
+                  <div className="max-h-[500px] overflow-y-auto">
+                    {infReferrals.map((r: any) => {
+                      const infEmail = profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8);
+                      const refEmail = profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8);
+                      return (
+                        <TableRow key={r.id}>
+                          <span className="flex-1 text-[12px] text-foreground">{infEmail} → {refEmail}</span>
+                          <span className="w-24 text-right text-[12px] text-primary font-semibold">{formatNaira(r.reward_amount)}</span>
+                          <span className="w-28 text-right text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                        </TableRow>
+                      );
+                    })}
+                    {infReferrals.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No influencer referrals yet</div>}
+                  </div>
+                </TableCard>
               </div>
             )}
 
             {/* ═══ INF WITHDRAWALS ═══ */}
             {activeTab === "inf_withdrawals" && (
-              <div className={cardCls}>
-                <SectionHeader title="Influencer Withdrawals" />
-                <div className="space-y-2">
-                  {infWithdrawals.map((w: any) => {
-                    const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id?.slice(0, 8);
-                    const bank = infBankAccounts.find((b: any) => b.id === w.bank_account_id);
-                    return (
-                      <div key={w.id} className="rounded-lg border border-border p-3">
-                        <div className="flex items-center justify-between mb-1">
+              <TableCard>
+                <div className="px-5 py-4 border-b border-border/30">
+                  <h3 className="text-[13px] font-semibold text-foreground">Influencer Withdrawals</h3>
+                </div>
+                {infWithdrawals.map((w: any) => {
+                  const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id?.slice(0, 8);
+                  const bank = infBankAccounts.find((b: any) => b.id === w.bank_account_id);
+                  return (
+                    <div key={w.id} className="px-5 py-4 border-b border-border/20 last:border-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <div>
                           <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                          {bank && <p className="text-[10px] text-muted-foreground">{bank.bank_name} · {bank.account_number} · {bank.account_name}</p>}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <p className="text-[14px] font-bold text-primary">{formatNaira(w.amount)}</p>
                           <StatusBadge status={w.status} />
                         </div>
-                        <p className="text-[13px] font-bold text-primary">{formatNaira(w.amount)}</p>
-                        {bank && <p className="text-[10px] text-muted-foreground">{bank.bank_name} · {bank.account_number} · {bank.account_name}</p>}
-                        {w.status === "pending" && (
-                          <div className="flex gap-2 mt-2">
-                            <Btn variant="primary" onClick={async () => {
-                              const wallet = infWallets.find((wl: any) => wl.user_id === w.user_id);
-                              if (wallet) {
-                                const newBal = Math.max(0, (wallet.balance || 0) - w.amount);
-                                await supabase.from("influencer_wallets" as any).update({ balance: newBal }).eq("id", wallet.id);
-                              }
-                              await supabase.from("influencer_withdrawals" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", w.id);
-                              await sendNotification({ userId: w.user_id, type: "withdrawal_approved", title: "Withdrawal Approved", message: `Your withdrawal of ₦${w.amount.toLocaleString("en-NG")} has been approved.` });
-                              toast({ title: "Withdrawal approved" }); await fetchData();
-                            }} className="flex-1"><Check className="w-3 h-3" /> Approve</Btn>
-                            <Btn variant="outline" onClick={async () => {
-                              await supabase.from("influencer_withdrawals" as any).update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", w.id);
-                              toast({ title: "Withdrawal rejected" }); await fetchData();
-                            }} className="flex-1">Reject</Btn>
-                          </div>
-                        )}
                       </div>
-                    );
-                  })}
-                  {infWithdrawals.length === 0 && <p className="text-center py-8 text-muted-foreground text-[12px]">No withdrawals yet</p>}
-                </div>
-              </div>
+                      {w.status === "pending" && (
+                        <div className="flex gap-2 mt-3">
+                          <Btn variant="primary" onClick={async () => {
+                            const wallet = infWallets.find((wl: any) => wl.user_id === w.user_id);
+                            if (wallet) {
+                              const newBal = Math.max(0, (wallet.balance || 0) - w.amount);
+                              await supabase.from("influencer_wallets" as any).update({ balance: newBal }).eq("id", wallet.id);
+                            }
+                            await supabase.from("influencer_withdrawals" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", w.id);
+                            await sendNotification({ userId: w.user_id, type: "withdrawal_approved", title: "Withdrawal Approved", message: `Your withdrawal of ₦${w.amount.toLocaleString("en-NG")} has been approved.` });
+                            toast({ title: "Withdrawal approved" }); await fetchData();
+                          }} className="flex-1"><Check className="w-3 h-3" /> Approve</Btn>
+                          <Btn variant="outline" onClick={async () => {
+                            await supabase.from("influencer_withdrawals" as any).update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", w.id);
+                            toast({ title: "Withdrawal rejected" }); await fetchData();
+                          }} className="flex-1">Reject</Btn>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {infWithdrawals.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No withdrawals yet</div>}
+              </TableCard>
             )}
 
             {/* ═══ INF CHALLENGES ═══ */}
             {activeTab === "inf_challenges" && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className={cardCls}>
                   <SectionHeader title="Create Challenge" />
                   <div className="space-y-3">
-                    <input value={newChallenge.title} onChange={e => setNewChallenge(p => ({ ...p, title: e.target.value }))} placeholder="Challenge title" className={inputCls} />
+                    <div className="grid grid-cols-2 gap-3">
+                      <input value={newChallenge.title} onChange={e => setNewChallenge(p => ({ ...p, title: e.target.value }))} placeholder="Challenge title" className={inputCls} />
+                      <input value={newChallenge.hashtag} onChange={e => setNewChallenge(p => ({ ...p, hashtag: e.target.value }))} placeholder="Hashtag" className={inputCls} />
+                    </div>
                     <textarea value={newChallenge.description} onChange={e => setNewChallenge(p => ({ ...p, description: e.target.value }))} placeholder="Description" className={`${inputCls} min-h-[60px] resize-none`} />
                     <textarea value={newChallenge.instructions} onChange={e => setNewChallenge(p => ({ ...p, instructions: e.target.value }))} placeholder="Instructions" className={`${inputCls} min-h-[60px] resize-none`} />
-                    <input value={newChallenge.hashtag} onChange={e => setNewChallenge(p => ({ ...p, hashtag: e.target.value }))} placeholder="Hashtag" className={inputCls} />
-                    <div>
-                      <p className="text-[10px] text-muted-foreground mb-1">Challenge Type</p>
-                      <select value={newChallenge.challenge_type} onChange={e => setNewChallenge(p => ({ ...p, challenge_type: e.target.value, total_videos: e.target.value === "single" ? 1 : p.total_videos }))} className={`${inputCls} bg-card`}>
-                        <option value="single">Single Video</option>
-                        <option value="set">Set (Multiple Videos)</option>
-                      </select>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-1">Challenge Type</p>
+                        <select value={newChallenge.challenge_type} onChange={e => setNewChallenge(p => ({ ...p, challenge_type: e.target.value, total_videos: e.target.value === "single" ? 1 : p.total_videos }))} className={inputCls}>
+                          <option value="single">Single Video</option>
+                          <option value="set">Set (Multiple Videos)</option>
+                        </select>
+                      </div>
+                      <div><p className="text-[10px] text-muted-foreground mb-1">Reward per video (₦)</p><input type="number" value={newChallenge.reward_per_video} onChange={e => setNewChallenge(p => ({ ...p, reward_per_video: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
                     </div>
                     {newChallenge.challenge_type === "set" && (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-3">
                         <div><p className="text-[10px] text-muted-foreground mb-1">Total Videos</p><input type="number" value={newChallenge.total_videos} onChange={e => setNewChallenge(p => ({ ...p, total_videos: parseInt(e.target.value) || 1 }))} min={2} className={inputCls} /></div>
                         <div><p className="text-[10px] text-muted-foreground mb-1">Post interval (days)</p><input type="number" value={newChallenge.posting_interval_days} onChange={e => setNewChallenge(p => ({ ...p, posting_interval_days: parseInt(e.target.value) || 1 }))} min={1} className={inputCls} /></div>
                       </div>
                     )}
-                    <div><p className="text-[10px] text-muted-foreground mb-1">Reward per video (₦)</p><input type="number" value={newChallenge.reward_per_video} onChange={e => setNewChallenge(p => ({ ...p, reward_per_video: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
                     <Btn variant="primary" onClick={async () => {
                       if (!newChallenge.title) return;
                       await supabase.from("influencer_challenges" as any).insert({
@@ -1382,7 +1489,7 @@ const Admin = () => {
                       toast({ title: "Challenge created" });
                       setNewChallenge({ title: "", description: "", instructions: "", hashtag: "", challenge_type: "single", total_videos: 1, reward_per_video: 3000, posting_interval_days: 1 });
                       await fetchData();
-                    }} className="w-full"><Plus className="w-3 h-3" /> Create Challenge</Btn>
+                    }}><Plus className="w-3 h-3" /> Create Challenge</Btn>
                   </div>
                 </div>
 
@@ -1391,15 +1498,16 @@ const Admin = () => {
                   const submissions = infChallengeSubmissions.filter((s: any) => s.challenge_id === ch.id);
                   const pendingSubs = submissions.filter((s: any) => s.status === "pending_review");
                   return (
-                    <div key={ch.id} className={cardCls}>
-                      <div className="flex items-center justify-between mb-2">
+                    <TableCard key={ch.id}>
+                      <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
                         <div>
                           <h4 className="font-semibold text-foreground text-[13px]">{ch.title}</h4>
                           <p className="text-[10px] text-muted-foreground">
-                            {ch.challenge_type === "single" ? "Single Video" : `Set of ${ch.total_videos} videos`} · {formatNaira(ch.reward_per_video)}/video · {ch.hashtag} · {ch.is_active ? "Active" : "Inactive"}
+                            {ch.challenge_type === "single" ? "Single Video" : `Set of ${ch.total_videos}`} · {formatNaira(ch.reward_per_video)}/video · {ch.hashtag}
                           </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-2">
+                          <StatusBadge status={ch.is_active ? "active" : "rejected"} />
                           <Btn variant="outline" onClick={async () => {
                             await supabase.from("influencer_challenges" as any).update({ is_active: !ch.is_active } as any).eq("id", ch.id);
                             await fetchData();
@@ -1407,31 +1515,42 @@ const Admin = () => {
                           <button onClick={async () => {
                             await supabase.from("influencer_challenges" as any).delete().eq("id", ch.id);
                             toast({ title: "Challenge deleted" }); await fetchData();
-                          }} className="text-destructive hover:text-destructive/80"><Trash2 className="w-4 h-4" /></button>
+                          }} className="text-destructive/60 hover:text-destructive p-1"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </div>
-                      <p className="text-[11px] text-muted-foreground mb-2">{ch.description}</p>
-                      <div className="grid grid-cols-3 gap-2 mb-3">
-                        <MetricCard label="Enrolled" value={enrollments.length} icon={Users} variant="primary" />
-                        <MetricCard label="Submissions" value={submissions.length} icon={Upload} />
-                        <MetricCard label="Pending" value={pendingSubs.length} icon={Activity} />
+                      <div className="px-5 py-3 border-b border-border/20">
+                        <p className="text-[11px] text-muted-foreground">{ch.description}</p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 p-4">
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-foreground">{enrollments.length}</p>
+                          <p className="text-[10px] text-muted-foreground">Enrolled</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-foreground">{submissions.length}</p>
+                          <p className="text-[10px] text-muted-foreground">Submissions</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-primary">{pendingSubs.length}</p>
+                          <p className="text-[10px] text-muted-foreground">Pending</p>
+                        </div>
                       </div>
                       {pendingSubs.length > 0 && (
-                        <div className="space-y-2">
+                        <div className="p-4 border-t border-border/20 space-y-2">
                           <p className="text-[11px] text-primary font-semibold">Pending Approvals</p>
                           {pendingSubs.map((sub: any) => {
                             const userEmail = profiles.find(p => p.id === sub.user_id)?.email || sub.user_id?.slice(0, 8);
                             const enrollment = enrollments.find((e: any) => e.user_id === sub.user_id);
                             return (
-                              <div key={sub.id} className="rounded-lg border border-border p-3">
-                                <div className="flex items-center justify-between mb-1">
+                              <div key={sub.id} className="rounded-lg border border-border/40 p-3">
+                                <div className="flex items-center justify-between mb-2">
                                   <div>
                                     <p className="text-[11px] text-foreground font-semibold">{userEmail}</p>
                                     <p className="text-[9px] text-muted-foreground">Video #{sub.video_number} of {ch.total_videos}</p>
                                   </div>
                                   <a href={sub.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline flex items-center gap-1"><ExternalLink className="w-2.5 h-2.5" /> View</a>
                                 </div>
-                                <div className="flex gap-2 mt-2">
+                                <div className="flex gap-2">
                                   <Btn variant="primary" onClick={async () => {
                                     await supabase.from("influencer_challenge_submissions" as any).update({ status: "approved", reviewed_at: new Date().toISOString() } as any).eq("id", sub.id);
                                     if (enrollment) {
@@ -1460,7 +1579,7 @@ const Admin = () => {
                           })}
                         </div>
                       )}
-                    </div>
+                    </TableCard>
                   );
                 })}
                 {infChallenges.length === 0 && <div className={cardCls}><p className="text-center py-8 text-muted-foreground text-[12px]">No challenges created yet</p></div>}
@@ -1470,24 +1589,30 @@ const Admin = () => {
             {/* ═══ SETTINGS ═══ */}
             {activeTab === "settings" && (
               <div className={cardCls}>
-                <SectionHeader title="App Settings" />
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <SectionHeader title="App Settings" subtitle="Configure platform-wide settings" />
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
                     <div>
                       <label className="text-[12px] font-medium text-foreground">Verify Page Active</label>
                       <p className="text-[11px] text-muted-foreground">If disabled, users will see "Coming Soon".</p>
                     </div>
-                    <input type="checkbox" checked={verifyPageActive} onChange={e => setVerifyPageActive(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer" />
+                    <input type="checkbox" checked={verifyPageActive} onChange={e => setVerifyPageActive(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer rounded" />
                   </div>
-                  <div><label className="text-[11px] text-muted-foreground">Verify Expense Button Link</label><input value={verifyExpenseLink} onChange={e => setVerifyExpenseLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1`} /></div>
-                  <div><label className="text-[11px] text-muted-foreground">Post-Queue Referral Points</label><input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className={`${inputCls} mt-1`} /></div>
-                  <div><label className="text-[11px] text-muted-foreground">Verify Spend Link</label><input value={verifySpendLink} onChange={e => setVerifySpendLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1`} /></div>
-                  <div><label className="text-[11px] text-muted-foreground">Verify Spend Description</label><textarea value={verifySpendDescription} onChange={e => setVerifySpendDescription(e.target.value)} className={`${inputCls} mt-1 min-h-[60px] resize-none`} /></div>
-                  <hr className="border-border" />
-                  <h4 className="text-sm font-semibold text-foreground">Footer Content</h4>
-                  <div><label className="text-[11px] text-muted-foreground">About Us</label><textarea value={footerAboutUs} onChange={e => setFooterAboutUs(e.target.value)} className={`${inputCls} mt-1 min-h-[60px] resize-none`} /></div>
-                  <div><label className="text-[11px] text-muted-foreground">Contact Us</label><textarea value={footerContactUs} onChange={e => setFooterContactUs(e.target.value)} className={`${inputCls} mt-1 min-h-[60px] resize-none`} /></div>
-                  <div><label className="text-[11px] text-muted-foreground">Invest With Us</label><textarea value={footerInvestWithUs} onChange={e => setFooterInvestWithUs(e.target.value)} className={`${inputCls} mt-1 min-h-[60px] resize-none`} /></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Verify Expense Button Link</label><input value={verifyExpenseLink} onChange={e => setVerifyExpenseLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Post-Queue Referral Points</label><input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className={`${inputCls} mt-1.5`} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Verify Spend Link</label><input value={verifySpendLink} onChange={e => setVerifySpendLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Verify Spend Description</label><textarea value={verifySpendDescription} onChange={e => setVerifySpendDescription(e.target.value)} className={`${inputCls} mt-1.5 min-h-[60px] resize-none`} /></div>
+                  </div>
+                  <hr className="border-border/30" />
+                  <h4 className="text-[13px] font-semibold text-foreground">Footer Content</h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div><label className="text-[11px] text-muted-foreground font-medium">About Us</label><textarea value={footerAboutUs} onChange={e => setFooterAboutUs(e.target.value)} className={`${inputCls} mt-1.5 min-h-[80px] resize-none`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Contact Us</label><textarea value={footerContactUs} onChange={e => setFooterContactUs(e.target.value)} className={`${inputCls} mt-1.5 min-h-[80px] resize-none`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Invest With Us</label><textarea value={footerInvestWithUs} onChange={e => setFooterInvestWithUs(e.target.value)} className={`${inputCls} mt-1.5 min-h-[80px] resize-none`} /></div>
+                  </div>
                   <Btn variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full"><Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save Settings"}</Btn>
                 </div>
               </div>
