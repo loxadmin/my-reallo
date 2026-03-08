@@ -33,7 +33,7 @@ const goalLabels: Record<string, string> = {
 };
 
 const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange }: QueueDisplayProps) => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
@@ -44,6 +44,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   const [claimedTotal, setClaimedTotal] = useState(0);
   const [spendVerified, setSpendVerified] = useState(false);
   const [isVerifyActive, setIsVerifyActive] = useState(true);
+  const [activateWallet, setActivateWallet] = useState<"food" | "transport" | null>(null);
 
   const position = profile?.queue_position ?? 201;
   const referralLink = profile?.referral_code
