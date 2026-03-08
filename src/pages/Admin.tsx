@@ -1086,6 +1086,7 @@ const Admin = () => {
                         <GlassButton variant="primary" onClick={async () => {
                           await supabase.from("influencer_applications" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", app.id);
                           await supabase.from("profiles").update({ queue_position: 0, off_queue_at: new Date().toISOString() }).eq("id", app.user_id);
+                          await sendNotification({ userId: app.user_id, type: "influencer_approved", title: "Influencer Application Approved!", message: "Congratulations! Your influencer application has been approved. You can now access influencer features." });
                           toast({ title: "Application approved" });
                           await fetchData();
                         }} className="flex-1 text-[11px]"><Check className="w-3 h-3 mr-1" /> Approve</GlassButton>
