@@ -232,18 +232,39 @@ const InfluencerPanel = () => {
         </p>
         <div className="space-y-3">
           <div>
-            <label className="text-[11px] text-muted-foreground mb-1 block">Social Media Link</label>
-            <input
-              value={socialLink}
-              onChange={e => setSocialLink(e.target.value)}
-              placeholder="https://instagram.com/yourprofile"
-              className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]"
-            />
+            <label className="text-[11px] text-muted-foreground mb-1 block">Select Platform</label>
+            <select
+              value={socialPlatform}
+              onChange={e => { setSocialPlatform(e.target.value); setSocialLink(""); }}
+              className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] bg-transparent"
+            >
+              <option value="" className="bg-background">Choose a platform...</option>
+              <option value="instagram" className="bg-background">Instagram</option>
+              <option value="tiktok" className="bg-background">TikTok</option>
+              <option value="facebook" className="bg-background">Facebook</option>
+              <option value="linkedin" className="bg-background">LinkedIn</option>
+            </select>
           </div>
+          {socialPlatform && (
+            <div>
+              <label className="text-[11px] text-muted-foreground mb-1 block">{socialPlatform.charAt(0).toUpperCase() + socialPlatform.slice(1)} Profile Link</label>
+              <input
+                value={socialLink}
+                onChange={e => setSocialLink(e.target.value)}
+                placeholder={
+                  socialPlatform === "instagram" ? "https://instagram.com/yourprofile" :
+                  socialPlatform === "tiktok" ? "https://tiktok.com/@yourprofile" :
+                  socialPlatform === "facebook" ? "https://facebook.com/yourprofile" :
+                  "https://linkedin.com/in/yourprofile"
+                }
+                className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]"
+              />
+            </div>
+          )}
           <p className="text-[10px] text-muted-foreground">
             ✓ Profile must be public &nbsp;•&nbsp; ✓ Email must be visible in bio &nbsp;•&nbsp; ✓ Email must match: {user?.email}
           </p>
-          <GlassButton variant="primary" onClick={handleApply} disabled={applying || !socialLink.trim()} className="w-full text-[13px]">
+          <GlassButton variant="primary" onClick={handleApply} disabled={applying || !socialLink.trim() || !socialPlatform} className="w-full text-[13px]">
             {applying ? "Submitting..." : "Apply as Influencer"}
           </GlassButton>
         </div>
