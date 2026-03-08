@@ -94,12 +94,6 @@ const InfluencerPanel = () => {
   const loadBanks = async () => {
     setBanksLoading(true);
     try {
-      const { data: result, error } = await supabase.functions.invoke('paystack-bank', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        body: null,
-      });
-      // The edge function uses query params, so we need a direct fetch approach
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
       const res = await fetch(
