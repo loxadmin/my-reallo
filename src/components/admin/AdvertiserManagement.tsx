@@ -33,7 +33,7 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
       supabase.from("advertiser_tokens" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("advertiser_submissions" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("admin_settings").select("*").in("key", [
-        "founder_full_name", "founder_signature_url", "advertiser_user_count", "advertiser_user_count_link",
+        "founder_full_name", "founder_signature_url", "advertiser_user_count", "advertiser_user_count_link", "advertiser_branded_email_required",
       ]),
     ]);
 
