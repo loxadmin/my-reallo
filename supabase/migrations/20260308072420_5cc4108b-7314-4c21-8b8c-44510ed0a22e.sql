@@ -1,0 +1,2 @@
+ALTER TABLE public.referral_points_backfill_20260307 ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins only backfill" ON public.referral_points_backfill_20260307 FOR ALL USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
