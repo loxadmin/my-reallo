@@ -1946,6 +1946,134 @@ const Admin = () => {
               </div>
             )}
 
+            {/* ═══ INF SUBMISSIONS ═══ */}
+            {activeTab === "inf_submissions" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-4 gap-4">
+                  <MetricCard label="Total" value={infChallengeSubmissions.length} icon={Upload} />
+                  <MetricCard label="Pending" value={infChallengeSubmissions.filter((s: any) => s.status === "pending_review").length} icon={Activity} trend="neutral" trendLabel="Awaiting review" />
+                  <MetricCard label="Approved" value={infChallengeSubmissions.filter((s: any) => s.status === "approved").length} icon={CheckCircle2} />
+                  <MetricCard label="Rejected" value={infChallengeSubmissions.filter((s: any) => s.status === "rejected" || s.status === "closed").length} icon={X} />
+                </div>
+
+                {/* Pending submissions first */}
+                {(() => {
+                  const pending = infChallengeSubmissions.filter((s: any) => s.status === "pending_review");
+                  if (pending.length === 0) return null;
+                  return (
+                    <TableCard>
+                      <div className="px-5 py-4 border-b border-border/30">
+                        <h3 className="text-[13px] font-semibold text-primary">Pending Review ({pending.length})</h3>
+                      </div>
+                      <TableHeader>
+                        <span className="flex-1">Influencer</span>
+                        <span className="flex-1">Challenge</span>
+                        <span className="w-20 text-center">Video #</span>
+                        <span className="w-20 text-center">Retries</span>
+                        <span className="w-28 text-right">Date</span>
+                        <span className="w-40 text-right">Actions</span>
+                      </TableHeader>
+                      <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                        {pending.map((sub: any) => {
+                          const userEmail = profiles.find(p => p.id === sub.user_id)?.email || sub.user_id?.slice(0, 8);
+                          const challenge = infChallenges.find((c: any) => c.id === sub.challenge_id);
+                          const enrollment = infChallengeEnrollments.find((e: any) => e.user_id === sub.user_id && e.challenge_id === sub.challenge_id);
+                          // Count prior rejections for same user + challenge + video_number
+                          const priorRejections = infChallengeSubmissions.filter((s: any) =>
+                            s.user_id === sub.user_id && s.challenge_id === sub.challenge_id &&
+                            s.video_number === sub.video_number && (s.status === "rejected" || s.status === "closed") && s.id !== sub.id
+                          ).length;
+
+                          return (
+                            <TableRow key={sub.id}>
+                              <span className="flex-1 text-[11px] font-medium text-foreground truncate">{userEmail}</span>
+                              <span className="flex-1 text-[11px] text-muted-foreground truncate">{challenge?.title || "Unknown"}</span>
+                              <span className="w-20 text-center text-[11px] text-foreground">#{sub.video_number}{challenge ? ` / ${challenge.total_videos}` : ""}</span>
+                              <span className="w-20 text-center">
+                                {priorRejections > 0
+                                  ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 font-medium">Last chance</span>
+                                  : <span className="text-[10px] text-muted-foreground">0</span>
+                                }
+                              </span>
+                              <span className="w-28 text-right text-[10px] text-muted-foreground">{new Date(sub.submitted_at).toLocaleDateString()}</span>
+                              <span className="w-40 flex gap-2 justify-end">
+                                <a href={sub.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline"><ExternalLink className="w-2.5 h-2.5" />View</a>
+                                <Btn variant="primary" onClick={async () => {
+                                  await supabase.from("influencer_challenge_submissions" as any).update({ status: "approved", reviewed_at: new Date().toISOString() } as any).eq("id", sub.id);
+                                  if (enrollment && challenge) {
+                                    const newPending = Math.max(0, (enrollment.pending_earnings || 0) - challenge.reward_per_video);
+                                    const newApproved = (enrollment.approved_earnings || 0) + challenge.reward_per_video;
+                                    const allSubs = infChallengeSubmissions.filter((s: any) => s.user_id === sub.user_id && s.challenge_id === sub.challenge_id);
+                                    const approvedCount = allSubs.filter((s: any) => s.status === "approved").length + 1;
+                                    const isComplete = approvedCount >= challenge.total_videos;
+                                    await supabase.from("influencer_challenge_enrollments" as any).update({ pending_earnings: newPending, approved_earnings: newApproved, completed: isComplete } as any).eq("id", enrollment.id);
+                                    if (isComplete) {
+                                      const { data: wallet } = await supabase.from("influencer_wallets" as any).select("*").eq("user_id", sub.user_id).eq("status", "active").maybeSingle();
+                                      if (wallet) await supabase.from("influencer_wallets" as any).update({ balance: ((wallet as any).balance || 0) + newApproved } as any).eq("id", (wallet as any).id);
+                                    }
+                                  }
+                                  await sendNotification({ userId: sub.user_id, type: "earning", title: "Video Submission Approved!", message: `Your video #${sub.video_number} for "${challenge?.title}" has been approved.` });
+                                  toast({ title: "Submission approved" }); await fetchData();
+                                }}><Check className="w-3 h-3" /></Btn>
+                                <Btn variant="destructive" onClick={async () => {
+                                  if (priorRejections >= 1) {
+                                    // Second rejection — close challenge for this influencer
+                                    await supabase.from("influencer_challenge_submissions" as any).update({ status: "closed", reviewed_at: new Date().toISOString(), admin_notes: "Final rejection — challenge closed" } as any).eq("id", sub.id);
+                                    if (enrollment) {
+                                      await supabase.from("influencer_challenge_enrollments" as any).update({ completed: true, pending_earnings: 0, approved_earnings: 0 } as any).eq("id", enrollment.id);
+                                    }
+                                    await sendNotification({ userId: sub.user_id, type: "rejection", title: "Challenge Closed", message: `Your video #${sub.video_number} for "${challenge?.title}" was rejected again. This challenge is now closed for you with no payout.` });
+                                    toast({ title: "Challenge closed for influencer", variant: "destructive" });
+                                  } else {
+                                    // First rejection — allow one retry
+                                    await supabase.from("influencer_challenge_submissions" as any).update({ status: "rejected", reviewed_at: new Date().toISOString() } as any).eq("id", sub.id);
+                                    await sendNotification({ userId: sub.user_id, type: "rejection", title: "Video Submission Rejected", message: `Your video #${sub.video_number} for "${challenge?.title}" was not approved. You have one more attempt to resubmit.` });
+                                    toast({ title: "Submission rejected — 1 retry allowed" });
+                                  }
+                                  await fetchData();
+                                }}><X className="w-3 h-3" /></Btn>
+                              </span>
+                            </TableRow>
+                          );
+                        })}
+                      </div>
+                    </TableCard>
+                  );
+                })()}
+
+                {/* All submissions history */}
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30">
+                    <h3 className="text-[13px] font-semibold text-foreground">All Submissions</h3>
+                  </div>
+                  <TableHeader>
+                    <span className="flex-1">Influencer</span>
+                    <span className="flex-1">Challenge</span>
+                    <span className="w-20 text-center">Video #</span>
+                    <span className="w-24 text-center">Status</span>
+                    <span className="w-28 text-right">Date</span>
+                    <span className="w-16 text-right">Link</span>
+                  </TableHeader>
+                  <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                    {infChallengeSubmissions.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No submissions yet</div>}
+                    {[...infChallengeSubmissions].sort((a: any, b: any) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()).map((sub: any) => {
+                      const userEmail = profiles.find(p => p.id === sub.user_id)?.email || sub.user_id?.slice(0, 8);
+                      const challenge = infChallenges.find((c: any) => c.id === sub.challenge_id);
+                      return (
+                        <TableRow key={sub.id}>
+                          <span className="flex-1 text-[11px] font-medium text-foreground truncate">{userEmail}</span>
+                          <span className="flex-1 text-[11px] text-muted-foreground truncate">{challenge?.title || "Unknown"}</span>
+                          <span className="w-20 text-center text-[11px]">#{sub.video_number}</span>
+                          <span className="w-24 text-center"><StatusBadge status={sub.status} /></span>
+                          <span className="w-28 text-right text-[10px] text-muted-foreground">{new Date(sub.submitted_at).toLocaleDateString()}</span>
+                          <span className="w-16 text-right"><a href={sub.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline"><ExternalLink className="w-3 h-3 inline" /></a></span>
+                        </TableRow>
+                      );
+                    })}
+                  </div>
+                </TableCard>
+              </div>
+
             {/* ═══ SETTINGS ═══ */}
             {activeTab === "settings" && (
               <div className={cardCls}>
