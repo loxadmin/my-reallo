@@ -326,8 +326,7 @@ const Auth = () => {
                   </svg>
                   Google
                 </button>
-              </motion.div>
-            </AnimatePresence>
+              </div>
           </GlassCard>
         )}
       </motion.div>
