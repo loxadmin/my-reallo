@@ -54,7 +54,8 @@ const WalletCarousel = ({
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
+    const idx = emblaApi.selectedScrollSnap();
+    setSelectedIndex(idx);
   }, [emblaApi]);
 
   useEffect(() => {
@@ -63,6 +64,9 @@ const WalletCarousel = ({
     emblaApi.on("select", onSelect);
     return () => { emblaApi.off("select", onSelect); };
   }, [emblaApi, onSelect]);
+
+  // Report active state after wallets array is built
+  // We'll do this via an effect below after wallets are defined
 
   const wallets = [
     {
