@@ -126,15 +126,15 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarHeader className="px-5 py-6 border-b border-sidebar-border/40">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+      <SidebarHeader className={`${collapsed ? "px-2 py-4" : "px-5 py-6"} border-b border-sidebar-border/40 transition-all`}>
+        <div className="flex items-center justify-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm shrink-0">
             <Shield className="w-4.5 h-4.5 text-primary-foreground" />
           </div>
           {!collapsed && <span className="text-[14px] font-bold text-sidebar-foreground tracking-tight">Reallo Admin</span>}
         </div>
       </SidebarHeader>
-      <SidebarContent className="px-4 py-4 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <SidebarContent className={`${collapsed ? "px-1" : "px-4"} py-4 overflow-y-auto scrollbar-hide transition-all`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {navGroups.map((group) => (
           <SidebarGroup key={group.label} className="mb-3">
             <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.18em] text-sidebar-foreground/40 font-semibold mb-2 px-3">
@@ -176,7 +176,7 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter className="px-4 py-4 border-t border-sidebar-border/40">
+      <SidebarFooter className={`${collapsed ? "px-1" : "px-4"} py-4 border-t border-sidebar-border/40 transition-all`}>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
