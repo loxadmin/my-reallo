@@ -21,7 +21,7 @@ interface WalletCarouselProps {
   children?: React.ReactNode;
 }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
+const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG"); // fallback only
 
 const WalletCarousel = ({
   targetAmount,
