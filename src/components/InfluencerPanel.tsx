@@ -26,6 +26,7 @@ const InfluencerPanel = () => {
   const [loading, setLoading] = useState(true);
 
   // Application form
+  const [socialPlatform, setSocialPlatform] = useState("");
   const [socialLink, setSocialLink] = useState("");
   const [applying, setApplying] = useState(false);
 
