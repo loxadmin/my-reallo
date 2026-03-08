@@ -66,6 +66,7 @@ const BankSearchSelect = ({
 
 const InfluencerPanel = () => {
   const { user, profile } = useAuth();
+  const { formatCurrency: formatNaira } = useCurrency();
   const [application, setApplication] = useState<InfluencerApp | null>(null);
   const [wallet, setWallet] = useState<InfluencerWallet | null>(null);
   const [bankAccount, setBankAccount] = useState<BankAccount | null>(null);
