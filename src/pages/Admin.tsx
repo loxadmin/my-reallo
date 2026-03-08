@@ -367,6 +367,10 @@ const Admin = () => {
     { id: "decisions", label: "Decisions", icon: Smartphone, count: decisionApps.length },
     { id: "analytics", label: "Analytics", icon: BarChart3, count: decisionResponses.length },
     { id: "verification", label: "Verify", icon: CheckCircle2, count: verificationTxs.length },
+    { id: "inf_apps", label: "Inf. Apps", icon: Star, count: infApps.length },
+    { id: "inf_wallets", label: "Inf. Wallets", icon: Wallet, count: infWallets.length },
+    { id: "inf_referrals", label: "Inf. Refs", icon: Users, count: infReferrals.length },
+    { id: "inf_withdrawals", label: "Inf. W/D", icon: ArrowDownToLine, count: infWithdrawals.length },
     { id: "settings", label: "Settings", icon: Link, count: 0 },
   ];
 
