@@ -191,8 +191,8 @@ const WalletCarousel = ({
         ))}
       </div>
 
-      {/* Action buttons passed as children */}
-      {children}
+      {/* Action buttons passed as children - only show when current wallet is active */}
+      {currentWalletActive && children}
     </div>
   );
 };
