@@ -109,9 +109,35 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="glass-card rounded-2xl px-8 py-6">
-          <p className="text-muted-foreground text-[13px]">Loading...</p>
+      <div className="relative min-h-screen overflow-x-hidden">
+        <WaterBackground />
+        <Navbar />
+        <div className="flex pt-14">
+          <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-8 space-y-6">
+            {/* Header skeleton */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-1/3 rounded-lg bg-muted animate-pulse" />
+                <div className="h-3 w-1/2 rounded-lg bg-muted animate-pulse" />
+              </div>
+            </div>
+            {/* Card skeleton */}
+            <div className="glass-card rounded-2xl p-6 space-y-4">
+              <div className="h-5 w-2/5 rounded-lg bg-muted animate-pulse" />
+              <div className="h-24 w-full rounded-xl bg-muted animate-pulse" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="h-16 rounded-xl bg-muted animate-pulse" />
+                <div className="h-16 rounded-xl bg-muted animate-pulse" />
+              </div>
+            </div>
+            {/* Second card skeleton */}
+            <div className="glass-card rounded-2xl p-6 space-y-3">
+              <div className="h-4 w-1/4 rounded-lg bg-muted animate-pulse" />
+              <div className="h-10 w-full rounded-xl bg-muted animate-pulse" />
+              <div className="h-10 w-full rounded-xl bg-muted animate-pulse" />
+            </div>
+          </main>
         </div>
       </div>
     );
