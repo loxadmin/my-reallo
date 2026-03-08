@@ -94,13 +94,6 @@ const InfluencerPanel = () => {
   const loadBanks = async () => {
     setBanksLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("paystack-bank", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        body: undefined,
-      });
-      // supabase.functions.invoke uses POST by default, but our edge fn reads query params
-      // Use fetch directly with proper URL
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const res = await fetch(
