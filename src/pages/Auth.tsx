@@ -111,7 +111,7 @@ const Auth = () => {
 
         const { error } = await signIn(email, password);
         if (error) setError(sanitizeAuthError(error));
-        else navigate("/");
+        else navigate("/dashboard");
       } else {
         const result = signupSchema.safeParse({
           email,
