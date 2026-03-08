@@ -223,6 +223,7 @@ const StatusBadge = ({ status, className }: { status: string; className?: string
     pending_appeal: "bg-accent/10 text-accent-foreground border-accent/20",
     rejected: "bg-destructive/10 text-destructive border-destructive/20",
     appeal_rejected: "bg-destructive/10 text-destructive border-destructive/20",
+    closed: "bg-destructive/10 text-destructive border-destructive/20",
     BANNED: "bg-destructive/10 text-destructive border-destructive/20",
   };
   return <span className={`text-[10px] px-2.5 py-1 rounded-full font-medium border ${colors[status] || "bg-muted text-muted-foreground border-border"} ${className || ""}`}>{status.replace(/_/g, " ")}</span>;
