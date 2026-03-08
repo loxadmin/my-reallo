@@ -4,8 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
-import { Users, Wallet, ArrowDownToLine, Star, Upload, CheckCircle2, Clock, AlertCircle, ExternalLink } from "lucide-react";
+import { Users, Wallet, ArrowDownToLine, Star, Upload, CheckCircle2, Clock, AlertCircle, ExternalLink, ChevronsUpDown, Check, Search } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface Bank { name: string; code: string; }
 interface InfluencerApp { id: string; status: string; social_link: string; }
