@@ -421,10 +421,7 @@ const Admin = () => {
   // Admin user management functions
   const handleBanUser = async (userId: string, reason: string) => {
     await supabase.from("profiles").update({ is_banned: true, ban_reason: reason } as any).eq("id", userId);
-    await supabase.from("notifications" as any).insert({
-      user_id: userId, type: "ban", title: "Account Banned",
-      message: `Your account has been banned. Reason: ${reason}`,
-    } as any);
+    await sendNotification({ userId, type: "ban", title: "Account Banned", message: `Your account has been banned. Reason: ${reason}` });
     toast({ title: "User banned" });
     setBanReason("");
     setSelectedUserId(null);
@@ -433,10 +430,7 @@ const Admin = () => {
 
   const handleUnbanUser = async (userId: string) => {
     await supabase.from("profiles").update({ is_banned: false, ban_reason: null } as any).eq("id", userId);
-    await supabase.from("notifications" as any).insert({
-      user_id: userId, type: "info", title: "Account Unbanned",
-      message: "Your account ban has been lifted.",
-    } as any);
+    await sendNotification({ userId, type: "info", title: "Account Unbanned", message: "Your account ban has been lifted." });
     toast({ title: "User unbanned" });
     await fetchData();
   };
@@ -444,13 +438,8 @@ const Admin = () => {
   const handleIssueWarning = async (userId: string, reason: string) => {
     const { user } = (await supabase.auth.getUser()).data;
     if (!user) return;
-    await supabase.from("user_warnings" as any).insert({
-      user_id: userId, reason, issued_by: user.id,
-    } as any);
-    await supabase.from("notifications" as any).insert({
-      user_id: userId, type: "warning", title: "Warning Issued",
-      message: `You have received a warning: ${reason}`,
-    } as any);
+    await supabase.from("user_warnings" as any).insert({ user_id: userId, reason, issued_by: user.id } as any);
+    await sendNotification({ userId, type: "warning", title: "Warning Issued", message: `You have received a warning: ${reason}` });
     toast({ title: "Warning issued" });
     setWarningText("");
     await fetchData();
