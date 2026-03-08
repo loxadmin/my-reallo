@@ -280,7 +280,7 @@ Deno.serve(async (req) => {
     if (founderSigUrl) {
       try {
         // Remove background from founder signature via AI
-        const cleanedFounderBytes = await removeSignatureBg(founderSigUrl);
+        const cleanedFounderBytes = await removeSignatureBg(founderSigUrl, "founder");
         const founderSigBytes = cleanedFounderBytes || await fetchImageBytes(founderSigUrl);
 
         if (founderSigBytes) {
