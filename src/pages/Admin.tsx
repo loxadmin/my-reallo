@@ -803,17 +803,17 @@ const Admin = () => {
                 <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
                   <h3 className="text-[13px] font-semibold text-foreground">Registered Users ({filteredProfiles.length})</h3>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <TableHeader>
-                  <span className="flex-1 min-w-[160px]">User</span>
-                  <span className="w-24">Spend</span>
-                  <span className="w-16">Queue</span>
-                  <span className="w-16">Points</span>
-                  <span className="w-14">Refs</span>
-                  <span className="w-20">Status</span>
-                  <span className="w-10"></span>
+                  <span className="flex-1 min-w-0">User</span>
+                  <span className="w-20 shrink-0">Spend</span>
+                  <span className="w-14 shrink-0">Queue</span>
+                  <span className="w-16 shrink-0">Points</span>
+                  <span className="w-10 shrink-0">Refs</span>
+                  <span className="w-16 shrink-0">Status</span>
+                  <span className="w-8 shrink-0"></span>
                 </TableHeader>
-                <div className="max-h-[600px] overflow-y-auto">
+                <div className="max-h-[600px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                   {filteredProfiles.map((p) => {
                     const isSelected = selectedUserId === p.id;
                     const pWarnings = userWarnings.filter(w => w.user_id === p.id);
@@ -821,19 +821,19 @@ const Admin = () => {
                     return (
                       <div key={p.id}>
                         <TableRow onClick={() => { setSelectedUserId(isSelected ? null : p.id); setEditingProfile(null); }}>
-                          <div className="flex-1 min-w-[160px] overflow-hidden">
-                            <p className="text-[12px] font-medium text-foreground truncate">{p.email}</p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">Joined {new Date(p.created_at).toLocaleDateString()}</p>
+                          <div className="flex-1 min-w-0 overflow-hidden">
+                            <p className="text-[11px] font-medium text-foreground truncate">{p.email}</p>
+                            <p className="text-[9px] text-muted-foreground mt-0.5">Joined {new Date(p.created_at).toLocaleDateString()}</p>
                           </div>
-                          <span className="w-24 text-[11px] text-foreground truncate">{formatNaira(p.total_annual_spend || 0)}</span>
-                          <span className="w-16 text-[11px] text-muted-foreground">#{p.queue_position}</span>
-                          <span className="w-16 text-[11px] text-foreground">{p.points_balance.toLocaleString()}</span>
-                          <span className="w-14 text-[11px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
-                          <span className="w-20">
-                            {p.is_banned ? <StatusBadge status="BANNED" /> : pDuplicates.length > 0 ? <span className="text-[9px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full border border-destructive/20">{pDuplicates.length} dup</span> : <StatusBadge status="active" />}
+                          <span className="w-20 shrink-0 text-[11px] text-foreground truncate">{formatNaira(p.total_annual_spend || 0)}</span>
+                          <span className="w-14 shrink-0 text-[11px] text-muted-foreground">#{p.queue_position}</span>
+                          <span className="w-16 shrink-0 text-[11px] text-foreground truncate">{p.points_balance.toLocaleString()}</span>
+                          <span className="w-10 shrink-0 text-[11px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
+                          <span className="w-16 shrink-0">
+                            {p.is_banned ? <StatusBadge status="BANNED" /> : pDuplicates.length > 0 ? <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full border border-destructive/20">{pDuplicates.length} dup</span> : <StatusBadge status="active" />}
                           </span>
-                          <span className="w-10 flex justify-end">
-                            {isSelected ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                          <span className="w-8 shrink-0 flex justify-end">
+                            {isSelected ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
                           </span>
                         </TableRow>
 
