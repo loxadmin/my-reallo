@@ -280,31 +280,27 @@ Deno.serve(async (req) => {
 
     if (founderSigUrl) {
       try {
-        // Remove background from founder signature too
-        let processedFounderSigUrl = founderSigUrl;
-        const cleanedFounderSig = await removeSignatureBg(founderSigUrl);
-        if (cleanedFounderSig) {
-          // Upload processed founder signature
-          const base64Data = cleanedFounderSig.replace(/^data:image\/\w+;base64,/, "");
-          const rawStr = atob(base64Data);
-          const sigBytes = new Uint8Array(rawStr.length);
-          for (let i = 0; i < rawStr.length; i++) sigBytes[i] = rawStr.charCodeAt(i);
+        // Remove background from founder signature programmatically
+        const cleanedFounderBytes = await removeSignatureBgProgrammatic(founderSigUrl);
+        let founderSigBytes: Uint8Array | null = null;
+
+        if (cleanedFounderBytes) {
           const fSigPath = `signatures/processed_founder.png`;
-          await supabase.storage.from("advertiser-uploads").upload(fSigPath, sigBytes, {
+          await supabase.storage.from("advertiser-uploads").upload(fSigPath, cleanedFounderBytes, {
             contentType: "image/png",
             upsert: true,
           });
-          const { data: fSigUrlData } = supabase.storage.from("advertiser-uploads").getPublicUrl(fSigPath);
-          processedFounderSigUrl = fSigUrlData.publicUrl;
+          founderSigBytes = cleanedFounderBytes;
+        } else {
+          founderSigBytes = await fetchImageBytes(founderSigUrl);
         }
 
-        const fSigBytes = await fetchImageBytes(processedFounderSigUrl);
-        if (fSigBytes) {
+        if (founderSigBytes) {
           let fSigImage;
           try {
-            fSigImage = await pdfDoc.embedPng(fSigBytes);
+            fSigImage = await pdfDoc.embedPng(founderSigBytes);
           } catch {
-            fSigImage = await pdfDoc.embedJpg(fSigBytes);
+            fSigImage = await pdfDoc.embedJpg(founderSigBytes);
           }
           const fDims = fSigImage.scaleToFit(120, 40);
           page.drawImage(fSigImage, { x: 350, y: sigY - 50, width: fDims.width, height: fDims.height });
