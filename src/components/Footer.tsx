@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import RealloLogo from "./RealloLogo";
 
 const Footer = () => {
   const [content, setContent] = useState({
