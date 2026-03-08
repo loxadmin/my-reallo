@@ -764,6 +764,15 @@ const Admin = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <select
+                value={adminCurrency}
+                onChange={e => setAdminCurrency(e.target.value as AdminCurrency)}
+                className="rounded-lg border border-border/40 bg-muted/30 text-[11px] text-foreground px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-pointer"
+              >
+                {(["NGN", "USD", "EUR", "GBP"] as AdminCurrency[]).map(c => (
+                  <option key={c} value={c}>{ADMIN_CURRENCY_SYMBOLS[c]} {c}</option>
+                ))}
+              </select>
               <ThemeToggle />
               <Btn variant="outline" onClick={fetchData} disabled={refreshing}>
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
