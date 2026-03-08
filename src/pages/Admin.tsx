@@ -153,7 +153,7 @@ const Admin = () => {
 
     // Fetch warnings
     const { data: warningsData } = await supabase.from("user_warnings" as any).select("*").order("created_at", { ascending: false });
-    setUserWarnings((warningsData || []) as UserWarning[]);
+    setUserWarnings((warningsData || []) as unknown as UserWarning[]);
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
