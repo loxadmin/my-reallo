@@ -527,13 +527,45 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           annual_data_spend: number | null
           annual_electricity_spend: number | null
+          ban_reason: string | null
           created_at: string | null
           email: string
           id: string
+          is_banned: boolean
           last_active: string | null
           off_queue_at: string | null
           points_balance: number
@@ -548,9 +580,11 @@ export type Database = {
         Insert: {
           annual_data_spend?: number | null
           annual_electricity_spend?: number | null
+          ban_reason?: string | null
           created_at?: string | null
           email: string
           id: string
+          is_banned?: boolean
           last_active?: string | null
           off_queue_at?: string | null
           points_balance?: number
@@ -565,9 +599,11 @@ export type Database = {
         Update: {
           annual_data_spend?: number | null
           annual_electricity_spend?: number | null
+          ban_reason?: string | null
           created_at?: string | null
           email?: string
           id?: string
+          is_banned?: boolean
           last_active?: string | null
           off_queue_at?: string | null
           points_balance?: number
@@ -813,9 +849,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_warnings: {
+        Row: {
+          created_at: string
+          id: string
+          issued_by: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          issued_by: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          issued_by?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       verification_transactions: {
         Row: {
+          duplicate_note: string | null
           id: string
+          is_duplicate: boolean
           is_verified: boolean
           submitted_at: string
           transaction_id: string
@@ -824,7 +886,9 @@ export type Database = {
           verified_amount: number | null
         }
         Insert: {
+          duplicate_note?: string | null
           id?: string
+          is_duplicate?: boolean
           is_verified?: boolean
           submitted_at?: string
           transaction_id: string
@@ -833,7 +897,9 @@ export type Database = {
           verified_amount?: number | null
         }
         Update: {
+          duplicate_note?: string | null
           id?: string
+          is_duplicate?: boolean
           is_verified?: boolean
           submitted_at?: string
           transaction_id?: string
