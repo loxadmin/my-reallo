@@ -1982,10 +1982,8 @@ const Admin = () => {
                       </TableHeader>
                       <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                         {pending.map((sub: any) => {
-                          const userEmail = profiles.find(p => p.id === sub.user_id)?.email || sub.user_id?.slice(0, 8);
                           const challenge = infChallenges.find((c: any) => c.id === sub.challenge_id);
                           const enrollment = infChallengeEnrollments.find((e: any) => e.user_id === sub.user_id && e.challenge_id === sub.challenge_id);
-                          // Count prior rejections for same user + challenge + video_number
                           const priorRejections = infChallengeSubmissions.filter((s: any) =>
                             s.user_id === sub.user_id && s.challenge_id === sub.challenge_id &&
                             s.video_number === sub.video_number && (s.status === "rejected" || s.status === "closed") && s.id !== sub.id
@@ -1993,7 +1991,7 @@ const Admin = () => {
 
                           return (
                             <TableRow key={sub.id}>
-                              <span className="flex-1 text-[11px] font-medium text-foreground truncate">{userEmail}</span>
+                              <span className="flex-1 truncate"><UserLink userId={sub.user_id} /></span>
                               <span className="flex-1 text-[11px] text-muted-foreground truncate">{challenge?.title || "Unknown"}</span>
                               <span className="w-20 text-center text-[11px] text-foreground">#{sub.video_number}{challenge ? ` / ${challenge.total_videos}` : ""}</span>
                               <span className="w-20 text-center">
