@@ -132,9 +132,10 @@ const InfluencerPanel = () => {
       const bankCode = banks.find(b => b.name === selectedBank)?.code;
       if (!bankCode) { setVerifying(false); return; }
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/paystack-bank?action=resolve-account&account_number=${accountNumber}&bank_code=${bankCode}`,
-        { headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` } }
+        { headers: { "Authorization": `Bearer ${anonKey}`, "apikey": anonKey } }
       );
       const data = await res.json();
       if (data.data?.account_name) {
