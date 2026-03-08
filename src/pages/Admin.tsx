@@ -95,6 +95,7 @@ const navGroups = [
       { id: "inf_referrals" as AdminTab, label: "Referrals", icon: Users },
       { id: "inf_withdrawals" as AdminTab, label: "Withdrawals", icon: ArrowDownToLine },
       { id: "inf_challenges" as AdminTab, label: "Challenges", icon: Upload },
+      { id: "inf_submissions" as AdminTab, label: "Submissions", icon: Eye },
     ],
   },
   {
