@@ -793,6 +793,16 @@ const Admin = () => {
                   {activeTab === "overview" ? "Here's what's happening with your platform today" : `Manage ${tabTitle[activeTab].toLowerCase()}`}
                 </p>
               </div>
+              {activeTab === "overview" && (
+                <div className="flex items-center gap-2">
+                  <Btn variant="outline" onClick={() => downloadFinancialStatement("csv")}>
+                    <Download className="w-3.5 h-3.5" /> CSV
+                  </Btn>
+                  <Btn variant="outline" onClick={() => downloadFinancialStatement("pdf")}>
+                    <Download className="w-3.5 h-3.5" /> PDF
+                  </Btn>
+                </div>
+              )}
             </div>
 
             {/* ═══ OVERVIEW ═══ */}
