@@ -900,6 +900,7 @@ export type Database = {
       verification_transactions: {
         Row: {
           duplicate_note: string | null
+          edit_count: number
           id: string
           is_duplicate: boolean
           is_verified: boolean
@@ -911,6 +912,7 @@ export type Database = {
         }
         Insert: {
           duplicate_note?: string | null
+          edit_count?: number
           id?: string
           is_duplicate?: boolean
           is_verified?: boolean
@@ -922,6 +924,7 @@ export type Database = {
         }
         Update: {
           duplicate_note?: string | null
+          edit_count?: number
           id?: string
           is_duplicate?: boolean
           is_verified?: boolean
