@@ -45,6 +45,7 @@ const spendMeta: Record<SpendType, { label: string; icon: React.ReactNode; color
 
 const VerifySpendFlow = () => {
   const { user, profile, refreshProfile } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [verifications, setVerifications] = useState<Record<SpendType, Verification | null>>({
     data: null, electricity: null, food: null, transport: null,
   });
