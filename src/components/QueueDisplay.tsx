@@ -72,15 +72,22 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   useEffect(() => {
     const fetchStats = async () => {
       if (!profile || !user) return;
-      const [refRes, actRes, settingsRes, voucherRes, verifyRes, activeRes] = await Promise.all([
+      const [refRes, actRes, settingsRes, voucherRes, verifyRes, activeRes, refUsersRes] = await Promise.all([
         supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", profile.id),
         supabase.from("waitlist_activity").select("positions_moved").eq("user_id", profile.id).gte("created_at", new Date().toISOString().split("T")[0]),
         supabase.from("admin_settings").select("value").eq("key", "verify_expense_link").single(),
         supabase.from("vouchers").select("amount_naira").eq("user_id", user.id),
         supabase.from("spend_verifications").select("status").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
         supabase.from("admin_settings").select("value").eq("key", "verify_page_active").single(),
+        supabase.from("referrals").select("referred_user_id, created_at, profiles!referrals_referred_user_id_fkey(email)").eq("referrer_id", profile.id).order("created_at", { ascending: false }),
       ]);
       setReferralCount(refRes.count || 0);
+      setReferredUsers(
+        (refUsersRes.data || []).map((r: any) => ({
+          email: (r.profiles as any)?.email || "Unknown",
+          created_at: r.created_at,
+        }))
+      );
       setTodaySkipped((actRes.data || []).reduce((sum, a) => sum + (a.positions_moved || 0), 0));
       setVerifyLink(settingsRes.data?.value || "");
       setIsVerifyActive(activeRes.data?.value === "false" ? false : true);
