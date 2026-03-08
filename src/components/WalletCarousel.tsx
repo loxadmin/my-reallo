@@ -40,18 +40,12 @@ const WalletCarousel = ({ pointsBalance, nairaValue }: WalletCarouselProps) => {
     setSelectedIndex(emblaApi.selectedScrollSnap());
   }, [emblaApi]);
 
-  useState(() => {
-    if (emblaApi) {
-      emblaApi.on("select", onSelect);
-      onSelect();
-    }
-  });
-
-  // Re-attach listener when emblaApi changes
-  if (emblaApi) {
-    emblaApi.off("select", onSelect);
+  useEffect(() => {
+    if (!emblaApi) return;
     emblaApi.on("select", onSelect);
-  }
+    onSelect();
+    return () => { emblaApi.off("select", onSelect); };
+  }, [emblaApi, onSelect]);
 
   const utilitySpend = (profile?.annual_data_spend ?? 0) + (profile?.annual_electricity_spend ?? 0);
   const foodSpend = profile?.annual_food_spend ?? 0;
