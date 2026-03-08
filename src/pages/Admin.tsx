@@ -701,7 +701,7 @@ const Admin = () => {
     return Object.values(days);
   }, [profiles, activities, verificationTxs]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p className="text-muted-foreground text-[13px]">Loading...</p></div>;
+  if (loading) return <PageSkeleton />;
   if (!isAdmin) return null;
 
   const referralApps = decisionApps.filter(a => a.category === "referral");
