@@ -32,7 +32,7 @@ interface Transaction {
   edit_count: number;
 }
 
-type SpendType = "data" | "electricity";
+type SpendType = "data" | "electricity" | "food" | "transport";
 
 const VerifySpendFlow = () => {
   const { user, profile, refreshProfile } = useAuth();
