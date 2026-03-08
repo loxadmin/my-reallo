@@ -1385,19 +1385,19 @@ const Admin = () => {
                     <h3 className="text-[13px] font-semibold text-foreground">Referral History</h3>
                   </div>
                   <TableHeader>
-                    <span className="flex-1">Influencer → Referred</span>
-                    <span className="w-24 text-right">Reward</span>
-                    <span className="w-28 text-right">Date</span>
+                    <span className="flex-1 min-w-0">Influencer → Referred</span>
+                    <span className="w-20 shrink-0 text-right">Reward</span>
+                    <span className="w-24 shrink-0 text-right">Date</span>
                   </TableHeader>
-                  <div className="max-h-[500px] overflow-y-auto">
+                  <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                     {infReferrals.map((r: any) => {
                       const infEmail = profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8);
                       const refEmail = profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8);
                       return (
                         <TableRow key={r.id}>
-                          <span className="flex-1 text-[12px] text-foreground">{infEmail} → {refEmail}</span>
-                          <span className="w-24 text-right text-[12px] text-primary font-semibold">{formatNaira(r.reward_amount)}</span>
-                          <span className="w-28 text-right text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                          <span className="flex-1 min-w-0 text-[11px] text-foreground truncate">{infEmail} → {refEmail}</span>
+                          <span className="w-20 shrink-0 text-right text-[11px] text-primary font-semibold">{formatNaira(r.reward_amount)}</span>
+                          <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
                         </TableRow>
                       );
                     })}
