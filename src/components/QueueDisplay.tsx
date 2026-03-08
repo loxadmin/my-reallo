@@ -7,7 +7,8 @@ import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import DecisionFlow from "./DecisionFlow";
 import VerifySpendFlow from "./VerifySpendFlow";
-import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2 } from "lucide-react";
+import InfluencerPanel from "./InfluencerPanel";
+import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2, Star } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
 
@@ -374,6 +375,13 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 </div>
               </GlassCard>
             )}
+          </motion.div>
+        )}
+
+        {/* ═══ INFLUENCER VIEW ═══ */}
+        {view === "influencer" && (
+          <motion.div key="influencer" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <InfluencerPanel />
           </motion.div>
         )}
       </div>

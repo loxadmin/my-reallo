@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import WaterBackground from "@/components/WaterBackground";
-import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, ChartBar as BarChart3, Plus, Trash2, Link, Upload, CircleCheck as CheckCircle2, FileSpreadsheet, Smartphone, Check, ExternalLink, CreditCard as Edit2, Download } from "lucide-react";
+import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, ChartBar as BarChart3, Plus, Trash2, Link, Upload, CircleCheck as CheckCircle2, FileSpreadsheet, Smartphone, Check, ExternalLink, CreditCard as Edit2, Download, Star, Wallet, ArrowDownToLine } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ProfileRow {
@@ -35,7 +35,7 @@ const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings";
+type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals";
 
 const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
@@ -54,6 +54,13 @@ const Admin = () => {
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [decisionApps, setDecisionApps] = useState<DecisionAppRow[]>([]);
   const [decisionResponses, setDecisionResponses] = useState<DecisionResponseRow[]>([]);
+
+  // Influencer state
+  const [infApps, setInfApps] = useState<any[]>([]);
+  const [infWallets, setInfWallets] = useState<any[]>([]);
+  const [infBankAccounts, setInfBankAccounts] = useState<any[]>([]);
+  const [infReferrals, setInfReferrals] = useState<any[]>([]);
+  const [infWithdrawals, setInfWithdrawals] = useState<any[]>([]);
 
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [verifyPageActive, setVerifyPageActive] = useState(true);
@@ -99,6 +106,20 @@ const Admin = () => {
     setDecisionApps((daRes.data || []) as unknown as DecisionAppRow[]);
     setDecisionResponses((drRes.data || []) as unknown as DecisionResponseRow[]);
     setEditedGoals({});
+
+    // Fetch influencer data
+    const [iaRes, iwRes, ibRes, irRes, iwdRes] = await Promise.all([
+      supabase.from("influencer_applications" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_wallets" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_bank_accounts" as any).select("*"),
+      supabase.from("influencer_referrals" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_withdrawals" as any).select("*").order("created_at", { ascending: false }),
+    ]);
+    setInfApps((iaRes.data || []) as any[]);
+    setInfWallets((iwRes.data || []) as any[]);
+    setInfBankAccounts((ibRes.data || []) as any[]);
+    setInfReferrals((irRes.data || []) as any[]);
+    setInfWithdrawals((iwdRes.data || []) as any[]);
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
@@ -346,6 +367,10 @@ const Admin = () => {
     { id: "decisions", label: "Decisions", icon: Smartphone, count: decisionApps.length },
     { id: "analytics", label: "Analytics", icon: BarChart3, count: decisionResponses.length },
     { id: "verification", label: "Verify", icon: CheckCircle2, count: verificationTxs.length },
+    { id: "inf_apps", label: "Inf. Apps", icon: Star, count: infApps.length },
+    { id: "inf_wallets", label: "Inf. Wallets", icon: Wallet, count: infWallets.length },
+    { id: "inf_referrals", label: "Inf. Refs", icon: Users, count: infReferrals.length },
+    { id: "inf_withdrawals", label: "Inf. W/D", icon: ArrowDownToLine, count: infWithdrawals.length },
     { id: "settings", label: "Settings", icon: Link, count: 0 },
   ];
 
@@ -776,6 +801,199 @@ const Admin = () => {
               </div>
             </GlassCard>
           </div>
+        )}
+
+        {/* Influencer Applications */}
+        {activeTab === "inf_apps" && (
+          <GlassCard animate={false}>
+            <h3 className="font-semibold text-foreground text-[13px] mb-4">Influencer Applications</h3>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="glass rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-primary">{infApps.filter(a => a.status === "pending_review").length}</p>
+                <p className="text-[10px] text-muted-foreground">Pending</p>
+              </div>
+              <div className="glass rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-foreground">{infApps.filter(a => a.status === "approved").length}</p>
+                <p className="text-[10px] text-muted-foreground">Approved</p>
+              </div>
+              <div className="glass rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-foreground">{infApps.filter(a => a.status === "rejected").length}</p>
+                <p className="text-[10px] text-muted-foreground">Rejected</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {infApps.map((app: any) => {
+                const userEmail = profiles.find(p => p.id === app.user_id)?.email || app.user_id?.slice(0, 8);
+                return (
+                  <div key={app.id} className="glass rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                        <a href={app.social_link} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline flex items-center gap-1">
+                          <ExternalLink className="w-2.5 h-2.5" /> {app.social_link}
+                        </a>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${app.status === "approved" ? "bg-primary/10 text-primary" : app.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+                        {app.status}
+                      </span>
+                    </div>
+                    {app.status === "pending_review" && (
+                      <div className="flex gap-2 mt-2">
+                        <GlassButton variant="primary" onClick={async () => {
+                          await supabase.from("influencer_applications" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", app.id);
+                          // Remove user from queue
+                          await supabase.from("profiles").update({ queue_position: 0, off_queue_at: new Date().toISOString() }).eq("id", app.user_id);
+                          toast({ title: "Application approved" });
+                          await fetchData();
+                        }} className="flex-1 text-[11px]"><Check className="w-3 h-3 mr-1" /> Approve</GlassButton>
+                        <GlassButton variant="outline" onClick={async () => {
+                          await supabase.from("influencer_applications" as any).update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", app.id);
+                          toast({ title: "Application rejected" });
+                          await fetchData();
+                        }} className="flex-1 text-[11px]">Reject</GlassButton>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {infApps.length === 0 && <p className="text-center py-8 text-muted-foreground text-[13px]">No applications yet</p>}
+            </div>
+          </GlassCard>
+        )}
+
+        {/* Influencer Wallet Activations */}
+        {activeTab === "inf_wallets" && (
+          <GlassCard animate={false}>
+            <h3 className="font-semibold text-foreground text-[13px] mb-4">Influencer Wallet Activations</h3>
+            <div className="space-y-2">
+              {infWallets.map((w: any) => {
+                const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id?.slice(0, 8);
+                const bank = infBankAccounts.find((b: any) => b.user_id === w.user_id);
+                return (
+                  <div key={w.id} className="glass rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${w.status === "active" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                        {w.status}
+                      </span>
+                    </div>
+                    {bank && (
+                      <div className="text-[11px] text-muted-foreground mb-2">
+                        <p>Bank: {bank.bank_name} • Acct: {bank.account_number}</p>
+                        <p>Name: {bank.account_name}</p>
+                        {bank.id_document_url && (
+                          <button onClick={() => {
+                            const { data } = supabase.storage.from("id-documents").getPublicUrl(bank.id_document_url);
+                            window.open(data.publicUrl, "_blank");
+                          }} className="text-primary hover:underline flex items-center gap-1 mt-1">
+                            <ExternalLink className="w-2.5 h-2.5" /> View ID Document
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {w.status === "pending_activation" && (
+                      <div className="flex gap-2">
+                        <GlassButton variant="primary" onClick={async () => {
+                          await supabase.from("influencer_wallets" as any).update({ status: "active" }).eq("id", w.id);
+                          if (bank) {
+                            await supabase.from("influencer_bank_accounts" as any).update({ verification_status: "verified" }).eq("id", bank.id);
+                          }
+                          toast({ title: "Wallet activated" });
+                          await fetchData();
+                        }} className="flex-1 text-[11px]"><Check className="w-3 h-3 mr-1" /> Approve Wallet</GlassButton>
+                        <GlassButton variant="outline" onClick={async () => {
+                          await supabase.from("influencer_wallets" as any).update({ status: "rejected" }).eq("id", w.id);
+                          toast({ title: "Wallet rejected" });
+                          await fetchData();
+                        }} className="flex-1 text-[11px]">Reject</GlassButton>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-muted-foreground mt-1">Balance: {formatNaira(w.balance || 0)}</p>
+                  </div>
+                );
+              })}
+              {infWallets.length === 0 && <p className="text-center py-8 text-muted-foreground text-[13px]">No wallet activations yet</p>}
+            </div>
+          </GlassCard>
+        )}
+
+        {/* Influencer Referrals */}
+        {activeTab === "inf_referrals" && (
+          <GlassCard animate={false}>
+            <h3 className="font-semibold text-foreground text-[13px] mb-4">Influencer Referrals</h3>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="glass rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-primary">{infReferrals.length}</p>
+                <p className="text-[10px] text-muted-foreground">Total Referrals</p>
+              </div>
+              <div className="glass rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-foreground">{formatNaira(infReferrals.reduce((s: number, r: any) => s + (r.reward_amount || 0), 0))}</p>
+                <p className="text-[10px] text-muted-foreground">Total Earnings</p>
+              </div>
+            </div>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {infReferrals.map((r: any) => {
+                const infEmail = profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8);
+                const refEmail = profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8);
+                return (
+                  <div key={r.id} className="flex items-center justify-between glass rounded-xl p-3">
+                    <div>
+                      <p className="text-[11px] text-foreground">{infEmail} → {refEmail}</p>
+                      <p className="text-[9px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <p className="text-[11px] text-primary font-semibold">{formatNaira(r.reward_amount)}</p>
+                  </div>
+                );
+              })}
+              {infReferrals.length === 0 && <p className="text-center py-8 text-muted-foreground text-[13px]">No influencer referrals yet</p>}
+            </div>
+          </GlassCard>
+        )}
+
+        {/* Influencer Withdrawals */}
+        {activeTab === "inf_withdrawals" && (
+          <GlassCard animate={false}>
+            <h3 className="font-semibold text-foreground text-[13px] mb-4">Influencer Withdrawals</h3>
+            <div className="space-y-2">
+              {infWithdrawals.map((w: any) => {
+                const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id?.slice(0, 8);
+                const bank = infBankAccounts.find((b: any) => b.id === w.bank_account_id);
+                return (
+                  <div key={w.id} className="glass rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${w.status === "approved" ? "bg-primary/10 text-primary" : w.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+                        {w.status}
+                      </span>
+                    </div>
+                    <p className="text-[13px] font-bold text-primary">{formatNaira(w.amount)}</p>
+                    {bank && <p className="text-[10px] text-muted-foreground">{bank.bank_name} • {bank.account_number} • {bank.account_name}</p>}
+                    {w.status === "pending" && (
+                      <div className="flex gap-2 mt-2">
+                        <GlassButton variant="primary" onClick={async () => {
+                          // Deduct from wallet
+                          const wallet = infWallets.find((wl: any) => wl.user_id === w.user_id);
+                          if (wallet) {
+                            const newBal = Math.max(0, (wallet.balance || 0) - w.amount);
+                            await supabase.from("influencer_wallets" as any).update({ balance: newBal }).eq("id", wallet.id);
+                          }
+                          await supabase.from("influencer_withdrawals" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", w.id);
+                          toast({ title: "Withdrawal approved" });
+                          await fetchData();
+                        }} className="flex-1 text-[11px]"><Check className="w-3 h-3 mr-1" /> Approve</GlassButton>
+                        <GlassButton variant="outline" onClick={async () => {
+                          await supabase.from("influencer_withdrawals" as any).update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", w.id);
+                          toast({ title: "Withdrawal rejected" });
+                          await fetchData();
+                        }} className="flex-1 text-[11px]">Reject</GlassButton>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {infWithdrawals.length === 0 && <p className="text-center py-8 text-muted-foreground text-[13px]">No withdrawals yet</p>}
+            </div>
+          </GlassCard>
         )}
 
         {/* Settings */}
