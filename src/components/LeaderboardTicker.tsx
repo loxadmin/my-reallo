@@ -88,7 +88,16 @@ const LeaderboardTicker = () => {
   const current = entries[currentIndex];
 
   return (
-    <div className="w-full rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm px-4 py-2.5 overflow-hidden">
+    <div
+      className="w-full rounded-xl px-4 py-2.5 overflow-hidden relative"
+      style={{
+        background: "linear-gradient(135deg, hsl(160 50% 40% / 0.12), hsl(160 60% 30% / 0.08))",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        border: "1px solid hsl(160 50% 40% / 0.2)",
+        boxShadow: "inset 0 1px 0 hsl(160 50% 60% / 0.1), 0 2px 12px hsl(160 50% 25% / 0.06)",
+      }}
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={current.id}
