@@ -9,6 +9,7 @@ import {
   Wallet, ArrowDownToLine, Ban, AlertTriangle, Eye, X, Bell, LayoutDashboard,
   ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "@/hooks/use-toast";
 import { sendNotification } from "@/lib/notifications";
 import WaterBackground from "@/components/WaterBackground";
