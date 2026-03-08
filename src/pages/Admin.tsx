@@ -883,9 +883,13 @@ const Admin = () => {
                         <p>Bank: {bank.bank_name} • Acct: {bank.account_number}</p>
                         <p>Name: {bank.account_name}</p>
                         {bank.id_document_url && (
-                          <button onClick={() => {
-                            const { data } = supabase.storage.from("id-documents").getPublicUrl(bank.id_document_url);
-                            window.open(data.publicUrl, "_blank");
+                          <button onClick={async () => {
+                            const { data, error } = await supabase.storage.from("id-documents").createSignedUrl(bank.id_document_url!, 3600);
+                            if (error || !data?.signedUrl) {
+                              alert("Failed to load document: " + (error?.message || "Unknown error"));
+                              return;
+                            }
+                            window.open(data.signedUrl, "_blank");
                           }} className="text-primary hover:underline flex items-center gap-1 mt-1">
                             <ExternalLink className="w-2.5 h-2.5" /> View ID Document
                           </button>
