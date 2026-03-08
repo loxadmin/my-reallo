@@ -561,6 +561,8 @@ export type Database = {
         Row: {
           annual_data_spend: number | null
           annual_electricity_spend: number | null
+          annual_food_spend: number | null
+          annual_transport_spend: number | null
           ban_reason: string | null
           created_at: string | null
           email: string
@@ -580,6 +582,8 @@ export type Database = {
         Insert: {
           annual_data_spend?: number | null
           annual_electricity_spend?: number | null
+          annual_food_spend?: number | null
+          annual_transport_spend?: number | null
           ban_reason?: string | null
           created_at?: string | null
           email: string
@@ -599,6 +603,8 @@ export type Database = {
         Update: {
           annual_data_spend?: number | null
           annual_electricity_spend?: number | null
+          annual_food_spend?: number | null
+          annual_transport_spend?: number | null
           ban_reason?: string | null
           created_at?: string | null
           email?: string
