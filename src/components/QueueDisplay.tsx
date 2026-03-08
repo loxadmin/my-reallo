@@ -35,6 +35,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
+  const [referredUsers, setReferredUsers] = useState<{ email: string; created_at: string }[]>([]);
   const [todaySkipped, setTodaySkipped] = useState(0);
   const [verifyLink, setVerifyLink] = useState("");
   const [nextUnlock, setNextUnlock] = useState({ hours: 0, minutes: 0, seconds: 0 });
