@@ -318,51 +318,149 @@ const Admin = () => {
       }).filter(r => r.transaction_id);
 
       let matchCount = 0;
+      let duplicateCount = 0;
+      // Track which tx_ids in THIS CSV have already been verified (first one wins)
+      const verifiedInThisRun = new Set<string>();
+
       for (const row of rows) {
-        const { data: matches } = await supabase.from("verification_transactions").select("id, user_id, verification_id").eq("transaction_id", row.transaction_id).eq("is_verified", false);
+        // Check if this transaction_id has ALREADY been verified (globally)
+        const { data: alreadyVerified } = await supabase.from("verification_transactions")
+          .select("id, user_id").eq("transaction_id", row.transaction_id).eq("is_verified", true).limit(1);
+
+        const isGlobalDuplicate = (alreadyVerified && alreadyVerified.length > 0) || verifiedInThisRun.has(row.transaction_id);
+
+        const { data: matches } = await supabase.from("verification_transactions")
+          .select("id, user_id, verification_id")
+          .eq("transaction_id", row.transaction_id)
+          .eq("is_verified", false)
+          .eq("is_duplicate", false);
+
         if (matches && matches.length > 0) {
-          for (const match of matches) {
-            await supabase.from("verification_transactions").update({ is_verified: true, verified_amount: row.amount }).eq("id", match.id);
+          if (isGlobalDuplicate) {
+            // Mark ALL unverified matches as duplicates
+            for (const match of matches) {
+              await supabase.from("verification_transactions").update({
+                is_duplicate: true,
+                duplicate_note: `Duplicate of already-verified transaction. Original verified for user ${alreadyVerified?.[0]?.user_id?.slice(0, 8) || 'unknown'}.`
+              } as any).eq("id", match.id);
+
+              // Notify the user about the duplicate
+              await supabase.from("notifications" as any).insert({
+                user_id: match.user_id,
+                type: "warning",
+                title: "Duplicate Transaction ID Detected",
+                message: `Your transaction ID "${row.transaction_id}" was flagged as a duplicate and could not be verified. This transaction ID has already been used. Please submit a unique transaction ID.`,
+              } as any);
+
+              duplicateCount++;
+            }
+          } else {
+            // Verify only the FIRST match, mark rest as duplicates
+            const firstMatch = matches[0];
+            await supabase.from("verification_transactions").update({ is_verified: true, verified_amount: row.amount }).eq("id", firstMatch.id);
+            verifiedInThisRun.add(row.transaction_id);
             matchCount++;
-            // Check if all txs for this verification are done
-            const { data: allTxs } = await supabase.from("verification_transactions").select("is_verified, verified_amount").eq("verification_id", match.verification_id);
-            const { data: verif } = await supabase.from("spend_verifications").select("frequency").eq("id", match.verification_id).single();
+
+            // Mark remaining matches as duplicates
+            for (let i = 1; i < matches.length; i++) {
+              await supabase.from("verification_transactions").update({
+                is_duplicate: true,
+                duplicate_note: `Duplicate submission. Already verified for user ${firstMatch.user_id.slice(0, 8)}.`
+              } as any).eq("id", matches[i].id);
+
+              await supabase.from("notifications" as any).insert({
+                user_id: matches[i].user_id,
+                type: "warning",
+                title: "Duplicate Transaction ID Detected",
+                message: `Your transaction ID "${row.transaction_id}" was flagged as a duplicate and could not be verified.`,
+              } as any);
+
+              duplicateCount++;
+            }
+
+            // Verification calculation logic (same as before)
+            const { data: allTxs } = await supabase.from("verification_transactions").select("is_verified, verified_amount").eq("verification_id", firstMatch.verification_id);
+            const { data: verif } = await supabase.from("spend_verifications").select("frequency").eq("id", firstMatch.verification_id).single();
             if (allTxs && verif) {
               const verifiedTxs = allTxs.filter(t => t.is_verified);
               const totalAmount = verifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
               const freq = (verif as any).frequency;
-              
-              // For monthly, use first tx × 12 as final
               if (freq === "monthly" && verifiedTxs.length >= 1) {
                 const annualAmount = Math.round(Number(verifiedTxs[0].verified_amount || 0) * 12);
-                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: annualAmount }).eq("id", match.verification_id);
-                await supabase.from("profiles").update({ total_annual_spend: annualAmount, spend_verified: true }).eq("id", match.user_id);
-              }
-              // For daily/weekly, set initial on first verification
-              else if (verifiedTxs.length === 1) {
+                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: annualAmount }).eq("id", firstMatch.verification_id);
+                await supabase.from("profiles").update({ total_annual_spend: annualAmount, spend_verified: true }).eq("id", firstMatch.user_id);
+              } else if (verifiedTxs.length === 1) {
                 const multiplier = freq === "daily" ? 365 : 52;
                 const initialAnnual = Math.round(Number(verifiedTxs[0].verified_amount || 0) * multiplier);
-                await supabase.from("profiles").update({ total_annual_spend: initialAnnual }).eq("id", match.user_id);
+                await supabase.from("profiles").update({ total_annual_spend: initialAnnual }).eq("id", firstMatch.user_id);
               }
-              // Check if verification period ended for recalculation
-              const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", match.verification_id).single();
+              const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", firstMatch.verification_id).single();
               if (vData && new Date() >= new Date((vData as any).ends_at) && freq !== "monthly") {
                 const recalcMultiplier = freq === "daily" ? 12 : 13;
                 const finalAnnual = Math.round(totalAmount * recalcMultiplier);
-                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: finalAnnual }).eq("id", match.verification_id);
-                await supabase.from("profiles").update({ total_annual_spend: finalAnnual, spend_verified: true }).eq("id", match.user_id);
+                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: finalAnnual }).eq("id", firstMatch.verification_id);
+                await supabase.from("profiles").update({ total_annual_spend: finalAnnual, spend_verified: true }).eq("id", firstMatch.user_id);
               }
             }
           }
         }
       }
-      toast({ title: `CSV processed`, description: `${matchCount} transactions matched from ${rows.length} rows.` });
+      toast({
+        title: `CSV processed`,
+        description: `${matchCount} verified, ${duplicateCount} duplicates flagged from ${rows.length} rows.`
+      });
       await fetchData();
     } catch {
       toast({ title: "CSV error", description: "Failed to process CSV file." });
     }
     setCsvUploading(false);
     if (csvInputRef.current) csvInputRef.current.value = "";
+  };
+
+  // Admin user management functions
+  const handleBanUser = async (userId: string, reason: string) => {
+    await supabase.from("profiles").update({ is_banned: true, ban_reason: reason } as any).eq("id", userId);
+    await supabase.from("notifications" as any).insert({
+      user_id: userId, type: "ban", title: "Account Banned",
+      message: `Your account has been banned. Reason: ${reason}`,
+    } as any);
+    toast({ title: "User banned" });
+    setBanReason("");
+    setSelectedUserId(null);
+    await fetchData();
+  };
+
+  const handleUnbanUser = async (userId: string) => {
+    await supabase.from("profiles").update({ is_banned: false, ban_reason: null } as any).eq("id", userId);
+    await supabase.from("notifications" as any).insert({
+      user_id: userId, type: "info", title: "Account Unbanned",
+      message: "Your account ban has been lifted.",
+    } as any);
+    toast({ title: "User unbanned" });
+    await fetchData();
+  };
+
+  const handleIssueWarning = async (userId: string, reason: string) => {
+    const { user } = (await supabase.auth.getUser()).data;
+    if (!user) return;
+    await supabase.from("user_warnings" as any).insert({
+      user_id: userId, reason, issued_by: user.id,
+    } as any);
+    await supabase.from("notifications" as any).insert({
+      user_id: userId, type: "warning", title: "Warning Issued",
+      message: `You have received a warning: ${reason}`,
+    } as any);
+    toast({ title: "Warning issued" });
+    setWarningText("");
+    await fetchData();
+  };
+
+  const handleUpdateProfile = async (userId: string, updates: { email?: string; points_balance?: number; queue_position?: number }) => {
+    await supabase.from("profiles").update(updates).eq("id", userId);
+    toast({ title: "Profile updated" });
+    setEditingProfile(null);
+    setSelectedUserId(null);
+    await fetchData();
   };
 
   // Decision analytics
