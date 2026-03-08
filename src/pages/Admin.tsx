@@ -1397,6 +1397,7 @@ const Admin = () => {
                                   }
                                 }
 
+                                await sendNotification({ userId: sub.user_id, type: "earning", title: "Video Submission Approved!", message: `Your video #${sub.video_number} for "${ch.title}" has been approved. You earned ₦${ch.reward_per_video.toLocaleString("en-NG")}!` });
                                 toast({ title: "Submission approved" });
                                 await fetchData();
                               }} className="flex-1 text-[10px]"><Check className="w-3 h-3 mr-1" /> Approve</GlassButton>
