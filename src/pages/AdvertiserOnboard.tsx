@@ -31,6 +31,7 @@ const AdvertiserOnboard = () => {
   const [verifying, setVerifying] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [brandedEmailRequired, setBrandedEmailRequired] = useState(true);
 
   // Validate token
   useEffect(() => {
