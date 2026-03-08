@@ -348,6 +348,10 @@ const Admin = () => {
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
     setVerifyPageActive(settings.find(s => s.key === "verify_page_active")?.value === "false" ? false : true);
+    setVerifyDataActive(settings.find(s => s.key === "verify_data_active")?.value === "false" ? false : true);
+    setVerifyElectricityActive(settings.find(s => s.key === "verify_electricity_active")?.value === "false" ? false : true);
+    setVerifyFoodActive(settings.find(s => s.key === "verify_food_active")?.value === "false" ? false : true);
+    setVerifyTransportActive(settings.find(s => s.key === "verify_transport_active")?.value === "false" ? false : true);
     setPostQueueReferralPoints(settings.find(s => s.key === "post_queue_referral_points")?.value || "1000");
     setVerifySpendLink(settings.find(s => s.key === "verify_spend_link")?.value || "");
     setVerifySpendDescription(settings.find(s => s.key === "verify_spend_description")?.value || "");
