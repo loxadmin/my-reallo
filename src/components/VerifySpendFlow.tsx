@@ -423,11 +423,6 @@ const VerifySpendFlow = () => {
               </div>
             );
           })}
-                  </GlassButton>
-                )}
-              </div>
-            );
-          })}
         </div>
       </div>
 
