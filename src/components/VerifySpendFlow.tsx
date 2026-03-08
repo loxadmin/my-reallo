@@ -424,8 +424,15 @@ const VerificationPanel = ({
   setEditingTxId, setEditValue, onStart, onSubmitTx, onEditTx,
   getMaxBoxes, getMultiplier,
 }: VerificationPanelProps) => {
-  const label = type === "data" ? "Data" : "Electricity";
-  const icon = type === "data" ? <Wifi className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />;
+  const labelMap: Record<SpendType, string> = { data: "Data", electricity: "Electricity", food: "Food", transport: "Transport" };
+  const iconMap: Record<SpendType, JSX.Element> = {
+    data: <Wifi className="w-3.5 h-3.5" />,
+    electricity: <Zap className="w-3.5 h-3.5" />,
+    food: <UtensilsCrossed className="w-3.5 h-3.5" />,
+    transport: <Bus className="w-3.5 h-3.5" />,
+  };
+  const label = labelMap[type];
+  const icon = iconMap[type];
 
   if (isComplete) {
     return (
