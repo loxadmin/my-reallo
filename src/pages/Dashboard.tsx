@@ -21,8 +21,12 @@ type DashStep = "calculator" | "goal" | "queue";
 interface SpendResult {
   weeklyData: number;
   monthlyElectricity: number;
+  weeklyFood: number;
+  weeklyTransport: number;
   annualData: number;
   annualElectricity: number;
+  annualFood: number;
+  annualTransport: number;
   totalAnnual: number;
 }
 
