@@ -126,9 +126,9 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarHeader className="px-5 py-6 border-b border-sidebar-border/40">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+      <SidebarHeader className={`${collapsed ? "px-2 py-4" : "px-5 py-6"} border-b border-sidebar-border/40 transition-all`}>
+        <div className="flex items-center justify-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm shrink-0">
             <Shield className="w-4.5 h-4.5 text-primary-foreground" />
           </div>
           {!collapsed && <span className="text-[14px] font-bold text-sidebar-foreground tracking-tight">Reallo Admin</span>}
