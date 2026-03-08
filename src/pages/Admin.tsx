@@ -5,13 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
+import GlassInput from "@/components/GlassInput";
 import WaterBackground from "@/components/WaterBackground";
-import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, ChartBar as BarChart3, Plus, Trash2, Link, Upload, CircleCheck as CheckCircle2, FileSpreadsheet, Smartphone, Check, ExternalLink, CreditCard as Edit2, Download, Star, Wallet, ArrowDownToLine } from "lucide-react";
+import { Users, Ghost, Activity, LogOut, RefreshCw, Shield, Settings, Save, MessageSquare, ChartBar as BarChart3, Plus, Trash2, Link, Upload, CircleCheck as CheckCircle2, FileSpreadsheet, Smartphone, Check, ExternalLink, CreditCard as Edit2, Download, Star, Wallet, ArrowDownToLine, Ban, AlertTriangle, Eye, X, Bell } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { sendNotification } from "@/lib/notifications";
 
 interface ProfileRow {
   id: string; email: string; total_annual_spend: number; selected_goal: string | null;
   queue_position: number; referral_code: string | null; points_balance: number; created_at: string;
+  is_banned: boolean; ban_reason: string | null;
 }
 interface ActivityRow { id: string; user_id: string; action_type: string; positions_moved: number; created_at: string; }
 interface GoalCategoryRow { id: string; goal_type: string; subcategory: string | null; label: string; max_price: number; }
@@ -29,13 +32,17 @@ interface DecisionResponseRow {
 interface VerificationTx {
   id: string; verification_id: string; user_id: string; transaction_id: string;
   is_verified: boolean; verified_amount: number | null; submitted_at: string;
+  is_duplicate: boolean; duplicate_note: string | null;
+}
+interface UserWarning {
+  id: string; user_id: string; reason: string; issued_by: string; created_at: string;
 }
 
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges";
+type AdminTab = "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "warnings";
 
 const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
@@ -54,6 +61,13 @@ const Admin = () => {
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [decisionApps, setDecisionApps] = useState<DecisionAppRow[]>([]);
   const [decisionResponses, setDecisionResponses] = useState<DecisionResponseRow[]>([]);
+
+  // User management state
+  const [userWarnings, setUserWarnings] = useState<UserWarning[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [warningText, setWarningText] = useState("");
+  const [banReason, setBanReason] = useState("");
+  const [editingProfile, setEditingProfile] = useState<{ email: string; points_balance: number; queue_position: number } | null>(null);
 
   // Influencer state
   const [infApps, setInfApps] = useState<any[]>([]);
@@ -137,6 +151,10 @@ const Admin = () => {
     setInfChallenges((icRes.data || []) as any[]);
     setInfChallengeSubmissions((icsRes.data || []) as any[]);
     setInfChallengeEnrollments((iceRes.data || []) as any[]);
+
+    // Fetch warnings
+    const { data: warningsData } = await supabase.from("user_warnings" as any).select("*").order("created_at", { ascending: false });
+    setUserWarnings((warningsData || []) as unknown as UserWarning[]);
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
@@ -301,51 +319,127 @@ const Admin = () => {
       }).filter(r => r.transaction_id);
 
       let matchCount = 0;
+      let duplicateCount = 0;
+      // Track which tx_ids in THIS CSV have already been verified (first one wins)
+      const verifiedInThisRun = new Set<string>();
+
       for (const row of rows) {
-        const { data: matches } = await supabase.from("verification_transactions").select("id, user_id, verification_id").eq("transaction_id", row.transaction_id).eq("is_verified", false);
+        // Check if this transaction_id has ALREADY been verified (globally)
+        const { data: alreadyVerified } = await supabase.from("verification_transactions")
+          .select("id, user_id").eq("transaction_id", row.transaction_id).eq("is_verified", true).limit(1);
+
+        const isGlobalDuplicate = (alreadyVerified && alreadyVerified.length > 0) || verifiedInThisRun.has(row.transaction_id);
+
+        const { data: matches } = await supabase.from("verification_transactions")
+          .select("id, user_id, verification_id")
+          .eq("transaction_id", row.transaction_id)
+          .eq("is_verified", false)
+          .eq("is_duplicate", false);
+
         if (matches && matches.length > 0) {
-          for (const match of matches) {
-            await supabase.from("verification_transactions").update({ is_verified: true, verified_amount: row.amount }).eq("id", match.id);
+          if (isGlobalDuplicate) {
+            // Mark ALL unverified matches as duplicates
+            for (const match of matches) {
+              await supabase.from("verification_transactions").update({
+                is_duplicate: true,
+                duplicate_note: `Duplicate of already-verified transaction. Original verified for user ${alreadyVerified?.[0]?.user_id?.slice(0, 8) || 'unknown'}.`
+              } as any).eq("id", match.id);
+
+              await sendNotification({ userId: match.user_id, type: "warning", title: "Duplicate Transaction ID Detected", message: `Your transaction ID "${row.transaction_id}" was flagged as a duplicate and could not be verified. This transaction ID has already been used.` });
+
+              duplicateCount++;
+            }
+          } else {
+            // Verify only the FIRST match, mark rest as duplicates
+            const firstMatch = matches[0];
+            await supabase.from("verification_transactions").update({ is_verified: true, verified_amount: row.amount }).eq("id", firstMatch.id);
+            verifiedInThisRun.add(row.transaction_id);
             matchCount++;
-            // Check if all txs for this verification are done
-            const { data: allTxs } = await supabase.from("verification_transactions").select("is_verified, verified_amount").eq("verification_id", match.verification_id);
-            const { data: verif } = await supabase.from("spend_verifications").select("frequency").eq("id", match.verification_id).single();
+
+            // Mark remaining matches as duplicates
+            for (let i = 1; i < matches.length; i++) {
+              await supabase.from("verification_transactions").update({
+                is_duplicate: true,
+                duplicate_note: `Duplicate submission. Already verified for user ${firstMatch.user_id.slice(0, 8)}.`
+              } as any).eq("id", matches[i].id);
+
+              await sendNotification({ userId: matches[i].user_id, type: "warning", title: "Duplicate Transaction ID Detected", message: `Your transaction ID "${row.transaction_id}" was flagged as a duplicate and could not be verified.` });
+
+              duplicateCount++;
+            }
+
+            // Verification calculation logic (same as before)
+            const { data: allTxs } = await supabase.from("verification_transactions").select("is_verified, verified_amount").eq("verification_id", firstMatch.verification_id);
+            const { data: verif } = await supabase.from("spend_verifications").select("frequency").eq("id", firstMatch.verification_id).single();
             if (allTxs && verif) {
               const verifiedTxs = allTxs.filter(t => t.is_verified);
               const totalAmount = verifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
               const freq = (verif as any).frequency;
-              
-              // For monthly, use first tx × 12 as final
               if (freq === "monthly" && verifiedTxs.length >= 1) {
                 const annualAmount = Math.round(Number(verifiedTxs[0].verified_amount || 0) * 12);
-                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: annualAmount }).eq("id", match.verification_id);
-                await supabase.from("profiles").update({ total_annual_spend: annualAmount, spend_verified: true }).eq("id", match.user_id);
-              }
-              // For daily/weekly, set initial on first verification
-              else if (verifiedTxs.length === 1) {
+                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: annualAmount }).eq("id", firstMatch.verification_id);
+                await supabase.from("profiles").update({ total_annual_spend: annualAmount, spend_verified: true }).eq("id", firstMatch.user_id);
+              } else if (verifiedTxs.length === 1) {
                 const multiplier = freq === "daily" ? 365 : 52;
                 const initialAnnual = Math.round(Number(verifiedTxs[0].verified_amount || 0) * multiplier);
-                await supabase.from("profiles").update({ total_annual_spend: initialAnnual }).eq("id", match.user_id);
+                await supabase.from("profiles").update({ total_annual_spend: initialAnnual }).eq("id", firstMatch.user_id);
               }
-              // Check if verification period ended for recalculation
-              const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", match.verification_id).single();
+              const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", firstMatch.verification_id).single();
               if (vData && new Date() >= new Date((vData as any).ends_at) && freq !== "monthly") {
                 const recalcMultiplier = freq === "daily" ? 12 : 13;
                 const finalAnnual = Math.round(totalAmount * recalcMultiplier);
-                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: finalAnnual }).eq("id", match.verification_id);
-                await supabase.from("profiles").update({ total_annual_spend: finalAnnual, spend_verified: true }).eq("id", match.user_id);
+                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: finalAnnual }).eq("id", firstMatch.verification_id);
+                await supabase.from("profiles").update({ total_annual_spend: finalAnnual, spend_verified: true }).eq("id", firstMatch.user_id);
               }
             }
           }
         }
       }
-      toast({ title: `CSV processed`, description: `${matchCount} transactions matched from ${rows.length} rows.` });
+      toast({
+        title: `CSV processed`,
+        description: `${matchCount} verified, ${duplicateCount} duplicates flagged from ${rows.length} rows.`
+      });
       await fetchData();
     } catch {
       toast({ title: "CSV error", description: "Failed to process CSV file." });
     }
     setCsvUploading(false);
     if (csvInputRef.current) csvInputRef.current.value = "";
+  };
+
+  // Admin user management functions
+  const handleBanUser = async (userId: string, reason: string) => {
+    await supabase.from("profiles").update({ is_banned: true, ban_reason: reason } as any).eq("id", userId);
+    await sendNotification({ userId, type: "ban", title: "Account Banned", message: `Your account has been banned. Reason: ${reason}` });
+    toast({ title: "User banned" });
+    setBanReason("");
+    setSelectedUserId(null);
+    await fetchData();
+  };
+
+  const handleUnbanUser = async (userId: string) => {
+    await supabase.from("profiles").update({ is_banned: false, ban_reason: null } as any).eq("id", userId);
+    await sendNotification({ userId, type: "info", title: "Account Unbanned", message: "Your account ban has been lifted." });
+    toast({ title: "User unbanned" });
+    await fetchData();
+  };
+
+  const handleIssueWarning = async (userId: string, reason: string) => {
+    const { user } = (await supabase.auth.getUser()).data;
+    if (!user) return;
+    await supabase.from("user_warnings" as any).insert({ user_id: userId, reason, issued_by: user.id } as any);
+    await sendNotification({ userId, type: "warning", title: "Warning Issued", message: `You have received a warning: ${reason}` });
+    toast({ title: "Warning issued" });
+    setWarningText("");
+    await fetchData();
+  };
+
+  const handleUpdateProfile = async (userId: string, updates: { email?: string; points_balance?: number; queue_position?: number }) => {
+    await supabase.from("profiles").update(updates).eq("id", userId);
+    toast({ title: "Profile updated" });
+    setEditingProfile(null);
+    setSelectedUserId(null);
+    await fetchData();
   };
 
   // Decision analytics
@@ -378,6 +472,7 @@ const Admin = () => {
 
   const tabs: { id: AdminTab; label: string; icon: any; count: number }[] = [
     { id: "users", label: "Users", icon: Users, count: profiles.length },
+    { id: "warnings", label: "Warnings", icon: AlertTriangle, count: userWarnings.length },
     { id: "ghosts", label: "Ghosts", icon: Ghost, count: ghostCount },
     { id: "activity", label: "Activity", icon: Activity, count: activities.length },
     { id: "goals", label: "Goals", icon: Settings, count: goalCategories.length },
@@ -431,33 +526,104 @@ const Admin = () => {
 
         {/* Users */}
         {activeTab === "users" && (
-          <GlassCard animate={false}>
-            <h3 className="font-semibold text-foreground text-[13px] mb-4">Registered Users</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-[12px]">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2 px-2 text-muted-foreground text-[11px]">Email</th>
-                    <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Spend</th>
-                    <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Queue #</th>
-                    <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Points</th>
-                    <th className="text-right py-2 px-2 text-muted-foreground text-[11px]">Referrals</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {profiles.map((p) => (
-                    <tr key={p.id} className="border-b border-border/50">
-                      <td className="py-2 px-2 text-foreground truncate max-w-[120px]">{p.email}</td>
-                      <td className="py-2 px-2 text-right text-primary">{formatNaira(p.total_annual_spend || 0)}</td>
-                      <td className="py-2 px-2 text-right font-bold text-foreground">{p.queue_position}</td>
-                      <td className="py-2 px-2 text-right text-primary">{p.points_balance || 0}</td>
-                      <td className="py-2 px-2 text-right text-foreground">{referralCounts[p.id] || 0}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </GlassCard>
+          <div className="space-y-4">
+            <GlassCard animate={false}>
+              <h3 className="font-semibold text-foreground text-[13px] mb-4">Registered Users ({profiles.length})</h3>
+              <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                {profiles.map((p) => {
+                  const isSelected = selectedUserId === p.id;
+                  const pWarnings = userWarnings.filter(w => w.user_id === p.id);
+                  const pDuplicates = verificationTxs.filter(t => t.user_id === p.id && t.is_duplicate);
+                  return (
+                    <div key={p.id} className={`glass rounded-xl p-3 ${p.is_banned ? 'border border-destructive/30' : ''}`}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[12px] font-semibold text-foreground">{p.email}</p>
+                            {p.is_banned && <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full">BANNED</span>}
+                            {pDuplicates.length > 0 && <span className="text-[9px] bg-yellow-500/10 text-yellow-600 px-1.5 py-0.5 rounded-full">{pDuplicates.length} dup</span>}
+                            {pWarnings.length > 0 && <span className="text-[9px] bg-orange-500/10 text-orange-600 px-1.5 py-0.5 rounded-full">{pWarnings.length} warn</span>}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            Spend: {formatNaira(p.total_annual_spend || 0)} • Queue: #{p.queue_position} • Points: {p.points_balance} • Refs: {referralCounts[p.id] || 0}
+                          </p>
+                        </div>
+                        <button onClick={() => { setSelectedUserId(isSelected ? null : p.id); setEditingProfile(null); }} className="text-muted-foreground hover:text-foreground">
+                          {isSelected ? <X className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+
+                      {isSelected && (
+                        <div className="mt-3 space-y-3 border-t border-border/30 pt-3">
+                          <p className="text-[10px] text-muted-foreground">ID: {p.id}</p>
+                          <p className="text-[10px] text-muted-foreground">Joined: {new Date(p.created_at).toLocaleDateString()}</p>
+                          <p className="text-[10px] text-muted-foreground">Goal: {p.selected_goal || 'None'} • Referral Code: {p.referral_code || 'None'}</p>
+
+                          {/* Duplicate TXs for this user */}
+                          {pDuplicates.length > 0 && (
+                            <div className="glass rounded-lg p-2">
+                              <p className="text-[10px] text-yellow-600 font-semibold mb-1">Duplicate Transactions:</p>
+                              {pDuplicates.map(d => (
+                                <p key={d.id} className="text-[10px] text-muted-foreground font-mono">{d.transaction_id} — {d.duplicate_note}</p>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Edit profile */}
+                          {editingProfile ? (
+                            <div className="space-y-2">
+                              <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                  <p className="text-[9px] text-muted-foreground">Points</p>
+                                  <input type="number" value={editingProfile.points_balance} onChange={e => setEditingProfile(prev => prev ? { ...prev, points_balance: parseInt(e.target.value) || 0 } : null)} className="w-full glass-input rounded-lg px-2 py-1 text-[11px] text-foreground" />
+                                </div>
+                                <div>
+                                  <p className="text-[9px] text-muted-foreground">Queue #</p>
+                                  <input type="number" value={editingProfile.queue_position} onChange={e => setEditingProfile(prev => prev ? { ...prev, queue_position: parseInt(e.target.value) || 0 } : null)} className="w-full glass-input rounded-lg px-2 py-1 text-[11px] text-foreground" />
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <GlassButton variant="primary" onClick={() => handleUpdateProfile(p.id, { points_balance: editingProfile.points_balance, queue_position: editingProfile.queue_position })} className="flex-1 text-[10px]"><Check className="w-3 h-3 mr-1" /> Save</GlassButton>
+                                <GlassButton variant="outline" onClick={() => setEditingProfile(null)} className="text-[10px]">Cancel</GlassButton>
+                              </div>
+                            </div>
+                          ) : (
+                            <GlassButton variant="outline" onClick={() => setEditingProfile({ email: p.email, points_balance: p.points_balance, queue_position: p.queue_position })} className="w-full text-[10px]"><Edit2 className="w-3 h-3 mr-1" /> Edit Profile</GlassButton>
+                          )}
+
+                          {/* Warning */}
+                          <div className="flex gap-2">
+                            <input value={selectedUserId === p.id ? warningText : ""} onChange={e => setWarningText(e.target.value)} placeholder="Warning reason..." className="flex-1 glass-input rounded-lg px-2 py-1.5 text-[11px] text-foreground" />
+                            <GlassButton variant="outline" onClick={() => { if (warningText.trim()) handleIssueWarning(p.id, warningText); }} disabled={!warningText.trim()} className="text-[10px]"><AlertTriangle className="w-3 h-3 mr-1" /> Warn</GlassButton>
+                          </div>
+
+                          {/* Ban/Unban */}
+                          {p.is_banned ? (
+                            <GlassButton variant="primary" onClick={() => handleUnbanUser(p.id)} className="w-full text-[10px]"><Check className="w-3 h-3 mr-1" /> Unban User</GlassButton>
+                          ) : (
+                            <div className="flex gap-2">
+                              <input value={selectedUserId === p.id ? banReason : ""} onChange={e => setBanReason(e.target.value)} placeholder="Ban reason..." className="flex-1 glass-input rounded-lg px-2 py-1.5 text-[11px] text-foreground" />
+                              <GlassButton variant="outline" onClick={() => { if (banReason.trim()) handleBanUser(p.id, banReason); }} disabled={!banReason.trim()} className="text-[10px] text-destructive"><Ban className="w-3 h-3 mr-1" /> Ban</GlassButton>
+                            </div>
+                          )}
+
+                          {/* Warnings history */}
+                          {pWarnings.length > 0 && (
+                            <div className="glass rounded-lg p-2">
+                              <p className="text-[10px] font-semibold text-orange-600 mb-1">Warning History:</p>
+                              {pWarnings.map(w => (
+                                <p key={w.id} className="text-[10px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()} — {w.reason}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </GlassCard>
+          </div>
         )}
 
         {/* Ghosts */}
@@ -785,27 +951,37 @@ const Admin = () => {
             </GlassCard>
             <GlassCard animate={false}>
               <h3 className="font-semibold text-foreground text-[13px] mb-4">User Transactions</h3>
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-3 gap-3 mb-4">
                 <div className="glass rounded-xl p-3 text-center">
                   <p className="text-xl font-bold text-primary">{verificationTxs.filter(t => t.is_verified).length}</p>
                   <p className="text-[10px] text-muted-foreground">Verified</p>
                 </div>
                 <div className="glass rounded-xl p-3 text-center">
-                  <p className="text-xl font-bold text-foreground">{verificationTxs.filter(t => !t.is_verified).length}</p>
+                  <p className="text-xl font-bold text-foreground">{verificationTxs.filter(t => !t.is_verified && !t.is_duplicate).length}</p>
                   <p className="text-[10px] text-muted-foreground">Pending</p>
+                </div>
+                <div className="glass rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-destructive">{verificationTxs.filter(t => t.is_duplicate).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Duplicates</p>
                 </div>
               </div>
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {verificationTxs.map(tx => {
                   const userEmail = profiles.find(p => p.id === tx.user_id)?.email || tx.user_id.slice(0, 8);
                   return (
-                    <div key={tx.id} className="flex items-center justify-between glass rounded-xl p-3">
+                    <div key={tx.id} className={`flex items-center justify-between glass rounded-xl p-3 ${tx.is_duplicate ? 'border border-destructive/30' : ''}`}>
                       <div>
                         <p className="text-[11px] text-muted-foreground">{userEmail}</p>
                         <p className="text-[13px] font-mono text-foreground">{tx.transaction_id}</p>
+                        {tx.is_duplicate && <p className="text-[9px] text-destructive">{tx.duplicate_note || 'Duplicate'}</p>}
                       </div>
                       <div className="text-right">
-                        {tx.is_verified ? (
+                        {tx.is_duplicate ? (
+                          <div className="flex items-center gap-1 text-destructive">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            <span className="text-[10px]">Duplicate</span>
+                          </div>
+                        ) : tx.is_verified ? (
                           <div className="flex items-center gap-1 text-primary">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span className="text-[11px]">₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
@@ -819,6 +995,44 @@ const Admin = () => {
               </div>
             </GlassCard>
           </div>
+        )}
+
+        {/* Warnings Tab */}
+        {activeTab === "warnings" && (
+          <GlassCard animate={false}>
+            <h3 className="font-semibold text-foreground text-[13px] mb-4 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-primary" /> User Warnings & Bans
+            </h3>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="glass rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-primary">{userWarnings.length}</p>
+                <p className="text-[10px] text-muted-foreground">Total Warnings</p>
+              </div>
+              <div className="glass rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-destructive">{profiles.filter(p => p.is_banned).length}</p>
+                <p className="text-[10px] text-muted-foreground">Banned Users</p>
+              </div>
+              <div className="glass rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-foreground">{verificationTxs.filter(t => t.is_duplicate).length}</p>
+                <p className="text-[10px] text-muted-foreground">Dup TX IDs</p>
+              </div>
+            </div>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {userWarnings.map(w => {
+                const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id.slice(0, 8);
+                return (
+                  <div key={w.id} className="glass rounded-xl p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                      <p className="text-[10px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1">{w.reason}</p>
+                  </div>
+                );
+              })}
+              {userWarnings.length === 0 && <p className="text-center py-8 text-muted-foreground text-[13px]">No warnings issued yet</p>}
+            </div>
+          </GlassCard>
         )}
 
         {/* Influencer Applications */}
@@ -861,12 +1075,14 @@ const Admin = () => {
                         <GlassButton variant="primary" onClick={async () => {
                           await supabase.from("influencer_applications" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", app.id);
                           await supabase.from("profiles").update({ queue_position: 0, off_queue_at: new Date().toISOString() }).eq("id", app.user_id);
+                          await sendNotification({ userId: app.user_id, type: "influencer_approved", title: "Influencer Application Approved!", message: "Congratulations! Your influencer application has been approved. You can now access influencer features." });
                           toast({ title: "Application approved" });
                           await fetchData();
                         }} className="flex-1 text-[11px]"><Check className="w-3 h-3 mr-1" /> Approve</GlassButton>
                         <GlassButton variant="outline" onClick={async () => {
                           const newStatus = app.status === "pending_appeal" ? "appeal_rejected" : "rejected";
                           await supabase.from("influencer_applications" as any).update({ status: newStatus, reviewed_at: new Date().toISOString() }).eq("id", app.id);
+                          await sendNotification({ userId: app.user_id, type: "influencer_rejected", title: "Influencer Application Update", message: app.status === "pending_appeal" ? "Your appeal has been reviewed and was not approved at this time." : "Your influencer application was not approved at this time." });
                           toast({ title: app.status === "pending_appeal" ? "Appeal rejected" : "Application rejected" });
                           await fetchData();
                         }} className="flex-1 text-[11px]">Reject</GlassButton>
@@ -921,11 +1137,13 @@ const Admin = () => {
                           if (bank) {
                             await supabase.from("influencer_bank_accounts" as any).update({ verification_status: "verified" }).eq("id", bank.id);
                           }
+                          await sendNotification({ userId: w.user_id, type: "wallet_activated", title: "Wallet Activated!", message: "Your influencer wallet has been activated. You can now receive earnings and request withdrawals." });
                           toast({ title: "Wallet activated" });
                           await fetchData();
                         }} className="flex-1 text-[11px]"><Check className="w-3 h-3 mr-1" /> Approve Wallet</GlassButton>
                         <GlassButton variant="outline" onClick={async () => {
                           await supabase.from("influencer_wallets" as any).update({ status: "rejected" }).eq("id", w.id);
+                          await sendNotification({ userId: w.user_id, type: "rejection", title: "Wallet Activation Rejected", message: "Your wallet activation request has been rejected. Please review your submitted documents." });
                           toast({ title: "Wallet rejected" });
                           await fetchData();
                         }} className="flex-1 text-[11px]">Reject</GlassButton>
@@ -1001,6 +1219,7 @@ const Admin = () => {
                             await supabase.from("influencer_wallets" as any).update({ balance: newBal }).eq("id", wallet.id);
                           }
                           await supabase.from("influencer_withdrawals" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", w.id);
+                          await sendNotification({ userId: w.user_id, type: "withdrawal_approved", title: "Withdrawal Approved", message: `Your withdrawal of ₦${w.amount.toLocaleString("en-NG")} has been approved and will be processed shortly.` });
                           toast({ title: "Withdrawal approved" });
                           await fetchData();
                         }} className="flex-1 text-[11px]"><Check className="w-3 h-3 mr-1" /> Approve</GlassButton>
@@ -1167,6 +1386,7 @@ const Admin = () => {
                                   }
                                 }
 
+                                await sendNotification({ userId: sub.user_id, type: "earning", title: "Video Submission Approved!", message: `Your video #${sub.video_number} for "${ch.title}" has been approved. You earned ₦${ch.reward_per_video.toLocaleString("en-NG")}!` });
                                 toast({ title: "Submission approved" });
                                 await fetchData();
                               }} className="flex-1 text-[10px]"><Check className="w-3 h-3 mr-1" /> Approve</GlassButton>
@@ -1174,6 +1394,7 @@ const Admin = () => {
                                 await supabase.from("influencer_challenge_submissions" as any).update({
                                   status: "rejected", reviewed_at: new Date().toISOString()
                                 } as any).eq("id", sub.id);
+                                await sendNotification({ userId: sub.user_id, type: "rejection", title: "Video Submission Rejected", message: `Your video #${sub.video_number} for "${ch.title}" was not approved. Please review the instructions and try again.` });
                                 toast({ title: "Submission rejected" });
                                 await fetchData();
                               }} className="flex-1 text-[10px]">Reject</GlassButton>

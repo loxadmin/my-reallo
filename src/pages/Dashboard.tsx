@@ -8,11 +8,11 @@ import SpendCalculator from "@/components/SpendCalculator";
 import GoalSelector from "@/components/GoalSelector";
 import QueueDisplay from "@/components/QueueDisplay";
 import WaterBackground from "@/components/WaterBackground";
-import { LayoutDashboard, Award, ShieldCheck, Star } from "lucide-react";
+import { LayoutDashboard, Award, ShieldCheck, Star, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
-export type DashView = "home" | "earn" | "goal" | "verify" | "influencer";
+export type DashView = "home" | "earn" | "goal" | "verify" | "influencer" | "notifications";
 
 type DashStep = "calculator" | "goal" | "queue";
 
@@ -100,6 +100,7 @@ const Dashboard = () => {
     { id: "earn", label: "Earn", icon: Award },
     ...(isOffQueue ? [{ id: "verify" as DashView, label: "Verify", icon: ShieldCheck }] : []),
     { id: "influencer" as DashView, label: "Influencer", icon: Star },
+    { id: "notifications" as DashView, label: "Notifications", icon: Bell },
   ];
 
   return (
