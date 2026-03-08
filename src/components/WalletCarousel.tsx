@@ -161,9 +161,12 @@ const WalletCarousel = ({
                       Claimable: <span className="text-primary font-semibold">{formatCurrency(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
                     </p>
 
-                    <div className="space-y-1.5 mb-5">
+                    <button
+                      onClick={() => setShowSpendPopup(true)}
+                      className="w-full text-left space-y-1.5 mb-5 cursor-pointer group/goal"
+                    >
                       <div className="flex justify-between items-end">
-                        <p className="font-medium text-foreground text-[12px]">GOAL - {goalLabel}</p>
+                        <p className="font-medium text-foreground text-[12px] group-hover/goal:text-primary transition-colors">GOAL - {goalLabel}</p>
                         <p className="text-muted-foreground text-[11px]">
                           {targetAmount > 0 ? Math.round((nairaValue / targetAmount) * 100) : 0}%
                         </p>
@@ -176,7 +179,7 @@ const WalletCarousel = ({
                           transition={{ duration: 1.2, ease: "easeOut" }}
                         />
                       </div>
-                    </div>
+                    </button>
                   </>
                 ) : (
                   <div className="py-4 text-center">
