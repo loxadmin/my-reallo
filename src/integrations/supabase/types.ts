@@ -815,6 +815,7 @@ export type Database = {
           frequency: string
           id: string
           recalculated_amount: number | null
+          spend_type: string
           started_at: string
           status: string
           user_id: string
@@ -827,6 +828,7 @@ export type Database = {
           frequency?: string
           id?: string
           recalculated_amount?: number | null
+          spend_type?: string
           started_at?: string
           status?: string
           user_id: string
@@ -839,6 +841,7 @@ export type Database = {
           frequency?: string
           id?: string
           recalculated_amount?: number | null
+          spend_type?: string
           started_at?: string
           status?: string
           user_id?: string
