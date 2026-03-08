@@ -403,6 +403,10 @@ const Admin = () => {
     await Promise.all([
       supabase.from("admin_settings").upsert({ key: "verify_expense_link", value: verifyExpenseLink, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_page_active", value: String(verifyPageActive), updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "verify_data_active", value: String(verifyDataActive), updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "verify_electricity_active", value: String(verifyElectricityActive), updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "verify_food_active", value: String(verifyFoodActive), updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "verify_transport_active", value: String(verifyTransportActive), updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "post_queue_referral_points", value: postQueueReferralPoints, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_spend_link", value: verifySpendLink, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_spend_description", value: verifySpendDescription, updated_at: new Date().toISOString() }),
