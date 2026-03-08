@@ -176,7 +176,7 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter className="px-4 py-4 border-t border-sidebar-border/40">
+      <SidebarFooter className={`${collapsed ? "px-1" : "px-4"} py-4 border-t border-sidebar-border/40 transition-all`}>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
