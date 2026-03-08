@@ -1162,26 +1162,26 @@ const Admin = () => {
                     <h3 className="text-[13px] font-semibold text-foreground">User Transactions</h3>
                   </div>
                   <TableHeader>
-                    <span className="flex-1">User</span>
-                    <span className="flex-1">Transaction ID</span>
-                    <span className="w-24 text-right">Status</span>
+                    <span className="flex-1 min-w-0">User</span>
+                    <span className="flex-1 min-w-0">Transaction ID</span>
+                    <span className="w-24 shrink-0 text-right">Status</span>
                   </TableHeader>
-                  <div className="max-h-[500px] overflow-y-auto">
+                  <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                     {verificationTxs.map(tx => {
                       const userEmail = profiles.find(p => p.id === tx.user_id)?.email || tx.user_id.slice(0, 8);
                       return (
                         <TableRow key={tx.id} className={tx.is_duplicate ? "bg-destructive/5" : ""}>
-                          <span className="flex-1 text-[12px] text-muted-foreground">{userEmail}</span>
-                          <div className="flex-1">
-                            <p className="text-[12px] font-mono text-foreground">{tx.transaction_id}</p>
-                            {tx.is_duplicate && <p className="text-[9px] text-destructive">{tx.duplicate_note || 'Duplicate'}</p>}
+                          <span className="flex-1 min-w-0 text-[11px] text-muted-foreground truncate">{userEmail}</span>
+                          <div className="flex-1 min-w-0 overflow-hidden">
+                            <p className="text-[11px] font-mono text-foreground truncate">{tx.transaction_id}</p>
+                            {tx.is_duplicate && <p className="text-[9px] text-destructive truncate">{tx.duplicate_note || 'Duplicate'}</p>}
                           </div>
-                          <span className="w-24 flex justify-end">
+                          <span className="w-24 shrink-0 flex justify-end">
                             {tx.is_duplicate ? (
-                              <span className="flex items-center gap-1 text-destructive text-[10px]"><AlertTriangle className="w-3 h-3" /> Duplicate</span>
+                              <span className="flex items-center gap-1 text-destructive text-[10px]"><AlertTriangle className="w-3 h-3 shrink-0" /> Dup</span>
                             ) : tx.is_verified ? (
-                              <span className="flex items-center gap-1 text-primary text-[11px]"><CheckCircle2 className="w-3 h-3" /> ₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
-                            ) : <span className="text-[11px] text-muted-foreground">Pending</span>}
+                              <span className="flex items-center gap-1 text-primary text-[10px]"><CheckCircle2 className="w-3 h-3 shrink-0" /> ₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
+                            ) : <span className="text-[10px] text-muted-foreground">Pending</span>}
                           </span>
                         </TableRow>
                       );
