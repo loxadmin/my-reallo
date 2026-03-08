@@ -9,7 +9,7 @@ import {
   Wallet, ArrowDownToLine, Ban, AlertTriangle, Eye, X, Bell, LayoutDashboard,
   ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown, DollarSign
 } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "@/hooks/use-toast";
 import { sendNotification } from "@/lib/notifications";
