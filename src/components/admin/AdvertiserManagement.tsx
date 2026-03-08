@@ -20,6 +20,7 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
   const [founderSigFile, setFounderSigFile] = useState<File | null>(null);
   const [advUserCount, setAdvUserCount] = useState("");
   const [advUserCountLink, setAdvUserCountLink] = useState("");
+  const [brandedEmailRequired, setBrandedEmailRequired] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
