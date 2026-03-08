@@ -26,6 +26,9 @@ interface Transaction {
   submitted_at: string;
   is_verified: boolean;
   verified_amount: number | null;
+  is_duplicate: boolean;
+  duplicate_note: string | null;
+  edit_count: number;
 }
 
 const VerifySpendFlow = () => {
