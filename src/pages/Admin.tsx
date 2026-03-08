@@ -74,7 +74,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "warnings";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "warnings";
 
 const navGroups = [
   {
@@ -84,6 +84,7 @@ const navGroups = [
       { id: "users" as AdminTab, label: "Users", icon: Users },
       { id: "goals" as AdminTab, label: "Goals", icon: Settings },
       { id: "decisions" as AdminTab, label: "Decision Apps", icon: Smartphone },
+      { id: "dec_submissions" as AdminTab, label: "Decision Submissions", icon: FileSpreadsheet },
       { id: "verification" as AdminTab, label: "Verification", icon: CheckCircle2 },
       { id: "warnings" as AdminTab, label: "Warnings", icon: AlertTriangle },
     ],
@@ -712,6 +713,8 @@ const Admin = () => {
   const bannedCount = profiles.filter(p => p.is_banned).length;
   const activeUsers = profiles.filter(p => !p.is_banned).length;
 
+  const pendingDecisionApprovals = decisionResponses.filter(r => r.referral_screenshot_url && !r.referral_approved).length;
+
   const counts: Record<string, number> = {
     users: profiles.length,
     warnings: userWarnings.length,
@@ -719,6 +722,7 @@ const Admin = () => {
     activity: activities.length,
     goals: goalCategories.length,
     decisions: decisionApps.length,
+    dec_submissions: pendingDecisionApprovals,
     analytics: decisionResponses.length,
     verification: verificationTxs.length,
     inf_apps: pendingApps,
@@ -738,7 +742,7 @@ const Admin = () => {
 
   const tabTitle: Record<AdminTab, string> = {
     overview: "Dashboard", users: "Users", ghosts: "Ghost Users", activity: "Activity Log",
-    goals: "Goal Categories", decisions: "Decision Apps", analytics: "Analytics",
+    goals: "Goal Categories", decisions: "Decision Apps", dec_submissions: "Decision Submissions", analytics: "Analytics",
     verification: "Verification", settings: "Settings", inf_apps: "Influencer Applications",
     inf_wallets: "Influencer Wallets", inf_referrals: "Influencer Referrals",
     inf_withdrawals: "Influencer Withdrawals", inf_challenges: "Influencer Challenges", inf_submissions: "Challenge Submissions", warnings: "Warnings",
@@ -798,17 +802,37 @@ const Admin = () => {
       ["Unverified Transactions", String(unverifiedTxs)],
       ["Duplicate Transactions Flagged", String(duplicateTxs)],
       [],
-      ["═══ 3. POINTS ECONOMY ═══"],
+      ["═══ 3. PROFIT & LOSS ANALYSIS ═══"],
+      ["", `Amount (${sym})`],
+      ["── REVENUE ──", ""],
+      ["Processed Revenue (verified transactions)", `${sym}${fmtVal(totalVerified)}`],
+      ["Total Points Purchased Value", `${sym}${fmtVal(totalPoints * 0.5)}`],
+      ["Gross Revenue", `${sym}${fmtVal(totalVerified + totalPoints * 0.5)}`],
+      ["", ""],
+      ["── COSTS & LIABILITIES ──", ""],
+      ["Influencer Payouts (approved)", `${sym}${fmtVal(totalInfluencerPayouts)}`],
+      ["Influencer Payouts (pending)", `${sym}${fmtVal(pendingInfluencerPayouts)}`],
+      ["Influencer Wallet Balances (outstanding)", `${sym}${fmtVal(totalInfluencerBalance)}`],
+      ["Influencer Referral Earnings (total)", `${sym}${fmtVal(totalInfluencerReferralEarnings)}`],
+      ["Points Liability (outstanding balance)", `${sym}${fmtVal(totalPoints * 0.5)}`],
+      ["Total Costs", `${sym}${fmtVal(totalInfluencerPayouts + pendingInfluencerPayouts + totalInfluencerBalance + totalPoints * 0.5)}`],
+      ["", ""],
+      ["── NET POSITION ──", ""],
+      ["Net Revenue (Revenue - Approved Payouts)", `${sym}${fmtVal(totalVerified - totalInfluencerPayouts)}`],
+      ["Net Position (Revenue - All Costs)", `${sym}${fmtVal((totalVerified + totalPoints * 0.5) - (totalInfluencerPayouts + pendingInfluencerPayouts + totalInfluencerBalance + totalPoints * 0.5))}`],
+      ["Profit Margin", totalVerified > 0 ? `${((totalVerified - totalInfluencerPayouts) / totalVerified * 100).toFixed(1)}%` : "N/A"],
+      [],
+      ["═══ 4. POINTS ECONOMY ═══"],
       ["Metric", "Value"],
       ["Total Points in Circulation", totalPoints.toLocaleString()],
       [`Points Monetary Value (${sym})`, `${sym}${fmtVal(totalPoints * 0.5)}`],
       ["Average Points Per User", profiles.length > 0 ? Math.round(totalPoints / profiles.length).toLocaleString() : "0"],
       [],
-      ["═══ 4. GOAL DISTRIBUTION ═══"],
+      ["═══ 5. GOAL DISTRIBUTION ═══"],
       ["Goal Type", "Users"],
       ...Object.entries(goalBreakdown).map(([g, c]) => [g, String(c)]),
       [],
-      ["═══ 5. INFLUENCER PROGRAM ═══"],
+      ["═══ 6. INFLUENCER PROGRAM ═══"],
       ["Metric", `Amount (${sym})`],
       ["Active Influencers", String(activeInfluencers)],
       ["Total Influencer Wallet Balance", `${sym}${fmtVal(totalInfluencerBalance)}`],
@@ -819,13 +843,13 @@ const Admin = () => {
       ["Influencer Applications (pending)", String(pendingApps)],
       ["Total Challenges", String(infChallenges.length)],
       [],
-      ["═══ 6. DECISION APPS ═══"],
+      ["═══ 7. DECISION APPS ═══"],
       ["Metric", "Value"],
       ["Total Decision Responses", String(decisionTotalResponses)],
       ["Switches Completed", String(decisionSwitchCompleted)],
       ["Total Decision Apps", String(decisionApps.length)],
       [],
-      ["═══ 7. VERIFIED TRANSACTION LOG ═══"],
+      ["═══ 8. VERIFIED TRANSACTION LOG ═══"],
       ["Transaction ID", `Amount (${sym})`, "Date", "User ID"],
       ...verifiedTxs.slice(0, 500).map(t => [
         t.transaction_id,
@@ -1462,6 +1486,94 @@ const Admin = () => {
                           })}
                         </div>
                       )}
+                    </TableCard>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ═══ DECISION SUBMISSIONS ═══ */}
+            {activeTab === "dec_submissions" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-4">
+                  <MetricCard label="Total Submissions" value={decisionResponses.length} icon={FileSpreadsheet} trend="up" trendLabel="All responses" />
+                  <MetricCard label="Pending Approval" value={decisionResponses.filter(r => r.referral_screenshot_url && !r.referral_approved).length} icon={Eye} trend={decisionResponses.filter(r => r.referral_screenshot_url && !r.referral_approved).length > 0 ? "down" : "neutral"} trendLabel="Needs review" />
+                  <MetricCard label="Approved" value={decisionResponses.filter(r => r.referral_approved).length} icon={Check} trend="up" trendLabel="Completed" />
+                </div>
+
+                {decisionApps.map(app => {
+                  const appResponses = decisionResponses.filter(r => r.app_id === app.id);
+                  if (appResponses.length === 0) return null;
+                  const pending = appResponses.filter(r => r.referral_screenshot_url && !r.referral_approved);
+                  const approved = appResponses.filter(r => r.referral_approved);
+                  return (
+                    <TableCard key={app.id}>
+                      <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {app.app_logo_url ? (
+                            <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary">{app.app_name.charAt(0)}</div>
+                          )}
+                          <div>
+                            <h4 className="font-semibold text-foreground text-[13px]">{app.app_name}</h4>
+                            <p className="text-[10px] text-muted-foreground capitalize">{app.category === "yes_no" ? "Yes/No" : app.category === "referral" ? "Referral" : "Robust"} · {appResponses.length} responses · {pending.length} pending · {approved.length} approved</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Pending approvals first */}
+                      {pending.length > 0 && (
+                        <div className="p-4 space-y-2 border-b border-border/20">
+                          <p className="text-[11px] text-primary font-semibold mb-2">⏳ Pending Approvals ({pending.length})</p>
+                          {pending.map(pr => {
+                            const screenshotUrl = getPublicScreenshotUrl(pr.referral_screenshot_url);
+                            return (
+                              <div key={pr.id} className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3">
+                                <div className="flex-1 min-w-0">
+                                  <UserLink userId={pr.user_id} />
+                                  <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
+                                    <span>{new Date(pr.created_at).toLocaleDateString()}</span>
+                                    <span>Has app: {pr.has_app ? "Yes" : "No"}</span>
+                                    {pr.would_switch !== null && <span>Would switch: {pr.would_switch ? "Yes" : "No"}</span>}
+                                    <span>Points: {pr.points_awarded}</span>
+                                  </div>
+                                  {screenshotUrl && pr.referral_screenshot_url !== "pending_review" && (
+                                    <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-1"><ExternalLink className="w-2.5 h-2.5" /> View Screenshot</a>
+                                  )}
+                                </div>
+                                <Btn variant="primary" onClick={() => handleApproveReferral(pr.id, pr.app_id, pr.user_id)}><Check className="w-3 h-3" /> Approve</Btn>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* All responses */}
+                      <div className="p-4">
+                        <p className="text-[11px] text-muted-foreground font-semibold mb-2">All Responses ({appResponses.length})</p>
+                        <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
+                          {appResponses.map(r => (
+                            <div key={r.id} className="flex items-center justify-between rounded-lg border border-border/30 p-3 hover:bg-muted/15 transition-colors">
+                              <div className="flex-1 min-w-0">
+                                <UserLink userId={r.user_id} />
+                                <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground flex-wrap">
+                                  <span>{new Date(r.created_at).toLocaleDateString()}</span>
+                                  <span>Has app: {r.has_app ? "✓" : "✗"}</span>
+                                  {r.would_switch !== null && <span>Switch: {r.would_switch ? "✓" : "✗"}</span>}
+                                  <span>Completed: {r.switch_completed ? "✓" : "✗"}</span>
+                                  <span>Pts: {r.points_awarded}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {r.referral_approved && <StatusBadge status="approved" />}
+                                {r.referral_screenshot_url && !r.referral_approved && <StatusBadge status="pending_review" />}
+                                {!r.referral_screenshot_url && !r.referral_approved && r.referral_clicked && <StatusBadge status="pending" />}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </TableCard>
                   );
                 })}
