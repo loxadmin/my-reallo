@@ -158,10 +158,10 @@ Deno.serve(async (req) => {
     const founderName = settings?.find((s: any) => s.key === "founder_full_name")?.value || "Founder";
     const founderSigUrl = settings?.find((s: any) => s.key === "founder_signature_url")?.value || "";
 
-    // Process advertiser signature (remove background) — always re-process for clean results
-    let processedSigUrl = submission.processed_signature_url;
+    // Process advertiser signature (remove background) — always re-process
+    let advertiserSigBytes: Uint8Array | null = null;
     if (submission.signature_url) {
-      const cleanedBytes = await removeSignatureBgProgrammatic(submission.signature_url);
+      const cleanedBytes = await removeSignatureBg(submission.signature_url);
       if (cleanedBytes) {
         const sigPath = `signatures/processed_${submission_id}.png`;
         await supabase.storage.from("advertiser-uploads").upload(sigPath, cleanedBytes, {
@@ -169,8 +169,8 @@ Deno.serve(async (req) => {
           upsert: true,
         });
         const { data: urlData } = supabase.storage.from("advertiser-uploads").getPublicUrl(sigPath);
-        processedSigUrl = urlData.publicUrl;
-        await supabase.from("advertiser_submissions").update({ processed_signature_url: processedSigUrl }).eq("id", submission_id);
+        await supabase.from("advertiser_submissions").update({ processed_signature_url: urlData.publicUrl }).eq("id", submission_id);
+        advertiserSigBytes = cleanedBytes;
       }
     }
 
