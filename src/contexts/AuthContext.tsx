@@ -12,8 +12,6 @@ interface Profile {
   email: string;
   annual_data_spend: number;
   annual_electricity_spend: number;
-  annual_food_spend: number;
-  annual_transport_spend: number;
   total_annual_spend: number;
   selected_goal: string | null;
   target_amount: number;

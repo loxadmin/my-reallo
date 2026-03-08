@@ -275,8 +275,6 @@ const Admin = () => {
   });
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [verifyPageActive, setVerifyPageActive] = useState(true);
-  const [verifyFoodActive, setVerifyFoodActive] = useState(true);
-  const [verifyTransportActive, setVerifyTransportActive] = useState(true);
   const [postQueueReferralPoints, setPostQueueReferralPoints] = useState("1000");
   const [verifySpendLink, setVerifySpendLink] = useState("");
   const [verifySpendDescription, setVerifySpendDescription] = useState("");
@@ -346,8 +344,6 @@ const Admin = () => {
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
     setVerifyPageActive(settings.find(s => s.key === "verify_page_active")?.value === "false" ? false : true);
-    setVerifyFoodActive(settings.find(s => s.key === "verify_food_active")?.value === "false" ? false : true);
-    setVerifyTransportActive(settings.find(s => s.key === "verify_transport_active")?.value === "false" ? false : true);
     setPostQueueReferralPoints(settings.find(s => s.key === "post_queue_referral_points")?.value || "1000");
     setVerifySpendLink(settings.find(s => s.key === "verify_spend_link")?.value || "");
     setVerifySpendDescription(settings.find(s => s.key === "verify_spend_description")?.value || "");
@@ -399,8 +395,6 @@ const Admin = () => {
     await Promise.all([
       supabase.from("admin_settings").upsert({ key: "verify_expense_link", value: verifyExpenseLink, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_page_active", value: String(verifyPageActive), updated_at: new Date().toISOString() }),
-      supabase.from("admin_settings").upsert({ key: "verify_food_active", value: String(verifyFoodActive), updated_at: new Date().toISOString() }),
-      supabase.from("admin_settings").upsert({ key: "verify_transport_active", value: String(verifyTransportActive), updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "post_queue_referral_points", value: postQueueReferralPoints, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_spend_link", value: verifySpendLink, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_spend_description", value: verifySpendDescription, updated_at: new Date().toISOString() }),
@@ -1607,20 +1601,6 @@ const Admin = () => {
                       <p className="text-[11px] text-muted-foreground">If disabled, users will see "Coming Soon".</p>
                     </div>
                     <input type="checkbox" checked={verifyPageActive} onChange={e => setVerifyPageActive(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer rounded" />
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
-                    <div>
-                      <label className="text-[12px] font-medium text-foreground">Food Verification Active</label>
-                      <p className="text-[11px] text-muted-foreground">If enabled, users can verify food spend.</p>
-                    </div>
-                    <input type="checkbox" checked={verifyFoodActive} onChange={e => setVerifyFoodActive(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer rounded" />
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
-                    <div>
-                      <label className="text-[12px] font-medium text-foreground">Transport Verification Active</label>
-                      <p className="text-[11px] text-muted-foreground">If enabled, users can verify transport spend.</p>
-                    </div>
-                    <input type="checkbox" checked={verifyTransportActive} onChange={e => setVerifyTransportActive(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer rounded" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div><label className="text-[11px] text-muted-foreground font-medium">Verify Expense Button Link</label><input value={verifyExpenseLink} onChange={e => setVerifyExpenseLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1.5`} /></div>

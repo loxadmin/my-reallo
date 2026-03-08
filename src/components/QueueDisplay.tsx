@@ -9,7 +9,6 @@ import DecisionFlow from "./DecisionFlow";
 import VerifySpendFlow from "./VerifySpendFlow";
 import InfluencerPanel from "./InfluencerPanel";
 import NotificationsPanel from "./NotificationsPanel";
-import WalletCarousel from "./WalletCarousel";
 import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2, Star } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
@@ -161,18 +160,23 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-            {/* Unified Wallet + Goal Card */}
-            <GlassCard className="p-4">
-              {/* Welcome */}
+            {/* Goal Balance Hero Card */}
+            <GlassCard variant="glow" className="relative overflow-hidden p-5">
               <p className="text-foreground text-[13px] font-medium mb-3">
                 Welcome back, {user?.email?.split("@")[0] || "User"} 👋
               </p>
-
-              {/* Swipeable Wallet Cards */}
-              <WalletCarousel pointsBalance={pointsBalance} nairaValue={nairaValue} />
+              <p className="text-muted-foreground uppercase tracking-[0.15em] text-[10px] font-medium mb-1">Annual Utility Spend</p>
+              <div className="flex items-baseline gap-3 mb-1">
+                <h2 className="font-display text-2xl font-bold gradient-text tabular-nums leading-none">
+                  {formatNaira(targetAmount)}
+                </h2>
+              </div>
+              <p className="text-[11px] text-muted-foreground mb-4">
+                Claimable: <span className="text-primary font-semibold">{formatNaira(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
+              </p>
 
               {/* Goal Progress */}
-              <div className="space-y-1.5 mt-3">
+              <div className="space-y-1.5 mb-5">
                 <div className="flex justify-between items-end">
                   <p className="font-medium text-foreground text-[12px]">GOAL - {goalLabels[goal] || goal}</p>
                   <p className="text-muted-foreground text-[11px]">{Math.round((nairaValue / targetAmount) * 100)}%</p>
@@ -185,13 +189,10 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                     transition={{ duration: 1.2, ease: "easeOut" }}
                   />
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Claimable: <span className="text-primary font-semibold">{formatNaira(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
-                </p>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 mt-4">
+              <div className="flex gap-3">
                 <GlassButton
                   variant="primary"
                   onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })}
