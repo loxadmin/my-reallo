@@ -1447,6 +1447,7 @@ const Admin = () => {
                         <div className="p-4 space-y-2">
                           <p className="text-[11px] text-primary font-semibold mb-2">Pending Approvals ({pendingApprovals.length})</p>
                           {pendingApprovals.map(pr => {
+                            const screenshotUrl = getPublicScreenshotUrl(pr.referral_screenshot_url);
                             return (
                               <div key={pr.id} className="flex items-center justify-between rounded-lg border border-border/40 p-3">
                                 <div>
