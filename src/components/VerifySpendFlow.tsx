@@ -127,6 +127,8 @@ const VerifySpendFlow = () => {
     const endsAt = new Date();
     endsAt.setDate(endsAt.getDate() + days);
 
+    const typeLabels: Record<SpendType, string> = { data: "Data", electricity: "Electricity", food: "Food", transport: "Transport" };
+
     await supabase.from("spend_verifications").insert({
       user_id: user.id,
       frequency: freq,
@@ -137,7 +139,7 @@ const VerifySpendFlow = () => {
     } as any);
 
     toast({
-      title: `${type === "data" ? "Data" : "Electricity"} verification started!`,
+      title: `${typeLabels[type]} verification started!`,
       description: type === "electricity"
         ? "Submit your monthly electricity transaction ID."
         : freq === "monthly" ? "Submit your transaction ID." : `Submit transaction IDs over the next ${days} days.`,
@@ -147,9 +149,12 @@ const VerifySpendFlow = () => {
   };
 
   const handleSubmitTx = async (index: number, type: SpendType) => {
-    const inputs = type === "data" ? dataTxInputs : elecTxInputs;
-    const transactions = type === "data" ? dataTxs : elecTxs;
-    const verification = type === "data" ? dataVerification : elecVerification;
+    const inputsMap: Record<SpendType, string[]> = { data: dataTxInputs, electricity: elecTxInputs, food: foodTxInputs, transport: transportTxInputs };
+    const txsMap: Record<SpendType, Transaction[]> = { data: dataTxs, electricity: elecTxs, food: foodTxs, transport: transportTxs };
+    const verifMap: Record<SpendType, Verification | null> = { data: dataVerification, electricity: elecVerification, food: foodVerification, transport: transportVerification };
+    const inputs = inputsMap[type];
+    const transactions = txsMap[type];
+    const verification = verifMap[type];
     const txId = inputs[index]?.trim();
     if (!txId || !verification || !user) return;
 
