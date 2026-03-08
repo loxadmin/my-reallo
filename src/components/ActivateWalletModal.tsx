@@ -5,6 +5,7 @@ import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import GlassInput from "./GlassInput";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -14,10 +15,9 @@ interface ActivateWalletModalProps {
   onComplete: () => void;
 }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
-
 const ActivateWalletModal = ({ type, onClose, onComplete }: ActivateWalletModalProps) => {
   const { user, refreshProfile } = useAuth();
+  const { formatCurrency, currency } = useCurrency();
   const [weeklyAmount, setWeeklyAmount] = useState("");
   const [step, setStep] = useState<"input" | "confirm">("input");
 
@@ -29,7 +29,6 @@ const ActivateWalletModal = ({ type, onClose, onComplete }: ActivateWalletModalP
     if (!user) return;
     const field = type === "food" ? "annual_food_spend" : "annual_transport_spend";
 
-    // Update the specific spend field and recalculate total
     const { error } = await supabase
       .from("profiles")
       .update({ [field]: annualAmount })
@@ -40,7 +39,6 @@ const ActivateWalletModal = ({ type, onClose, onComplete }: ActivateWalletModalP
       return;
     }
 
-    // Recalculate total_annual_spend
     const { data: profile } = await supabase
       .from("profiles")
       .select("annual_data_spend, annual_electricity_spend, annual_food_spend, annual_transport_spend")
@@ -58,7 +56,7 @@ const ActivateWalletModal = ({ type, onClose, onComplete }: ActivateWalletModalP
     }
 
     await refreshProfile();
-    toast({ title: `${label} Spend Saved`, description: `Annual ${label.toLowerCase()} spend: ${formatNaira(annualAmount)}` });
+    toast({ title: `${label} Spend Saved`, description: `Annual ${label.toLowerCase()} spend: ${formatCurrency(annualAmount)}` });
     onComplete();
   };
 
@@ -89,7 +87,7 @@ const ActivateWalletModal = ({ type, onClose, onComplete }: ActivateWalletModalP
                 </div>
                 <GlassInput
                   label={`Weekly ${label.toLowerCase()} spend`}
-                  prefix="₦"
+                  prefix={currency.symbol}
                   type="number"
                   placeholder="e.g. 5000"
                   value={weeklyAmount}
@@ -98,7 +96,7 @@ const ActivateWalletModal = ({ type, onClose, onComplete }: ActivateWalletModalP
                 />
                 {weeklyAmount && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[12px] text-primary mt-3">
-                    Annual: {formatNaira(annualAmount)}
+                    Annual: {formatCurrency(annualAmount)}
                   </motion.p>
                 )}
                 <GlassButton
@@ -116,7 +114,7 @@ const ActivateWalletModal = ({ type, onClose, onComplete }: ActivateWalletModalP
               <motion.div key="confirm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
                 <Icon className="w-8 h-8 text-primary mx-auto mb-3" />
                 <p className="text-[12px] text-muted-foreground uppercase tracking-widest mb-2">Annual {label} Spend</p>
-                <h2 className="font-display text-2xl font-bold gradient-text mb-4">{formatNaira(annualAmount)}</h2>
+                <h2 className="font-display text-2xl font-bold gradient-text mb-4">{formatCurrency(annualAmount)}</h2>
                 <p className="text-[12px] text-muted-foreground mb-6">
                   You'll need to verify this spend with transaction IDs to claim.
                 </p>

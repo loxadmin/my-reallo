@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import GlassCard from "@/components/GlassCard";
@@ -19,10 +20,11 @@ interface Voucher {
   created_at: string;
 }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
+
 
 const Vouchers = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
+  const { formatCurrency: formatNaira } = useCurrency();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [vouchers, setVouchers] = useState<Voucher[]>([]);

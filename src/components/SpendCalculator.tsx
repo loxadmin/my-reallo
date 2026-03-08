@@ -4,6 +4,7 @@ import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import GlassInput from "./GlassInput";
 import { ArrowRight, Zap, Wifi, UtensilsCrossed, Car } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface SpendResult {
   weeklyData: number;
@@ -21,9 +22,8 @@ interface SpendCalculatorProps {
   onComplete: (result: SpendResult) => void;
 }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
-
 const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
+  const { formatCurrency, currency } = useCurrency();
   const [step, setStep] = useState(0);
   const [weeklyData, setWeeklyData] = useState("");
   const [monthlyElectricity, setMonthlyElectricity] = useState("");
@@ -59,6 +59,8 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
     });
   };
 
+  const sym = currency.symbol;
+
   return (
     <section className="min-h-screen flex items-start justify-center px-4 sm:px-6 pt-4 pb-20">
       <div className="w-full max-w-md">
@@ -88,10 +90,10 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
                     <p className="text-[12px] text-muted-foreground">How much per week?</p>
                   </div>
                 </div>
-                <GlassInput label="Weekly data spend" prefix="₦" type="number" placeholder="e.g. 5000" value={weeklyData} onChange={(e) => setWeeklyData(e.target.value)} min="0" />
+                <GlassInput label="Weekly data spend" prefix={sym} type="number" placeholder="e.g. 5000" value={weeklyData} onChange={(e) => setWeeklyData(e.target.value)} min="0" />
                 {weeklyData && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[12px] text-primary mt-3">
-                    Annual: {formatNaira(annualData)}
+                    Annual: {formatCurrency(annualData)}
                   </motion.p>
                 )}
                 <GlassButton variant="primary" className="w-full mt-6 text-[13px]" onClick={handleNext} disabled={!weeklyData}>
@@ -113,10 +115,10 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
                     <p className="text-[12px] text-muted-foreground">How much per month?</p>
                   </div>
                 </div>
-                <GlassInput label="Monthly electricity spend" prefix="₦" type="number" placeholder="e.g. 15000" value={monthlyElectricity} onChange={(e) => setMonthlyElectricity(e.target.value)} min="0" />
+                <GlassInput label="Monthly electricity spend" prefix={sym} type="number" placeholder="e.g. 15000" value={monthlyElectricity} onChange={(e) => setMonthlyElectricity(e.target.value)} min="0" />
                 {monthlyElectricity && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[12px] text-primary mt-3">
-                    Annual: {formatNaira(annualElectricity)}
+                    Annual: {formatCurrency(annualElectricity)}
                   </motion.p>
                 )}
                 <GlassButton variant="primary" className="w-full mt-6 text-[13px]" onClick={handleNext} disabled={!monthlyElectricity}>
@@ -138,10 +140,10 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
                     <p className="text-[12px] text-muted-foreground">How much per week?</p>
                   </div>
                 </div>
-                <GlassInput label="Weekly food spend" prefix="₦" type="number" placeholder="e.g. 7000" value={weeklyFood} onChange={(e) => setWeeklyFood(e.target.value)} min="0" />
+                <GlassInput label="Weekly food spend" prefix={sym} type="number" placeholder="e.g. 7000" value={weeklyFood} onChange={(e) => setWeeklyFood(e.target.value)} min="0" />
                 {weeklyFood && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[12px] text-primary mt-3">
-                    Annual: {formatNaira(annualFood)}
+                    Annual: {formatCurrency(annualFood)}
                   </motion.p>
                 )}
                 <GlassButton variant="primary" className="w-full mt-6 text-[13px]" onClick={handleNext} disabled={!weeklyFood}>
@@ -163,10 +165,10 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
                     <p className="text-[12px] text-muted-foreground">How much per week?</p>
                   </div>
                 </div>
-                <GlassInput label="Weekly transport spend" prefix="₦" type="number" placeholder="e.g. 3000" value={weeklyTransport} onChange={(e) => setWeeklyTransport(e.target.value)} min="0" />
+                <GlassInput label="Weekly transport spend" prefix={sym} type="number" placeholder="e.g. 3000" value={weeklyTransport} onChange={(e) => setWeeklyTransport(e.target.value)} min="0" />
                 {weeklyTransport && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[12px] text-primary mt-3">
-                    Annual: {formatNaira(annualTransport)}
+                    Annual: {formatCurrency(annualTransport)}
                   </motion.p>
                 )}
                 <GlassButton variant="primary" className="w-full mt-6 text-[13px]" onClick={handleNext} disabled={!weeklyTransport}>
@@ -183,28 +185,28 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
                   Your Total Annual Spend
                 </motion.p>
                 <motion.h2 className="font-display text-3xl sm:text-4xl font-bold gradient-text mb-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                  {formatNaira(totalAnnual)}
+                  {formatCurrency(totalAnnual)}
                 </motion.h2>
                 <div className="grid grid-cols-2 gap-3 mb-8">
                   <div className="glass rounded-xl p-3">
                     <Wifi className="w-4 h-4 text-primary mx-auto mb-1" />
                     <p className="text-[11px] text-muted-foreground">Data</p>
-                    <p className="text-[12px] font-semibold text-foreground">{formatNaira(annualData)}</p>
+                    <p className="text-[12px] font-semibold text-foreground">{formatCurrency(annualData)}</p>
                   </div>
                   <div className="glass rounded-xl p-3">
                     <Zap className="w-4 h-4 text-primary mx-auto mb-1" />
                     <p className="text-[11px] text-muted-foreground">Electricity</p>
-                    <p className="text-[12px] font-semibold text-foreground">{formatNaira(annualElectricity)}</p>
+                    <p className="text-[12px] font-semibold text-foreground">{formatCurrency(annualElectricity)}</p>
                   </div>
                   <div className="glass rounded-xl p-3">
                     <UtensilsCrossed className="w-4 h-4 text-primary mx-auto mb-1" />
                     <p className="text-[11px] text-muted-foreground">Food</p>
-                    <p className="text-[12px] font-semibold text-foreground">{formatNaira(annualFood)}</p>
+                    <p className="text-[12px] font-semibold text-foreground">{formatCurrency(annualFood)}</p>
                   </div>
                   <div className="glass rounded-xl p-3">
                     <Car className="w-4 h-4 text-primary mx-auto mb-1" />
                     <p className="text-[11px] text-muted-foreground">Transport</p>
-                    <p className="text-[12px] font-semibold text-foreground">{formatNaira(annualTransport)}</p>
+                    <p className="text-[12px] font-semibold text-foreground">{formatCurrency(annualTransport)}</p>
                   </div>
                 </div>
                 <motion.p className="text-[12px] text-muted-foreground mb-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>

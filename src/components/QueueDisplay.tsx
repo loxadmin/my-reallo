@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
+
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import DecisionFlow from "./DecisionFlow";
@@ -24,7 +26,7 @@ interface QueueDisplayProps {
   onViewChange?: (view: DashView) => void;
 }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
+
 
 const goalLabels: Record<string, string> = {
   education: "Education",
@@ -37,6 +39,7 @@ type CategoryVerifStatus = Record<string, boolean>; // spend_type -> verified
 
 const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange }: QueueDisplayProps) => {
   const { user, profile, refreshProfile } = useAuth();
+  const { formatCurrency: formatNaira } = useCurrency();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [referralCount, setReferralCount] = useState(0);

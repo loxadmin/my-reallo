@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import GlassInput from "./GlassInput";
@@ -44,6 +45,7 @@ const spendMeta: Record<SpendType, { label: string; icon: React.ReactNode; color
 
 const VerifySpendFlow = () => {
   const { user, profile, refreshProfile } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [verifications, setVerifications] = useState<Record<SpendType, Verification | null>>({
     data: null, electricity: null, food: null, transport: null,
   });
@@ -249,7 +251,7 @@ const VerifySpendFlow = () => {
           </div>
           <p className="font-semibold text-foreground text-[14px]">Verification Complete!</p>
           <p className="text-[13px] text-primary font-semibold mt-1">
-            ₦{totalVerifiedAnnualSpend.toLocaleString("en-NG")}
+            {formatCurrency(totalVerifiedAnnualSpend)}
           </p>
           <p className="text-[11px] text-muted-foreground">Total Verified Annual Spend</p>
           <div className="grid grid-cols-2 gap-2 mt-4">
@@ -262,7 +264,7 @@ const VerifySpendFlow = () => {
                     {spendMeta[t].icon}
                     <span className="text-[10px]">{spendMeta[t].label}</span>
                   </div>
-                  <p className="text-[12px] font-semibold text-foreground">₦{spend.toLocaleString("en-NG")}</p>
+                  <p className="text-[12px] font-semibold text-foreground">{formatCurrency(spend)}</p>
                 </div>
               );
             })}
@@ -311,7 +313,7 @@ const VerifySpendFlow = () => {
             <p className="font-semibold text-foreground text-[13px]">{meta.label} Verified!</p>
             {verification?.recalculated_amount != null && (
               <p className="text-[12px] text-primary mt-1 font-semibold">
-                Annual: ₦{verification.recalculated_amount.toLocaleString("en-NG")}
+                Annual: {formatCurrency(verification.recalculated_amount)}
               </p>
             )}
           </motion.div>
@@ -459,7 +461,7 @@ const VerifySpendFlow = () => {
                 </div>
                 {status === "completed" && annualSpend > 0 ? (
                   <p className="text-[11px] text-primary font-medium mt-0.5">
-                    ₦{annualSpend.toLocaleString("en-NG")}/yr verified
+                    {formatCurrency(annualSpend)}/yr verified
                   </p>
                 ) : (
                   <p className="text-[10px] text-muted-foreground mt-0.5">{meta.description}</p>
@@ -511,6 +513,7 @@ const VerificationActivePanel = ({
   setEditingTxId, setEditValue, onSubmitTx, onEditTx,
   getMaxBoxes, getMultiplier, isMonthlyType,
 }: ActivePanelProps) => {
+  const { formatCurrency } = useCurrency();
   const meta = spendMeta[type];
   const now = new Date();
   const daysLeft = Math.max(0, Math.ceil((new Date(verification.ends_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
@@ -540,7 +543,7 @@ const VerificationActivePanel = ({
       {verifiedCount > 0 && annualSpend > 0 && (
         <div className="glass rounded-xl p-4 border border-primary/15 text-center">
           <p className="text-[10px] text-muted-foreground mb-1">Estimated Annual {meta.label} Spend</p>
-          <p className="text-[16px] font-bold text-primary">₦{annualSpend.toLocaleString("en-NG")}</p>
+          <p className="text-[16px] font-bold text-primary">{formatCurrency(annualSpend)}</p>
           <p className="text-[10px] text-muted-foreground mt-1">
             {verifiedCount} verified × {isMonthlyType ? 12 : getMultiplier(verification.frequency)} multiplier
           </p>
@@ -601,7 +604,7 @@ const VerificationActivePanel = ({
                     existingTx.is_verified ? (
                       <div className="flex items-center gap-1 text-primary shrink-0">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-medium">₦{existingTx.verified_amount?.toLocaleString("en-NG")}</span>
+                        <span className="text-[10px] font-medium">{formatCurrency(existingTx.verified_amount ?? 0)}</span>
                       </div>
                     ) : isDuplicate ? (
                       canEdit ? (

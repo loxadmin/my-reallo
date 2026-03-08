@@ -292,6 +292,9 @@ const Admin = () => {
   const [footerContactUs, setFooterContactUs] = useState("");
   const [footerAboutUs, setFooterAboutUs] = useState("");
   const [footerInvestWithUs, setFooterInvestWithUs] = useState("");
+  const [currencyRateUsd, setCurrencyRateUsd] = useState("1600");
+  const [currencyRateEur, setCurrencyRateEur] = useState("1700");
+  const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
   const [searchQuery, setSearchQuery] = useState("");
   const [newApp, setNewApp] = useState({
     app_name: "", app_logo_url: "", category: "yes_no" as string,
@@ -365,6 +368,9 @@ const Admin = () => {
     setFooterContactUs(settings.find(s => s.key === "footer_contact_us")?.value || "");
     setFooterAboutUs(settings.find(s => s.key === "footer_about_us")?.value || "");
     setFooterInvestWithUs(settings.find(s => s.key === "footer_invest_with_us")?.value || "");
+    setCurrencyRateUsd(settings.find(s => s.key === "currency_rate_usd")?.value || "1600");
+    setCurrencyRateEur(settings.find(s => s.key === "currency_rate_eur")?.value || "1700");
+    setCurrencyRateGbp(settings.find(s => s.key === "currency_rate_gbp")?.value || "2000");
 
     const counts: Record<string, number> = {};
     for (const p of profs) {
@@ -420,6 +426,9 @@ const Admin = () => {
       supabase.from("admin_settings").upsert({ key: "footer_contact_us", value: footerContactUs, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "footer_about_us", value: footerAboutUs, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "footer_invest_with_us", value: footerInvestWithUs, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_usd", value: currencyRateUsd, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_eur", value: currencyRateEur, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_gbp", value: currencyRateGbp, updated_at: new Date().toISOString() }),
     ]);
     toast({ title: "Settings saved" });
     setSaving(false);
@@ -1721,6 +1730,24 @@ const Admin = () => {
                     <div><label className="text-[11px] text-muted-foreground font-medium">Contact Us</label><textarea value={footerContactUs} onChange={e => setFooterContactUs(e.target.value)} className={`${inputCls} mt-1.5 min-h-[80px] resize-none`} /></div>
                     <div><label className="text-[11px] text-muted-foreground font-medium">Invest With Us</label><textarea value={footerInvestWithUs} onChange={e => setFooterInvestWithUs(e.target.value)} className={`${inputCls} mt-1.5 min-h-[80px] resize-none`} /></div>
                   </div>
+                  <hr className="border-border/30" />
+                  <h4 className="text-[13px] font-semibold text-foreground">Currency Exchange Rates</h4>
+                  <p className="text-[11px] text-muted-foreground -mt-3">Set how many Naira (₦) equals 1 unit of each currency. Users see amounts in their local currency based on geolocation.</p>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-[11px] text-muted-foreground font-medium">1 USD = ₦</label>
+                      <input type="number" value={currencyRateUsd} onChange={e => setCurrencyRateUsd(e.target.value)} placeholder="1600" className={`${inputCls} mt-1.5`} />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground font-medium">1 EUR = ₦</label>
+                      <input type="number" value={currencyRateEur} onChange={e => setCurrencyRateEur(e.target.value)} placeholder="1700" className={`${inputCls} mt-1.5`} />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground font-medium">1 GBP = ₦</label>
+                      <input type="number" value={currencyRateGbp} onChange={e => setCurrencyRateGbp(e.target.value)} placeholder="2000" className={`${inputCls} mt-1.5`} />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Geolocation mapping: Nigeria → ₦, USA → $, UK → £, Europe → €, Others → $</p>
                   <Btn variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full"><Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save Settings"}</Btn>
                 </div>
               </div>

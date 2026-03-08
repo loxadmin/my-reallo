@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
@@ -19,7 +20,7 @@ interface Challenge { id: string; title: string; description: string; instructio
 interface ChallengeEnrollment { id: string; challenge_id: string; user_id: string; completed: boolean; pending_earnings: number; approved_earnings: number; enrolled_at: string; }
 interface ChallengeSubmission { id: string; challenge_id: string; user_id: string; video_url: string; video_number: number; status: string; submitted_at: string; }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
+
 
 const BankSearchSelect = ({
   banks, selectedBank, banksLoading, onSelect,
@@ -65,6 +66,7 @@ const BankSearchSelect = ({
 
 const InfluencerPanel = () => {
   const { user, profile } = useAuth();
+  const { formatCurrency: formatNaira } = useCurrency();
   const [application, setApplication] = useState<InfluencerApp | null>(null);
   const [wallet, setWallet] = useState<InfluencerWallet | null>(null);
   const [bankAccount, setBankAccount] = useState<BankAccount | null>(null);

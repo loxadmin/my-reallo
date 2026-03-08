@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Wifi, UtensilsCrossed, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -20,8 +21,6 @@ interface WalletCarouselProps {
   children?: React.ReactNode;
 }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
-
 const WalletCarousel = ({
   targetAmount,
   nairaValue,
@@ -34,6 +33,7 @@ const WalletCarousel = ({
   children,
 }: WalletCarouselProps) => {
   const { profile } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [showTotal, setShowTotal] = useState(false);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: "center" });
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -113,11 +113,11 @@ const WalletCarousel = ({
                   <>
                     <div className="flex items-baseline gap-3 mb-1">
                       <h2 className="font-display text-2xl font-bold gradient-text tabular-nums leading-none">
-                        {formatNaira(wallet.amount)}
+                        {formatCurrency(wallet.amount)}
                       </h2>
                     </div>
                     <p className="text-[11px] text-muted-foreground mb-4">
-                      Claimable: <span className="text-primary font-semibold">{formatNaira(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
+                      Claimable: <span className="text-primary font-semibold">{formatCurrency(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
                     </p>
 
                     <div className="space-y-1.5 mb-5">
