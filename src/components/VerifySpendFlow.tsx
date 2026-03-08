@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import GlassInput from "./GlassInput";
-import { ShieldCheck, Clock, ExternalLink, CheckCircle2, AlertCircle, Zap, Wifi } from "lucide-react";
+import { ShieldCheck, Clock, ExternalLink, CheckCircle2, AlertCircle, Zap, Wifi, UtensilsCrossed, Bus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface Verification {
