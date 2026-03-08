@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import GlassInput from "./GlassInput";
-import { ShieldCheck, Clock, ExternalLink, CheckCircle2, AlertCircle, Zap, Wifi } from "lucide-react";
+import { ShieldCheck, Clock, ExternalLink, CheckCircle2, AlertCircle, Zap, Wifi, UtensilsCrossed, Bus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface Verification {
@@ -32,16 +32,22 @@ interface Transaction {
   edit_count: number;
 }
 
-type SpendType = "data" | "electricity";
+type SpendType = "data" | "electricity" | "food" | "transport";
 
 const VerifySpendFlow = () => {
   const { user, profile, refreshProfile } = useAuth();
   const [dataVerification, setDataVerification] = useState<Verification | null>(null);
   const [elecVerification, setElecVerification] = useState<Verification | null>(null);
+  const [foodVerification, setFoodVerification] = useState<Verification | null>(null);
+  const [transportVerification, setTransportVerification] = useState<Verification | null>(null);
   const [dataTxs, setDataTxs] = useState<Transaction[]>([]);
   const [elecTxs, setElecTxs] = useState<Transaction[]>([]);
+  const [foodTxs, setFoodTxs] = useState<Transaction[]>([]);
+  const [transportTxs, setTransportTxs] = useState<Transaction[]>([]);
   const [dataTxInputs, setDataTxInputs] = useState<string[]>([]);
   const [elecTxInputs, setElecTxInputs] = useState<string[]>([]);
+  const [foodTxInputs, setFoodTxInputs] = useState<string[]>([]);
+  const [transportTxInputs, setTransportTxInputs] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">("daily");
   const [verifySettings, setVerifySettings] = useState({ link: "", description: "" });
@@ -49,6 +55,8 @@ const VerifySpendFlow = () => {
   const [activeTab, setActiveTab] = useState<SpendType>("data");
   const [editingTxId, setEditingTxId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [verifyFoodActive, setVerifyFoodActive] = useState(false);
+  const [verifyTransportActive, setVerifyTransportActive] = useState(false);
 
   useEffect(() => {
     if (user) fetchData();
@@ -56,46 +64,55 @@ const VerifySpendFlow = () => {
 
   const fetchData = async () => {
     if (!user) return;
-    const [dataRes, elecRes, settingsRes] = await Promise.all([
+    const [dataRes, elecRes, foodRes, transportRes, settingsRes] = await Promise.all([
       supabase.from("spend_verifications").select("*").eq("user_id", user.id).eq("spend_type", "data").order("created_at", { ascending: false }).limit(1),
       supabase.from("spend_verifications").select("*").eq("user_id", user.id).eq("spend_type", "electricity").order("created_at", { ascending: false }).limit(1),
+      supabase.from("spend_verifications").select("*").eq("user_id", user.id).eq("spend_type", "food").order("created_at", { ascending: false }).limit(1),
+      supabase.from("spend_verifications").select("*").eq("user_id", user.id).eq("spend_type", "transport").order("created_at", { ascending: false }).limit(1),
       supabase.from("admin_settings").select("*"),
     ]);
 
-    const dv = (dataRes.data || [])[0] as Verification | undefined;
-    const ev = (elecRes.data || [])[0] as Verification | undefined;
+    const loadVerification = async (
+      res: any,
+      setVerif: (v: Verification | null) => void,
+      setTxs: (t: Transaction[]) => void,
+      setInputs: (i: string[]) => void,
+      isElectricity: boolean = false
+    ) => {
+      const v = (res.data || [])[0] as Verification | undefined;
+      if (v) {
+        setVerif(v);
+        const { data: txs } = await supabase.from("verification_transactions").select("*").eq("verification_id", v.id).order("submitted_at", { ascending: true });
+        const txList = (txs || []) as Transaction[];
+        setTxs(txList);
+        if (isElectricity) {
+          setInputs(Array.from({ length: 1 }, (_, i) => txList[i]?.transaction_id || ""));
+        } else {
+          const maxBoxes = getMaxBoxes(v.frequency);
+          const filled = txList.map(t => t.transaction_id);
+          setInputs(Array.from({ length: maxBoxes }, (_, i) => filled[i] || ""));
+        }
+      } else {
+        setVerif(null);
+        setTxs([]);
+        setInputs(isElectricity ? [""] : []);
+      }
+    };
 
-    if (dv) {
-      setDataVerification(dv);
-      const { data: txs } = await supabase.from("verification_transactions").select("*").eq("verification_id", dv.id).order("submitted_at", { ascending: true });
-      const txList = (txs || []) as Transaction[];
-      setDataTxs(txList);
-      const maxBoxes = getMaxBoxes(dv.frequency);
-      const filled = txList.map(t => t.transaction_id);
-      setDataTxInputs(Array.from({ length: maxBoxes }, (_, i) => filled[i] || ""));
-    } else {
-      setDataVerification(null);
-      setDataTxs([]);
-      setDataTxInputs([]);
-    }
-
-    if (ev) {
-      setElecVerification(ev);
-      const { data: txs } = await supabase.from("verification_transactions").select("*").eq("verification_id", ev.id).order("submitted_at", { ascending: true });
-      const txList = (txs || []) as Transaction[];
-      setElecTxs(txList);
-      setElecTxInputs(Array.from({ length: 1 }, (_, i) => txList[i]?.transaction_id || ""));
-    } else {
-      setElecVerification(null);
-      setElecTxs([]);
-      setElecTxInputs([""]);
-    }
+    await Promise.all([
+      loadVerification(dataRes, setDataVerification, setDataTxs, setDataTxInputs),
+      loadVerification(elecRes, setElecVerification, setElecTxs, setElecTxInputs, true),
+      loadVerification(foodRes, setFoodVerification, setFoodTxs, setFoodTxInputs),
+      loadVerification(transportRes, setTransportVerification, setTransportTxs, setTransportTxInputs),
+    ]);
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifySettings({
       link: settings.find(s => s.key === "verify_spend_link")?.value || "",
       description: settings.find(s => s.key === "verify_spend_description")?.value || "Verify your spend by completing the action at the link below.",
     });
+    setVerifyFoodActive(settings.find(s => s.key === "verify_food_active")?.value !== "false");
+    setVerifyTransportActive(settings.find(s => s.key === "verify_transport_active")?.value !== "false");
   };
 
   const getMaxBoxes = (freq: string) => freq === "daily" ? 30 : freq === "weekly" ? 4 : 1;
@@ -110,6 +127,8 @@ const VerifySpendFlow = () => {
     const endsAt = new Date();
     endsAt.setDate(endsAt.getDate() + days);
 
+    const typeLabels: Record<SpendType, string> = { data: "Data", electricity: "Electricity", food: "Food", transport: "Transport" };
+
     await supabase.from("spend_verifications").insert({
       user_id: user.id,
       frequency: freq,
@@ -120,7 +139,7 @@ const VerifySpendFlow = () => {
     } as any);
 
     toast({
-      title: `${type === "data" ? "Data" : "Electricity"} verification started!`,
+      title: `${typeLabels[type]} verification started!`,
       description: type === "electricity"
         ? "Submit your monthly electricity transaction ID."
         : freq === "monthly" ? "Submit your transaction ID." : `Submit transaction IDs over the next ${days} days.`,
@@ -130,9 +149,12 @@ const VerifySpendFlow = () => {
   };
 
   const handleSubmitTx = async (index: number, type: SpendType) => {
-    const inputs = type === "data" ? dataTxInputs : elecTxInputs;
-    const transactions = type === "data" ? dataTxs : elecTxs;
-    const verification = type === "data" ? dataVerification : elecVerification;
+    const inputsMap: Record<SpendType, string[]> = { data: dataTxInputs, electricity: elecTxInputs, food: foodTxInputs, transport: transportTxInputs };
+    const txsMap: Record<SpendType, Transaction[]> = { data: dataTxs, electricity: elecTxs, food: foodTxs, transport: transportTxs };
+    const verifMap: Record<SpendType, Verification | null> = { data: dataVerification, electricity: elecVerification, food: foodVerification, transport: transportVerification };
+    const inputs = inputsMap[type];
+    const transactions = txsMap[type];
+    const verification = verifMap[type];
     const txId = inputs[index]?.trim();
     if (!txId || !verification || !user) return;
 
@@ -237,25 +259,48 @@ const VerifySpendFlow = () => {
   const now = new Date();
   const dataComplete = dataVerification?.status === "completed" || dataVerification?.status === "verified";
   const elecComplete = elecVerification?.status === "completed" || elecVerification?.status === "verified";
-  const bothComplete = dataComplete && elecComplete;
+  const foodComplete = foodVerification?.status === "completed" || foodVerification?.status === "verified";
+  const transportComplete = transportVerification?.status === "completed" || transportVerification?.status === "verified";
+  const utilityComplete = dataComplete && elecComplete;
 
   const dataVerifiedTxs = dataTxs.filter(t => t.is_verified);
   const elecVerifiedTxs = elecTxs.filter(t => t.is_verified);
+  const foodVerifiedTxs = foodTxs.filter(t => t.is_verified);
+  const transportVerifiedTxs = transportTxs.filter(t => t.is_verified);
 
-  const dataAnnualSpend = dataVerification
-    ? (dataVerification.frequency === "monthly"
-      ? (dataVerifiedTxs.length > 0 ? Number(dataVerifiedTxs[0].verified_amount || 0) * 12 : 0)
-      : dataVerifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0) * getMultiplier(dataVerification.frequency))
-    : 0;
+  const calcAnnual = (verif: Verification | null, verifiedTxs: Transaction[], isElec: boolean = false) => {
+    if (!verif) return 0;
+    if (isElec) return verifiedTxs.length > 0 ? Number(verifiedTxs[0].verified_amount || 0) * 12 : 0;
+    return verif.frequency === "monthly"
+      ? (verifiedTxs.length > 0 ? Number(verifiedTxs[0].verified_amount || 0) * 12 : 0)
+      : verifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0) * getMultiplier(verif.frequency);
+  };
 
-  const elecAnnualSpend = elecVerifiedTxs.length > 0
-    ? Number(elecVerifiedTxs[0].verified_amount || 0) * 12
-    : 0;
+  const dataAnnualSpend = calcAnnual(dataVerification, dataVerifiedTxs);
+  const elecAnnualSpend = calcAnnual(elecVerification, elecVerifiedTxs, true);
+  const foodAnnualSpend = calcAnnual(foodVerification, foodVerifiedTxs);
+  const transportAnnualSpend = calcAnnual(transportVerification, transportVerifiedTxs);
+  const totalVerifiedAnnualSpend = dataAnnualSpend + elecAnnualSpend + foodAnnualSpend + transportAnnualSpend;
 
-  const totalVerifiedAnnualSpend = dataAnnualSpend + elecAnnualSpend;
+  // Build tab list based on active settings
+  const tabs: { type: SpendType; label: string; icon: any; active: boolean }[] = [
+    { type: "data", label: "Data", icon: Wifi, active: true },
+    { type: "electricity", label: "Elec", icon: Zap, active: true },
+    ...(verifyFoodActive ? [{ type: "food" as SpendType, label: "Food", icon: UtensilsCrossed, active: true }] : []),
+    ...(verifyTransportActive ? [{ type: "transport" as SpendType, label: "Transport", icon: Bus, active: true }] : []),
+  ];
 
-  // Both verified = fully complete
-  if (bothComplete) {
+  const completionMap: Record<SpendType, boolean> = { data: dataComplete, electricity: elecComplete, food: foodComplete, transport: transportComplete };
+  const verifMap: Record<SpendType, Verification | null> = { data: dataVerification, electricity: elecVerification, food: foodVerification, transport: transportVerification };
+  const txsMap: Record<SpendType, Transaction[]> = { data: dataTxs, electricity: elecTxs, food: foodTxs, transport: transportTxs };
+  const inputsMap: Record<SpendType, string[]> = { data: dataTxInputs, electricity: elecTxInputs, food: foodTxInputs, transport: transportTxInputs };
+  const setInputsMap: Record<SpendType, (v: string[]) => void> = { data: setDataTxInputs, electricity: setElecTxInputs, food: setFoodTxInputs, transport: setTransportTxInputs };
+  const verifiedTxsMap: Record<SpendType, Transaction[]> = { data: dataVerifiedTxs, electricity: elecVerifiedTxs, food: foodVerifiedTxs, transport: transportVerifiedTxs };
+  const annualSpendMap: Record<SpendType, number> = { data: dataAnnualSpend, electricity: elecAnnualSpend, food: foodAnnualSpend, transport: transportAnnualSpend };
+
+  const allRequiredComplete = utilityComplete && (!verifyFoodActive || foodComplete) && (!verifyTransportActive || transportComplete);
+
+  if (allRequiredComplete) {
     return (
       <GlassCard variant="strong" className="space-y-4">
         <div className="flex items-center gap-2">
@@ -268,9 +313,11 @@ const VerifySpendFlow = () => {
           <p className="text-[12px] text-primary mt-1">
             Total Verified Annual Spend: ₦{totalVerifiedAnnualSpend.toLocaleString("en-NG")}
           </p>
-          <div className="flex justify-center gap-4 mt-2 text-[10px] text-muted-foreground">
+          <div className="flex flex-wrap justify-center gap-3 mt-2 text-[10px] text-muted-foreground">
             <span><Wifi className="w-3 h-3 inline mr-1" />Data: ₦{dataAnnualSpend.toLocaleString("en-NG")}</span>
-            <span><Zap className="w-3 h-3 inline mr-1" />Electricity: ₦{elecAnnualSpend.toLocaleString("en-NG")}</span>
+            <span><Zap className="w-3 h-3 inline mr-1" />Elec: ₦{elecAnnualSpend.toLocaleString("en-NG")}</span>
+            {verifyFoodActive && <span><UtensilsCrossed className="w-3 h-3 inline mr-1" />Food: ₦{foodAnnualSpend.toLocaleString("en-NG")}</span>}
+            {verifyTransportActive && <span><Bus className="w-3 h-3 inline mr-1" />Transport: ₦{transportAnnualSpend.toLocaleString("en-NG")}</span>}
           </div>
         </motion.div>
       </GlassCard>
@@ -285,52 +332,48 @@ const VerifySpendFlow = () => {
       </div>
 
       {/* Status summary */}
-      <div className="flex gap-2">
-        <div className={`flex-1 glass rounded-xl p-2 text-center text-[10px] border ${dataComplete ? "border-primary/40 text-primary" : "border-muted text-muted-foreground"}`}>
-          <Wifi className="w-3 h-3 mx-auto mb-1" />
-          Data {dataComplete ? "✓" : dataVerification ? "In Progress" : "Not Started"}
-        </div>
-        <div className={`flex-1 glass rounded-xl p-2 text-center text-[10px] border ${elecComplete ? "border-primary/40 text-primary" : "border-muted text-muted-foreground"}`}>
-          <Zap className="w-3 h-3 mx-auto mb-1" />
-          Electricity {elecComplete ? "✓" : elecVerification ? "In Progress" : "Not Started"}
-        </div>
+      <div className="flex gap-2 flex-wrap">
+        {tabs.map(tab => (
+          <div key={tab.type} className={`flex-1 min-w-[60px] glass rounded-xl p-2 text-center text-[10px] border ${completionMap[tab.type] ? "border-primary/40 text-primary" : "border-muted text-muted-foreground"}`}>
+            <tab.icon className="w-3 h-3 mx-auto mb-1" />
+            {tab.label} {completionMap[tab.type] ? "✓" : verifMap[tab.type] ? "⏳" : "—"}
+          </div>
+        ))}
       </div>
 
-      {!dataComplete || !elecComplete ? (
+      {!allRequiredComplete && (
         <p className="text-[10px] text-destructive/80">
-          ⚠ Both data and electricity must be verified for spend verification to be complete.
+          ⚠ All active categories must be verified for spend verification to be complete.
         </p>
-      ) : null}
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 glass rounded-xl p-1">
-        <button
-          onClick={() => setActiveTab("data")}
-          className={`flex-1 rounded-lg py-2 text-[11px] font-medium transition-all flex items-center justify-center gap-1 ${activeTab === "data" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-        >
-          <Wifi className="w-3 h-3" /> Data
-        </button>
-        <button
-          onClick={() => setActiveTab("electricity")}
-          className={`flex-1 rounded-lg py-2 text-[11px] font-medium transition-all flex items-center justify-center gap-1 ${activeTab === "electricity" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-        >
-          <Zap className="w-3 h-3" /> Electricity
-        </button>
+        {tabs.map(tab => (
+          <button
+            key={tab.type}
+            onClick={() => setActiveTab(tab.type)}
+            className={`flex-1 rounded-lg py-2 text-[10px] font-medium transition-all flex items-center justify-center gap-1 ${activeTab === tab.type ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            <tab.icon className="w-3 h-3" /> {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Data Tab */}
-      {activeTab === "data" && (
+      {/* Active Tab Panel */}
+      {tabs.map(tab => activeTab === tab.type && (
         <VerificationPanel
-          type="data"
-          verification={dataVerification}
-          transactions={dataTxs}
-          txInputs={dataTxInputs}
-          setTxInputs={setDataTxInputs}
-          isComplete={dataComplete}
-          verifiedTxs={dataVerifiedTxs}
-          annualSpend={dataAnnualSpend}
-          frequency={frequency}
-          setFrequency={setFrequency}
+          key={tab.type}
+          type={tab.type}
+          verification={verifMap[tab.type]}
+          transactions={txsMap[tab.type]}
+          txInputs={inputsMap[tab.type]}
+          setTxInputs={setInputsMap[tab.type]}
+          isComplete={completionMap[tab.type]}
+          verifiedTxs={verifiedTxsMap[tab.type]}
+          annualSpend={annualSpendMap[tab.type]}
+          frequency={tab.type === "electricity" ? "monthly" : frequency}
+          setFrequency={tab.type === "electricity" ? () => {} : setFrequency}
           verifySettings={verifySettings}
           starting={starting}
           submitting={submitting}
@@ -338,41 +381,13 @@ const VerifySpendFlow = () => {
           editValue={editValue}
           setEditingTxId={setEditingTxId}
           setEditValue={setEditValue}
-          onStart={() => handleStartVerification("data")}
-          onSubmitTx={(idx) => handleSubmitTx(idx, "data")}
+          onStart={() => handleStartVerification(tab.type)}
+          onSubmitTx={(idx) => handleSubmitTx(idx, tab.type)}
           onEditTx={handleEditDuplicateTx}
-          getMaxBoxes={getMaxBoxes}
-          getMultiplier={getMultiplier}
+          getMaxBoxes={tab.type === "electricity" ? () => 1 : getMaxBoxes}
+          getMultiplier={tab.type === "electricity" ? () => 12 : getMultiplier}
         />
-      )}
-
-      {/* Electricity Tab */}
-      {activeTab === "electricity" && (
-        <VerificationPanel
-          type="electricity"
-          verification={elecVerification}
-          transactions={elecTxs}
-          txInputs={elecTxInputs}
-          setTxInputs={setElecTxInputs}
-          isComplete={elecComplete}
-          verifiedTxs={elecVerifiedTxs}
-          annualSpend={elecAnnualSpend}
-          frequency={"monthly"}
-          setFrequency={() => {}}
-          verifySettings={verifySettings}
-          starting={starting}
-          submitting={submitting}
-          editingTxId={editingTxId}
-          editValue={editValue}
-          setEditingTxId={setEditingTxId}
-          setEditValue={setEditValue}
-          onStart={() => handleStartVerification("electricity")}
-          onSubmitTx={(idx) => handleSubmitTx(idx, "electricity")}
-          onEditTx={handleEditDuplicateTx}
-          getMaxBoxes={() => 1}
-          getMultiplier={() => 12}
-        />
-      )}
+      ))}
     </GlassCard>
   );
 };
@@ -409,8 +424,15 @@ const VerificationPanel = ({
   setEditingTxId, setEditValue, onStart, onSubmitTx, onEditTx,
   getMaxBoxes, getMultiplier,
 }: VerificationPanelProps) => {
-  const label = type === "data" ? "Data" : "Electricity";
-  const icon = type === "data" ? <Wifi className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />;
+  const labelMap: Record<SpendType, string> = { data: "Data", electricity: "Electricity", food: "Food", transport: "Transport" };
+  const iconMap: Record<SpendType, JSX.Element> = {
+    data: <Wifi className="w-3.5 h-3.5" />,
+    electricity: <Zap className="w-3.5 h-3.5" />,
+    food: <UtensilsCrossed className="w-3.5 h-3.5" />,
+    transport: <Bus className="w-3.5 h-3.5" />,
+  };
+  const label = labelMap[type];
+  const icon = iconMap[type];
 
   if (isComplete) {
     return (
@@ -439,7 +461,7 @@ const VerificationPanel = ({
             </GlassButton>
           </a>
         )}
-        {type === "data" && (
+        {(type === "data" || type === "food" || type === "transport") && (
           <div>
             <p className="text-[11px] text-muted-foreground mb-2">Select submission frequency:</p>
             <div className="flex gap-2">
