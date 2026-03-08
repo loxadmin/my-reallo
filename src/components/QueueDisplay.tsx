@@ -9,6 +9,8 @@ import DecisionFlow from "./DecisionFlow";
 import VerifySpendFlow from "./VerifySpendFlow";
 import InfluencerPanel from "./InfluencerPanel";
 import NotificationsPanel from "./NotificationsPanel";
+import WalletCarousel from "./WalletCarousel";
+import ActivateWalletModal from "./ActivateWalletModal";
 import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2, Star } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
@@ -31,7 +33,7 @@ const goalLabels: Record<string, string> = {
 };
 
 const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange }: QueueDisplayProps) => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
@@ -42,6 +44,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   const [claimedTotal, setClaimedTotal] = useState(0);
   const [spendVerified, setSpendVerified] = useState(false);
   const [isVerifyActive, setIsVerifyActive] = useState(true);
+  const [activateWallet, setActivateWallet] = useState<"food" | "transport" | null>(null);
 
   const position = profile?.queue_position ?? 201;
   const referralLink = profile?.referral_code
@@ -160,56 +163,54 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-            {/* Goal Balance Hero Card */}
+            {/* Goal Balance Hero Card with Wallet Carousel */}
             <GlassCard variant="glow" className="relative overflow-hidden p-5">
               <p className="text-foreground text-[13px] font-medium mb-3">
                 Welcome back, {user?.email?.split("@")[0] || "User"} 👋
               </p>
-              <p className="text-muted-foreground uppercase tracking-[0.15em] text-[10px] font-medium mb-1">Annual Utility Spend</p>
-              <div className="flex items-baseline gap-3 mb-1">
-                <h2 className="font-display text-2xl font-bold gradient-text tabular-nums leading-none">
-                  {formatNaira(targetAmount)}
-                </h2>
-              </div>
-              <p className="text-[11px] text-muted-foreground mb-4">
-                Claimable: <span className="text-primary font-semibold">{formatNaira(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
-              </p>
 
-              {/* Goal Progress */}
-              <div className="space-y-1.5 mb-5">
-                <div className="flex justify-between items-end">
-                  <p className="font-medium text-foreground text-[12px]">GOAL - {goalLabels[goal] || goal}</p>
-                  <p className="text-muted-foreground text-[11px]">{Math.round((nairaValue / targetAmount) * 100)}%</p>
+              <WalletCarousel
+                targetAmount={targetAmount}
+                nairaValue={nairaValue}
+                pointsBalance={pointsBalance}
+                goal={goal}
+                goalLabel={goalLabels[goal] || goal}
+                onActivateWallet={(type) => setActivateWallet(type)}
+              >
+                {/* Action Buttons */}
+                <div className="flex gap-3 mt-4">
+                  <GlassButton
+                    variant="primary"
+                    onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })}
+                    className="flex-1 h-10 rounded-xl text-[12px]"
+                    disabled={!isOffQueue}
+                  >
+                    {isOffQueue ? <><Wallet className="w-3.5 h-3.5" /> Claim</> : <><Lock className="w-3.5 h-3.5" /> Claim</>}
+                  </GlassButton>
+                  <GlassButton
+                    variant="outline"
+                    onClick={() => onViewChange?.("earn")}
+                    className="flex-1 h-10 rounded-xl text-[12px]"
+                  >
+                    <Award className="w-3.5 h-3.5" /> Earn
+                  </GlassButton>
                 </div>
-                <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full bg-primary"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min((nairaValue / targetAmount) * 100, 100)}%` }}
-                    transition={{ duration: 1.2, ease: "easeOut" }}
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <GlassButton
-                  variant="primary"
-                  onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })}
-                  className="flex-1 h-10 rounded-xl text-[12px]"
-                  disabled={!isOffQueue}
-                >
-                  {isOffQueue ? <><Wallet className="w-3.5 h-3.5" /> Claim</> : <><Lock className="w-3.5 h-3.5" /> Claim</>}
-                </GlassButton>
-                <GlassButton
-                  variant="outline"
-                  onClick={() => onViewChange?.("earn")}
-                  className="flex-1 h-10 rounded-xl text-[12px]"
-                >
-                  <Award className="w-3.5 h-3.5" /> Earn
-                </GlassButton>
-              </div>
+              </WalletCarousel>
             </GlassCard>
+
+            {/* Activate Wallet Modal */}
+            <AnimatePresence>
+              {activateWallet && (
+                <ActivateWalletModal
+                  type={activateWallet}
+                  onClose={() => setActivateWallet(null)}
+                  onComplete={() => {
+                    setActivateWallet(null);
+                    refreshProfile();
+                  }}
+                />
+              )}
+            </AnimatePresence>
 
             {/* Queue & Stats - Interactive */}
             {!isOffQueue && (

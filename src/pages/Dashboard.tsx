@@ -21,8 +21,12 @@ type DashStep = "calculator" | "goal" | "queue";
 interface SpendResult {
   weeklyData: number;
   monthlyElectricity: number;
+  weeklyFood?: number;
+  weeklyTransport?: number;
   annualData: number;
   annualElectricity: number;
+  annualFood?: number;
+  annualTransport?: number;
   totalAnnual: number;
 }
 
@@ -57,6 +61,8 @@ const Dashboard = () => {
           weeklyData: 0, monthlyElectricity: 0,
           annualData: profile.annual_data_spend,
           annualElectricity: profile.annual_electricity_spend,
+          annualFood: profile.annual_food_spend ?? 0,
+          annualTransport: profile.annual_transport_spend ?? 0,
           totalAnnual: profile.total_annual_spend,
         });
         setStep("queue");
@@ -65,6 +71,8 @@ const Dashboard = () => {
           weeklyData: 0, monthlyElectricity: 0,
           annualData: profile.annual_data_spend,
           annualElectricity: profile.annual_electricity_spend,
+          annualFood: profile.annual_food_spend ?? 0,
+          annualTransport: profile.annual_transport_spend ?? 0,
           totalAnnual: profile.total_annual_spend,
         });
         setStep("goal");
@@ -78,6 +86,8 @@ const Dashboard = () => {
       await supabase.from("profiles").update({
         annual_data_spend: result.annualData,
         annual_electricity_spend: result.annualElectricity,
+        annual_food_spend: result.annualFood ?? 0,
+        annual_transport_spend: result.annualTransport ?? 0,
         total_annual_spend: result.totalAnnual,
       }).eq("id", user.id);
       await refreshProfile();
