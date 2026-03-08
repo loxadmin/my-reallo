@@ -107,7 +107,7 @@ const InfluencerPanel = () => {
   const fetchData = async () => {
     if (!user) return;
     setLoading(true);
-    const [appRes, walletRes, bankRes, refRes, wdRes] = await Promise.all([
+    const [appRes, walletRes, bankRes, refRes, wdRes, chRes, enRes, subRes] = await Promise.all([
       supabase.from("influencer_applications" as any).select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("influencer_wallets" as any).select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("influencer_bank_accounts" as any).select("*").eq("user_id", user.id).maybeSingle(),
