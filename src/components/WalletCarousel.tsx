@@ -254,7 +254,7 @@ const WalletCarousel = ({
               {/* Backdrop */}
               <div className="absolute inset-0 bg-background/60 backdrop-blur-md" />
 
-              {/* Circle card */}
+              {/* Circle card with carousel */}
               <motion.div
                 initial={{ scale: 0.7, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -263,15 +263,41 @@ const WalletCarousel = ({
                 onClick={(e) => e.stopPropagation()}
                 className="relative z-10 w-[22rem] h-[22rem] sm:w-[26rem] sm:h-[26rem] rounded-full flex flex-col items-center justify-center glass-card border border-border/20 shadow-[0_8px_40px_hsl(var(--primary)/0.15)]"
               >
-                <p className="text-muted-foreground uppercase tracking-[0.15em] text-[9px] font-medium mb-2">
-                  {showTotal ? "Total Annual Spend" : wallets[selectedIndex]?.label ?? "Annual Utility Spend"}
-                </p>
-                <p className="font-display text-2xl font-bold gradient-text tabular-nums">
-                  {formatCurrency(showTotal ? totalAllSpend : (wallets[selectedIndex]?.amount ?? utilitySpend))}
-                </p>
+                {/* Carousel inside popup */}
+                <div ref={popupEmblaRef} className="overflow-hidden w-[70%]">
+                  <div className="flex">
+                    {wallets.map((wallet) => (
+                      <div key={wallet.type} className="min-w-0 shrink-0 grow-0 basis-full flex flex-col items-center justify-center">
+                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center mb-2">
+                          {wallet.icon}
+                        </div>
+                        <p className="text-muted-foreground uppercase tracking-[0.15em] text-[9px] font-medium mb-2 text-center">
+                          {showTotal && wallet.type === "utility" ? "Total Annual Spend" : wallet.label}
+                        </p>
+                        <p className="font-display text-2xl font-bold gradient-text tabular-nums">
+                          {formatCurrency(showTotal && wallet.type === "utility" ? totalAllSpend : wallet.amount)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Popup dots */}
+                <div className="flex justify-center gap-1.5 mt-3">
+                  {wallets.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => popupEmblaApi?.scrollTo(idx)}
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full transition-all duration-200",
+                        popupSelectedIndex === idx ? "bg-primary w-4" : "bg-muted-foreground/30"
+                      )}
+                    />
+                  ))}
+                </div>
 
                 {/* Total toggle */}
-                <div className="flex items-center gap-1.5 mt-4">
+                <div className="flex items-center gap-1.5 mt-3">
                   <span className="text-[9px] text-muted-foreground">Total</span>
                   <button
                     onClick={() => setShowTotal(!showTotal)}
