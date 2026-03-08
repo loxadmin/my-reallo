@@ -12,6 +12,7 @@ import PageSkeleton from "@/components/PageSkeleton";
 import { LayoutDashboard, Award, ShieldCheck, Star, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 export type DashView = "home" | "earn" | "goal" | "verify" | "influencer" | "notifications";
 
