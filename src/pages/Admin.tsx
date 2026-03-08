@@ -1405,6 +1405,7 @@ const Admin = () => {
                                 await supabase.from("influencer_challenge_submissions" as any).update({
                                   status: "rejected", reviewed_at: new Date().toISOString()
                                 } as any).eq("id", sub.id);
+                                await sendNotification({ userId: sub.user_id, type: "rejection", title: "Video Submission Rejected", message: `Your video #${sub.video_number} for "${ch.title}" was not approved. Please review the instructions and try again.` });
                                 toast({ title: "Submission rejected" });
                                 await fetchData();
                               }} className="flex-1 text-[10px]">Reject</GlassButton>
