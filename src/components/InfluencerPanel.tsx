@@ -278,7 +278,23 @@ const InfluencerPanel = () => {
     await fetchData();
   };
 
-  if (loading) return <GlassCard className="p-6 text-center"><p className="text-muted-foreground text-[13px]">Loading...</p></GlassCard>;
+  if (loading) return (
+    <GlassCard className="p-6 space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 w-1/3 rounded-lg bg-muted animate-pulse" />
+          <div className="h-3 w-1/2 rounded-lg bg-muted animate-pulse" />
+        </div>
+      </div>
+      <div className="h-20 w-full rounded-xl bg-muted animate-pulse" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="h-16 rounded-xl bg-muted animate-pulse" />
+        <div className="h-16 rounded-xl bg-muted animate-pulse" />
+      </div>
+      <div className="h-10 w-full rounded-xl bg-muted animate-pulse" />
+    </GlassCard>
+  );
 
   // Step 1: No application yet
   if (!application) {
