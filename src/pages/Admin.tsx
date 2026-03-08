@@ -750,34 +750,76 @@ const Admin = () => {
     const totalInfluencerPayouts = infWithdrawals.filter((w: any) => w.status === "approved").reduce((s: number, w: any) => s + (w.amount || 0), 0);
     const totalVoucherValue = 0; // placeholder if vouchers data available
 
+    // Computed stats for statement
+    const totalReferrals = activities.filter(a => a.action_type === "referral").length;
+    const avgSpendPerUser = profiles.length > 0 ? totalSpend / profiles.length : 0;
+    const usersWithGoals = profiles.filter(p => p.selected_goal).length;
+    const usersOffQueue = profiles.filter(p => (p.queue_position ?? 999) <= 0).length;
+    const usersOnQueue = profiles.filter(p => (p.queue_position ?? 0) > 0).length;
+    const totalInfluencerReferralEarnings = infReferrals.reduce((s: number, r: any) => s + (r.reward_amount || 0), 0);
+    const pendingInfluencerPayouts = infWithdrawals.filter((w: any) => w.status === "pending").reduce((s: number, w: any) => s + (w.amount || 0), 0);
+    const activeInfluencers = infWallets.filter((w: any) => w.status === "active").length;
+    const totalInfluencerBalance = infWallets.reduce((s: number, w: any) => s + (w.balance || 0), 0);
+    const duplicateTxs = verificationTxs.filter(t => t.is_duplicate).length;
+    const unverifiedTxs = verificationTxs.filter(t => !t.is_verified && !t.is_duplicate).length;
+    const decisionTotalResponses = decisionResponses.length;
+    const decisionSwitchCompleted = decisionResponses.filter(r => r.switch_completed).length;
+    const goalBreakdown: Record<string, number> = {};
+    profiles.forEach(p => { if (p.selected_goal) goalBreakdown[p.selected_goal] = (goalBreakdown[p.selected_goal] || 0) + 1; });
+
     const lines = [
-      ["Reallo Financial Statement"],
-      [`Generated: ${today}`, `Currency: ${adminCurrency}`],
+      ["REALLO PLATFORM — FINANCIAL STATEMENT"],
+      [`Report Date: ${today}`, `Currency: ${adminCurrency}`, `Exchange Rate: 1 ${adminCurrency} = ${sym}${rate === 1 ? "1" : rate.toLocaleString()} NGN`],
       [],
-      ["PLATFORM OVERVIEW"],
+      ["═══ 1. PLATFORM OVERVIEW ═══"],
       ["Metric", "Value"],
-      ["Total Users", String(profiles.length)],
+      ["Total Registered Users", String(profiles.length)],
       ["Active Users", String(activeUsers)],
       ["Banned Users", String(bannedCount)],
+      ["Users On Queue", String(usersOnQueue)],
+      ["Users Off Queue (Eligible)", String(usersOffQueue)],
+      ["Users With Goals Set", String(usersWithGoals)],
+      ["Total Referrals Made", String(totalReferrals)],
+      ["Total Warnings Issued", String(userWarnings.length)],
+      ["Ghost Users (Seeded)", String(ghostCount)],
       [],
-      ["REVENUE"],
+      ["═══ 2. REVENUE & SPEND ═══"],
       ["Metric", `Amount (${sym})`],
       ["Total Annual Spend (all users)", `${sym}${fmtVal(totalSpend)}`],
-      ["Processed Revenue (verified txns)", `${sym}${fmtVal(totalRevenue)}`],
+      ["Average Spend Per User", `${sym}${fmtVal(avgSpendPerUser)}`],
+      ["Processed Revenue (verified txns)", `${sym}${fmtVal(totalVerified)}`],
       ["Verified Transactions Count", String(verifiedTxs.length)],
+      ["Unverified Transactions", String(unverifiedTxs)],
+      ["Duplicate Transactions Flagged", String(duplicateTxs)],
       [],
-      ["POINTS ECONOMY"],
+      ["═══ 3. POINTS ECONOMY ═══"],
       ["Metric", "Value"],
-      ["Total Points in Circulation", String(totalPoints)],
-      [`Points Value (${sym})`, `${sym}${fmtVal(totalPoints * 0.5)}`],
+      ["Total Points in Circulation", totalPoints.toLocaleString()],
+      [`Points Monetary Value (${sym})`, `${sym}${fmtVal(totalPoints * 0.5)}`],
+      ["Average Points Per User", profiles.length > 0 ? Math.round(totalPoints / profiles.length).toLocaleString() : "0"],
       [],
-      ["INFLUENCER PAYOUTS"],
+      ["═══ 4. GOAL DISTRIBUTION ═══"],
+      ["Goal Type", "Users"],
+      ...Object.entries(goalBreakdown).map(([g, c]) => [g, String(c)]),
+      [],
+      ["═══ 5. INFLUENCER PROGRAM ═══"],
       ["Metric", `Amount (${sym})`],
-      ["Total Influencer Referral Earnings", `${sym}${fmtVal(infReferrals.reduce((s: number, r: any) => s + (r.reward_amount || 0), 0))}`],
-      ["Total Approved Withdrawals", `${sym}${fmtVal(totalInfluencerPayouts)}`],
-      ["Pending Withdrawals", String(pendingWithdrawals)],
+      ["Active Influencers", String(activeInfluencers)],
+      ["Total Influencer Wallet Balance", `${sym}${fmtVal(totalInfluencerBalance)}`],
+      ["Total Referral Earnings", `${sym}${fmtVal(totalInfluencerReferralEarnings)}`],
+      ["Approved Withdrawals", `${sym}${fmtVal(totalInfluencerPayouts)}`],
+      ["Pending Withdrawal Amount", `${sym}${fmtVal(pendingInfluencerPayouts)}`],
+      ["Pending Withdrawal Count", String(pendingWithdrawals)],
+      ["Influencer Applications (pending)", String(pendingApps)],
+      ["Total Challenges", String(infChallenges.length)],
       [],
-      ["VERIFIED TRANSACTIONS"],
+      ["═══ 6. DECISION APPS ═══"],
+      ["Metric", "Value"],
+      ["Total Decision Responses", String(decisionTotalResponses)],
+      ["Switches Completed", String(decisionSwitchCompleted)],
+      ["Total Decision Apps", String(decisionApps.length)],
+      [],
+      ["═══ 7. VERIFIED TRANSACTION LOG ═══"],
       ["Transaction ID", `Amount (${sym})`, "Date", "User ID"],
       ...verifiedTxs.slice(0, 500).map(t => [
         t.transaction_id,
