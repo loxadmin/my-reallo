@@ -60,12 +60,33 @@ const WalletCarousel = ({
     setSelectedIndex(idx);
   }, [emblaApi]);
 
+  const onPopupSelect = useCallback(() => {
+    if (!popupEmblaApi) return;
+    const idx = popupEmblaApi.selectedScrollSnap();
+    setPopupSelectedIndex(idx);
+  }, [popupEmblaApi]);
+
   useEffect(() => {
     if (!emblaApi) return;
     onSelect();
     emblaApi.on("select", onSelect);
     return () => { emblaApi.off("select", onSelect); };
   }, [emblaApi, onSelect]);
+
+  useEffect(() => {
+    if (!popupEmblaApi) return;
+    onPopupSelect();
+    popupEmblaApi.on("select", onPopupSelect);
+    return () => { popupEmblaApi.off("select", onPopupSelect); };
+  }, [popupEmblaApi, onPopupSelect]);
+
+  // Sync popup carousel to main carousel when popup opens
+  useEffect(() => {
+    if (showSpendPopup && popupEmblaApi) {
+      popupEmblaApi.scrollTo(selectedIndex, true);
+      setPopupSelectedIndex(selectedIndex);
+    }
+  }, [showSpendPopup, popupEmblaApi, selectedIndex]);
 
   const wallets: { type: WalletType; label: string; amount: number; icon: React.ReactNode; active: boolean }[] = [
     { type: "utility", label: utilityDisplayLabel, amount: utilityDisplayAmount, icon: <Wifi className="w-3.5 h-3.5" />, active: true },
