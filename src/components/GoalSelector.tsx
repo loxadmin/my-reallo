@@ -28,6 +28,7 @@ const goalMeta: Record<string, { label: string; icon: any; description: string }
 
 
 const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
+  const { formatCurrency: formatNaira } = useCurrency();
   const [categories, setCategories] = useState<GoalCategory[]>([]);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<GoalCategory | null>(null);
