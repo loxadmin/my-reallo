@@ -31,10 +31,7 @@ const Footer = () => {
           {content.about_us && (
             <div>
               <h4 className="text-[13px] font-semibold text-foreground mb-2">About Us</h4>
-              <div className="inline">
-                <RealloLogo size={14} className="inline-block align-middle mr-0.5" />
-              </div>{" "}
-              <p className="text-[12px] text-muted-foreground leading-relaxed whitespace-pre-line">{content.about_us}</p>
+              <p className="text-[12px] text-muted-foreground leading-relaxed whitespace-pre-line"><RealloLogo size={12} className="inline-block align-middle mr-0.5" /> {content.about_us}</p>
             </div>
           )}
           {content.contact_us && (
