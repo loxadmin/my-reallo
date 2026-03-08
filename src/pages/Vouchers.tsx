@@ -159,7 +159,7 @@ const Vouchers = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  if (loading || !user) return null;
+  if (loading || !user) return <PageSkeleton />;
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
