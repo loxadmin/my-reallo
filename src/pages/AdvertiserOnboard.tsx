@@ -293,7 +293,7 @@ const AdvertiserOnboard = () => {
               {!emailVerified && (
                 <button
                   onClick={verificationSent ? handleVerifyCode : handleSendVerification}
-                  disabled={verifying || (!verificationSent && !emailMatchesWebsite())}
+                  disabled={verifying || !email || (!verificationSent && brandedEmailRequired && !emailMatchesWebsite())}
                   className="clay-primary text-primary-foreground rounded-xl px-4 py-2.5 text-xs font-semibold whitespace-nowrap disabled:opacity-50"
                 >
                   {verifying ? "..." : verificationSent ? "Verify" : "Send Code"}
