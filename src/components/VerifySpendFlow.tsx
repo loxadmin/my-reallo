@@ -123,7 +123,7 @@ const VerifySpendFlow = () => {
     if (!user) return;
     setStarting(true);
 
-    const freq = type === "electricity" ? "monthly" : frequency;
+    const freq = (type === "electricity" || type === "food" || type === "transport") ? "monthly" : frequency;
     const days = freq === "daily" ? 30 : freq === "weekly" ? 28 : 1;
     const endsAt = new Date();
     endsAt.setDate(endsAt.getDate() + days);
