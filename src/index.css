@@ -28,13 +28,13 @@
     --ring: 160 60% 18%;
     --radius: 1rem;
 
-    --sidebar-background: 160 30% 95%;
-    --sidebar-foreground: 160 40% 15%;
+    --sidebar-background: 160 25% 96%;
+    --sidebar-foreground: 160 30% 12%;
     --sidebar-primary: 160 60% 18%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 25% 90%;
-    --sidebar-accent-foreground: 160 40% 15%;
-    --sidebar-border: 160 20% 85%;
+    --sidebar-accent: 160 20% 91%;
+    --sidebar-accent-foreground: 160 30% 12%;
+    --sidebar-border: 160 15% 88%;
     --sidebar-ring: 160 60% 18%;
   }
 
