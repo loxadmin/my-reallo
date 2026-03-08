@@ -1,19 +1,8 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { Bell, Check, AlertTriangle, Ban, Info, CheckCircle2, Star } from "lucide-react";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
-import { Bell, Check, AlertTriangle, Ban, Info, CheckCircle2, Star } from "lucide-react";
-
-interface Notification {
-  id: string;
-  user_id: string;
-  type: string;
-  title: string;
-  message: string;
-  is_read: boolean;
-  created_at: string;
-}
+import { useNotifications } from "@/contexts/NotificationContext";
+import PageSkeleton from "./PageSkeleton";
 
 const typeIcons: Record<string, typeof Bell> = {
   info: Info,
@@ -32,44 +21,19 @@ const typeColors: Record<string, string> = {
 };
 
 const NotificationsPanel = () => {
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) fetchNotifications();
-  }, [user]);
-
-  const fetchNotifications = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("notifications" as any)
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setNotifications((data || []) as unknown as Notification[]);
-    setLoading(false);
-  };
-
-  const markAsRead = async (id: string) => {
-    await supabase.from("notifications" as any).update({ is_read: true } as any).eq("id", id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-  };
-
-  const markAllRead = async () => {
-    if (!user) return;
-    await supabase.from("notifications" as any).update({ is_read: true } as any).eq("user_id", user.id).eq("is_read", false);
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-  };
-
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const { notifications, unreadCount, loading, markAsRead, markAllRead } = useNotifications();
 
   if (loading) {
     return (
       <div className="max-w-md mx-auto px-4 py-8">
-        <GlassCard>
-          <p className="text-center text-muted-foreground text-[13px]">Loading notifications...</p>
+        <GlassCard className="p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+            <div className="h-4 w-1/3 rounded-lg bg-muted animate-pulse" />
+          </div>
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-16 w-full rounded-xl bg-muted animate-pulse" />
+          ))}
         </GlassCard>
       </div>
     );

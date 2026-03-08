@@ -12,6 +12,7 @@ import PageSkeleton from "@/components/PageSkeleton";
 import { LayoutDashboard, Award, ShieldCheck, Star, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 export type DashView = "home" | "earn" | "goal" | "verify" | "influencer" | "notifications";
 
@@ -33,6 +34,7 @@ interface SpendResult {
 
 const Dashboard = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const { view: urlView } = useParams<{ view?: string }>();
   const [step, setStep] = useState<DashStep>("calculator");
@@ -148,6 +150,9 @@ const Dashboard = () => {
           >
             <item.icon className="w-4 h-4" />
             {item.label}
+            {item.id === "notifications" && unreadCount > 0 && (
+              <span className="ml-auto text-[9px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full leading-none">{unreadCount}</span>
+            )}
           </DropdownMenuItem>
         ))}
       </Navbar>
@@ -172,6 +177,9 @@ const Dashboard = () => {
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
+                    {item.id === "notifications" && unreadCount > 0 && (
+                      <span className="ml-auto text-[9px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full leading-none">{unreadCount}</span>
+                    )}
                   </button>
                 );
               })}
