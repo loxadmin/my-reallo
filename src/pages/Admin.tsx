@@ -876,8 +876,8 @@ const Admin = () => {
                   </TableHeader>
                   {activities.slice(0, 6).map((a) => (
                     <TableRow key={a.id}>
-                      <span className="flex-1 min-w-0 text-[11px] text-muted-foreground font-mono truncate">{a.user_id.slice(0, 12)}...</span>
-                      <span className="w-24 shrink-0 text-[11px] text-foreground capitalize truncate">{a.action_type}</span>
+                      <span className="flex-1 min-w-0 text-[11px] text-muted-foreground font-mono truncate">{a.user_id.slice(0, 8)}</span>
+                      <span className="w-24 shrink-0 text-[11px] text-foreground capitalize">{a.action_type}</span>
                       <span className="w-20 shrink-0 text-right text-[11px] font-semibold text-primary">+{a.positions_moved}</span>
                       <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
                     </TableRow>
