@@ -2073,7 +2073,7 @@ const Admin = () => {
                   </div>
                 </TableCard>
               </div>
-
+            )}
             {/* ═══ SETTINGS ═══ */}
             {activeTab === "settings" && (
               <div className={cardCls}>
