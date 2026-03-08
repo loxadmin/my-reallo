@@ -37,17 +37,27 @@ const AdvertiserOnboard = () => {
   useEffect(() => {
     if (!token) { setTokenValid(false); return; }
     (async () => {
-      const { data } = await supabase
-        .from("advertiser_tokens" as any)
-        .select("id, status")
-        .eq("token", token)
-        .eq("status", "active")
-        .maybeSingle();
-      if (data) {
+      const [tokenRes, settingRes] = await Promise.all([
+        supabase
+          .from("advertiser_tokens" as any)
+          .select("id, status")
+          .eq("token", token)
+          .eq("status", "active")
+          .maybeSingle(),
+        supabase
+          .from("admin_settings")
+          .select("value")
+          .eq("key", "advertiser_branded_email_required")
+          .maybeSingle(),
+      ]);
+      if (tokenRes.data) {
         setTokenValid(true);
-        setTokenId((data as any).id);
+        setTokenId((tokenRes.data as any).id);
       } else {
         setTokenValid(false);
+      }
+      if (settingRes.data) {
+        setBrandedEmailRequired((settingRes.data as any).value !== "false");
       }
     })();
   }, [token]);
