@@ -295,9 +295,9 @@ const Auth = () => {
                 )}
 
                 {error && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[13px] text-destructive font-medium">
+                  <p className="text-[13px] text-destructive font-medium">
                     {error}
-                  </motion.p>
+                  </p>
                 )}
 
                 <GlassButton variant="primary" className="w-full mt-4 text-[13px] py-3.5" onClick={handleSubmit} disabled={loading || !email || !password}>
