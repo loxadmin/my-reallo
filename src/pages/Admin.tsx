@@ -15,6 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { sendNotification } from "@/lib/notifications";
 import WaterBackground from "@/components/WaterBackground";
 import UserProfileDrawer from "@/components/UserProfileDrawer";
+import PageSkeleton from "@/components/PageSkeleton";
 import {
   SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
   SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton,
