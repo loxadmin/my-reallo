@@ -234,7 +234,23 @@ Deno.serve(async (req) => {
 
     if (founderSigUrl) {
       try {
-        const fSigBytes = await fetchImageBytes(founderSigUrl);
+        // Remove background from founder signature too
+        let processedFounderSigUrl = founderSigUrl;
+        const cleanedFounderSig = await removeSignatureBg(founderSigUrl);
+        if (cleanedFounderSig) {
+          // Upload processed founder signature
+          const base64Data = cleanedFounderSig.replace(/^data:image\/\w+;base64,/, "");
+          const sigBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+          const fSigPath = `signatures/processed_founder.png`;
+          await supabase.storage.from("advertiser-uploads").upload(fSigPath, sigBytes, {
+            contentType: "image/png",
+            upsert: true,
+          });
+          const { data: fSigUrlData } = supabase.storage.from("advertiser-uploads").getPublicUrl(fSigPath);
+          processedFounderSigUrl = fSigUrlData.publicUrl;
+        }
+
+        const fSigBytes = await fetchImageBytes(processedFounderSigUrl);
         if (fSigBytes) {
           let fSigImage;
           try {
