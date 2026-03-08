@@ -16,6 +16,8 @@ import {
   getPasswordStrength,
   GENERIC_AUTH_ERROR,
 } from "@/lib/security";
+import { getDeviceFingerprint } from "@/lib/fingerprint";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
