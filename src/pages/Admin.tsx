@@ -493,6 +493,7 @@ const Admin = () => {
 
   const tabs: { id: AdminTab; label: string; icon: any; count: number }[] = [
     { id: "users", label: "Users", icon: Users, count: profiles.length },
+    { id: "warnings", label: "Warnings", icon: AlertTriangle, count: userWarnings.length },
     { id: "ghosts", label: "Ghosts", icon: Ghost, count: ghostCount },
     { id: "activity", label: "Activity", icon: Activity, count: activities.length },
     { id: "goals", label: "Goals", icon: Settings, count: goalCategories.length },
