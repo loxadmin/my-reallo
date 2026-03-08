@@ -222,10 +222,7 @@ const Auth = () => {
               </button>
             </div>
 
-              <div
-                key={mode}
-                className="space-y-4"
-              >
+              <div className="space-y-4 animate-fade-in">
                 <div>
                   <GlassInput
                     label="Email"
