@@ -18,14 +18,14 @@ async function fetchImageBytes(url: string): Promise<Uint8Array | null> {
 
 /** AI-based signature background removal via Lovable AI Gateway.
  *  Returns cleaned PNG bytes, or null on failure. */
-async function removeSignatureBg(imageUrl: string): Promise<Uint8Array | null> {
+async function removeSignatureBg(imageUrl: string, label = "signature"): Promise<Uint8Array | null> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) {
-    console.error("BG removal: LOVABLE_API_KEY not set");
+    console.error(`BG removal [${label}]: LOVABLE_API_KEY not set`);
     return null;
   }
 
-  console.log("BG removal: starting for URL:", imageUrl?.substring(0, 80));
+  console.log(`BG removal [${label}]: starting for URL:`, imageUrl);
 
   try {
     // Fetch image and convert to base64 data URL
