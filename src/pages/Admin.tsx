@@ -915,9 +915,9 @@ const Admin = () => {
                             <p className="text-[11px] font-medium text-foreground truncate">{p.email}</p>
                             <p className="text-[9px] text-muted-foreground mt-0.5">Joined {new Date(p.created_at).toLocaleDateString()}</p>
                           </div>
-                          <span className="w-20 shrink-0 text-[11px] text-foreground truncate">{formatNaira(p.total_annual_spend || 0)}</span>
+                          <span className="w-20 shrink-0 text-[11px] text-foreground">{formatNairaCompact(p.total_annual_spend || 0)}</span>
                           <span className="w-14 shrink-0 text-[11px] text-muted-foreground">#{p.queue_position}</span>
-                          <span className="w-16 shrink-0 text-[11px] text-foreground truncate">{p.points_balance.toLocaleString()}</span>
+                          <span className="w-16 shrink-0 text-[11px] text-foreground">{formatCompact(p.points_balance)}</span>
                           <span className="w-10 shrink-0 text-[11px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
                           <span className="w-16 shrink-0">
                             {p.is_banned ? <StatusBadge status="BANNED" /> : pDuplicates.length > 0 ? <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full border border-destructive/20">{pDuplicates.length} dup</span> : <StatusBadge status="active" />}
