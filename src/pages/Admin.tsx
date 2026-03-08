@@ -181,8 +181,8 @@ const MetricCard = ({ label, value, icon: Icon, trend, trendLabel }: {
 const SectionHeader = ({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) => (
   <div className="flex items-center justify-between mb-5">
     <div>
-      <h2 className="text-lg font-bold text-foreground">{title}</h2>
-      {subtitle && <p className="text-[12px] text-muted-foreground mt-0.5">{subtitle}</p>}
+      <p className="text-[15px] font-bold text-foreground">{title}</p>
+      {subtitle && <p className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</p>}
     </div>
     {action}
   </div>
