@@ -262,12 +262,24 @@ const InfluencerPanel = () => {
       return;
     }
     setWithdrawing(true);
+    // Deduct balance immediately to prevent double-spending
+    const newBalance = wallet.balance - amount;
+    const { error: walletError } = await supabase.from("influencer_wallets" as any)
+      .update({ balance: newBalance } as any)
+      .eq("id", wallet.id);
+    if (walletError) {
+      toast({ title: "Error", description: walletError.message });
+      setWithdrawing(false);
+      return;
+    }
     const { error } = await supabase.from("influencer_withdrawals" as any).insert({
       user_id: user.id,
       amount,
       bank_account_id: bankAccount.id,
     } as any);
     if (error) {
+      // Rollback balance on insert failure
+      await supabase.from("influencer_wallets" as any).update({ balance: wallet.balance } as any).eq("id", wallet.id);
       toast({ title: "Error", description: error.message });
     } else {
       toast({ title: "Withdrawal Requested", description: "Admin will process your withdrawal." });
