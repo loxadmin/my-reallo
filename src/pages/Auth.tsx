@@ -181,14 +181,12 @@ const Auth = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md z-10"
       >
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <RealloLogo size={48} />
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <RealloLogo size={28} />
+            <h1 className="font-display text-xl font-bold gradient-text">Reallo</h1>
           </div>
-          <h1 className="font-display text-2xl font-bold text-foreground mb-2">
-            <span className="gradient-text">Reallo</span>
-          </h1>
-          <p className="text-[13px] text-muted-foreground">Reclaim what's yours</p>
+          <p className="text-[12px] text-muted-foreground">Reclaim what's yours</p>
         </div>
 
         {signupSuccess ? (
