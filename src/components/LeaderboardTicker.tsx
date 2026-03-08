@@ -91,11 +91,10 @@ const LeaderboardTicker = () => {
     <div
       className="w-full rounded-xl px-4 py-2.5 overflow-hidden relative"
       style={{
-        background: "hsl(160 50% 40% / 0.06)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        border: "1px solid hsl(160 50% 45% / 0.15)",
-        boxShadow: "inset 0 1px 0 hsl(160 50% 70% / 0.08)",
+        background: "hsl(160 50% 40% / 0.02)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        border: "1px solid hsl(160 50% 45% / 0.08)",
       }}
     >
       <AnimatePresence mode="wait">
