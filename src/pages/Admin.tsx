@@ -48,13 +48,28 @@ interface UserWarning {
   id: string; user_id: string; reason: string; issued_by: string; created_at: string;
 }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
+type AdminCurrency = "NGN" | "USD" | "EUR" | "GBP";
+const ADMIN_CURRENCY_SYMBOLS: Record<AdminCurrency, string> = { NGN: "₦", USD: "$", EUR: "€", GBP: "£" };
+const ADMIN_CURRENCY_DEFAULTS: Record<AdminCurrency, number> = { NGN: 1, USD: 1600, EUR: 1700, GBP: 2000 };
+
 const formatCompact = (n: number): string => {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1) + "K";
-  return String(n);
+  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
+  if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1) + "K";
+  return String(Math.round(n));
 };
-const formatNairaCompact = (n: number): string => "₦" + formatCompact(n);
+
+const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, number>) => {
+  const sym = ADMIN_CURRENCY_SYMBOLS[currency];
+  const rate = rates[currency];
+  const convert = (naira: number) => currency === "NGN" ? naira : naira / rate;
+  const fmt = (naira: number) => {
+    const v = convert(naira);
+    if (currency === "NGN") return sym + v.toLocaleString("en-NG");
+    return sym + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  const fmtCompact = (naira: number) => sym + formatCompact(convert(naira));
+  return { fmt, fmtCompact };
+};
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
