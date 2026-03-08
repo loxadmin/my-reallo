@@ -203,9 +203,9 @@ const VerifySpendFlow = () => {
             ))}
           </div>
           <p className="text-[10px] text-muted-foreground mt-1">
-            {frequency === "daily" && "30 transaction IDs over 30 days (first tx × 365 = initial annual spend)"}
-            {frequency === "weekly" && "4 transaction IDs over 28 days (first tx × 52 = initial annual spend)"}
-            {frequency === "monthly" && "1 transaction ID (tx × 12 = final annual spend, no recalculation)"}
+            {frequency === "daily" && "Submit transaction IDs over 30 days (sum of verified × 12 = annual spend)"}
+            {frequency === "weekly" && "Submit transaction IDs over 28 days (sum of verified × 13 = annual spend)"}
+            {frequency === "monthly" && "1 transaction ID (tx × 12 = annual spend, calculated immediately)"}
           </p>
         </div>
         <GlassButton variant="primary" className="w-full text-[13px]" onClick={handleStartVerification} disabled={starting}>
