@@ -1230,6 +1230,7 @@ const Admin = () => {
                             await supabase.from("influencer_wallets" as any).update({ balance: newBal }).eq("id", wallet.id);
                           }
                           await supabase.from("influencer_withdrawals" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", w.id);
+                          await sendNotification({ userId: w.user_id, type: "withdrawal_approved", title: "Withdrawal Approved", message: `Your withdrawal of ₦${w.amount.toLocaleString("en-NG")} has been approved and will be processed shortly.` });
                           toast({ title: "Withdrawal approved" });
                           await fetchData();
                         }} className="flex-1 text-[11px]"><Check className="w-3 h-3 mr-1" /> Approve</GlassButton>
