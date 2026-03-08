@@ -88,6 +88,7 @@ const Dashboard = () => {
         });
         setStep("goal");
       }
+      setProfileReady(true);
     }
   }, [profile]);
 
