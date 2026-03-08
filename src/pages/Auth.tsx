@@ -39,9 +39,40 @@ const Auth = () => {
     const ref = searchParams.get("ref");
     if (ref) {
       setReferralCode(ref.toUpperCase());
+      localStorage.setItem(REFERRAL_STORAGE_KEY, ref.toUpperCase());
       setMode("signup");
     }
   }, [searchParams]);
+
+  // Handle post-OAuth referral processing
+  useEffect(() => {
+    const processOAuthReferral = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const pendingRef = localStorage.getItem(REFERRAL_STORAGE_KEY);
+      if (pendingRef) {
+        localStorage.removeItem(REFERRAL_STORAGE_KEY);
+        try {
+          const deviceFp = getDeviceFingerprint();
+          await supabase.functions.invoke("handle-google-referral", {
+            body: { referral_code: pendingRef, device_fingerprint: deviceFp },
+          });
+        } catch {
+          // Non-critical
+        }
+      }
+      navigate("/");
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") {
+        processOAuthReferral();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const passwordStrength = mode === "signup" ? getPasswordStrength(password) : null;
 
