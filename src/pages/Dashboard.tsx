@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 export type DashView = "home" | "earn" | "goal" | "verify" | "influencer" | "notifications";
+
+const validViews: DashView[] = ["home", "earn", "goal", "verify", "influencer", "notifications"];
 
 type DashStep = "calculator" | "goal" | "queue";
 
@@ -27,9 +29,22 @@ interface SpendResult {
 const Dashboard = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const { view: urlView } = useParams<{ view?: string }>();
   const [step, setStep] = useState<DashStep>("calculator");
   const [spendResult, setSpendResult] = useState<SpendResult | null>(null);
-  const [activeView, setActiveView] = useState<DashView>("home");
+
+  // Derive activeView from URL param
+  const activeView: DashView = urlView && validViews.includes(urlView as DashView)
+    ? (urlView as DashView)
+    : "home";
+
+  const setActiveView = (view: DashView) => {
+    if (view === "home") {
+      navigate("/dashboard");
+    } else {
+      navigate(`/dashboard/${view}`);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
