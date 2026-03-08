@@ -13,6 +13,7 @@ interface WalletCarouselProps {
   goal: string;
   goalLabel: string;
   onActivateWallet: (type: "food" | "transport") => void;
+  onActiveWalletChange?: (isActive: boolean) => void;
   children?: React.ReactNode;
 }
 
@@ -25,12 +26,14 @@ const WalletCarousel = ({
   goal,
   goalLabel,
   onActivateWallet,
+  onActiveWalletChange,
   children,
 }: WalletCarouselProps) => {
   const { profile } = useAuth();
   const [showTotal, setShowTotal] = useState(false);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: "center" });
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [currentWalletActive, setCurrentWalletActive] = useState(true);
 
   const utilitySpend = (profile?.annual_data_spend ?? 0) + (profile?.annual_electricity_spend ?? 0);
   const foodSpend = profile?.annual_food_spend ?? 0;
@@ -51,7 +54,8 @@ const WalletCarousel = ({
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
+    const idx = emblaApi.selectedScrollSnap();
+    setSelectedIndex(idx);
   }, [emblaApi]);
 
   useEffect(() => {
@@ -60,6 +64,9 @@ const WalletCarousel = ({
     emblaApi.on("select", onSelect);
     return () => { emblaApi.off("select", onSelect); };
   }, [emblaApi, onSelect]);
+
+  // Report active state after wallets array is built
+  // We'll do this via an effect below after wallets are defined
 
   const wallets = [
     {
@@ -84,6 +91,13 @@ const WalletCarousel = ({
       active: transportActive,
     },
   ];
+
+  const isCurrentActive = wallets[selectedIndex]?.active ?? true;
+
+  useEffect(() => {
+    setCurrentWalletActive(isCurrentActive);
+    onActiveWalletChange?.(isCurrentActive);
+  }, [selectedIndex, isCurrentActive, onActiveWalletChange]);
 
   return (
     <div className="relative">
@@ -177,8 +191,8 @@ const WalletCarousel = ({
         ))}
       </div>
 
-      {/* Action buttons passed as children */}
-      {children}
+      {/* Action buttons passed as children - only show when current wallet is active */}
+      {currentWalletActive && children}
     </div>
   );
 };
