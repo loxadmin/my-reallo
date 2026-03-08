@@ -102,6 +102,7 @@ const InfluencerPanel = () => {
 
   // Tab
   const [tab, setTab] = useState<"overview" | "withdraw" | "challenges">("overview");
+  const [challengeSubTab, setChallengeSubTab] = useState<"new" | "ongoing" | "past">("new");
   const [videoLinks, setVideoLinks] = useState<Record<string, string>>({});
 
   const fetchData = async () => {
