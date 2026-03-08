@@ -641,10 +641,39 @@ const Admin = () => {
   const referralApps = decisionApps.filter(a => a.category === "referral");
   const totalSpend = profiles.reduce((s, p) => s + (p.total_annual_spend || 0), 0);
   const totalPoints = profiles.reduce((s, p) => s + (p.points_balance || 0), 0);
+  const totalRevenue = verificationTxs.filter(t => t.is_verified).reduce((s, t) => s + Number(t.verified_amount || 0), 0);
   const pendingWithdrawals = infWithdrawals.filter((w: any) => w.status === "pending").length;
   const pendingApps = infApps.filter((a: any) => a.status === "pending_review" || a.status === "pending_appeal").length;
   const bannedCount = profiles.filter(p => p.is_banned).length;
   const activeUsers = profiles.filter(p => !p.is_banned).length;
+
+  // Build event graph data (last 30 days)
+  const eventGraphData = useMemo(() => {
+    const days: Record<string, { date: string; signups: number; referrals: number; verifications: number; points: number }> = {};
+    const now = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split("T")[0];
+      days[key] = { date: d.toLocaleDateString("en-NG", { day: "numeric", month: "short" }), signups: 0, referrals: 0, verifications: 0, points: 0 };
+    }
+    for (const p of profiles) {
+      const key = p.created_at?.split("T")[0];
+      if (key && days[key]) days[key].signups++;
+    }
+    for (const a of activities) {
+      const key = a.created_at?.split("T")[0];
+      if (key && days[key]) {
+        if (a.action_type === "referral") days[key].referrals++;
+        else days[key].points += (a.positions_moved || 0);
+      }
+    }
+    for (const t of verificationTxs) {
+      const key = t.submitted_at?.split("T")[0];
+      if (key && days[key]) days[key].verifications++;
+    }
+    return Object.values(days);
+  }, [profiles, activities, verificationTxs]);
 
   const counts: Record<string, number> = {
     users: profiles.length,
