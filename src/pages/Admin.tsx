@@ -314,6 +314,7 @@ const Admin = () => {
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
   const [searchQuery, setSearchQuery] = useState("");
+  const [drawerUserId, setDrawerUserId] = useState<string | null>(null);
   const [adminCurrency, setAdminCurrency] = useState<AdminCurrency>("NGN");
   const [chartView, setChartView] = useState<"bar" | "line" | "area" | "pie">("bar");
   const adminRates: Record<AdminCurrency, number> = useMemo(() => ({
