@@ -358,6 +358,21 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_points_backfill_20260307: {
+        Row: {
+          approved_points_due: number | null
+          user_id: string | null
+        }
+        Insert: {
+          approved_points_due?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          approved_points_due?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           created_at: string | null
