@@ -256,6 +256,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+            <LeaderboardTicker />
             <GlassCard variant="glow" className="relative overflow-hidden p-5">
               <p className="text-foreground text-[13px] font-medium mb-3">
                 Welcome back, {user?.email?.split("@")[0] || "User"} 👋
