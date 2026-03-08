@@ -13,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 interface ProfileRow {
   id: string; email: string; total_annual_spend: number; selected_goal: string | null;
   queue_position: number; referral_code: string | null; points_balance: number; created_at: string;
+  is_banned: boolean; ban_reason: string | null;
 }
 interface ActivityRow { id: string; user_id: string; action_type: string; positions_moved: number; created_at: string; }
 interface GoalCategoryRow { id: string; goal_type: string; subcategory: string | null; label: string; max_price: number; }
