@@ -337,14 +337,24 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
                 )}
 
                 {sub.status === "approved" && sub.loi_pdf_url && (
-                  <a
-                    href={sub.loi_pdf_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-primary text-[11px] font-semibold hover:underline w-fit"
-                  >
-                    <Download className="w-3.5 h-3.5" /> Download LOI PDF
-                  </a>
+                  <div className="flex items-center gap-3">
+                    <a
+                      href={sub.loi_pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-primary text-[11px] font-semibold hover:underline w-fit"
+                    >
+                      <Download className="w-3.5 h-3.5" /> Download LOI PDF
+                    </a>
+                    <button
+                      onClick={() => handleApprove(sub.id)}
+                      disabled={processingId === sub.id}
+                      className="flex items-center gap-1 text-muted-foreground text-[10px] hover:text-primary transition-colors"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${processingId === sub.id ? "animate-spin" : ""}`} />
+                      {processingId === sub.id ? "Regenerating..." : "Regenerate"}
+                    </button>
+                  </div>
                 )}
 
                 {sub.status === "declined" && sub.admin_notes && (
