@@ -259,10 +259,13 @@ const VerifySpendFlow = () => {
   const now = new Date();
   const dataComplete = dataVerification?.status === "completed" || dataVerification?.status === "verified";
   const elecComplete = elecVerification?.status === "completed" || elecVerification?.status === "verified";
-  const bothComplete = dataComplete && elecComplete;
+  const foodComplete = foodVerification?.status === "completed" || foodVerification?.status === "verified";
+  const transportComplete = transportVerification?.status === "completed" || transportVerification?.status === "verified";
 
   const dataVerifiedTxs = dataTxs.filter(t => t.is_verified);
   const elecVerifiedTxs = elecTxs.filter(t => t.is_verified);
+  const foodVerifiedTxs = foodTxs.filter(t => t.is_verified);
+  const transportVerifiedTxs = transportTxs.filter(t => t.is_verified);
 
   const dataAnnualSpend = dataVerification
     ? (dataVerification.frequency === "monthly"
@@ -270,14 +273,23 @@ const VerifySpendFlow = () => {
       : dataVerifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0) * getMultiplier(dataVerification.frequency))
     : 0;
 
-  const elecAnnualSpend = elecVerifiedTxs.length > 0
-    ? Number(elecVerifiedTxs[0].verified_amount || 0) * 12
-    : 0;
+  const elecAnnualSpend = elecVerifiedTxs.length > 0 ? Number(elecVerifiedTxs[0].verified_amount || 0) * 12 : 0;
+  const foodAnnualSpend = foodVerifiedTxs.length > 0 ? Number(foodVerifiedTxs[0].verified_amount || 0) * 52 : 0;
+  const transportAnnualSpend = transportVerifiedTxs.length > 0 ? Number(transportVerifiedTxs[0].verified_amount || 0) * 52 : 0;
 
-  const totalVerifiedAnnualSpend = dataAnnualSpend + elecAnnualSpend;
+  const totalVerifiedAnnualSpend = dataAnnualSpend + elecAnnualSpend + foodAnnualSpend + transportAnnualSpend;
 
-  // Both verified = fully complete
-  if (bothComplete) {
+  // Active categories based on admin toggles
+  const activeCategories = [
+    verifyToggles.data && { type: "data" as SpendType, label: "Data", icon: <Wifi className="w-3 h-3" />, complete: dataComplete, verification: dataVerification },
+    verifyToggles.electricity && { type: "electricity" as SpendType, label: "Elec", icon: <Zap className="w-3 h-3" />, complete: elecComplete, verification: elecVerification },
+    verifyToggles.food && (profile?.annual_food_spend ?? 0) > 0 && { type: "food" as SpendType, label: "Food", icon: <UtensilsCrossed className="w-3 h-3" />, complete: foodComplete, verification: foodVerification },
+    verifyToggles.transport && (profile?.annual_transport_spend ?? 0) > 0 && { type: "transport" as SpendType, label: "Transport", icon: <Car className="w-3 h-3" />, complete: transportComplete, verification: transportVerification },
+  ].filter(Boolean) as { type: SpendType; label: string; icon: React.ReactNode; complete: boolean; verification: Verification | null }[];
+
+  const allComplete = activeCategories.every(c => c.complete);
+
+  if (allComplete && activeCategories.length > 0) {
     return (
       <GlassCard variant="strong" className="space-y-4">
         <div className="flex items-center gap-2">
@@ -290,14 +302,39 @@ const VerifySpendFlow = () => {
           <p className="text-[12px] text-primary mt-1">
             Total Verified Annual Spend: ₦{totalVerifiedAnnualSpend.toLocaleString("en-NG")}
           </p>
-          <div className="flex justify-center gap-4 mt-2 text-[10px] text-muted-foreground">
-            <span><Wifi className="w-3 h-3 inline mr-1" />Data: ₦{dataAnnualSpend.toLocaleString("en-NG")}</span>
-            <span><Zap className="w-3 h-3 inline mr-1" />Electricity: ₦{elecAnnualSpend.toLocaleString("en-NG")}</span>
+          <div className="flex flex-wrap justify-center gap-3 mt-2 text-[10px] text-muted-foreground">
+            {verifyToggles.data && <span><Wifi className="w-3 h-3 inline mr-1" />Data: ₦{dataAnnualSpend.toLocaleString("en-NG")}</span>}
+            {verifyToggles.electricity && <span><Zap className="w-3 h-3 inline mr-1" />Elec: ₦{elecAnnualSpend.toLocaleString("en-NG")}</span>}
+            {verifyToggles.food && foodAnnualSpend > 0 && <span><UtensilsCrossed className="w-3 h-3 inline mr-1" />Food: ₦{foodAnnualSpend.toLocaleString("en-NG")}</span>}
+            {verifyToggles.transport && transportAnnualSpend > 0 && <span><Car className="w-3 h-3 inline mr-1" />Transport: ₦{transportAnnualSpend.toLocaleString("en-NG")}</span>}
           </div>
         </motion.div>
       </GlassCard>
     );
   }
+
+  const panelProps = (type: SpendType) => {
+    const map: Record<SpendType, { v: Verification | null; txs: Transaction[]; inputs: string[]; setInputs: (v: string[]) => void; complete: boolean; verifiedTxs: Transaction[]; spend: number }> = {
+      data: { v: dataVerification, txs: dataTxs, inputs: dataTxInputs, setInputs: setDataTxInputs, complete: dataComplete, verifiedTxs: dataVerifiedTxs, spend: dataAnnualSpend },
+      electricity: { v: elecVerification, txs: elecTxs, inputs: elecTxInputs, setInputs: setElecTxInputs, complete: elecComplete, verifiedTxs: elecVerifiedTxs, spend: elecAnnualSpend },
+      food: { v: foodVerification, txs: foodTxs, inputs: foodTxInputs, setInputs: setFoodTxInputs, complete: foodComplete, verifiedTxs: foodVerifiedTxs, spend: foodAnnualSpend },
+      transport: { v: transportVerification, txs: transportTxs, inputs: transportTxInputs, setInputs: setTransportTxInputs, complete: transportComplete, verifiedTxs: transportVerifiedTxs, spend: transportAnnualSpend },
+    };
+    const d = map[type];
+    const isMonthlyType = type !== "data";
+    return {
+      type, verification: d.v, transactions: d.txs, txInputs: d.inputs, setTxInputs: d.setInputs,
+      isComplete: d.complete, verifiedTxs: d.verifiedTxs, annualSpend: d.spend,
+      frequency: isMonthlyType ? "monthly" as const : frequency,
+      setFrequency: isMonthlyType ? (() => {}) : setFrequency,
+      verifySettings, starting, submitting, editingTxId, editValue, setEditingTxId, setEditValue,
+      onStart: () => handleStartVerification(type),
+      onSubmitTx: (idx: number) => handleSubmitTx(idx, type),
+      onEditTx: handleEditDuplicateTx,
+      getMaxBoxes: isMonthlyType ? (() => 1) : getMaxBoxes,
+      getMultiplier: isMonthlyType ? (() => type === "food" || type === "transport" ? 52 : 12) : getMultiplier,
+    };
+  };
 
   return (
     <GlassCard variant="strong" className="space-y-4">
@@ -307,94 +344,37 @@ const VerifySpendFlow = () => {
       </div>
 
       {/* Status summary */}
-      <div className="flex gap-2">
-        <div className={`flex-1 glass rounded-xl p-2 text-center text-[10px] border ${dataComplete ? "border-primary/40 text-primary" : "border-muted text-muted-foreground"}`}>
-          <Wifi className="w-3 h-3 mx-auto mb-1" />
-          Data {dataComplete ? "✓" : dataVerification ? "In Progress" : "Not Started"}
-        </div>
-        <div className={`flex-1 glass rounded-xl p-2 text-center text-[10px] border ${elecComplete ? "border-primary/40 text-primary" : "border-muted text-muted-foreground"}`}>
-          <Zap className="w-3 h-3 mx-auto mb-1" />
-          Electricity {elecComplete ? "✓" : elecVerification ? "In Progress" : "Not Started"}
-        </div>
+      <div className="grid grid-cols-2 gap-2">
+        {activeCategories.map(cat => (
+          <div key={cat.type} className={`glass rounded-xl p-2 text-center text-[10px] border ${cat.complete ? "border-primary/40 text-primary" : "border-muted text-muted-foreground"}`}>
+            <div className="flex items-center justify-center mb-1">{cat.icon}</div>
+            {cat.label} {cat.complete ? "✓" : cat.verification ? "In Progress" : "Not Started"}
+          </div>
+        ))}
       </div>
 
-      {!dataComplete || !elecComplete ? (
+      {!allComplete && (
         <p className="text-[10px] text-destructive/80">
-          ⚠ Both data and electricity must be verified for spend verification to be complete.
+          ⚠ All active categories must be verified for spend verification to be complete.
         </p>
-      ) : null}
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 glass rounded-xl p-1">
-        <button
-          onClick={() => setActiveTab("data")}
-          className={`flex-1 rounded-lg py-2 text-[11px] font-medium transition-all flex items-center justify-center gap-1 ${activeTab === "data" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-        >
-          <Wifi className="w-3 h-3" /> Data
-        </button>
-        <button
-          onClick={() => setActiveTab("electricity")}
-          className={`flex-1 rounded-lg py-2 text-[11px] font-medium transition-all flex items-center justify-center gap-1 ${activeTab === "electricity" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-        >
-          <Zap className="w-3 h-3" /> Electricity
-        </button>
+        {activeCategories.map(cat => (
+          <button
+            key={cat.type}
+            onClick={() => setActiveTab(cat.type)}
+            className={`flex-1 rounded-lg py-2 text-[10px] font-medium transition-all flex items-center justify-center gap-1 ${activeTab === cat.type ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            {cat.icon} {cat.label}
+          </button>
+        ))}
       </div>
 
-      {/* Data Tab */}
-      {activeTab === "data" && (
-        <VerificationPanel
-          type="data"
-          verification={dataVerification}
-          transactions={dataTxs}
-          txInputs={dataTxInputs}
-          setTxInputs={setDataTxInputs}
-          isComplete={dataComplete}
-          verifiedTxs={dataVerifiedTxs}
-          annualSpend={dataAnnualSpend}
-          frequency={frequency}
-          setFrequency={setFrequency}
-          verifySettings={verifySettings}
-          starting={starting}
-          submitting={submitting}
-          editingTxId={editingTxId}
-          editValue={editValue}
-          setEditingTxId={setEditingTxId}
-          setEditValue={setEditValue}
-          onStart={() => handleStartVerification("data")}
-          onSubmitTx={(idx) => handleSubmitTx(idx, "data")}
-          onEditTx={handleEditDuplicateTx}
-          getMaxBoxes={getMaxBoxes}
-          getMultiplier={getMultiplier}
-        />
-      )}
-
-      {/* Electricity Tab */}
-      {activeTab === "electricity" && (
-        <VerificationPanel
-          type="electricity"
-          verification={elecVerification}
-          transactions={elecTxs}
-          txInputs={elecTxInputs}
-          setTxInputs={setElecTxInputs}
-          isComplete={elecComplete}
-          verifiedTxs={elecVerifiedTxs}
-          annualSpend={elecAnnualSpend}
-          frequency={"monthly"}
-          setFrequency={() => {}}
-          verifySettings={verifySettings}
-          starting={starting}
-          submitting={submitting}
-          editingTxId={editingTxId}
-          editValue={editValue}
-          setEditingTxId={setEditingTxId}
-          setEditValue={setEditValue}
-          onStart={() => handleStartVerification("electricity")}
-          onSubmitTx={(idx) => handleSubmitTx(idx, "electricity")}
-          onEditTx={handleEditDuplicateTx}
-          getMaxBoxes={() => 1}
-          getMultiplier={() => 12}
-        />
-      )}
+      {activeCategories.map(cat => (
+        activeTab === cat.type && <VerificationPanel key={cat.type} {...panelProps(cat.type)} />
+      ))}
     </GlassCard>
   );
 };
