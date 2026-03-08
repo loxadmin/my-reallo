@@ -262,7 +262,11 @@
   }
 
   :root.dark .layout-grid-item {
-    @apply bg-white/8 border border-white/8 hover:bg-white/12;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  :root.dark .layout-grid-item:hover {
+    background: rgba(255, 255, 255, 0.12);
   }
 
   /* ── Utility classes ── */
