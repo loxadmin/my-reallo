@@ -256,124 +256,13 @@ const WalletCarousel = ({
 
               {/* Circle card with carousel */}
               <motion.div
-                initial={{ scale: 0.7, opacity: 0, rotateX: 15 }}
-                animate={{ scale: 1, opacity: 1, rotateX: 8 }}
-                exit={{ scale: 0.7, opacity: 0, rotateX: 15 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.7, opacity: 0 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative z-10 w-[22rem] h-[22rem] sm:w-[26rem] sm:h-[26rem] rounded-full flex flex-col items-center justify-center overflow-hidden"
-                style={{
-                  perspective: "800px",
-                  transformStyle: "preserve-3d",
-                  background: "linear-gradient(145deg, hsla(160, 50%, 60%, 0.12) 0%, hsla(160, 40%, 45%, 0.06) 40%, hsla(160, 60%, 30%, 0.1) 100%)",
-                  backdropFilter: "blur(20px) saturate(1.6) brightness(1.05)",
-                  WebkitBackdropFilter: "blur(20px) saturate(1.6) brightness(1.05)",
-                  border: "1px solid hsla(160, 50%, 70%, 0.25)",
-                  boxShadow: `
-                    0 20px 60px hsla(160, 60%, 20%, 0.25),
-                    0 8px 20px hsla(160, 50%, 30%, 0.15),
-                    inset 0 2px 4px hsla(160, 50%, 90%, 0.3),
-                    inset 0 -3px 6px hsla(160, 60%, 15%, 0.2),
-                    0 0 0 1px hsla(160, 40%, 60%, 0.12),
-                    0 0 80px hsla(160, 50%, 40%, 0.08)
-                  `,
-                }}
+                className="relative z-10 w-[22rem] h-[22rem] sm:w-[26rem] sm:h-[26rem] rounded-full flex flex-col items-center justify-center glass-card border border-border/20 shadow-[0_8px_40px_hsl(var(--primary)/0.15)]"
               >
-                {/* ── Liquid blobs (vivid, visible) ── */}
-                <div
-                  className="absolute rounded-full"
-                  style={{
-                    width: "55%", height: "55%", top: "8%", left: "20%",
-                    background: "radial-gradient(ellipse at 40% 40%, hsla(160, 70%, 50%, 0.55) 0%, hsla(160, 60%, 40%, 0.3) 40%, hsla(160, 50%, 35%, 0.1) 70%, transparent 100%)",
-                    filter: "blur(18px)",
-                    animation: "liquidBlob1 7s ease-in-out infinite",
-                  }}
-                />
-                <div
-                  className="absolute rounded-full"
-                  style={{
-                    width: "50%", height: "50%", bottom: "8%", right: "12%",
-                    background: "radial-gradient(ellipse at 60% 60%, hsla(155, 65%, 55%, 0.45) 0%, hsla(165, 55%, 45%, 0.2) 50%, transparent 85%)",
-                    filter: "blur(15px)",
-                    animation: "liquidBlob2 9s ease-in-out infinite",
-                  }}
-                />
-                <div
-                  className="absolute rounded-full"
-                  style={{
-                    width: "40%", height: "40%", top: "35%", left: "8%",
-                    background: "radial-gradient(ellipse at 50% 50%, hsla(165, 60%, 60%, 0.4) 0%, hsla(160, 50%, 45%, 0.15) 55%, transparent 80%)",
-                    filter: "blur(14px)",
-                    animation: "liquidBlob3 11s ease-in-out infinite",
-                  }}
-                />
-                {/* Small bright accent blob */}
-                <div
-                  className="absolute rounded-full"
-                  style={{
-                    width: "25%", height: "25%", top: "55%", right: "25%",
-                    background: "radial-gradient(circle, hsla(160, 80%, 60%, 0.5) 0%, hsla(160, 60%, 50%, 0.15) 60%, transparent 100%)",
-                    filter: "blur(10px)",
-                    animation: "liquidBlob1 6s ease-in-out infinite reverse",
-                  }}
-                />
-
-                {/* ── Liquid surface / caustic lines ── */}
-                <div
-                  className="absolute left-[10%] right-[10%] pointer-events-none"
-                  style={{
-                    height: "3px", bottom: "40%",
-                    background: "linear-gradient(90deg, transparent 0%, hsla(160, 60%, 65%, 0.6) 20%, hsla(160, 70%, 70%, 0.8) 50%, hsla(160, 60%, 65%, 0.6) 80%, transparent 100%)",
-                    animation: "liquidSurface 3.5s ease-in-out infinite",
-                    filter: "blur(0.5px)",
-                    borderRadius: "50%",
-                  }}
-                />
-                <div
-                  className="absolute left-[15%] right-[15%] pointer-events-none"
-                  style={{
-                    height: "2px", bottom: "36%",
-                    background: "linear-gradient(90deg, transparent 0%, hsla(160, 50%, 60%, 0.35) 30%, hsla(160, 60%, 65%, 0.5) 50%, hsla(160, 50%, 60%, 0.35) 70%, transparent 100%)",
-                    animation: "liquidSurface 5s ease-in-out infinite 0.5s",
-                    filter: "blur(0.5px)",
-                    borderRadius: "50%",
-                  }}
-                />
-
-                {/* ── 3D Glass highlights ── */}
-                {/* Top specular (strong) */}
-                <div
-                  className="absolute top-0 left-0 right-0 h-[40%] rounded-t-full pointer-events-none"
-                  style={{
-                    background: "linear-gradient(180deg, hsla(160, 50%, 90%, 0.25) 0%, hsla(160, 40%, 80%, 0.08) 40%, transparent 100%)",
-                  }}
-                />
-                {/* Bottom shadow for depth */}
-                <div
-                  className="absolute bottom-0 left-0 right-0 h-[30%] rounded-b-full pointer-events-none"
-                  style={{
-                    background: "linear-gradient(0deg, hsla(160, 60%, 15%, 0.15) 0%, transparent 100%)",
-                  }}
-                />
-                {/* Glass shine sweep */}
-                <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
-                  <div
-                    className="absolute"
-                    style={{
-                      width: "35%", height: "200%", top: "-50%", left: "-20%",
-                      background: "linear-gradient(90deg, transparent, hsla(160, 50%, 90%, 0.3), hsla(160, 40%, 85%, 0.15), transparent)",
-                      animation: "glassShine 5s ease-in-out infinite",
-                    }}
-                  />
-                </div>
-                {/* Inner edge rim light */}
-                <div
-                  className="absolute inset-[2px] rounded-full pointer-events-none"
-                  style={{
-                    border: "1px solid hsla(160, 50%, 80%, 0.15)",
-                    boxShadow: "inset 0 0 20px hsla(160, 50%, 50%, 0.06)",
-                  }}
-                />
                 {/* Carousel inside popup */}
                 <div ref={popupEmblaRef} className="overflow-hidden w-[70%]">
                   <div className="flex">
