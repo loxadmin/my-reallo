@@ -275,6 +275,8 @@ const Admin = () => {
   });
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [verifyPageActive, setVerifyPageActive] = useState(true);
+  const [verifyFoodActive, setVerifyFoodActive] = useState(true);
+  const [verifyTransportActive, setVerifyTransportActive] = useState(true);
   const [postQueueReferralPoints, setPostQueueReferralPoints] = useState("1000");
   const [verifySpendLink, setVerifySpendLink] = useState("");
   const [verifySpendDescription, setVerifySpendDescription] = useState("");
