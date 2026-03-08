@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,8 +7,9 @@ import {
   BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet,
   Smartphone, Check, ExternalLink, CreditCard as Edit2, Download, Star,
   Wallet, ArrowDownToLine, Ban, AlertTriangle, Eye, X, Bell, LayoutDashboard,
-  ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown
+  ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown, DollarSign
 } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "@/hooks/use-toast";
 import { sendNotification } from "@/lib/notifications";
@@ -48,6 +49,12 @@ interface UserWarning {
 }
 
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
+const formatCompact = (n: number): string => {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1) + "K";
+  return String(n);
+};
+const formatNairaCompact = (n: number): string => "₦" + formatCompact(n);
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
@@ -166,12 +173,12 @@ const MetricCard = ({ label, value, icon: Icon, trend, trendLabel }: {
   label: string; value: string | number; icon: any; trend?: "up" | "down" | "neutral"; trendLabel?: string;
 }) => (
   <div className="rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-5 space-y-2.5 hover:shadow-md transition-shadow overflow-hidden">
-    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider truncate">{label}</p>
-    <p className="text-xl font-bold text-foreground leading-none truncate">{value}</p>
+    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{label}</p>
+    <p className="text-xl font-bold text-foreground leading-none">{value}</p>
     {trend && trendLabel && (
       <div className="flex items-center gap-1.5">
         {trend === "up" ? <TrendingUp className="w-3 h-3 text-primary shrink-0" /> : trend === "down" ? <TrendingDown className="w-3 h-3 text-destructive shrink-0" /> : null}
-        <span className={`text-[10px] font-medium truncate ${trend === "up" ? "text-primary" : trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>{trendLabel}</span>
+        <span className={`text-[10px] font-medium ${trend === "up" ? "text-primary" : trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>{trendLabel}</span>
       </div>
     )}
   </div>
@@ -628,12 +635,41 @@ const Admin = () => {
     const a = document.createElement("a"); a.href = url; a.download = "decision_analytics.csv"; a.click();
   };
 
+  // Build event graph data (last 30 days) - must be before early returns
+  const eventGraphData = useMemo(() => {
+    const days: Record<string, { date: string; signups: number; referrals: number; verifications: number; points: number }> = {};
+    const now = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split("T")[0];
+      days[key] = { date: d.toLocaleDateString("en-NG", { day: "numeric", month: "short" }), signups: 0, referrals: 0, verifications: 0, points: 0 };
+    }
+    for (const p of profiles) {
+      const key = p.created_at?.split("T")[0];
+      if (key && days[key]) days[key].signups++;
+    }
+    for (const a of activities) {
+      const key = a.created_at?.split("T")[0];
+      if (key && days[key]) {
+        if (a.action_type === "referral") days[key].referrals++;
+        else days[key].points += (a.positions_moved || 0);
+      }
+    }
+    for (const t of verificationTxs) {
+      const key = t.submitted_at?.split("T")[0];
+      if (key && days[key]) days[key].verifications++;
+    }
+    return Object.values(days);
+  }, [profiles, activities, verificationTxs]);
+
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p className="text-muted-foreground text-[13px]">Loading...</p></div>;
   if (!isAdmin) return null;
 
   const referralApps = decisionApps.filter(a => a.category === "referral");
   const totalSpend = profiles.reduce((s, p) => s + (p.total_annual_spend || 0), 0);
   const totalPoints = profiles.reduce((s, p) => s + (p.points_balance || 0), 0);
+  const totalRevenue = verificationTxs.filter(t => t.is_verified).reduce((s, t) => s + Number(t.verified_amount || 0), 0);
   const pendingWithdrawals = infWithdrawals.filter((w: any) => w.status === "pending").length;
   const pendingApps = infApps.filter((a: any) => a.status === "pending_review" || a.status === "pending_appeal").length;
   const bannedCount = profiles.filter(p => p.is_banned).length;
@@ -721,13 +757,55 @@ const Admin = () => {
             {/* ═══ OVERVIEW ═══ */}
             {activeTab === "overview" && (
               <>
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                  <MetricCard label="Total Users" value={profiles.length} icon={Users} trend="up" trendLabel={`${activeUsers} active`} />
-                  <MetricCard label="Annual Spend" value={formatNaira(totalSpend)} icon={Wallet} trend="up" trendLabel="Total verified" />
-                  <MetricCard label="Total Points" value={totalPoints.toLocaleString()} icon={Star} trend="neutral" trendLabel="In circulation" />
-                  <MetricCard label="Banned Users" value={bannedCount} icon={Ban} trend={bannedCount > 0 ? "down" : "neutral"} trendLabel={`${userWarnings.length} warnings`} />
-                  <MetricCard label="Ghost Users" value={ghostCount} icon={Ghost} trend="neutral" trendLabel="Seeded" />
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                  <MetricCard label="Total Users" value={formatCompact(profiles.length)} icon={Users} trend="up" trendLabel={`${formatCompact(activeUsers)} active`} />
+                  <MetricCard label="Annual Spend" value={formatNairaCompact(totalSpend)} icon={Wallet} trend="up" trendLabel="All users" />
+                  <MetricCard label="Processed Revenue" value={formatNairaCompact(totalRevenue)} icon={DollarSign} trend="up" trendLabel={`${verificationTxs.filter(t => t.is_verified).length} verified txns`} />
+                  <MetricCard label="Total Points" value={formatCompact(totalPoints)} icon={Star} trend="neutral" trendLabel="In circulation" />
+                  <MetricCard label="Banned Users" value={formatCompact(bannedCount)} icon={Ban} trend={bannedCount > 0 ? "down" : "neutral"} trendLabel={`${formatCompact(userWarnings.length)} warnings`} />
+                  <MetricCard label="Ghost Users" value={formatCompact(ghostCount)} icon={Ghost} trend="neutral" trendLabel="Seeded" />
                 </div>
+
+                {/* Events Graph */}
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                    <h3 className="text-[13px] font-semibold text-foreground">Platform Activity (30 Days)</h3>
+                    <div className="flex items-center gap-4 text-[10px]">
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary inline-block" /> Signups</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: "hsl(160 40% 50%)" }} /> Referrals</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: "hsl(200 60% 50%)" }} /> Verifications</span>
+                    </div>
+                  </div>
+                  <div className="p-5" style={{ height: 280 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={eventGraphData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="gradSignups" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(160 60% 18%)" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="hsl(160 60% 18%)" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="gradReferrals" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(160 40% 50%)" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="hsl(160 40% 50%)" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="gradVerifications" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(200 60% 50%)" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="hsl(200 60% 50%)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 50% / 0.1)" />
+                        <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(0 0% 50% / 0.3)" interval="preserveStartEnd" />
+                        <YAxis tick={{ fontSize: 10 }} stroke="hsl(0 0% 50% / 0.3)" allowDecimals={false} />
+                        <Tooltip
+                          contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid hsl(0 0% 50% / 0.2)", background: "hsl(var(--card))", color: "hsl(var(--foreground))" }}
+                        />
+                        <Area type="monotone" dataKey="signups" stroke="hsl(160 60% 18%)" fill="url(#gradSignups)" strokeWidth={2} name="Signups" />
+                        <Area type="monotone" dataKey="referrals" stroke="hsl(160 40% 50%)" fill="url(#gradReferrals)" strokeWidth={1.5} name="Referrals" />
+                        <Area type="monotone" dataKey="verifications" stroke="hsl(200 60% 50%)" fill="url(#gradVerifications)" strokeWidth={1.5} name="Verifications" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </TableCard>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Pending actions */}
@@ -798,8 +876,8 @@ const Admin = () => {
                   </TableHeader>
                   {activities.slice(0, 6).map((a) => (
                     <TableRow key={a.id}>
-                      <span className="flex-1 min-w-0 text-[11px] text-muted-foreground font-mono truncate">{a.user_id.slice(0, 12)}...</span>
-                      <span className="w-24 shrink-0 text-[11px] text-foreground capitalize truncate">{a.action_type}</span>
+                      <span className="flex-1 min-w-0 text-[11px] text-muted-foreground font-mono truncate">{a.user_id.slice(0, 8)}</span>
+                      <span className="w-24 shrink-0 text-[11px] text-foreground capitalize">{a.action_type}</span>
                       <span className="w-20 shrink-0 text-right text-[11px] font-semibold text-primary">+{a.positions_moved}</span>
                       <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
                     </TableRow>
@@ -837,9 +915,9 @@ const Admin = () => {
                             <p className="text-[11px] font-medium text-foreground truncate">{p.email}</p>
                             <p className="text-[9px] text-muted-foreground mt-0.5">Joined {new Date(p.created_at).toLocaleDateString()}</p>
                           </div>
-                          <span className="w-20 shrink-0 text-[11px] text-foreground truncate">{formatNaira(p.total_annual_spend || 0)}</span>
+                          <span className="w-20 shrink-0 text-[11px] text-foreground">{formatNairaCompact(p.total_annual_spend || 0)}</span>
                           <span className="w-14 shrink-0 text-[11px] text-muted-foreground">#{p.queue_position}</span>
-                          <span className="w-16 shrink-0 text-[11px] text-foreground truncate">{p.points_balance.toLocaleString()}</span>
+                          <span className="w-16 shrink-0 text-[11px] text-foreground">{formatCompact(p.points_balance)}</span>
                           <span className="w-10 shrink-0 text-[11px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
                           <span className="w-16 shrink-0">
                             {p.is_banned ? <StatusBadge status="BANNED" /> : pDuplicates.length > 0 ? <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full border border-destructive/20">{pDuplicates.length} dup</span> : <StatusBadge status="active" />}
