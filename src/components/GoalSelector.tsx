@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import { GraduationCap, Plane, Briefcase, Home, ChevronRight, ArrowLeft } from "lucide-react";
@@ -25,7 +26,6 @@ const goalMeta: Record<string, { label: string; icon: any; description: string }
   rent: { label: "Rent Support", icon: Home, description: "Secure your living space" },
 };
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 
 const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
   const [categories, setCategories] = useState<GoalCategory[]>([]);
