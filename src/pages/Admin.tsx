@@ -225,15 +225,15 @@ const TableCard = ({ children, className }: { children: React.ReactNode; classNa
 );
 
 const TableHeader = ({ children }: { children: React.ReactNode }) => (
-  <div className="px-5 py-3.5 border-b border-border/40 bg-muted/30">
-    <div className="flex items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider gap-4">
+  <div className="px-5 py-3.5 border-b border-border/40 bg-muted/30 overflow-x-auto">
+    <div className="flex items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider gap-4 min-w-[600px]">
       {children}
     </div>
   </div>
 );
 
 const TableRow = ({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) => (
-  <div onClick={onClick} className={`px-5 py-3 border-b border-border/20 last:border-0 flex items-center gap-4 hover:bg-muted/20 transition-colors ${onClick ? "cursor-pointer" : ""} ${className || ""}`}>
+  <div onClick={onClick} className={`px-5 py-3 border-b border-border/20 last:border-0 flex items-center gap-4 hover:bg-muted/20 transition-colors min-w-[600px] ${onClick ? "cursor-pointer" : ""} ${className || ""}`}>
     {children}
   </div>
 );
