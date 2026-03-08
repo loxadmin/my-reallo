@@ -757,13 +757,55 @@ const Admin = () => {
             {/* ═══ OVERVIEW ═══ */}
             {activeTab === "overview" && (
               <>
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                  <MetricCard label="Total Users" value={profiles.length} icon={Users} trend="up" trendLabel={`${activeUsers} active`} />
-                  <MetricCard label="Annual Spend" value={formatNaira(totalSpend)} icon={Wallet} trend="up" trendLabel="Total verified" />
-                  <MetricCard label="Total Points" value={totalPoints.toLocaleString()} icon={Star} trend="neutral" trendLabel="In circulation" />
-                  <MetricCard label="Banned Users" value={bannedCount} icon={Ban} trend={bannedCount > 0 ? "down" : "neutral"} trendLabel={`${userWarnings.length} warnings`} />
-                  <MetricCard label="Ghost Users" value={ghostCount} icon={Ghost} trend="neutral" trendLabel="Seeded" />
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                  <MetricCard label="Total Users" value={formatCompact(profiles.length)} icon={Users} trend="up" trendLabel={`${formatCompact(activeUsers)} active`} />
+                  <MetricCard label="Annual Spend" value={formatNairaCompact(totalSpend)} icon={Wallet} trend="up" trendLabel="All users" />
+                  <MetricCard label="Processed Revenue" value={formatNairaCompact(totalRevenue)} icon={DollarSign} trend="up" trendLabel={`${verificationTxs.filter(t => t.is_verified).length} verified txns`} />
+                  <MetricCard label="Total Points" value={formatCompact(totalPoints)} icon={Star} trend="neutral" trendLabel="In circulation" />
+                  <MetricCard label="Banned Users" value={formatCompact(bannedCount)} icon={Ban} trend={bannedCount > 0 ? "down" : "neutral"} trendLabel={`${formatCompact(userWarnings.length)} warnings`} />
+                  <MetricCard label="Ghost Users" value={formatCompact(ghostCount)} icon={Ghost} trend="neutral" trendLabel="Seeded" />
                 </div>
+
+                {/* Events Graph */}
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                    <h3 className="text-[13px] font-semibold text-foreground">Platform Activity (30 Days)</h3>
+                    <div className="flex items-center gap-4 text-[10px]">
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary inline-block" /> Signups</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: "hsl(160 40% 50%)" }} /> Referrals</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: "hsl(200 60% 50%)" }} /> Verifications</span>
+                    </div>
+                  </div>
+                  <div className="p-5" style={{ height: 280 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={eventGraphData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="gradSignups" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(160 60% 18%)" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="hsl(160 60% 18%)" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="gradReferrals" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(160 40% 50%)" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="hsl(160 40% 50%)" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="gradVerifications" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(200 60% 50%)" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="hsl(200 60% 50%)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 50% / 0.1)" />
+                        <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(0 0% 50% / 0.3)" interval="preserveStartEnd" />
+                        <YAxis tick={{ fontSize: 10 }} stroke="hsl(0 0% 50% / 0.3)" allowDecimals={false} />
+                        <Tooltip
+                          contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid hsl(0 0% 50% / 0.2)", background: "hsl(var(--card))", color: "hsl(var(--foreground))" }}
+                        />
+                        <Area type="monotone" dataKey="signups" stroke="hsl(160 60% 18%)" fill="url(#gradSignups)" strokeWidth={2} name="Signups" />
+                        <Area type="monotone" dataKey="referrals" stroke="hsl(160 40% 50%)" fill="url(#gradReferrals)" strokeWidth={1.5} name="Referrals" />
+                        <Area type="monotone" dataKey="verifications" stroke="hsl(200 60% 50%)" fill="url(#gradVerifications)" strokeWidth={1.5} name="Verifications" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </TableCard>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Pending actions */}
