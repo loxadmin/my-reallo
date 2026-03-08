@@ -286,12 +286,12 @@ const Auth = () => {
                 </div>
 
                 {mode === "signup" && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+                  <div>
                     <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
                     <p className="text-[11px] text-primary/60 mt-1 flex items-center gap-1">
                       <Gift className="w-3 h-3" /> You and your referrer both benefit
                     </p>
-                  </motion.div>
+                  </div>
                 )}
 
                 {error && (
