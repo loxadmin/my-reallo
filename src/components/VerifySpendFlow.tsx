@@ -137,11 +137,12 @@ const VerifySpendFlow = () => {
       ends_at: endsAt.toISOString(),
     } as any);
 
+    const typeLabels: Record<string, string> = { data: "Data", electricity: "Electricity", food: "Food", transport: "Transport" };
     toast({
-      title: `${type === "data" ? "Data" : "Electricity"} verification started!`,
-      description: type === "electricity"
-        ? "Submit your monthly electricity transaction ID."
-        : freq === "monthly" ? "Submit your transaction ID." : `Submit transaction IDs over the next ${days} days.`,
+      title: `${typeLabels[type]} verification started!`,
+      description: type === "data" && freq !== "monthly"
+        ? `Submit transaction IDs over the next ${days} days.`
+        : "Submit your monthly transaction ID.",
     });
     setStarting(false);
     await fetchData();
