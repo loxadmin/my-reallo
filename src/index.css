@@ -85,6 +85,10 @@
   h2 { font-size: 40px; @apply font-bold tracking-tight; }
   h3 { font-size: 22px; @apply font-bold tracking-tight; }
   button, input, select, textarea { font-size: 13px !important; }
+
+  /* Hide scrollbar on sidebar */
+  [data-sidebar="content"]::-webkit-scrollbar { display: none; }
+  [data-sidebar="content"] { scrollbar-width: none; -ms-overflow-style: none; }
 }
 
 @layer components {
