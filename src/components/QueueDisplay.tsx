@@ -9,6 +9,7 @@ import DecisionFlow from "./DecisionFlow";
 import VerifySpendFlow from "./VerifySpendFlow";
 import InfluencerPanel from "./InfluencerPanel";
 import NotificationsPanel from "./NotificationsPanel";
+import WalletCarousel from "./WalletCarousel";
 import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2, Star } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
