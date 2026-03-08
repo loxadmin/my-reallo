@@ -1093,6 +1093,7 @@ const Admin = () => {
                         <GlassButton variant="outline" onClick={async () => {
                           const newStatus = app.status === "pending_appeal" ? "appeal_rejected" : "rejected";
                           await supabase.from("influencer_applications" as any).update({ status: newStatus, reviewed_at: new Date().toISOString() }).eq("id", app.id);
+                          await sendNotification({ userId: app.user_id, type: "influencer_rejected", title: "Influencer Application Update", message: app.status === "pending_appeal" ? "Your appeal has been reviewed and was not approved at this time." : "Your influencer application was not approved at this time." });
                           toast({ title: app.status === "pending_appeal" ? "Appeal rejected" : "Application rejected" });
                           await fetchData();
                         }} className="flex-1 text-[11px]">Reject</GlassButton>
