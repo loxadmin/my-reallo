@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,8 +7,9 @@ import {
   BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet,
   Smartphone, Check, ExternalLink, CreditCard as Edit2, Download, Star,
   Wallet, ArrowDownToLine, Ban, AlertTriangle, Eye, X, Bell, LayoutDashboard,
-  ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown
+  ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown, DollarSign
 } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "@/hooks/use-toast";
 import { sendNotification } from "@/lib/notifications";
