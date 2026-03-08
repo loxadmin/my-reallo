@@ -838,10 +838,10 @@ const Admin = () => {
                         </TableRow>
 
                         {isSelected && (
-                          <div className="px-5 py-4 bg-muted/10 border-b border-border/20 space-y-3">
-                            <div className="grid grid-cols-4 gap-3 text-[10px] text-muted-foreground">
-                              <span>ID: {p.id.slice(0, 16)}...</span>
-                              <span>Goal: {p.selected_goal || 'None'}</span>
+                          <div className="px-5 py-4 bg-muted/10 border-b border-border/20 space-y-3 overflow-hidden">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-[10px] text-muted-foreground">
+                              <span className="truncate">ID: {p.id.slice(0, 16)}...</span>
+                              <span className="truncate">Goal: {p.selected_goal || 'None'}</span>
                               <span>Warnings: {pWarnings.length}</span>
                               <span>Duplicates: {pDuplicates.length}</span>
                             </div>
