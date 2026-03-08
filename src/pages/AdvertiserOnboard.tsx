@@ -31,22 +31,33 @@ const AdvertiserOnboard = () => {
   const [verifying, setVerifying] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [brandedEmailRequired, setBrandedEmailRequired] = useState(true);
 
   // Validate token
   useEffect(() => {
     if (!token) { setTokenValid(false); return; }
     (async () => {
-      const { data } = await supabase
-        .from("advertiser_tokens" as any)
-        .select("id, status")
-        .eq("token", token)
-        .eq("status", "active")
-        .maybeSingle();
-      if (data) {
+      const [tokenRes, settingRes] = await Promise.all([
+        supabase
+          .from("advertiser_tokens" as any)
+          .select("id, status")
+          .eq("token", token)
+          .eq("status", "active")
+          .maybeSingle(),
+        supabase
+          .from("admin_settings")
+          .select("value")
+          .eq("key", "advertiser_branded_email_required")
+          .maybeSingle(),
+      ]);
+      if (tokenRes.data) {
         setTokenValid(true);
-        setTokenId((data as any).id);
+        setTokenId((tokenRes.data as any).id);
       } else {
         setTokenValid(false);
+      }
+      if (settingRes.data) {
+        setBrandedEmailRequired((settingRes.data as any).value !== "false");
       }
     })();
   }, [token]);
@@ -59,6 +70,7 @@ const AdvertiserOnboard = () => {
   };
 
   const emailMatchesWebsite = () => {
+    if (!brandedEmailRequired) return true;
     if (!email || !websiteUrl) return false;
     const domain = getDomain(websiteUrl);
     const emailDomain = email.split("@")[1]?.toLowerCase();
@@ -66,8 +78,12 @@ const AdvertiserOnboard = () => {
   };
 
   const handleSendVerification = async () => {
-    if (!emailMatchesWebsite()) {
+    if (brandedEmailRequired && !emailMatchesWebsite()) {
       toast({ title: "Email must match website domain", description: `Use an email @${getDomain(websiteUrl)}` });
+      return;
+    }
+    if (!email) {
+      toast({ title: "Please enter an email address" });
       return;
     }
     setVerifying(true);
@@ -264,7 +280,7 @@ const AdvertiserOnboard = () => {
           {/* Email */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-1.5">
-              <Mail className="w-4 h-4 text-primary" /> Official Email * <span className="text-[10px] text-muted-foreground">(must match website domain)</span>
+              <Mail className="w-4 h-4 text-primary" /> Official Email * {brandedEmailRequired && <span className="text-[10px] text-muted-foreground">(must match website domain)</span>}
             </label>
             <div className="flex gap-2">
               <input
@@ -277,7 +293,7 @@ const AdvertiserOnboard = () => {
               {!emailVerified && (
                 <button
                   onClick={verificationSent ? handleVerifyCode : handleSendVerification}
-                  disabled={verifying || (!verificationSent && !emailMatchesWebsite())}
+                  disabled={verifying || !email || (!verificationSent && brandedEmailRequired && !emailMatchesWebsite())}
                   className="clay-primary text-primary-foreground rounded-xl px-4 py-2.5 text-xs font-semibold whitespace-nowrap disabled:opacity-50"
                 >
                   {verifying ? "..." : verificationSent ? "Verify" : "Send Code"}
@@ -298,7 +314,7 @@ const AdvertiserOnboard = () => {
                 className={`${inputCls} mt-2`}
               />
             )}
-            {email && websiteUrl && !emailMatchesWebsite() && !emailVerified && (
+            {brandedEmailRequired && email && websiteUrl && !emailMatchesWebsite() && !emailVerified && (
               <p className="text-destructive text-xs mt-1">Email domain must match website: @{getDomain(websiteUrl)}</p>
             )}
           </div>

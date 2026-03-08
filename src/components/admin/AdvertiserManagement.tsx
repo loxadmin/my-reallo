@@ -20,6 +20,7 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
   const [founderSigFile, setFounderSigFile] = useState<File | null>(null);
   const [advUserCount, setAdvUserCount] = useState("");
   const [advUserCountLink, setAdvUserCountLink] = useState("");
+  const [brandedEmailRequired, setBrandedEmailRequired] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -32,7 +33,7 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
       supabase.from("advertiser_tokens" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("advertiser_submissions" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("admin_settings").select("*").in("key", [
-        "founder_full_name", "founder_signature_url", "advertiser_user_count", "advertiser_user_count_link",
+        "founder_full_name", "founder_signature_url", "advertiser_user_count", "advertiser_user_count_link", "advertiser_branded_email_required",
       ]),
     ]);
 
@@ -44,6 +45,7 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
     setFounderSigUrl(settings.find(s => s.key === "founder_signature_url")?.value || "");
     setAdvUserCount(settings.find(s => s.key === "advertiser_user_count")?.value || "");
     setAdvUserCountLink(settings.find(s => s.key === "advertiser_user_count_link")?.value || "");
+    setBrandedEmailRequired(settings.find(s => s.key === "advertiser_branded_email_required")?.value !== "false");
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -68,6 +70,7 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
       supabase.from("admin_settings").upsert({ key: "founder_signature_url", value: sigUrl, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "advertiser_user_count", value: advUserCount, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "advertiser_user_count_link", value: advUserCountLink, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "advertiser_branded_email_required", value: brandedEmailRequired ? "true" : "false", updated_at: new Date().toISOString() }),
     ]);
 
     toast({ title: "Advertiser settings saved" });
@@ -182,6 +185,19 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
                 }} />
               </label>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="text-[11px] text-muted-foreground font-medium">Branded Email Required</label>
+              <p className="text-[10px] text-muted-foreground">When enabled, advertiser email must match their website domain.</p>
+            </div>
+            <button
+              onClick={() => setBrandedEmailRequired(!brandedEmailRequired)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${brandedEmailRequired ? "bg-primary" : "bg-input"}`}
+            >
+              <span className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${brandedEmailRequired ? "translate-x-5" : "translate-x-0"}`} />
+            </button>
           </div>
 
           <hr className="border-border/30" />
