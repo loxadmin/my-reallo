@@ -779,17 +779,17 @@ const Admin = () => {
                     <Btn variant="outline" onClick={() => setActiveTab("activity")}>View All</Btn>
                   </div>
                   <TableHeader>
-                    <span className="flex-1">User</span>
-                    <span className="w-32">Action</span>
-                    <span className="w-24 text-right">Positions</span>
-                    <span className="w-28 text-right">Date</span>
+                    <span className="flex-1 min-w-0">User</span>
+                    <span className="w-24 shrink-0">Action</span>
+                    <span className="w-20 shrink-0 text-right">Positions</span>
+                    <span className="w-24 shrink-0 text-right">Date</span>
                   </TableHeader>
                   {activities.slice(0, 6).map((a) => (
                     <TableRow key={a.id}>
-                      <span className="flex-1 text-[12px] text-muted-foreground font-mono">{a.user_id.slice(0, 12)}...</span>
-                      <span className="w-32 text-[12px] text-foreground capitalize">{a.action_type}</span>
-                      <span className="w-24 text-right text-[12px] font-semibold text-primary">+{a.positions_moved}</span>
-                      <span className="w-28 text-right text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
+                      <span className="flex-1 min-w-0 text-[11px] text-muted-foreground font-mono truncate">{a.user_id.slice(0, 12)}...</span>
+                      <span className="w-24 shrink-0 text-[11px] text-foreground capitalize truncate">{a.action_type}</span>
+                      <span className="w-20 shrink-0 text-right text-[11px] font-semibold text-primary">+{a.positions_moved}</span>
+                      <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
                     </TableRow>
                   ))}
                   {activities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No activity yet</div>}
