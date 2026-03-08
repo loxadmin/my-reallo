@@ -92,23 +92,23 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
   const collapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-primary/20" style={{ background: 'hsla(160, 45%, 25%, 0.12)', backdropFilter: 'blur(20px)' } as React.CSSProperties}>
-      <SidebarHeader className="px-4 py-5 border-b border-border/30">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Shield className="w-4 h-4 text-primary-foreground" />
+    <Sidebar collapsible="icon" className="border-r-0">
+      <SidebarHeader className="px-5 py-6 border-b border-sidebar-border/40">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+            <Shield className="w-4.5 h-4.5 text-primary-foreground" />
           </div>
-          {!collapsed && <span className="text-[13px] font-bold text-sidebar-foreground tracking-tight">Reallo Admin</span>}
+          {!collapsed && <span className="text-[14px] font-bold text-sidebar-foreground tracking-tight">Reallo Admin</span>}
         </div>
       </SidebarHeader>
-      <SidebarContent className="px-3 py-3">
+      <SidebarContent className="px-4 py-4 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {navGroups.map((group) => (
-          <SidebarGroup key={group.label} className="mb-1">
-            <SidebarGroupLabel className="text-[9px] uppercase tracking-[0.15em] text-sidebar-foreground/40 font-semibold mb-1 px-2">
+          <SidebarGroup key={group.label} className="mb-3">
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.18em] text-sidebar-foreground/40 font-semibold mb-2 px-3">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-0.5">
                 {group.items.map((item) => {
                   const count = counts[item.id];
                   const isActive = activeTab === item.id;
@@ -118,17 +118,17 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
                         isActive={isActive}
                         onClick={() => setActiveTab(item.id)}
                         tooltip={item.label}
-                        className={`rounded-lg transition-all duration-200 ${isActive
-                          ? "bg-primary text-primary-foreground font-medium shadow-sm"
-                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                        className={`rounded-xl h-10 px-3 transition-all duration-200 border ${isActive
+                          ? "bg-primary text-primary-foreground font-semibold shadow-md border-primary/30"
+                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 border-transparent"
                         }`}
                       >
-                        <item.icon className="w-4 h-4 shrink-0" />
+                        <item.icon className="w-[18px] h-[18px] shrink-0" />
                         {!collapsed && (
-                          <div className="flex items-center justify-between w-full">
-                            <span className="text-[12px]">{item.label}</span>
+                          <div className="flex items-center justify-between w-full min-w-0">
+                            <span className="text-[13px] truncate">{item.label}</span>
                             {count !== undefined && count > 0 && (
-                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary"}`}>
+                              <span className={`text-[10px] min-w-[22px] text-center px-1.5 py-0.5 rounded-md font-bold shrink-0 ml-2 ${isActive ? "bg-primary-foreground/25 text-primary-foreground" : "bg-primary/15 text-primary"}`}>
                                 {count > 99 ? "99+" : count}
                               </span>
                             )}
@@ -143,16 +143,16 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter className="px-3 py-3 border-t border-border/30">
+      <SidebarFooter className="px-4 py-4 border-t border-sidebar-border/40">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={onLogout}
               tooltip="Logout"
-              className="text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10 rounded-lg"
+              className="rounded-xl h-10 px-3 text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10 border border-transparent transition-all"
             >
-              <LogOut className="w-4 h-4 shrink-0" />
-              {!collapsed && <span className="text-[12px]">Logout</span>}
+              <LogOut className="w-[18px] h-[18px] shrink-0" />
+              {!collapsed && <span className="text-[13px]">Logout</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
