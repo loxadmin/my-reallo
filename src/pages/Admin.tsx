@@ -388,6 +388,7 @@ const Admin = () => {
     { id: "inf_wallets", label: "Inf. Wallets", icon: Wallet, count: infWallets.length },
     { id: "inf_referrals", label: "Inf. Refs", icon: Users, count: infReferrals.length },
     { id: "inf_withdrawals", label: "Inf. W/D", icon: ArrowDownToLine, count: infWithdrawals.length },
+    { id: "inf_challenges", label: "Challenges", icon: Upload, count: infChallenges.length },
     { id: "settings", label: "Settings", icon: Link, count: 0 },
   ];
 
