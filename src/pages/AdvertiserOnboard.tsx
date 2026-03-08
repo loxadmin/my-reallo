@@ -70,6 +70,7 @@ const AdvertiserOnboard = () => {
   };
 
   const emailMatchesWebsite = () => {
+    if (!brandedEmailRequired) return true;
     if (!email || !websiteUrl) return false;
     const domain = getDomain(websiteUrl);
     const emailDomain = email.split("@")[1]?.toLowerCase();
