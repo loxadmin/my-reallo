@@ -227,7 +227,7 @@ const WalletCarousel = ({
             onClick={() => setShowSpendPopup(false)}
           >
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-background/40 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-background/60 backdrop-blur-md" />
 
             {/* Circle card */}
             <motion.div
@@ -236,7 +236,7 @@ const WalletCarousel = ({
               exit={{ scale: 0.7, opacity: 0 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="relative z-10 w-56 h-56 rounded-full flex flex-col items-center justify-center glass-card border border-border/20 shadow-[0_8px_40px_hsl(var(--primary)/0.15)]"
+              className="relative z-10 w-72 h-72 sm:w-80 sm:h-80 rounded-full flex flex-col items-center justify-center glass-card border border-border/20 shadow-[0_8px_40px_hsl(var(--primary)/0.15)]"
             >
               <p className="text-muted-foreground uppercase tracking-[0.15em] text-[9px] font-medium mb-2">
                 {showTotal ? "Total Annual Spend" : "Annual Utility Spend"}
