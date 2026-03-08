@@ -232,15 +232,15 @@ const StatusBadge = ({ status, className }: { status: string; className?: string
 };
 
 // ── Button ──
-const Btn = ({ children, variant = "default", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "primary" | "outline" | "destructive" }) => {
-  const base = "inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-[11px] font-medium transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+const Btn = ({ children, variant = "default", className, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "primary" | "outline" | "destructive" }) => {
+  const base = "inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-[11px] font-semibold transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
   const variants: Record<string, string> = {
-    default: "bg-muted text-foreground hover:bg-muted/80",
-    primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
-    outline: "border border-border text-foreground hover:bg-muted/50",
-    destructive: "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20",
+    default: "bg-muted text-foreground hover:bg-muted/80 border border-border/40",
+    primary: "clay-primary text-primary-foreground",
+    outline: "glass-outline text-primary border border-primary/20 hover:border-primary/40",
+    destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
   };
-  return <button className={`${base} ${variants[variant]}`} {...props}>{children}</button>;
+  return <button className={`${base} ${variants[variant]} ${className || ""}`} {...props}>{children}</button>;
 };
 
 // ── Table wrapper ──
