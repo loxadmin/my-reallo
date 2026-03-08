@@ -313,7 +313,7 @@ const VerifySpendFlow = () => {
             <p className="font-semibold text-foreground text-[13px]">{meta.label} Verified!</p>
             {verification?.recalculated_amount != null && (
               <p className="text-[12px] text-primary mt-1 font-semibold">
-                Annual: ₦{verification.recalculated_amount.toLocaleString("en-NG")}
+                Annual: {formatCurrency(verification.recalculated_amount)}
               </p>
             )}
           </motion.div>
