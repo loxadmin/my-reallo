@@ -461,7 +461,7 @@ const VerifySpendFlow = () => {
                 </div>
                 {status === "completed" && annualSpend > 0 ? (
                   <p className="text-[11px] text-primary font-medium mt-0.5">
-                    ₦{annualSpend.toLocaleString("en-NG")}/yr verified
+                    {formatCurrency(annualSpend)}/yr verified
                   </p>
                 ) : (
                   <p className="text-[10px] text-muted-foreground mt-0.5">{meta.description}</p>
