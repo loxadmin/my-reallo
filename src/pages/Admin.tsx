@@ -1608,6 +1608,20 @@ const Admin = () => {
                     </div>
                     <input type="checkbox" checked={verifyPageActive} onChange={e => setVerifyPageActive(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer rounded" />
                   </div>
+                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
+                    <div>
+                      <label className="text-[12px] font-medium text-foreground">Food Verification Active</label>
+                      <p className="text-[11px] text-muted-foreground">If enabled, users can verify food spend.</p>
+                    </div>
+                    <input type="checkbox" checked={verifyFoodActive} onChange={e => setVerifyFoodActive(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer rounded" />
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
+                    <div>
+                      <label className="text-[12px] font-medium text-foreground">Transport Verification Active</label>
+                      <p className="text-[11px] text-muted-foreground">If enabled, users can verify transport spend.</p>
+                    </div>
+                    <input type="checkbox" checked={verifyTransportActive} onChange={e => setVerifyTransportActive(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer rounded" />
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div><label className="text-[11px] text-muted-foreground font-medium">Verify Expense Button Link</label><input value={verifyExpenseLink} onChange={e => setVerifyExpenseLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1.5`} /></div>
                     <div><label className="text-[11px] text-muted-foreground font-medium">Post-Queue Referral Points</label><input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className={`${inputCls} mt-1.5`} /></div>
