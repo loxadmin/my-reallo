@@ -1,7 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { PDFDocument, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1";
-import { decode as decodePng, encode as encodePng } from "https://deno.land/x/pngs@0.1.1/mod.ts";
-import { decode as decodeJpeg } from "https://deno.land/x/jpegts@1.1/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,79 +16,81 @@ async function fetchImageBytes(url: string): Promise<Uint8Array | null> {
   }
 }
 
-/** Programmatic signature background removal — no external API needed.
- *  Converts near-white pixels to transparent, keeps dark ink strokes,
- *  then returns a cleaned PNG as Uint8Array. */
-async function removeSignatureBgProgrammatic(imageUrl: string): Promise<Uint8Array | null> {
-  console.log("BG removal (programmatic): starting for URL:", imageUrl?.substring(0, 80));
+/** AI-based signature background removal via Lovable AI Gateway.
+ *  Returns cleaned PNG bytes, or null on failure. */
+async function removeSignatureBg(imageUrl: string): Promise<Uint8Array | null> {
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) {
+    console.error("BG removal: LOVABLE_API_KEY not set");
+    return null;
+  }
+
+  console.log("BG removal: starting for URL:", imageUrl?.substring(0, 80));
+
   try {
-    const imgBytes = await fetchImageBytes(imageUrl);
-    if (!imgBytes) {
-      console.error("BG removal: failed to fetch image");
+    // Fetch image and convert to base64 data URL
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) {
+      console.error("BG removal: failed to fetch image, status:", imgRes.status);
+      return null;
+    }
+    const imgBytes = new Uint8Array(await imgRes.arrayBuffer());
+    const contentType = imgRes.headers.get("content-type") || "image/png";
+    
+    // Convert to base64 in chunks to avoid stack overflow
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < imgBytes.length; i += chunkSize) {
+      const chunk = imgBytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    const imageInput = `data:${contentType};base64,${btoa(binary)}`;
+    console.log("BG removal: converted to base64, length:", imageInput.length);
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-image",
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: "Remove the background from this signature image completely. Output ONLY the signature ink strokes on a pure white background. Remove any paper texture, shadows, or coloring. The result should be a clean signature on white." },
+            { type: "image_url", image_url: { url: imageInput } },
+          ],
+        }],
+        modalities: ["image", "text"],
+      }),
+    });
+
+    console.log("BG removal: AI response status:", res.status);
+    
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error("BG removal: AI error:", errText.substring(0, 500));
       return null;
     }
 
-    // Decode image to raw RGBA pixels
-    let width: number, height: number, pixels: Uint8Array;
-
-    // Detect format from bytes
-    const isPng = imgBytes[0] === 0x89 && imgBytes[1] === 0x50;
-    const isJpeg = imgBytes[0] === 0xFF && imgBytes[1] === 0xD8;
-
-    if (isPng) {
-      const decoded = decodePng(imgBytes);
-      width = decoded.width;
-      height = decoded.height;
-      pixels = new Uint8Array(decoded.image);
-    } else if (isJpeg) {
-      const decoded = decodeJpeg(imgBytes);
-      width = decoded.width;
-      height = decoded.height;
-      // jpegts returns RGB, convert to RGBA
-      const rgb = decoded.data;
-      pixels = new Uint8Array(width * height * 4);
-      for (let i = 0; i < width * height; i++) {
-        pixels[i * 4] = rgb[i * 3];
-        pixels[i * 4 + 1] = rgb[i * 3 + 1];
-        pixels[i * 4 + 2] = rgb[i * 3 + 2];
-        pixels[i * 4 + 3] = 255;
-      }
-    } else {
-      console.error("BG removal: unsupported image format");
+    const data = await res.json();
+    const resultDataUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url || null;
+    
+    if (!resultDataUrl) {
+      console.error("BG removal: no image in response");
       return null;
     }
 
-    console.log(`BG removal: decoded ${width}x${height} image`);
+    console.log("BG removal: success, result length:", resultDataUrl.length);
 
-    // Threshold: if pixel brightness > 200, make it pure white
-    // If pixel is dark enough (ink), keep it on white background
-    const threshold = 200;
-    for (let i = 0; i < width * height; i++) {
-      const r = pixels[i * 4];
-      const g = pixels[i * 4 + 1];
-      const b = pixels[i * 4 + 2];
-      const brightness = (r + g + b) / 3;
-
-      if (brightness > threshold) {
-        // Background — make pure white
-        pixels[i * 4] = 255;
-        pixels[i * 4 + 1] = 255;
-        pixels[i * 4 + 2] = 255;
-        pixels[i * 4 + 3] = 255;
-      } else {
-        // Ink — darken it slightly for cleaner look
-        const factor = Math.max(0, brightness / threshold);
-        pixels[i * 4] = Math.round(r * (1 - factor * 0.5));
-        pixels[i * 4 + 1] = Math.round(g * (1 - factor * 0.5));
-        pixels[i * 4 + 2] = Math.round(b * (1 - factor * 0.5));
-        pixels[i * 4 + 3] = 255;
-      }
-    }
-
-    // Encode back to PNG
-    const pngOut = encodePng(pixels, width, height);
-    console.log("BG removal: success, output size:", pngOut.length);
-    return new Uint8Array(pngOut);
+    // Convert base64 data URL to Uint8Array
+    const base64Data = resultDataUrl.replace(/^data:image\/\w+;base64,/, "");
+    const rawStr = atob(base64Data);
+    const resultBytes = new Uint8Array(rawStr.length);
+    for (let i = 0; i < rawStr.length; i++) resultBytes[i] = rawStr.charCodeAt(i);
+    
+    return resultBytes;
   } catch (e) {
     console.error("BG removal error:", e);
     return null;
@@ -158,10 +158,10 @@ Deno.serve(async (req) => {
     const founderName = settings?.find((s: any) => s.key === "founder_full_name")?.value || "Founder";
     const founderSigUrl = settings?.find((s: any) => s.key === "founder_signature_url")?.value || "";
 
-    // Process advertiser signature (remove background) — always re-process for clean results
-    let processedSigUrl = submission.processed_signature_url;
+    // Process advertiser signature (remove background) — always re-process
+    let advertiserSigBytes: Uint8Array | null = null;
     if (submission.signature_url) {
-      const cleanedBytes = await removeSignatureBgProgrammatic(submission.signature_url);
+      const cleanedBytes = await removeSignatureBg(submission.signature_url);
       if (cleanedBytes) {
         const sigPath = `signatures/processed_${submission_id}.png`;
         await supabase.storage.from("advertiser-uploads").upload(sigPath, cleanedBytes, {
@@ -169,8 +169,8 @@ Deno.serve(async (req) => {
           upsert: true,
         });
         const { data: urlData } = supabase.storage.from("advertiser-uploads").getPublicUrl(sigPath);
-        processedSigUrl = urlData.publicUrl;
-        await supabase.from("advertiser_submissions").update({ processed_signature_url: processedSigUrl }).eq("id", submission_id);
+        await supabase.from("advertiser_submissions").update({ processed_signature_url: urlData.publicUrl }).eq("id", submission_id);
+        advertiserSigBytes = cleanedBytes;
       }
     }
 
@@ -253,23 +253,21 @@ Deno.serve(async (req) => {
     // Advertiser signature (left)
     page.drawText("Advertiser:", { x: 50, y: sigY, size: 10, font: helveticaBold, color: black });
 
-    // Try to embed advertiser signature image
-    if (processedSigUrl) {
-      try {
-        const sigBytes = await fetchImageBytes(processedSigUrl);
-        if (sigBytes) {
-          let sigImage;
-          try {
-            sigImage = await pdfDoc.embedPng(sigBytes);
-          } catch {
-            sigImage = await pdfDoc.embedJpg(sigBytes);
-          }
-          const sigDims = sigImage.scaleToFit(120, 40);
-          page.drawImage(sigImage, { x: 50, y: sigY - 50, width: sigDims.width, height: sigDims.height });
+    // Try to embed advertiser signature image (use cleaned bytes or fall back to original)
+    try {
+      const sigBytes = advertiserSigBytes || await fetchImageBytes(submission.signature_url);
+      if (sigBytes) {
+        let sigImage;
+        try {
+          sigImage = await pdfDoc.embedPng(sigBytes);
+        } catch {
+          sigImage = await pdfDoc.embedJpg(sigBytes);
         }
-      } catch (e) {
-        console.error("Failed to embed advertiser signature:", e);
+        const sigDims = sigImage.scaleToFit(120, 40);
+        page.drawImage(sigImage, { x: 50, y: sigY - 50, width: sigDims.width, height: sigDims.height });
       }
+    } catch (e) {
+      console.error("Failed to embed advertiser signature:", e);
     }
     page.drawLine({ start: { x: 50, y: sigY - 55 }, end: { x: 200, y: sigY - 55 }, thickness: 0.5, color: black });
     page.drawText(submission.ceo_name, { x: 50, y: sigY - 68, size: 10, font: helvetica, color: black });
@@ -280,22 +278,18 @@ Deno.serve(async (req) => {
 
     if (founderSigUrl) {
       try {
-        // Remove background from founder signature programmatically
-        const cleanedFounderBytes = await removeSignatureBgProgrammatic(founderSigUrl);
-        let founderSigBytes: Uint8Array | null = null;
-
-        if (cleanedFounderBytes) {
-          const fSigPath = `signatures/processed_founder.png`;
-          await supabase.storage.from("advertiser-uploads").upload(fSigPath, cleanedFounderBytes, {
-            contentType: "image/png",
-            upsert: true,
-          });
-          founderSigBytes = cleanedFounderBytes;
-        } else {
-          founderSigBytes = await fetchImageBytes(founderSigUrl);
-        }
+        // Remove background from founder signature via AI
+        const cleanedFounderBytes = await removeSignatureBg(founderSigUrl);
+        const founderSigBytes = cleanedFounderBytes || await fetchImageBytes(founderSigUrl);
 
         if (founderSigBytes) {
+          if (cleanedFounderBytes) {
+            const fSigPath = `signatures/processed_founder.png`;
+            await supabase.storage.from("advertiser-uploads").upload(fSigPath, cleanedFounderBytes, {
+              contentType: "image/png",
+              upsert: true,
+            });
+          }
           let fSigImage;
           try {
             fSigImage = await pdfDoc.embedPng(founderSigBytes);
