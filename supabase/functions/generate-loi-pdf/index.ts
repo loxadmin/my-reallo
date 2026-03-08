@@ -158,18 +158,13 @@ Deno.serve(async (req) => {
     const founderName = settings?.find((s: any) => s.key === "founder_full_name")?.value || "Founder";
     const founderSigUrl = settings?.find((s: any) => s.key === "founder_signature_url")?.value || "";
 
-    // Process advertiser signature (remove background)
+    // Process advertiser signature (remove background) — always re-process for clean results
     let processedSigUrl = submission.processed_signature_url;
-    if (!processedSigUrl && submission.signature_url) {
-      processedSigUrl = await removeSignatureBg(submission.signature_url);
-      if (processedSigUrl) {
-        // Upload processed signature to storage
-        const base64Data = processedSigUrl.replace(/^data:image\/\w+;base64,/, "");
-        const rawStr = atob(base64Data);
-        const sigBytes = new Uint8Array(rawStr.length);
-        for (let i = 0; i < rawStr.length; i++) sigBytes[i] = rawStr.charCodeAt(i);
+    if (submission.signature_url) {
+      const cleanedBytes = await removeSignatureBgProgrammatic(submission.signature_url);
+      if (cleanedBytes) {
         const sigPath = `signatures/processed_${submission_id}.png`;
-        await supabase.storage.from("advertiser-uploads").upload(sigPath, sigBytes, {
+        await supabase.storage.from("advertiser-uploads").upload(sigPath, cleanedBytes, {
           contentType: "image/png",
           upsert: true,
         });
