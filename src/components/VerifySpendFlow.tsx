@@ -138,15 +138,12 @@ const VerifySpendFlow = () => {
   const verifiedTxs = transactions.filter(t => t.is_verified);
   const totalVerifiedAmount = verifiedTxs.reduce((sum, t) => sum + Number(t.verified_amount || 0), 0);
   
-  const getMultiplier = (freq: string) => freq === "daily" ? 365 : freq === "weekly" ? 52 : 12;
-  const getRecalcMultiplier = (freq: string) => freq === "daily" ? 12 : freq === "weekly" ? 13 : 12;
+  // Daily: sum × 12, Weekly: sum × 13, Monthly: single tx × 12
+  const getMultiplier = (freq: string) => freq === "daily" ? 12 : freq === "weekly" ? 13 : 12;
   
-  const firstVerifiedAmount = verifiedTxs.length > 0 ? Number(verifiedTxs[0].verified_amount || 0) : 0;
-  const initialAnnualSpend = firstVerifiedAmount * getMultiplier(verification?.frequency || "daily");
-
-  // If verification ended and not monthly, recalculate
-  const shouldRecalculate = verification && verificationEnded && verification.frequency !== "monthly";
-  const recalculatedSpend = shouldRecalculate ? totalVerifiedAmount * getRecalcMultiplier(verification!.frequency) : null;
+  const calculatedAnnualSpend = verification?.frequency === "monthly"
+    ? (verifiedTxs.length > 0 ? Number(verifiedTxs[0].verified_amount || 0) * 12 : 0)
+    : totalVerifiedAmount * getMultiplier(verification?.frequency || "daily");
 
   // Show "already verified" if complete
   if (isComplete || (verification && verification.status === "verified")) {
@@ -206,9 +203,9 @@ const VerifySpendFlow = () => {
             ))}
           </div>
           <p className="text-[10px] text-muted-foreground mt-1">
-            {frequency === "daily" && "30 transaction IDs over 30 days (first tx × 365 = initial annual spend)"}
-            {frequency === "weekly" && "4 transaction IDs over 28 days (first tx × 52 = initial annual spend)"}
-            {frequency === "monthly" && "1 transaction ID (tx × 12 = final annual spend, no recalculation)"}
+            {frequency === "daily" && "Submit transaction IDs over 30 days (sum of verified × 12 = annual spend)"}
+            {frequency === "weekly" && "Submit transaction IDs over 28 days (sum of verified × 13 = annual spend)"}
+            {frequency === "monthly" && "1 transaction ID (tx × 12 = annual spend, calculated immediately)"}
           </p>
         </div>
         <GlassButton variant="primary" className="w-full text-[13px]" onClick={handleStartVerification} disabled={starting}>
@@ -235,16 +232,13 @@ const VerifySpendFlow = () => {
         )}
       </div>
 
-      {firstVerifiedAmount > 0 && (
+      {verifiedTxs.length > 0 && calculatedAnnualSpend > 0 && (
         <div className="glass rounded-xl p-3">
-          <p className="text-[11px] text-muted-foreground">Initial Verified Annual Spend</p>
-          <p className="text-[13px] font-semibold text-primary">₦{initialAnnualSpend.toLocaleString("en-NG")}</p>
-          {recalculatedSpend !== null && (
-            <>
-              <p className="text-[11px] text-muted-foreground mt-2">Final Recalculated Annual Spend</p>
-              <p className="text-[13px] font-semibold text-primary">₦{recalculatedSpend.toLocaleString("en-NG")}</p>
-            </>
-          )}
+          <p className="text-[11px] text-muted-foreground">Calculated Annual Spend</p>
+          <p className="text-[13px] font-semibold text-primary">₦{calculatedAnnualSpend.toLocaleString("en-NG")}</p>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            {verifiedTxs.length} verified tx × {getMultiplier(verification?.frequency || "daily")}
+          </p>
         </div>
       )}
 

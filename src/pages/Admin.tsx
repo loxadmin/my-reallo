@@ -398,21 +398,27 @@ const Admin = () => {
                 await supabase.from("profiles").update(updateData).eq("id", userId);
               };
 
-              if (freq === "monthly" && verifiedTxs.length >= 1) {
-                const annualAmount = Math.round(Number(verifiedTxs[0].verified_amount || 0) * 12);
-                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: annualAmount }).eq("id", firstMatch.verification_id);
-                await updateProfileSpend(firstMatch.user_id, annualAmount, true);
-              } else if (verifiedTxs.length === 1) {
-                const multiplier = freq === "daily" ? 365 : 52;
-                const initialAnnual = Math.round(Number(verifiedTxs[0].verified_amount || 0) * multiplier);
-                await updateProfileSpend(firstMatch.user_id, initialAnnual);
-              }
-              const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", firstMatch.verification_id).single();
-              if (vData && new Date() >= new Date((vData as any).ends_at) && freq !== "monthly") {
-                const recalcMultiplier = freq === "daily" ? 12 : 13;
-                const finalAnnual = Math.round(totalAmount * recalcMultiplier);
-                await supabase.from("spend_verifications").update({ status: "verified", recalculated_amount: finalAnnual }).eq("id", firstMatch.verification_id);
-                await updateProfileSpend(firstMatch.user_id, finalAnnual, true);
+              // Calculate annual spend: sum of verified amounts × frequency multiplier
+              // Daily: sum × 12, Weekly: sum × 13, Monthly: single tx × 12
+              const multiplier = freq === "daily" ? 12 : freq === "weekly" ? 13 : 12;
+              const annualSpend = freq === "monthly" 
+                ? Math.round(Number(verifiedTxs[0]?.verified_amount || 0) * 12)
+                : Math.round(totalAmount * multiplier);
+
+              await supabase.from("spend_verifications").update({ 
+                recalculated_amount: annualSpend,
+                ...(freq === "monthly" ? { status: "verified" } : {})
+              }).eq("id", firstMatch.verification_id);
+              
+              await updateProfileSpend(firstMatch.user_id, annualSpend, freq === "monthly");
+
+              // Auto-complete daily/weekly when cycle ends
+              if (freq !== "monthly") {
+                const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", firstMatch.verification_id).single();
+                if (vData && new Date() >= new Date((vData as any).ends_at)) {
+                  await supabase.from("spend_verifications").update({ status: "verified" }).eq("id", firstMatch.verification_id);
+                  await updateProfileSpend(firstMatch.user_id, annualSpend, true);
+                }
               }
             }
           }
