@@ -1780,13 +1780,12 @@ const Admin = () => {
                   <h3 className="text-[13px] font-semibold text-foreground">Influencer Withdrawals</h3>
                 </div>
                 {infWithdrawals.map((w: any) => {
-                  const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id?.slice(0, 8);
                   const bank = infBankAccounts.find((b: any) => b.id === w.bank_account_id);
                   return (
                     <div key={w.id} className="px-5 py-4 border-b border-border/20 last:border-0">
                       <div className="flex items-center justify-between mb-1">
                         <div>
-                          <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                          <UserLink userId={w.user_id} />
                           {bank && <p className="text-[10px] text-muted-foreground">{bank.bank_name} · {bank.account_number} · {bank.account_name}</p>}
                         </div>
                         <div className="flex items-center gap-3">
