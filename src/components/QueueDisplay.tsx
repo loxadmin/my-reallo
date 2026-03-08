@@ -35,6 +35,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
+  const [referredUsers, setReferredUsers] = useState<{ email: string; created_at: string }[]>([]);
   const [todaySkipped, setTodaySkipped] = useState(0);
   const [verifyLink, setVerifyLink] = useState("");
   const [nextUnlock, setNextUnlock] = useState({ hours: 0, minutes: 0, seconds: 0 });
@@ -71,15 +72,22 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   useEffect(() => {
     const fetchStats = async () => {
       if (!profile || !user) return;
-      const [refRes, actRes, settingsRes, voucherRes, verifyRes, activeRes] = await Promise.all([
+      const [refRes, actRes, settingsRes, voucherRes, verifyRes, activeRes, refUsersRes] = await Promise.all([
         supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", profile.id),
         supabase.from("waitlist_activity").select("positions_moved").eq("user_id", profile.id).gte("created_at", new Date().toISOString().split("T")[0]),
         supabase.from("admin_settings").select("value").eq("key", "verify_expense_link").single(),
         supabase.from("vouchers").select("amount_naira").eq("user_id", user.id),
         supabase.from("spend_verifications").select("status").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
         supabase.from("admin_settings").select("value").eq("key", "verify_page_active").single(),
+        supabase.from("referrals").select("referred_user_id, created_at, profiles!referrals_referred_user_id_fkey(email)").eq("referrer_id", profile.id).order("created_at", { ascending: false }),
       ]);
       setReferralCount(refRes.count || 0);
+      setReferredUsers(
+        (refUsersRes.data || []).map((r: any) => ({
+          email: (r.profiles as any)?.email || "Unknown",
+          created_at: r.created_at,
+        }))
+      );
       setTodaySkipped((actRes.data || []).reduce((sum, a) => sum + (a.positions_moved || 0), 0));
       setVerifyLink(settingsRes.data?.value || "");
       setIsVerifyActive(activeRes.data?.value === "false" ? false : true);
@@ -298,6 +306,29 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                   </button>
                 </div>
                 <p className="text-[10px] text-foreground font-mono bg-muted/30 rounded-lg p-2 truncate">{referralLink}</p>
+              </GlassCard>
+            )}
+
+            {/* Referred Users List */}
+            {referredUsers.length > 0 && (
+              <GlassCard className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Share2 className="w-3.5 h-3.5 text-primary" />
+                  <p className="text-[11px] text-muted-foreground font-medium">Your Referred Users ({referredUsers.length})</p>
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {referredUsers.map((ru, i) => {
+                    const username = ru.email.split("@")[0];
+                    return (
+                      <div key={i} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2">
+                        <span className="text-[11px] text-foreground font-medium">{username}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(ru.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </GlassCard>
             )}
           </motion.div>
