@@ -264,7 +264,7 @@ const VerifySpendFlow = () => {
                     {spendMeta[t].icon}
                     <span className="text-[10px]">{spendMeta[t].label}</span>
                   </div>
-                  <p className="text-[12px] font-semibold text-foreground">₦{spend.toLocaleString("en-NG")}</p>
+                  <p className="text-[12px] font-semibold text-foreground">{formatCurrency(spend)}</p>
                 </div>
               );
             })}
