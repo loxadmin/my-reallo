@@ -1788,18 +1788,20 @@ const Admin = () => {
                       {w.status === "pending" && (
                         <div className="flex gap-2 mt-3">
                           <Btn variant="primary" onClick={async () => {
-                            const wallet = infWallets.find((wl: any) => wl.user_id === w.user_id);
-                            if (wallet) {
-                              const newBal = Math.max(0, (wallet.balance || 0) - w.amount);
-                              await supabase.from("influencer_wallets" as any).update({ balance: newBal }).eq("id", wallet.id);
-                            }
+                            // Balance already deducted on request — just approve
                             await supabase.from("influencer_withdrawals" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", w.id);
                             await sendNotification({ userId: w.user_id, type: "withdrawal_approved", title: "Withdrawal Approved", message: `Your withdrawal of ₦${w.amount.toLocaleString("en-NG")} has been approved.` });
                             toast({ title: "Withdrawal approved" }); await fetchData();
                           }} className="flex-1"><Check className="w-3 h-3" /> Approve</Btn>
                           <Btn variant="outline" onClick={async () => {
+                            // Refund balance on rejection
+                            const wallet = infWallets.find((wl: any) => wl.user_id === w.user_id);
+                            if (wallet) {
+                              await supabase.from("influencer_wallets" as any).update({ balance: (wallet.balance || 0) + w.amount }).eq("id", wallet.id);
+                            }
                             await supabase.from("influencer_withdrawals" as any).update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", w.id);
-                            toast({ title: "Withdrawal rejected" }); await fetchData();
+                            await sendNotification({ userId: w.user_id, type: "withdrawal_rejected", title: "Withdrawal Rejected", message: `Your withdrawal of ₦${w.amount.toLocaleString("en-NG")} has been rejected. The amount has been refunded to your wallet.` });
+                            toast({ title: "Withdrawal rejected, balance refunded" }); await fetchData();
                           }} className="flex-1">Reject</Btn>
                         </div>
                       )}
