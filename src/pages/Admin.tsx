@@ -2146,6 +2146,27 @@ const Admin = () => {
           </main>
         </div>
       </div>
+      {/* User Profile Drawer */}
+      {(() => {
+        const drawerProfile = drawerUserId ? profiles.find(p => p.id === drawerUserId) : null;
+        const dp = drawerProfile as any;
+        return (
+          <UserProfileDrawer
+            open={!!drawerUserId}
+            onClose={() => setDrawerUserId(null)}
+            profile={dp ? { ...dp, total_annual_spend: dp.total_annual_spend || 0 } : null}
+            referralCount={drawerUserId ? (referralCounts[drawerUserId] || 0) : 0}
+            infApp={drawerUserId ? infApps.find((a: any) => a.user_id === drawerUserId) : undefined}
+            infWallet={drawerUserId ? infWallets.find((w: any) => w.user_id === drawerUserId) : undefined}
+            bankAccount={drawerUserId ? infBankAccounts.find((b: any) => b.user_id === drawerUserId) : undefined}
+            withdrawals={drawerUserId ? infWithdrawals.filter((w: any) => w.user_id === drawerUserId) : undefined}
+            challengeSubmissions={drawerUserId ? infChallengeSubmissions.filter((s: any) => s.user_id === drawerUserId) : undefined}
+            verificationTxs={drawerUserId ? verificationTxs.filter((t: any) => t.user_id === drawerUserId) : undefined}
+            decisionResponses={drawerUserId ? decisionResponses.filter((r: any) => r.user_id === drawerUserId) : undefined}
+            formatNaira={formatNaira}
+          />
+        );
+      })()}
     </SidebarProvider>
   );
 };
