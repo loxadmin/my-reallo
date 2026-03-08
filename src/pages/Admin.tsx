@@ -107,6 +107,20 @@ const Admin = () => {
     setDecisionResponses((drRes.data || []) as unknown as DecisionResponseRow[]);
     setEditedGoals({});
 
+    // Fetch influencer data
+    const [iaRes, iwRes, ibRes, irRes, iwdRes] = await Promise.all([
+      supabase.from("influencer_applications" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_wallets" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_bank_accounts" as any).select("*"),
+      supabase.from("influencer_referrals" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_withdrawals" as any).select("*").order("created_at", { ascending: false }),
+    ]);
+    setInfApps((iaRes.data || []) as any[]);
+    setInfWallets((iwRes.data || []) as any[]);
+    setInfBankAccounts((ibRes.data || []) as any[]);
+    setInfReferrals((irRes.data || []) as any[]);
+    setInfWithdrawals((iwdRes.data || []) as any[]);
+
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
     setVerifyPageActive(settings.find(s => s.key === "verify_page_active")?.value === "false" ? false : true);
