@@ -76,6 +76,21 @@ const Auth = () => {
 
   const passwordStrength = mode === "signup" ? getPasswordStrength(password) : null;
 
+  const handleGoogleSignIn = async () => {
+    // Store referral code before redirecting to Google
+    if (referralCode) {
+      localStorage.setItem(REFERRAL_STORAGE_KEY, referralCode.toUpperCase());
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth`,
+      },
+    });
+    if (error) setError(sanitizeAuthError(error));
+  };
+
   const handleSubmit = async () => {
     setError("");
     setFieldErrors({});
