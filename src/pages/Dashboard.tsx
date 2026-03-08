@@ -100,6 +100,7 @@ const Dashboard = () => {
     { id: "earn", label: "Earn", icon: Award },
     ...(isOffQueue ? [{ id: "verify" as DashView, label: "Verify", icon: ShieldCheck }] : []),
     { id: "influencer" as DashView, label: "Influencer", icon: Star },
+    { id: "notifications" as DashView, label: "Notifications", icon: Bell },
   ];
 
   return (
