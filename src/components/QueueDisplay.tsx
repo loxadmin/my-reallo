@@ -161,17 +161,18 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
           <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-            {/* Welcome */}
-            <p className="text-foreground text-[13px] font-medium px-1">
-              Welcome back, {user?.email?.split("@")[0] || "User"} 👋
-            </p>
-
-            {/* Swipeable Wallet Cards */}
-            <WalletCarousel pointsBalance={pointsBalance} nairaValue={nairaValue} />
-
-            {/* Goal Progress */}
+            {/* Unified Wallet + Goal Card */}
             <GlassCard className="p-4">
-              <div className="space-y-1.5">
+              {/* Welcome */}
+              <p className="text-foreground text-[13px] font-medium mb-3">
+                Welcome back, {user?.email?.split("@")[0] || "User"} 👋
+              </p>
+
+              {/* Swipeable Wallet Cards */}
+              <WalletCarousel pointsBalance={pointsBalance} nairaValue={nairaValue} />
+
+              {/* Goal Progress */}
+              <div className="space-y-1.5 mt-3">
                 <div className="flex justify-between items-end">
                   <p className="font-medium text-foreground text-[12px]">GOAL - {goalLabels[goal] || goal}</p>
                   <p className="text-muted-foreground text-[11px]">{Math.round((nairaValue / targetAmount) * 100)}%</p>
@@ -185,7 +186,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                   />
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Claimable: <span className="text-primary font-semibold">{formatNaira(nairaValue)}</span> / {formatNaira(targetAmount)}
+                  Claimable: <span className="text-primary font-semibold">{formatNaira(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
                 </p>
               </div>
 

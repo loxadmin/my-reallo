@@ -6,7 +6,7 @@ import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import GlassInput from "./GlassInput";
 import { Switch } from "./ui/switch";
-import { Wallet, UtensilsCrossed, Bus, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Wallet, UtensilsCrossed, Bus, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
@@ -116,8 +116,8 @@ const WalletCarousel = ({ pointsBalance, nairaValue }: WalletCarouselProps) => {
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.25 }}
           >
-            <GlassCard variant="glow">
-              {/* Original wallet card design */}
+            <div>
+              {/* Wallet header */}
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <currentWallet.icon className="w-4 h-4 text-primary" />
@@ -125,7 +125,6 @@ const WalletCarousel = ({ pointsBalance, nairaValue }: WalletCarouselProps) => {
                     {showTotal && activeIndex === 0 ? "TOTAL ANNUAL SPEND" : currentWallet.label}
                   </p>
                 </div>
-                {/* Total toggle - only on utility wallet */}
                 {activeIndex === 0 && isActivated && (
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9px] text-muted-foreground">Total</span>
@@ -135,12 +134,12 @@ const WalletCarousel = ({ pointsBalance, nairaValue }: WalletCarouselProps) => {
               </div>
 
               {isActivated ? (
-                <div className="text-center">
+                <div>
                   <h2 className="font-display text-2xl font-bold gradient-text">
                     {formatNaira(showTotal && activeIndex === 0 ? totalAllSpend : spendAmount)}
                   </h2>
                   <p className="text-muted-foreground mt-1 text-[11px]">
-                    = {pointsBalance.toLocaleString()} points ({formatNaira(nairaValue)} value)
+                    Claimable: <span className="text-primary font-semibold">{formatNaira(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
                   </p>
                 </div>
               ) : activatingWallet === currentWallet.id ? (
@@ -179,20 +178,10 @@ const WalletCarousel = ({ pointsBalance, nairaValue }: WalletCarouselProps) => {
                   </GlassButton>
                 </div>
               )}
-            </GlassCard>
+            </div>
           </motion.div>
         </AnimatePresence>
 
-        {activeIndex > 0 && (
-          <button onClick={() => handleSwipe("right")} className="absolute left-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-muted/60 backdrop-blur-sm flex items-center justify-center text-foreground/60 hover:text-foreground transition-colors">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-        )}
-        {activeIndex < wallets.length - 1 && (
-          <button onClick={() => handleSwipe("left")} className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-muted/60 backdrop-blur-sm flex items-center justify-center text-foreground/60 hover:text-foreground transition-colors">
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
       </div>
 
       {/* Dot indicators */}
