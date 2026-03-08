@@ -251,7 +251,7 @@ const VerifySpendFlow = () => {
           </div>
           <p className="font-semibold text-foreground text-[14px]">Verification Complete!</p>
           <p className="text-[13px] text-primary font-semibold mt-1">
-            ₦{totalVerifiedAnnualSpend.toLocaleString("en-NG")}
+            {formatCurrency(totalVerifiedAnnualSpend)}
           </p>
           <p className="text-[11px] text-muted-foreground">Total Verified Annual Spend</p>
           <div className="grid grid-cols-2 gap-2 mt-4">
