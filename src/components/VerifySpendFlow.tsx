@@ -64,46 +64,55 @@ const VerifySpendFlow = () => {
 
   const fetchData = async () => {
     if (!user) return;
-    const [dataRes, elecRes, settingsRes] = await Promise.all([
+    const [dataRes, elecRes, foodRes, transportRes, settingsRes] = await Promise.all([
       supabase.from("spend_verifications").select("*").eq("user_id", user.id).eq("spend_type", "data").order("created_at", { ascending: false }).limit(1),
       supabase.from("spend_verifications").select("*").eq("user_id", user.id).eq("spend_type", "electricity").order("created_at", { ascending: false }).limit(1),
+      supabase.from("spend_verifications").select("*").eq("user_id", user.id).eq("spend_type", "food").order("created_at", { ascending: false }).limit(1),
+      supabase.from("spend_verifications").select("*").eq("user_id", user.id).eq("spend_type", "transport").order("created_at", { ascending: false }).limit(1),
       supabase.from("admin_settings").select("*"),
     ]);
 
-    const dv = (dataRes.data || [])[0] as Verification | undefined;
-    const ev = (elecRes.data || [])[0] as Verification | undefined;
+    const loadVerification = async (
+      res: any,
+      setVerif: (v: Verification | null) => void,
+      setTxs: (t: Transaction[]) => void,
+      setInputs: (i: string[]) => void,
+      isElectricity: boolean = false
+    ) => {
+      const v = (res.data || [])[0] as Verification | undefined;
+      if (v) {
+        setVerif(v);
+        const { data: txs } = await supabase.from("verification_transactions").select("*").eq("verification_id", v.id).order("submitted_at", { ascending: true });
+        const txList = (txs || []) as Transaction[];
+        setTxs(txList);
+        if (isElectricity) {
+          setInputs(Array.from({ length: 1 }, (_, i) => txList[i]?.transaction_id || ""));
+        } else {
+          const maxBoxes = getMaxBoxes(v.frequency);
+          const filled = txList.map(t => t.transaction_id);
+          setInputs(Array.from({ length: maxBoxes }, (_, i) => filled[i] || ""));
+        }
+      } else {
+        setVerif(null);
+        setTxs([]);
+        setInputs(isElectricity ? [""] : []);
+      }
+    };
 
-    if (dv) {
-      setDataVerification(dv);
-      const { data: txs } = await supabase.from("verification_transactions").select("*").eq("verification_id", dv.id).order("submitted_at", { ascending: true });
-      const txList = (txs || []) as Transaction[];
-      setDataTxs(txList);
-      const maxBoxes = getMaxBoxes(dv.frequency);
-      const filled = txList.map(t => t.transaction_id);
-      setDataTxInputs(Array.from({ length: maxBoxes }, (_, i) => filled[i] || ""));
-    } else {
-      setDataVerification(null);
-      setDataTxs([]);
-      setDataTxInputs([]);
-    }
-
-    if (ev) {
-      setElecVerification(ev);
-      const { data: txs } = await supabase.from("verification_transactions").select("*").eq("verification_id", ev.id).order("submitted_at", { ascending: true });
-      const txList = (txs || []) as Transaction[];
-      setElecTxs(txList);
-      setElecTxInputs(Array.from({ length: 1 }, (_, i) => txList[i]?.transaction_id || ""));
-    } else {
-      setElecVerification(null);
-      setElecTxs([]);
-      setElecTxInputs([""]);
-    }
+    await Promise.all([
+      loadVerification(dataRes, setDataVerification, setDataTxs, setDataTxInputs),
+      loadVerification(elecRes, setElecVerification, setElecTxs, setElecTxInputs, true),
+      loadVerification(foodRes, setFoodVerification, setFoodTxs, setFoodTxInputs),
+      loadVerification(transportRes, setTransportVerification, setTransportTxs, setTransportTxInputs),
+    ]);
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifySettings({
       link: settings.find(s => s.key === "verify_spend_link")?.value || "",
       description: settings.find(s => s.key === "verify_spend_description")?.value || "Verify your spend by completing the action at the link below.",
     });
+    setVerifyFoodActive(settings.find(s => s.key === "verify_food_active")?.value !== "false");
+    setVerifyTransportActive(settings.find(s => s.key === "verify_transport_active")?.value !== "false");
   };
 
   const getMaxBoxes = (freq: string) => freq === "daily" ? 30 : freq === "weekly" ? 4 : 1;
