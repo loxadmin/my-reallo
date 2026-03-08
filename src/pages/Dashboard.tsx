@@ -119,7 +119,7 @@ const Dashboard = () => {
 
   const isOffQueue = (profile?.queue_position ?? 999) <= 0;
 
-  if (loading) {
+  if (loading || (!profileReady && user)) {
     return (
       <div className="relative min-h-screen overflow-x-hidden">
         <WaterBackground />
