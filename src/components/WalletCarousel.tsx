@@ -92,6 +92,13 @@ const WalletCarousel = ({
     },
   ];
 
+  const isCurrentActive = wallets[selectedIndex]?.active ?? true;
+
+  useEffect(() => {
+    setCurrentWalletActive(isCurrentActive);
+    onActiveWalletChange?.(isCurrentActive);
+  }, [selectedIndex, isCurrentActive, onActiveWalletChange]);
+
   return (
     <div className="relative">
       <div ref={emblaRef} className="overflow-hidden">
