@@ -3,83 +3,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-async function sendSmtpEmail({
-  host, port, username, password, from, to, subject, html,
-}: {
-  host: string; port: number; username: string; password: string;
-  from: string; to: string; subject: string; html: string;
-}) {
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
-
-  let conn: Deno.TlsConn | Deno.Conn;
-
-  if (port === 465) {
-    conn = await Deno.connectTls({ hostname: host, port });
-  } else {
-    conn = await Deno.connect({ hostname: host, port });
-  }
-
-  const read = async (): Promise<string> => {
-    const buf = new Uint8Array(4096);
-    const n = await conn.read(buf);
-    return n ? decoder.decode(buf.subarray(0, n)) : "";
-  };
-
-  const send = async (cmd: string): Promise<string> => {
-    await conn.write(encoder.encode(cmd + "\r\n"));
-    return await read();
-  };
-
-  await read();
-  await send("EHLO localhost");
-
-  if (port !== 465) {
-    const starttlsRes = await send("STARTTLS");
-    if (!starttlsRes.startsWith("220")) {
-      conn.close();
-      throw new Error("STARTTLS not supported: " + starttlsRes.trim());
-    }
-    conn = await Deno.startTls(conn as Deno.TcpConn, { hostname: host });
-    await send("EHLO localhost");
-  }
-
-  await send("AUTH LOGIN");
-  await send(btoa(username));
-  const authRes = await send(btoa(password));
-  if (!authRes.startsWith("235")) {
-    conn.close();
-    throw new Error("SMTP auth failed: " + authRes.trim());
-  }
-
-  await send(`MAIL FROM:<${from}>`);
-  await send(`RCPT TO:<${to}>`);
-  await send("DATA");
-
-  const message = [
-    `From: Reallo <${from}>`,
-    `To: ${to}`,
-    `Subject: ${subject}`,
-    `MIME-Version: 1.0`,
-    `Content-Type: text/html; charset=UTF-8`,
-    ``,
-    html,
-    ``,
-    `.`,
-  ].join("\r\n");
-
-  const dataRes = await send(message);
-  await send("QUIT");
-  conn.close();
-
-  if (!dataRes.startsWith("250")) {
-    throw new Error("SMTP send failed: " + dataRes.trim());
-  }
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -87,19 +13,16 @@ Deno.serve(async (req) => {
 
     if (!to || !subject || !body) {
       return new Response(JSON.stringify({ error: "Missing to, subject, or body" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const smtpHost = Deno.env.get("SMTP_HOST");
-    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587");
-    const smtpUser = Deno.env.get("SMTP_USER");
-    const smtpPass = Deno.env.get("SMTP_PASS");
-    const smtpFrom = Deno.env.get("SMTP_FROM") || smtpUser || "noreply@reallo.app";
-
-    if (!smtpHost || !smtpUser || !smtpPass) {
-      return new Response(JSON.stringify({ error: "SMTP not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      return new Response(JSON.stringify({ error: "RESEND_API_KEY not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -112,24 +35,38 @@ Deno.serve(async (req) => {
       </div>
     `;
 
-    await sendSmtpEmail({
-      host: smtpHost,
-      port: smtpPort,
-      username: smtpUser,
-      password: smtpPass,
-      from: smtpFrom,
-      to,
-      subject,
-      html,
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "Reallo <onboarding@resend.dev>",
+        to,
+        subject,
+        html,
+      }),
     });
 
-    return new Response(JSON.stringify({ success: true }), {
+    const result = await res.json();
+
+    if (!res.ok) {
+      console.error("Resend error:", result);
+      return new Response(JSON.stringify({ error: result.message || "Failed to send email" }), {
+        status: res.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ success: true, id: result.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Email send error:", error);
     return new Response(JSON.stringify({ error: (error as Error).message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
