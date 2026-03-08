@@ -172,7 +172,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+    <div className="relative min-h-screen flex items-center justify-center px-4 py-24 overflow-x-hidden overflow-y-auto">
       <WaterBackground />
       <Navbar />
 
@@ -282,14 +282,16 @@ const Auth = () => {
                   )}
                 </div>
 
-                {mode === "signup" && (
-                  <div>
-                    <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
-                    <p className="text-[11px] text-primary/60 mt-1 flex items-center gap-1">
-                      <Gift className="w-3 h-3" /> You and your referrer both benefit
-                    </p>
+                <div className={`grid transition-all duration-300 ease-in-out ${mode === "signup" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                  <div className="overflow-hidden">
+                    <div className="pt-1">
+                      <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
+                      <p className="text-[11px] text-primary/60 mt-1 flex items-center gap-1">
+                        <Gift className="w-3 h-3" /> You and your referrer both benefit
+                      </p>
+                    </div>
                   </div>
-                )}
+                </div>
 
                 {error && (
                   <p className="text-[13px] text-destructive font-medium">
