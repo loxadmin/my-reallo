@@ -37,7 +37,9 @@ const WalletCarousel = ({
   const { formatCurrency } = useCurrency();
   const [showTotal, setShowTotal] = useState(false);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: "center" });
+  const [popupEmblaRef, popupEmblaApi] = useEmblaCarousel({ loop: false, align: "center" });
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [popupSelectedIndex, setPopupSelectedIndex] = useState(0);
   const [currentWalletActive, setCurrentWalletActive] = useState(true);
   const [showSpendPopup, setShowSpendPopup] = useState(false);
 
