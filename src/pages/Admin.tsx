@@ -219,21 +219,21 @@ const Btn = ({ children, variant = "default", ...props }: React.ButtonHTMLAttrib
 
 // ── Table wrapper ──
 const TableCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <div className={`rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm overflow-hidden ${className || ""}`}>
+  <div className={`rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden ${className || ""}`}>
     {children}
   </div>
 );
 
 const TableHeader = ({ children }: { children: React.ReactNode }) => (
-  <div className="px-5 py-3.5 border-b border-border/40 bg-muted/30 overflow-x-auto">
-    <div className="flex items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider gap-4 min-w-[600px]">
+  <div className="px-5 py-3 border-b border-border/30 bg-muted/20">
+    <div className="flex items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider gap-3">
       {children}
     </div>
   </div>
 );
 
 const TableRow = ({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) => (
-  <div onClick={onClick} className={`px-5 py-3 border-b border-border/20 last:border-0 flex items-center gap-4 hover:bg-muted/20 transition-colors min-w-[600px] ${onClick ? "cursor-pointer" : ""} ${className || ""}`}>
+  <div onClick={onClick} className={`px-5 py-3 border-b border-border/15 last:border-0 flex items-center gap-3 hover:bg-muted/15 transition-colors ${onClick ? "cursor-pointer" : ""} ${className || ""}`}>
     {children}
   </div>
 );
