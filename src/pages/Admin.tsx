@@ -754,6 +754,7 @@ const Admin = () => {
     verification: "Verification", settings: "Settings", inf_apps: "Influencer Applications",
     inf_wallets: "Influencer Wallets", inf_referrals: "Influencer Referrals",
     inf_withdrawals: "Influencer Withdrawals", inf_challenges: "Influencer Challenges", inf_submissions: "Challenge Submissions", warnings: "Warnings",
+    advertisers: "Advertisers",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
