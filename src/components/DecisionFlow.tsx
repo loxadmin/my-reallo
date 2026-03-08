@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
-import { Award, CheckSquare, ExternalLink, Clock, Upload, X, History, Zap } from "lucide-react";
+import { Award, CheckSquare, ExternalLink, Clock, Upload, X, History, Zap, Users } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import InfluencerFlow from "./InfluencerFlow";
 
 interface DecisionApp {
   id: string;
@@ -39,7 +40,7 @@ interface DecisionResponse {
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromResponses = () => supabase.from("decision_responses" as any);
 
-type EarnTab = "earn" | "ongoing" | "past";
+type EarnTab = "earn" | "ongoing" | "past" | "influencer";
 type FlowStep = "checklist" | "sequential" | "done";
 
 const DecisionFlow = () => {
@@ -465,11 +466,12 @@ const DecisionFlow = () => {
     return (
       <div className="space-y-3">
         {fileInput}
-        <div className="flex gap-1 p-1 rounded-xl glass">
+        <div className="flex gap-1 p-1 rounded-xl glass overflow-x-auto">
           {([
             { id: "earn" as EarnTab, label: "Earn", icon: Zap, count: earnResponses.length },
             { id: "ongoing" as EarnTab, label: "Ongoing", icon: Clock, count: ongoingResponses.length },
             { id: "past" as EarnTab, label: "Past", icon: History, count: pastResponses.length },
+            { id: "influencer" as EarnTab, label: "Influencer", icon: Users, count: 0 },
           ]).map(tab => (
             <button
               key={tab.id}
@@ -486,7 +488,9 @@ const DecisionFlow = () => {
 
         <AnimatePresence mode="wait">
           <motion.div key={earnTab} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2">
-            {currentList.length === 0 && (
+            {earnTab === "influencer" && <InfluencerFlow />}
+
+            {earnTab !== "influencer" && currentList.length === 0 && (
               <GlassCard className="text-center py-8">
                 <p className="text-muted-foreground text-[12px]">No {earnTab === "earn" ? "available" : earnTab} earnings</p>
               </GlassCard>
@@ -601,10 +605,13 @@ const DecisionFlow = () => {
 
   // ═══ CHECKLIST VIEW ═══
   if (unansweredApps.length === 0) return (
-    <GlassCard className="text-center py-8">
-      <Award className="w-6 h-6 text-primary mx-auto mb-2" />
-      <p className="text-muted-foreground text-[12px]">No new apps to review. Check back later!</p>
-    </GlassCard>
+    <div className="space-y-4">
+      <GlassCard className="text-center py-8">
+        <Award className="w-6 h-6 text-primary mx-auto mb-2" />
+        <p className="text-muted-foreground text-[12px]">No new apps to review. Check back later!</p>
+      </GlassCard>
+      <InfluencerFlow />
+    </div>
   );
 
   const questionText = unansweredApps.length === 1
@@ -660,6 +667,10 @@ const DecisionFlow = () => {
           {submitting ? "Processing..." : "Submit & Earn Points"}
         </GlassButton>
       </GlassCard>
+
+      <div className="pt-2">
+        <InfluencerFlow />
+      </div>
     </div>
   );
 };
