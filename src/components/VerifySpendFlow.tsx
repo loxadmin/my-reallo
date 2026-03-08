@@ -542,7 +542,7 @@ const VerificationActivePanel = ({
       {verifiedCount > 0 && annualSpend > 0 && (
         <div className="glass rounded-xl p-4 border border-primary/15 text-center">
           <p className="text-[10px] text-muted-foreground mb-1">Estimated Annual {meta.label} Spend</p>
-          <p className="text-[16px] font-bold text-primary">₦{annualSpend.toLocaleString("en-NG")}</p>
+          <p className="text-[16px] font-bold text-primary">{formatCurrency(annualSpend)}</p>
           <p className="text-[10px] text-muted-foreground mt-1">
             {verifiedCount} verified × {isMonthlyType ? 12 : getMultiplier(verification.frequency)} multiplier
           </p>
