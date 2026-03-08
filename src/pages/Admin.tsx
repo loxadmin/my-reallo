@@ -1365,7 +1365,7 @@ const Admin = () => {
                           <input value={edited.subcategory ?? (cat.subcategory || "")} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], subcategory: e.target.value || null } }))} className={`w-32 ${inputCls}`} />
                           <input value={edited.label ?? cat.label} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], label: e.target.value } }))} className={`flex-1 ${inputCls}`} />
                           <input type="number" value={edited.max_price ?? cat.max_price} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], max_price: parseInt(e.target.value) || 0 } }))} className={`w-28 ${inputCls}`} />
-                          <button onClick={() => handleDeleteGoal(cat.id)} className="w-12 flex justify-center text-destructive/60 hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <Btn variant="destructive" onClick={() => handleDeleteGoal(cat.id)}><Trash2 className="w-3 h-3" /></Btn>
                         </div>
                       </div>
                     );
@@ -1461,7 +1461,7 @@ const Admin = () => {
                         <div className="flex items-center gap-2">
                           <StatusBadge status={app.is_active ? "active" : "rejected"} />
                           <Btn variant="outline" onClick={() => handleToggleDecisionApp(app.id, app.is_active)}>{app.is_active ? "Deactivate" : "Activate"}</Btn>
-                          <button onClick={() => handleDeleteDecisionApp(app.id)} className="text-destructive/60 hover:text-destructive p-1"><Trash2 className="w-4 h-4" /></button>
+                          <Btn variant="destructive" onClick={() => handleDeleteDecisionApp(app.id)}><Trash2 className="w-3 h-3" /></Btn>
                         </div>
                       </div>
                       {app.category === "robust" && (app.switch_to_referral_app_ids || []).length > 0 && (
@@ -1821,11 +1821,11 @@ const Admin = () => {
                         </div>
                       </div>
                       {bank?.id_document_url && (
-                        <button onClick={async () => {
+                        <Btn variant="outline" onClick={async () => {
                           const { data, error } = await supabase.storage.from("id-documents").createSignedUrl(bank.id_document_url!, 3600);
                           if (error || !data?.signedUrl) { alert("Failed to load document"); return; }
                           window.open(data.signedUrl, "_blank");
-                        }} className="text-primary hover:underline text-[10px] flex items-center gap-1 mb-2"><ExternalLink className="w-2.5 h-2.5" /> View ID Document</button>
+                        }}><ExternalLink className="w-3 h-3" /> View ID Document</Btn>
                       )}
                       {w.status === "pending_activation" && (
                         <div className="flex gap-2 mt-1">
@@ -1869,7 +1869,7 @@ const Admin = () => {
                     {infReferrals.map((r: any) => {
                       return (
                         <TableRow key={r.id}>
-                          <span className="flex-1 min-w-0 flex items-center gap-1 text-[11px]"><button onClick={() => setDrawerUserId(r.influencer_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8)}</button> → <button onClick={() => setDrawerUserId(r.referred_user_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8)}</button></span>
+                          <span className="flex-1 min-w-0 flex items-center gap-1 text-[11px]"><UserLink userId={r.influencer_id} /> → <UserLink userId={r.referred_user_id} /></span>
                           <span className="w-20 shrink-0 text-right text-[11px] text-primary font-semibold">{formatNaira(r.reward_amount)}</span>
                           <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
                         </TableRow>
@@ -1991,10 +1991,10 @@ const Admin = () => {
                             await supabase.from("influencer_challenges" as any).update({ is_active: !ch.is_active } as any).eq("id", ch.id);
                             await fetchData();
                           }}>{ch.is_active ? "Deactivate" : "Activate"}</Btn>
-                          <button onClick={async () => {
+                          <Btn variant="destructive" onClick={async () => {
                             await supabase.from("influencer_challenges" as any).delete().eq("id", ch.id);
                             toast({ title: "Challenge deleted" }); await fetchData();
-                          }} className="text-destructive/60 hover:text-destructive p-1"><Trash2 className="w-4 h-4" /></button>
+                          }}><Trash2 className="w-3 h-3" /></Btn>
                         </div>
                       </div>
                       <div className="px-5 py-3 border-b border-border/20">
