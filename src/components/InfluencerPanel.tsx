@@ -94,23 +94,29 @@ const InfluencerPanel = () => {
   const loadBanks = async () => {
     setBanksLoading(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const { data: result, error } = await supabase.functions.invoke('paystack-bank', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        body: null,
+      });
+      // The edge function uses query params, so we need a direct fetch approach
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/paystack-bank?action=list-banks`,
+        `https://mrcypdyivfprvvirnwtq.supabase.co/functions/v1/paystack-bank?action=list-banks`,
         {
           headers: {
-            "Authorization": `Bearer ${anonKey}`,
-            "apikey": anonKey,
+            "Authorization": `Bearer ${token}`,
+            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yY3lwZHlpdmZwcnZ2aXJud3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Mzk2NTUsImV4cCI6MjA4NzQxNTY1NX0.qnUvMhjs-zl4Cdd8DiIJ10Qe3Cl_uAiMGU3CksfXOkw",
           },
         }
       );
-      const result = await res.json();
-      if (result.data) {
-        setBanks(result.data.map((b: any) => ({ name: b.name, code: b.code })));
+      const data = await res.json();
+      if (data.data) {
+        setBanks(data.data.map((b: any) => ({ name: b.name, code: b.code })));
       } else {
-        console.error("Bank load response:", result);
-        toast({ title: "Error", description: result.error || "Failed to load banks" });
+        console.error("Bank load response:", data);
+        toast({ title: "Error", description: data.error || "Failed to load banks" });
       }
     } catch (err) {
       console.error("Bank load error:", err);
