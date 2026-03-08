@@ -18,8 +18,22 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    // Support both query params (GET) and body (POST)
+    let action: string | null = null;
+    let accountNumber: string | null = null;
+    let bankCode: string | null = null;
+
+    if (req.method === 'POST') {
+      const body = await req.json();
+      action = body.action;
+      accountNumber = body.account_number;
+      bankCode = body.bank_code;
+    } else {
+      const url = new URL(req.url);
+      action = url.searchParams.get('action');
+      accountNumber = url.searchParams.get('account_number');
+      bankCode = url.searchParams.get('bank_code');
+    }
 
     if (action === 'list-banks') {
       const res = await fetch('https://api.paystack.co/bank?country=nigeria&perPage=100', {
@@ -32,8 +46,6 @@ serve(async (req) => {
     }
 
     if (action === 'resolve-account') {
-      const accountNumber = url.searchParams.get('account_number');
-      const bankCode = url.searchParams.get('bank_code');
       if (!accountNumber || !bankCode) {
         return new Response(JSON.stringify({ error: 'account_number and bank_code required' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

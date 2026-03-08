@@ -94,23 +94,15 @@ const InfluencerPanel = () => {
   const loadBanks = async () => {
     setBanksLoading(true);
     try {
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-      const res = await fetch(
-        `https://mrcypdyivfprvvirnwtq.supabase.co/functions/v1/paystack-bank?action=list-banks`,
-        {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yY3lwZHlpdmZwcnZ2aXJud3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Mzk2NTUsImV4cCI6MjA4NzQxNTY1NX0.qnUvMhjs-zl4Cdd8DiIJ10Qe3Cl_uAiMGU3CksfXOkw",
-          },
-        }
-      );
-      const data = await res.json();
-      if (data.data) {
+      const { data, error } = await supabase.functions.invoke('paystack-bank', {
+        body: { action: 'list-banks' },
+      });
+      if (error) throw error;
+      if (data?.data) {
         setBanks(data.data.map((b: any) => ({ name: b.name, code: b.code })));
       } else {
         console.error("Bank load response:", data);
-        toast({ title: "Error", description: data.error || "Failed to load banks" });
+        toast({ title: "Error", description: data?.error || "Failed to load banks" });
       }
     } catch (err) {
       console.error("Bank load error:", err);
@@ -131,23 +123,15 @@ const InfluencerPanel = () => {
     try {
       const bankCode = banks.find(b => b.name === selectedBank)?.code;
       if (!bankCode) { setVerifying(false); return; }
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-      const res = await fetch(
-        `https://mrcypdyivfprvvirnwtq.supabase.co/functions/v1/paystack-bank?action=resolve-account&account_number=${encodeURIComponent(accountNumber)}&bank_code=${encodeURIComponent(bankCode)}`,
-        {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yY3lwZHlpdmZwcnZ2aXJud3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Mzk2NTUsImV4cCI6MjA4NzQxNTY1NX0.qnUvMhjs-zl4Cdd8DiIJ10Qe3Cl_uAiMGU3CksfXOkw",
-          },
-        }
-      );
-      const data = await res.json();
-      if (data.data?.account_name) {
+      const { data, error } = await supabase.functions.invoke('paystack-bank', {
+        body: { action: 'resolve-account', account_number: accountNumber, bank_code: bankCode },
+      });
+      if (error) throw error;
+      if (data?.data?.account_name) {
         setAccountName(data.data.account_name);
         toast({ title: "Account Verified", description: data.data.account_name });
       } else {
-        toast({ title: "Verification Failed", description: data.message || "Could not verify account" });
+        toast({ title: "Verification Failed", description: data?.message || "Could not verify account" });
       }
     } catch {
       toast({ title: "Error", description: "Failed to verify account" });
