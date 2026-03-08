@@ -16,13 +16,6 @@ interface Profile {
   last_active: string;
   created_at: string;
   points_balance: number;
-  influencer_status: string;
-  influencer_social_link: string | null;
-  influencer_id_url: string | null;
-  bank_name: string | null;
-  account_number: string | null;
-  account_name: string | null;
-  influencer_wallet_balance: number;
 }
 
 interface AuthContextType {
