@@ -6,6 +6,8 @@ import { Wifi, UtensilsCrossed, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 
+export type WalletType = "utility" | "food" | "transport";
+
 interface WalletCarouselProps {
   targetAmount: number;
   nairaValue: number;
@@ -14,6 +16,7 @@ interface WalletCarouselProps {
   goalLabel: string;
   onActivateWallet: (type: "food" | "transport") => void;
   onActiveWalletChange?: (isActive: boolean) => void;
+  onWalletContext?: (ctx: { walletType: WalletType; showTotal: boolean }) => void;
   children?: React.ReactNode;
 }
 
@@ -27,6 +30,7 @@ const WalletCarousel = ({
   goalLabel,
   onActivateWallet,
   onActiveWalletChange,
+  onWalletContext,
   children,
 }: WalletCarouselProps) => {
   const { profile } = useAuth();
@@ -43,14 +47,8 @@ const WalletCarousel = ({
   const foodActive = foodSpend > 0;
   const transportActive = transportSpend > 0;
 
-  // The display amount for utility card changes based on toggle
   const utilityDisplayAmount = showTotal ? totalAllSpend : utilitySpend;
   const utilityDisplayLabel = showTotal ? "Total Annual Spend" : "Annual Utility Spend";
-
-  // Capped target for display
-  const displayTarget = showTotal
-    ? Math.min(totalAllSpend, targetAmount)
-    : Math.min(utilitySpend, targetAmount);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -65,39 +63,23 @@ const WalletCarousel = ({
     return () => { emblaApi.off("select", onSelect); };
   }, [emblaApi, onSelect]);
 
-  // Report active state after wallets array is built
-  // We'll do this via an effect below after wallets are defined
-
-  const wallets = [
-    {
-      type: "utility" as const,
-      label: utilityDisplayLabel,
-      amount: utilityDisplayAmount,
-      icon: <Wifi className="w-3.5 h-3.5" />,
-      active: true,
-    },
-    {
-      type: "food" as const,
-      label: "Annual Food Spend",
-      amount: foodSpend,
-      icon: <UtensilsCrossed className="w-3.5 h-3.5" />,
-      active: foodActive,
-    },
-    {
-      type: "transport" as const,
-      label: "Annual Transport Spend",
-      amount: transportSpend,
-      icon: <Car className="w-3.5 h-3.5" />,
-      active: transportActive,
-    },
+  const wallets: { type: WalletType; label: string; amount: number; icon: React.ReactNode; active: boolean }[] = [
+    { type: "utility", label: utilityDisplayLabel, amount: utilityDisplayAmount, icon: <Wifi className="w-3.5 h-3.5" />, active: true },
+    { type: "food", label: "Annual Food Spend", amount: foodSpend, icon: <UtensilsCrossed className="w-3.5 h-3.5" />, active: foodActive },
+    { type: "transport", label: "Annual Transport Spend", amount: transportSpend, icon: <Car className="w-3.5 h-3.5" />, active: transportActive },
   ];
 
   const isCurrentActive = wallets[selectedIndex]?.active ?? true;
+  const currentWalletType = wallets[selectedIndex]?.type ?? "utility";
 
   useEffect(() => {
     setCurrentWalletActive(isCurrentActive);
     onActiveWalletChange?.(isCurrentActive);
   }, [selectedIndex, isCurrentActive, onActiveWalletChange]);
+
+  useEffect(() => {
+    onWalletContext?.({ walletType: currentWalletType, showTotal });
+  }, [currentWalletType, showTotal, onWalletContext]);
 
   return (
     <div className="relative">
@@ -106,7 +88,6 @@ const WalletCarousel = ({
           {wallets.map((wallet, idx) => (
             <div key={wallet.type} className="min-w-0 shrink-0 grow-0 basis-full">
               <div className="space-y-1.5">
-                {/* Wallet type label with icon */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
@@ -116,7 +97,6 @@ const WalletCarousel = ({
                       {wallet.label}
                     </p>
                   </div>
-                  {/* Toggle on utility card only */}
                   {idx === 0 && (
                     <div className="flex items-center gap-1.5">
                       <span className="text-[9px] text-muted-foreground">Total</span>
@@ -140,7 +120,6 @@ const WalletCarousel = ({
                       Claimable: <span className="text-primary font-semibold">{formatNaira(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
                     </p>
 
-                    {/* Goal Progress */}
                     <div className="space-y-1.5 mb-5">
                       <div className="flex justify-between items-end">
                         <p className="font-medium text-foreground text-[12px]">GOAL - {goalLabel}</p>
@@ -177,7 +156,6 @@ const WalletCarousel = ({
         </div>
       </div>
 
-      {/* Dot indicators */}
       <div className="flex justify-center gap-1.5 mt-3">
         {wallets.map((_, idx) => (
           <button
@@ -191,7 +169,6 @@ const WalletCarousel = ({
         ))}
       </div>
 
-      {/* Action buttons passed as children - only show when current wallet is active */}
       {currentWalletActive && children}
     </div>
   );
