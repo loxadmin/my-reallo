@@ -5,10 +5,17 @@ import GlassCard from "@/components/GlassCard";
 import GlassButton from "@/components/GlassButton";
 import GlassInput from "@/components/GlassInput";
 import { useAuth } from "@/contexts/AuthContext";
-import { Mail, Lock, UserPlus, LogIn, Gift } from "lucide-react";
+import { Mail, Lock, UserPlus, LogIn, Gift, Eye, EyeOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import RealloLogo from "@/components/RealloLogo";
 import WaterBackground from "@/components/WaterBackground";
+import {
+  loginSchema,
+  signupSchema,
+  sanitizeAuthError,
+  getPasswordStrength,
+  GENERIC_AUTH_ERROR,
+} from "@/lib/security";
 
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -16,8 +23,10 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -30,18 +39,53 @@ const Auth = () => {
     }
   }, [searchParams]);
 
+  const passwordStrength = mode === "signup" ? getPasswordStrength(password) : null;
+
   const handleSubmit = async () => {
     setError("");
+    setFieldErrors({});
     setLoading(true);
-    if (mode === "login") {
-      const { error } = await signIn(email, password);
-      if (error) setError(error.message);
-      else navigate("/");
-    } else {
-      const { error } = await signUp(email, password, referralCode || undefined);
-      if (error) setError(error.message);
-      else setSignupSuccess(true);
+
+    try {
+      if (mode === "login") {
+        const result = loginSchema.safeParse({ email, password });
+        if (!result.success) {
+          const errs: Record<string, string> = {};
+          result.error.errors.forEach((e) => {
+            errs[e.path[0] as string] = e.message;
+          });
+          setFieldErrors(errs);
+          setLoading(false);
+          return;
+        }
+
+        const { error } = await signIn(email, password);
+        if (error) setError(sanitizeAuthError(error));
+        else navigate("/");
+      } else {
+        const result = signupSchema.safeParse({
+          email,
+          password,
+          referralCode: referralCode || undefined,
+        });
+        if (!result.success) {
+          const errs: Record<string, string> = {};
+          result.error.errors.forEach((e) => {
+            errs[e.path[0] as string] = e.message;
+          });
+          setFieldErrors(errs);
+          setLoading(false);
+          return;
+        }
+
+        const { error } = await signUp(email, password, referralCode || undefined);
+        if (error) setError(sanitizeAuthError(error));
+        else setSignupSuccess(true);
+      }
+    } catch {
+      setError("An unexpected error occurred. Please try again.");
     }
+
     setLoading(false);
   };
 
@@ -81,7 +125,7 @@ const Auth = () => {
           <GlassCard variant="glow">
             <div className="flex gap-2 mb-6">
               <button
-                onClick={() => setMode("login")}
+                onClick={() => { setMode("login"); setError(""); setFieldErrors({}); }}
                 className={`flex-1 py-2.5 rounded-xl font-display text-[13px] font-medium transition-all duration-300 ${
                   mode === "login" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"
                 }`}
@@ -89,7 +133,7 @@ const Auth = () => {
                 <LogIn className="inline w-4 h-4 mr-1.5" /> Login
               </button>
               <button
-                onClick={() => setMode("signup")}
+                onClick={() => { setMode("signup"); setError(""); setFieldErrors({}); }}
                 className={`flex-1 py-2.5 rounded-xl font-display text-[13px] font-medium transition-all duration-300 ${
                   mode === "signup" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"
                 }`}
@@ -107,8 +151,64 @@ const Auth = () => {
                 transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
-                <GlassInput label="Email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-                <GlassInput label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <div>
+                  <GlassInput
+                    label="Email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                  />
+                  {fieldErrors.email && (
+                    <p className="text-[11px] text-destructive mt-1">{fieldErrors.email}</p>
+                  )}
+                </div>
+
+                <div>
+                  <div className="relative">
+                    <GlassInput
+                      label="Password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-[38px] text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {fieldErrors.password && (
+                    <p className="text-[11px] text-destructive mt-1">{fieldErrors.password}</p>
+                  )}
+                  {mode === "signup" && password.length > 0 && passwordStrength && (
+                    <div className="mt-2 space-y-1">
+                      <div className="flex gap-1">
+                        {[0, 1, 2, 3].map((i) => (
+                          <div
+                            key={i}
+                            className="h-1 flex-1 rounded-full transition-colors duration-300"
+                            style={{
+                              backgroundColor:
+                                i <= passwordStrength.score
+                                  ? passwordStrength.color
+                                  : "hsl(var(--muted))",
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        Strength: <span style={{ color: passwordStrength.color }}>{passwordStrength.label}</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
 
                 {mode === "signup" && (
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>

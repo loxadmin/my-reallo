@@ -1,6 +1,11 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  updateLastActivity,
+  isSessionExpiredByInactivity,
+  clearActivityTimestamp,
+} from "@/lib/security";
 
 interface Profile {
   id: string;
@@ -16,6 +21,8 @@ interface Profile {
   last_active: string;
   created_at: string;
   points_balance: number;
+  is_banned: boolean;
+  ban_reason: string | null;
 }
 
 interface AuthContextType {
@@ -64,6 +71,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const performSignOut = useCallback(async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    setIsAdmin(false);
+    clearActivityTimestamp();
+  }, []);
+
+  // ─── 48-hour inactivity auto-logout ───
+  useEffect(() => {
+    if (!user) return;
+
+    const checkInactivity = () => {
+      if (isSessionExpiredByInactivity()) {
+        performSignOut();
+      }
+    };
+
+    // Check on mount
+    checkInactivity();
+
+    // Update activity on user interactions
+    const activityEvents = ["mousedown", "keydown", "scroll", "touchstart"];
+    let throttleTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const handleActivity = () => {
+      if (throttleTimer) return;
+      throttleTimer = setTimeout(() => {
+        updateLastActivity();
+        throttleTimer = null;
+      }, 60_000); // Throttle to once per minute
+    };
+
+    activityEvents.forEach((event) =>
+      window.addEventListener(event, handleActivity, { passive: true })
+    );
+
+    // Periodic inactivity check every 5 minutes
+    const interval = setInterval(checkInactivity, 5 * 60_000);
+
+    return () => {
+      activityEvents.forEach((event) =>
+        window.removeEventListener(event, handleActivity)
+      );
+      clearInterval(interval);
+      if (throttleTimer) clearTimeout(throttleTimer);
+    };
+  }, [user, performSignOut]);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
@@ -71,6 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
+          updateLastActivity();
           setTimeout(async () => {
             await fetchProfile(session.user.id);
             await checkAdmin(session.user.id);
@@ -85,9 +143,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      // Check inactivity before restoring session
+      if (session?.user && isSessionExpiredByInactivity()) {
+        supabase.auth.signOut();
+        clearActivityTimestamp();
+        setLoading(false);
+        return;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        updateLastActivity();
         fetchProfile(session.user.id);
         checkAdmin(session.user.id);
       }
@@ -98,7 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, referralCode?: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -112,15 +179,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) {
+      updateLastActivity();
+    }
     return { error };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-    setIsAdmin(false);
+    await performSignOut();
   };
 
   return (
