@@ -16,6 +16,8 @@ import {
   getPasswordStrength,
   GENERIC_AUTH_ERROR,
 } from "@/lib/security";
+import { getDeviceFingerprint } from "@/lib/fingerprint";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -78,9 +80,41 @@ const Auth = () => {
           return;
         }
 
-        const { error } = await signUp(email, password, referralCode || undefined);
-        if (error) setError(sanitizeAuthError(error));
-        else setSignupSuccess(true);
+        // Check device/IP signup limit before proceeding
+        const deviceFp = getDeviceFingerprint();
+        try {
+          const { data: limitCheck, error: limitError } = await supabase.functions.invoke(
+            "check-signup-limit",
+            { body: { action: "check", device_fingerprint: deviceFp } }
+          );
+          if (limitError) throw limitError;
+          if (!limitCheck?.allowed) {
+            setError("Too many accounts created from this device or network. Maximum 2 accounts allowed.");
+            setLoading(false);
+            return;
+          }
+        } catch {
+          // If check fails, allow signup to proceed (fail-open for UX)
+        }
+
+        const { error: signUpError } = await signUp(email, password, referralCode || undefined);
+        if (signUpError) {
+          setError(sanitizeAuthError(signUpError));
+        } else {
+          // Register this device/IP after successful signup
+          try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            const userId = sessionData?.session?.user?.id;
+            if (userId) {
+              await supabase.functions.invoke("check-signup-limit", {
+                body: { action: "register", device_fingerprint: deviceFp, user_id: userId },
+              });
+            }
+          } catch {
+            // Non-critical, don't block signup success
+          }
+          setSignupSuccess(true);
+        }
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");
