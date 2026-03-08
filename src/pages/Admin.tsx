@@ -813,6 +813,7 @@ const Admin = () => {
   };
 
 
+  return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background relative">
         {/* Water background behind everything */}
