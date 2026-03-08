@@ -1045,6 +1045,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      request_influencer_withdrawal: {
+        Args: { p_amount: number; p_bank_account_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
