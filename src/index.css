@@ -60,13 +60,13 @@
     --input: 150 10% 12%;
     --ring: 160 45% 35%;
 
-    --sidebar-background: 160 20% 8%;
-    --sidebar-foreground: 160 10% 85%;
+    --sidebar-background: 160 25% 7%;
+    --sidebar-foreground: 160 8% 88%;
     --sidebar-primary: 160 45% 35%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 15% 14%;
-    --sidebar-accent-foreground: 160 10% 85%;
-    --sidebar-border: 160 15% 18%;
+    --sidebar-accent: 160 20% 12%;
+    --sidebar-accent-foreground: 160 8% 88%;
+    --sidebar-border: 160 18% 15%;
     --sidebar-ring: 160 45% 35%;
   }
 }
