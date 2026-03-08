@@ -241,10 +241,10 @@ const WalletCarousel = ({
                 className="relative z-10 w-[22rem] h-[22rem] sm:w-[26rem] sm:h-[26rem] rounded-full flex flex-col items-center justify-center glass-card border border-border/20 shadow-[0_8px_40px_hsl(var(--primary)/0.15)]"
               >
                 <p className="text-muted-foreground uppercase tracking-[0.15em] text-[9px] font-medium mb-2">
-                  {showTotal ? "Total Annual Spend" : "Annual Utility Spend"}
+                  {showTotal ? "Total Annual Spend" : wallets[selectedIndex]?.label ?? "Annual Utility Spend"}
                 </p>
                 <p className="font-display text-2xl font-bold gradient-text tabular-nums">
-                  {formatCurrency(showTotal ? totalAllSpend : utilitySpend)}
+                  {formatCurrency(showTotal ? totalAllSpend : (wallets[selectedIndex]?.amount ?? utilitySpend))}
                 </p>
 
                 {/* Total toggle */}
