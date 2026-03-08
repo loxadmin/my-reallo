@@ -713,6 +713,8 @@ const Admin = () => {
   const bannedCount = profiles.filter(p => p.is_banned).length;
   const activeUsers = profiles.filter(p => !p.is_banned).length;
 
+  const pendingDecisionApprovals = decisionResponses.filter(r => r.referral_screenshot_url && !r.referral_approved).length;
+
   const counts: Record<string, number> = {
     users: profiles.length,
     warnings: userWarnings.length,
@@ -720,6 +722,7 @@ const Admin = () => {
     activity: activities.length,
     goals: goalCategories.length,
     decisions: decisionApps.length,
+    dec_submissions: pendingDecisionApprovals,
     analytics: decisionResponses.length,
     verification: verificationTxs.length,
     inf_apps: pendingApps,
