@@ -283,7 +283,14 @@ Deno.serve(async (req) => {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (resendApiKey) {
       // Convert PDF to base64 for attachment
-      const pdfBase64 = btoa(String.fromCharCode(...pdfBytes));
+      // Convert in chunks to avoid stack overflow
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < pdfBytes.length; i += chunkSize) {
+        const chunk = pdfBytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode(...chunk);
+      }
+      const pdfBase64 = btoa(binary);
 
       await fetch("https://api.resend.com/emails", {
         method: "POST",
