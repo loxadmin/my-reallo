@@ -61,6 +61,13 @@ const Admin = () => {
   const [decisionApps, setDecisionApps] = useState<DecisionAppRow[]>([]);
   const [decisionResponses, setDecisionResponses] = useState<DecisionResponseRow[]>([]);
 
+  // User management state
+  const [userWarnings, setUserWarnings] = useState<UserWarning[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [warningText, setWarningText] = useState("");
+  const [banReason, setBanReason] = useState("");
+  const [editingProfile, setEditingProfile] = useState<{ email: string; points_balance: number; queue_position: number } | null>(null);
+
   // Influencer state
   const [infApps, setInfApps] = useState<any[]>([]);
   const [infWallets, setInfWallets] = useState<any[]>([]);
