@@ -40,6 +40,7 @@ const WalletCarousel = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [currentWalletActive, setCurrentWalletActive] = useState(true);
   const [showSpendPopup, setShowSpendPopup] = useState(false);
+  const [popupIndex, setPopupIndex] = useState(0);
 
   const utilitySpend = (profile?.annual_data_spend ?? 0) + (profile?.annual_electricity_spend ?? 0);
   const foodSpend = profile?.annual_food_spend ?? 0;
