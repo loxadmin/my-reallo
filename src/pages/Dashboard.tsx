@@ -150,6 +150,9 @@ const Dashboard = () => {
           >
             <item.icon className="w-4 h-4" />
             {item.label}
+            {item.id === "notifications" && unreadCount > 0 && (
+              <span className="ml-auto text-[9px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full leading-none">{unreadCount}</span>
+            )}
           </DropdownMenuItem>
         ))}
       </Navbar>
