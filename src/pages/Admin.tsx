@@ -128,6 +128,16 @@ const Admin = () => {
     setInfReferrals((irRes.data || []) as any[]);
     setInfWithdrawals((iwdRes.data || []) as any[]);
 
+    // Fetch challenge data
+    const [icRes, icsRes, iceRes] = await Promise.all([
+      supabase.from("influencer_challenges" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_challenge_submissions" as any).select("*").order("submitted_at", { ascending: false }),
+      supabase.from("influencer_challenge_enrollments" as any).select("*"),
+    ]);
+    setInfChallenges((icRes.data || []) as any[]);
+    setInfChallengeSubmissions((icsRes.data || []) as any[]);
+    setInfChallengeEnrollments((iceRes.data || []) as any[]);
+
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
     setVerifyPageActive(settings.find(s => s.key === "verify_page_active")?.value === "false" ? false : true);
