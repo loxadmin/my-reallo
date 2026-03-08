@@ -24,7 +24,7 @@ interface QueueDisplayProps {
   onViewChange?: (view: DashView) => void;
 }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
+
 
 const goalLabels: Record<string, string> = {
   education: "Education",
