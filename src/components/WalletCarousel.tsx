@@ -114,7 +114,7 @@ const WalletCarousel = ({
                   <>
                     <div className="flex items-baseline gap-3 mb-1">
                       <h2 className="font-display text-2xl font-bold gradient-text tabular-nums leading-none">
-                        {formatNaira(wallet.amount)}
+                        {formatCurrency(wallet.amount)}
                       </h2>
                     </div>
                     <p className="text-[11px] text-muted-foreground mb-4">
