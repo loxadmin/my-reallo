@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Wifi, UtensilsCrossed, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Switch } from "@/components/ui/switch";
+
 
 export type WalletType = "utility" | "food" | "transport";
 
