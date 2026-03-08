@@ -2263,6 +2263,11 @@ const Admin = () => {
               </div>
             )}
 
+            {/* ═══ ADVERTISERS ═══ */}
+            {activeTab === "advertisers" && (
+              <AdvertiserManagement onRefresh={fetchData} />
+            )}
+
           </main>
         </div>
       </div>
