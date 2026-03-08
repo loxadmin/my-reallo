@@ -62,7 +62,7 @@ const Auth = () => {
           // Non-critical
         }
       }
-      navigate("/");
+      navigate("/dashboard");
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
