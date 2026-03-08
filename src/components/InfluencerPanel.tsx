@@ -373,21 +373,13 @@ const InfluencerPanel = () => {
           </p>
 
           <div className="space-y-3">
-            {/* Bank Selection */}
-            <div>
-              <label className="text-[11px] text-muted-foreground mb-1 block">Select Bank</label>
-              <select
-                value={selectedBank}
-                onChange={e => { setSelectedBank(e.target.value); setAccountName(""); }}
-                className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px] bg-transparent"
-              >
-                <option value="" className="bg-background">Select a bank...</option>
-                {banksLoading && <option className="bg-background">Loading banks...</option>}
-                {banks.map(b => (
-                  <option key={b.code} value={b.name} className="bg-background">{b.name}</option>
-                ))}
-              </select>
-            </div>
+            {/* Bank Selection with Search */}
+            <BankSearchSelect
+              banks={banks}
+              selectedBank={selectedBank}
+              banksLoading={banksLoading}
+              onSelect={(name) => { setSelectedBank(name); setAccountName(""); }}
+            />
 
             {/* Account Number */}
             <div>
