@@ -31,6 +31,10 @@ interface DecisionResponseRow {
 interface VerificationTx {
   id: string; verification_id: string; user_id: string; transaction_id: string;
   is_verified: boolean; verified_amount: number | null; submitted_at: string;
+  is_duplicate: boolean; duplicate_note: string | null;
+}
+interface UserWarning {
+  id: string; user_id: string; reason: string; issued_by: string; created_at: string;
 }
 
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
