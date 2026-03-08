@@ -699,7 +699,7 @@ const Admin = () => {
             {/* Page title */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-bold text-foreground">{activeTab === "overview" ? "Welcome Back" : tabTitle[activeTab]}</h1>
+                <p className="text-lg font-bold text-foreground">{activeTab === "overview" ? "Welcome Back" : tabTitle[activeTab]}</p>
                 <p className="text-[12px] text-muted-foreground mt-0.5">
                   {activeTab === "overview" ? "Here's what's happening with your platform today" : `Manage ${tabTitle[activeTab].toLowerCase()}`}
                 </p>
