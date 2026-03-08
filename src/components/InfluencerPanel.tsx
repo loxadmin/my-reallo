@@ -94,16 +94,33 @@ const InfluencerPanel = () => {
   const loadBanks = async () => {
     setBanksLoading(true);
     try {
+      const { data, error } = await supabase.functions.invoke("paystack-bank", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        body: undefined,
+      });
+      // supabase.functions.invoke uses POST by default, but our edge fn reads query params
+      // Use fetch directly with proper URL
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/paystack-bank?action=list-banks`,
-        { headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` } }
+        {
+          headers: {
+            "Authorization": `Bearer ${anonKey}`,
+            "apikey": anonKey,
+          },
+        }
       );
-      const data = await res.json();
-      if (data.data) {
-        setBanks(data.data.map((b: any) => ({ name: b.name, code: b.code })));
+      const result = await res.json();
+      if (result.data) {
+        setBanks(result.data.map((b: any) => ({ name: b.name, code: b.code })));
+      } else {
+        console.error("Bank load response:", result);
+        toast({ title: "Error", description: result.error || "Failed to load banks" });
       }
-    } catch {
+    } catch (err) {
+      console.error("Bank load error:", err);
       toast({ title: "Error", description: "Failed to load banks" });
     }
     setBanksLoading(false);
