@@ -292,6 +292,9 @@ const Admin = () => {
   const [footerContactUs, setFooterContactUs] = useState("");
   const [footerAboutUs, setFooterAboutUs] = useState("");
   const [footerInvestWithUs, setFooterInvestWithUs] = useState("");
+  const [currencyRateUsd, setCurrencyRateUsd] = useState("1600");
+  const [currencyRateEur, setCurrencyRateEur] = useState("1700");
+  const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
   const [searchQuery, setSearchQuery] = useState("");
   const [newApp, setNewApp] = useState({
     app_name: "", app_logo_url: "", category: "yes_no" as string,
