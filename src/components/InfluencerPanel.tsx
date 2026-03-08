@@ -70,6 +70,9 @@ const InfluencerPanel = () => {
   const [bankAccount, setBankAccount] = useState<BankAccount | null>(null);
   const [referrals, setReferrals] = useState<InfluencerReferral[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [enrollments, setEnrollments] = useState<ChallengeEnrollment[]>([]);
+  const [submissions, setSubmissions] = useState<ChallengeSubmission[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Application form
