@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Wifi, UtensilsCrossed, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Switch } from "@/components/ui/switch";
+
 
 export type WalletType = "utility" | "food" | "transport";
 
@@ -100,11 +100,51 @@ const WalletCarousel = ({
                   {idx === 0 && (
                     <div className="flex items-center gap-1.5">
                       <span className="text-[9px] text-muted-foreground">Total</span>
-                      <Switch
-                        checked={showTotal}
-                        onCheckedChange={setShowTotal}
-                        className="h-4 w-7 data-[state=checked]:bg-primary"
-                      />
+                      <button
+                        onClick={() => setShowTotal(!showTotal)}
+                        className={cn(
+                          "relative w-8 h-[18px] rounded-full transition-all duration-300 overflow-hidden",
+                          "border border-border/40 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)]",
+                          showTotal
+                            ? "bg-primary/20 border-primary/30"
+                            : "bg-muted/50 dark:bg-muted/30"
+                        )}
+                      >
+                        {/* Liquid flow background */}
+                        <span
+                          className={cn(
+                            "absolute inset-0 rounded-full opacity-60 transition-opacity duration-300",
+                            showTotal ? "opacity-80" : "opacity-40"
+                          )}
+                          style={{
+                            background: showTotal
+                              ? "linear-gradient(135deg, hsl(160 60% 40% / 0.5), hsl(160 45% 55% / 0.3))"
+                              : "linear-gradient(135deg, hsl(160 50% 35% / 0.2), hsl(160 40% 50% / 0.1))",
+                            animation: "waterFlow 4s ease-in-out infinite",
+                          }}
+                        />
+                        {/* Thumb */}
+                        <span
+                          className={cn(
+                            "absolute top-[2px] w-[14px] h-[14px] rounded-full transition-all duration-300",
+                            "shadow-[0_1px_4px_rgba(0,0,0,0.15),inset_0_1px_2px_rgba(255,255,255,0.3)]",
+                            "overflow-hidden",
+                            showTotal ? "left-[14px]" : "left-[2px]"
+                          )}
+                          style={{
+                            background: "linear-gradient(180deg, hsl(160 50% 45% / 0.9), hsl(160 60% 30% / 0.8))",
+                            boxShadow: "0 1px 4px hsl(160 50% 25% / 0.3), inset 0 1px 2px hsl(160 40% 60% / 0.4), inset 0 -1px 2px hsl(160 60% 15% / 0.3)",
+                          }}
+                        >
+                          {/* Liquid shimmer inside thumb */}
+                          <span
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                              background: "radial-gradient(circle at 40% 35%, hsl(160 50% 70% / 0.5) 0%, transparent 60%)",
+                            }}
+                          />
+                        </span>
+                      </button>
                     </div>
                   )}
                 </div>
