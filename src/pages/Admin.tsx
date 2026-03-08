@@ -311,6 +311,14 @@ const Admin = () => {
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
   const [searchQuery, setSearchQuery] = useState("");
+  const [adminCurrency, setAdminCurrency] = useState<AdminCurrency>("NGN");
+  const adminRates: Record<AdminCurrency, number> = useMemo(() => ({
+    NGN: 1,
+    USD: Number(currencyRateUsd) || ADMIN_CURRENCY_DEFAULTS.USD,
+    EUR: Number(currencyRateEur) || ADMIN_CURRENCY_DEFAULTS.EUR,
+    GBP: Number(currencyRateGbp) || ADMIN_CURRENCY_DEFAULTS.GBP,
+  }), [currencyRateUsd, currencyRateEur, currencyRateGbp]);
+  const { fmt: formatNaira, fmtCompact: formatNairaCompact } = useMemo(() => makeAdminFormat(adminCurrency, adminRates), [adminCurrency, adminRates]);
   const [newApp, setNewApp] = useState({
     app_name: "", app_logo_url: "", category: "yes_no" as string,
     points_select: 500, points_switch_intent: 2000, points_switch_complete: 10000,
