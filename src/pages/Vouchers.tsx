@@ -20,7 +20,7 @@ interface Voucher {
   created_at: string;
 }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
+
 
 const Vouchers = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
