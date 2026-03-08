@@ -34,6 +34,7 @@ interface SpendResult {
 
 const Dashboard = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const { view: urlView } = useParams<{ view?: string }>();
   const [step, setStep] = useState<DashStep>("calculator");
