@@ -38,10 +38,16 @@ const VerifySpendFlow = () => {
   const { user, profile, refreshProfile } = useAuth();
   const [dataVerification, setDataVerification] = useState<Verification | null>(null);
   const [elecVerification, setElecVerification] = useState<Verification | null>(null);
+  const [foodVerification, setFoodVerification] = useState<Verification | null>(null);
+  const [transportVerification, setTransportVerification] = useState<Verification | null>(null);
   const [dataTxs, setDataTxs] = useState<Transaction[]>([]);
   const [elecTxs, setElecTxs] = useState<Transaction[]>([]);
+  const [foodTxs, setFoodTxs] = useState<Transaction[]>([]);
+  const [transportTxs, setTransportTxs] = useState<Transaction[]>([]);
   const [dataTxInputs, setDataTxInputs] = useState<string[]>([]);
   const [elecTxInputs, setElecTxInputs] = useState<string[]>([]);
+  const [foodTxInputs, setFoodTxInputs] = useState<string[]>([]);
+  const [transportTxInputs, setTransportTxInputs] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">("daily");
   const [verifySettings, setVerifySettings] = useState({ link: "", description: "" });
@@ -49,52 +55,64 @@ const VerifySpendFlow = () => {
   const [activeTab, setActiveTab] = useState<SpendType>("data");
   const [editingTxId, setEditingTxId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [verifyToggles, setVerifyToggles] = useState({ data: true, electricity: true, food: true, transport: true });
 
   useEffect(() => {
     if (user) fetchData();
   }, [user]);
 
+  const fetchVerificationAndTxs = async (userId: string, spendType: string) => {
+    const { data: vData } = await supabase.from("spend_verifications").select("*").eq("user_id", userId).eq("spend_type", spendType).order("created_at", { ascending: false }).limit(1);
+    const v = (vData || [])[0] as Verification | undefined;
+    let txs: Transaction[] = [];
+    let inputs: string[] = [];
+    if (v) {
+      const { data: txData } = await supabase.from("verification_transactions").select("*").eq("verification_id", v.id).order("submitted_at", { ascending: true });
+      txs = (txData || []) as Transaction[];
+      const maxBoxes = spendType === "electricity" ? 1 : getMaxBoxes(v.frequency);
+      inputs = Array.from({ length: maxBoxes }, (_, i) => txs[i]?.transaction_id || "");
+    } else if (spendType === "electricity" || spendType === "food" || spendType === "transport") {
+      inputs = [""];
+    }
+    return { verification: v || null, txs, inputs };
+  };
+
   const fetchData = async () => {
     if (!user) return;
-    const [dataRes, elecRes, settingsRes] = await Promise.all([
-      supabase.from("spend_verifications").select("*").eq("user_id", user.id).eq("spend_type", "data").order("created_at", { ascending: false }).limit(1),
-      supabase.from("spend_verifications").select("*").eq("user_id", user.id).eq("spend_type", "electricity").order("created_at", { ascending: false }).limit(1),
+    const [dataResult, elecResult, foodResult, transportResult, settingsRes] = await Promise.all([
+      fetchVerificationAndTxs(user.id, "data"),
+      fetchVerificationAndTxs(user.id, "electricity"),
+      fetchVerificationAndTxs(user.id, "food"),
+      fetchVerificationAndTxs(user.id, "transport"),
       supabase.from("admin_settings").select("*"),
     ]);
 
-    const dv = (dataRes.data || [])[0] as Verification | undefined;
-    const ev = (elecRes.data || [])[0] as Verification | undefined;
+    setDataVerification(dataResult.verification);
+    setDataTxs(dataResult.txs);
+    setDataTxInputs(dataResult.inputs);
 
-    if (dv) {
-      setDataVerification(dv);
-      const { data: txs } = await supabase.from("verification_transactions").select("*").eq("verification_id", dv.id).order("submitted_at", { ascending: true });
-      const txList = (txs || []) as Transaction[];
-      setDataTxs(txList);
-      const maxBoxes = getMaxBoxes(dv.frequency);
-      const filled = txList.map(t => t.transaction_id);
-      setDataTxInputs(Array.from({ length: maxBoxes }, (_, i) => filled[i] || ""));
-    } else {
-      setDataVerification(null);
-      setDataTxs([]);
-      setDataTxInputs([]);
-    }
+    setElecVerification(elecResult.verification);
+    setElecTxs(elecResult.txs);
+    setElecTxInputs(elecResult.inputs);
 
-    if (ev) {
-      setElecVerification(ev);
-      const { data: txs } = await supabase.from("verification_transactions").select("*").eq("verification_id", ev.id).order("submitted_at", { ascending: true });
-      const txList = (txs || []) as Transaction[];
-      setElecTxs(txList);
-      setElecTxInputs(Array.from({ length: 1 }, (_, i) => txList[i]?.transaction_id || ""));
-    } else {
-      setElecVerification(null);
-      setElecTxs([]);
-      setElecTxInputs([""]);
-    }
+    setFoodVerification(foodResult.verification);
+    setFoodTxs(foodResult.txs);
+    setFoodTxInputs(foodResult.inputs);
+
+    setTransportVerification(transportResult.verification);
+    setTransportTxs(transportResult.txs);
+    setTransportTxInputs(transportResult.inputs);
 
     const settings = (settingsRes.data || []) as { key: string; value: string }[];
     setVerifySettings({
       link: settings.find(s => s.key === "verify_spend_link")?.value || "",
       description: settings.find(s => s.key === "verify_spend_description")?.value || "Verify your spend by completing the action at the link below.",
+    });
+    setVerifyToggles({
+      data: settings.find(s => s.key === "verify_data_active")?.value !== "false",
+      electricity: settings.find(s => s.key === "verify_electricity_active")?.value !== "false",
+      food: settings.find(s => s.key === "verify_food_active")?.value !== "false",
+      transport: settings.find(s => s.key === "verify_transport_active")?.value !== "false",
     });
   };
 
