@@ -55,6 +55,13 @@ const Admin = () => {
   const [decisionApps, setDecisionApps] = useState<DecisionAppRow[]>([]);
   const [decisionResponses, setDecisionResponses] = useState<DecisionResponseRow[]>([]);
 
+  // Influencer state
+  const [infApps, setInfApps] = useState<any[]>([]);
+  const [infWallets, setInfWallets] = useState<any[]>([]);
+  const [infBankAccounts, setInfBankAccounts] = useState<any[]>([]);
+  const [infReferrals, setInfReferrals] = useState<any[]>([]);
+  const [infWithdrawals, setInfWithdrawals] = useState<any[]>([]);
+
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [verifyPageActive, setVerifyPageActive] = useState(true);
   const [postQueueReferralPoints, setPostQueueReferralPoints] = useState("1000");
