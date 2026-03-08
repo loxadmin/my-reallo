@@ -105,15 +105,9 @@ Deno.serve(async (req) => {
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h1 style="color: #16a34a; font-size: 24px; margin: 0;">Reallo</h1>
-        </div>
         <div style="background: #f8f9fa; border-radius: 12px; padding: 24px;">
           <h2 style="color: #1a1a1a; font-size: 18px; margin-top: 0;">${subject}</h2>
           <p style="color: #555; font-size: 14px; line-height: 1.6;">${body}</p>
-        </div>
-        <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-          <p>This is an automated notification from Reallo. Do not reply to this email.</p>
         </div>
       </div>
     `;
