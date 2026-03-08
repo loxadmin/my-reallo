@@ -723,6 +723,7 @@ const Admin = () => {
     inf_referrals: infReferrals.length,
     inf_withdrawals: pendingWithdrawals,
     inf_challenges: infChallenges.length,
+    inf_submissions: infChallengeSubmissions.filter((s: any) => s.status === "pending_review").length,
   };
 
   const inputCls = "w-full rounded-lg border border-border/60 bg-background/50 backdrop-blur-sm px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all";
