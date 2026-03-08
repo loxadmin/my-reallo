@@ -505,7 +505,9 @@ const InfluencerPanel = () => {
     const influencerLink = profile?.referral_code
       ? `${window.location.origin}/auth?ref=${profile.referral_code}`
       : "";
-    const totalEarned = referrals.reduce((s, r) => s + r.reward_amount, 0);
+    const referralEarnings = referrals.reduce((s, r) => s + r.reward_amount, 0);
+    const challengeEarnings = enrollments.reduce((s, e) => s + (e.approved_earnings || 0), 0);
+    const totalEarned = referralEarnings + challengeEarnings;
 
     return (
       <div className="space-y-4">
