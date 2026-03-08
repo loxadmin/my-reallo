@@ -28,13 +28,13 @@
     --ring: 160 60% 18%;
     --radius: 1rem;
 
-    --sidebar-background: 160 30% 95%;
-    --sidebar-foreground: 160 40% 15%;
+    --sidebar-background: 160 25% 96%;
+    --sidebar-foreground: 160 30% 12%;
     --sidebar-primary: 160 60% 18%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 25% 90%;
-    --sidebar-accent-foreground: 160 40% 15%;
-    --sidebar-border: 160 20% 85%;
+    --sidebar-accent: 160 20% 91%;
+    --sidebar-accent-foreground: 160 30% 12%;
+    --sidebar-border: 160 15% 88%;
     --sidebar-ring: 160 60% 18%;
   }
 
@@ -60,13 +60,13 @@
     --input: 150 10% 12%;
     --ring: 160 45% 35%;
 
-    --sidebar-background: 160 20% 8%;
-    --sidebar-foreground: 160 10% 85%;
+    --sidebar-background: 160 25% 7%;
+    --sidebar-foreground: 160 8% 88%;
     --sidebar-primary: 160 45% 35%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 15% 14%;
-    --sidebar-accent-foreground: 160 10% 85%;
-    --sidebar-border: 160 15% 18%;
+    --sidebar-accent: 160 20% 12%;
+    --sidebar-accent-foreground: 160 8% 88%;
+    --sidebar-border: 160 18% 15%;
     --sidebar-ring: 160 45% 35%;
   }
 }
@@ -85,6 +85,10 @@
   h2 { font-size: 40px; @apply font-bold tracking-tight; }
   h3 { font-size: 22px; @apply font-bold tracking-tight; }
   button, input, select, textarea { font-size: 13px !important; }
+
+  /* Hide scrollbar on sidebar */
+  [data-sidebar="content"]::-webkit-scrollbar { display: none; }
+  [data-sidebar="content"] { scrollbar-width: none; -ms-overflow-style: none; }
 }
 
 @layer components {

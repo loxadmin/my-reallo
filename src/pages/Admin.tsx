@@ -92,23 +92,23 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
   const collapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-primary/20" style={{ background: 'hsla(160, 45%, 25%, 0.12)', backdropFilter: 'blur(20px)' } as React.CSSProperties}>
-      <SidebarHeader className="px-4 py-5 border-b border-border/30">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Shield className="w-4 h-4 text-primary-foreground" />
+    <Sidebar collapsible="icon" className="border-r-0">
+      <SidebarHeader className="px-5 py-6 border-b border-sidebar-border/40">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+            <Shield className="w-4.5 h-4.5 text-primary-foreground" />
           </div>
-          {!collapsed && <span className="text-[13px] font-bold text-sidebar-foreground tracking-tight">Reallo Admin</span>}
+          {!collapsed && <span className="text-[14px] font-bold text-sidebar-foreground tracking-tight">Reallo Admin</span>}
         </div>
       </SidebarHeader>
-      <SidebarContent className="px-3 py-3">
+      <SidebarContent className="px-4 py-4 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {navGroups.map((group) => (
-          <SidebarGroup key={group.label} className="mb-1">
-            <SidebarGroupLabel className="text-[9px] uppercase tracking-[0.15em] text-sidebar-foreground/40 font-semibold mb-1 px-2">
+          <SidebarGroup key={group.label} className="mb-3">
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.18em] text-sidebar-foreground/40 font-semibold mb-2 px-3">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-0.5">
                 {group.items.map((item) => {
                   const count = counts[item.id];
                   const isActive = activeTab === item.id;
@@ -118,17 +118,17 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
                         isActive={isActive}
                         onClick={() => setActiveTab(item.id)}
                         tooltip={item.label}
-                        className={`rounded-lg transition-all duration-200 ${isActive
-                          ? "bg-primary text-primary-foreground font-medium shadow-sm"
-                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                        className={`rounded-xl h-10 px-3 transition-all duration-200 border ${isActive
+                          ? "bg-primary text-primary-foreground font-semibold shadow-md border-primary/30"
+                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 border-transparent"
                         }`}
                       >
-                        <item.icon className="w-4 h-4 shrink-0" />
+                        <item.icon className="w-[18px] h-[18px] shrink-0" />
                         {!collapsed && (
-                          <div className="flex items-center justify-between w-full">
-                            <span className="text-[12px]">{item.label}</span>
+                          <div className="flex items-center justify-between w-full min-w-0">
+                            <span className="text-[13px] truncate">{item.label}</span>
                             {count !== undefined && count > 0 && (
-                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary"}`}>
+                              <span className={`text-[10px] min-w-[22px] text-center px-1.5 py-0.5 rounded-md font-bold shrink-0 ml-2 ${isActive ? "bg-primary-foreground/25 text-primary-foreground" : "bg-primary/15 text-primary"}`}>
                                 {count > 99 ? "99+" : count}
                               </span>
                             )}
@@ -143,16 +143,16 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter className="px-3 py-3 border-t border-border/30">
+      <SidebarFooter className="px-4 py-4 border-t border-sidebar-border/40">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={onLogout}
               tooltip="Logout"
-              className="text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10 rounded-lg"
+              className="rounded-xl h-10 px-3 text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10 border border-transparent transition-all"
             >
-              <LogOut className="w-4 h-4 shrink-0" />
-              {!collapsed && <span className="text-[12px]">Logout</span>}
+              <LogOut className="w-[18px] h-[18px] shrink-0" />
+              {!collapsed && <span className="text-[13px]">Logout</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -165,13 +165,13 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
 const MetricCard = ({ label, value, icon: Icon, trend, trendLabel }: {
   label: string; value: string | number; icon: any; trend?: "up" | "down" | "neutral"; trendLabel?: string;
 }) => (
-  <div className="rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm p-5 space-y-3 hover:shadow-md transition-shadow">
-    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
-    <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
+  <div className="rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-5 space-y-2.5 hover:shadow-md transition-shadow overflow-hidden">
+    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider truncate">{label}</p>
+    <p className="text-xl font-bold text-foreground leading-none truncate">{value}</p>
     {trend && trendLabel && (
       <div className="flex items-center gap-1.5">
-        {trend === "up" ? <TrendingUp className="w-3 h-3 text-primary" /> : trend === "down" ? <TrendingDown className="w-3 h-3 text-destructive" /> : null}
-        <span className={`text-[10px] font-medium ${trend === "up" ? "text-primary" : trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>{trendLabel}</span>
+        {trend === "up" ? <TrendingUp className="w-3 h-3 text-primary shrink-0" /> : trend === "down" ? <TrendingDown className="w-3 h-3 text-destructive shrink-0" /> : null}
+        <span className={`text-[10px] font-medium truncate ${trend === "up" ? "text-primary" : trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>{trendLabel}</span>
       </div>
     )}
   </div>
@@ -181,8 +181,8 @@ const MetricCard = ({ label, value, icon: Icon, trend, trendLabel }: {
 const SectionHeader = ({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) => (
   <div className="flex items-center justify-between mb-5">
     <div>
-      <h2 className="text-lg font-bold text-foreground">{title}</h2>
-      {subtitle && <p className="text-[12px] text-muted-foreground mt-0.5">{subtitle}</p>}
+      <p className="text-[15px] font-bold text-foreground">{title}</p>
+      {subtitle && <p className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</p>}
     </div>
     {action}
   </div>
@@ -219,21 +219,21 @@ const Btn = ({ children, variant = "default", ...props }: React.ButtonHTMLAttrib
 
 // ── Table wrapper ──
 const TableCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <div className={`rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm overflow-hidden ${className || ""}`}>
+  <div className={`rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden ${className || ""}`}>
     {children}
   </div>
 );
 
 const TableHeader = ({ children }: { children: React.ReactNode }) => (
-  <div className="px-5 py-3.5 border-b border-border/40 bg-muted/30 overflow-x-auto">
-    <div className="flex items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider gap-4 min-w-[600px]">
+  <div className="px-5 py-3 border-b border-border/30 bg-muted/20">
+    <div className="flex items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider gap-3">
       {children}
     </div>
   </div>
 );
 
 const TableRow = ({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) => (
-  <div onClick={onClick} className={`px-5 py-3 border-b border-border/20 last:border-0 flex items-center gap-4 hover:bg-muted/20 transition-colors min-w-[600px] ${onClick ? "cursor-pointer" : ""} ${className || ""}`}>
+  <div onClick={onClick} className={`px-5 py-3 border-b border-border/15 last:border-0 flex items-center gap-3 hover:bg-muted/15 transition-colors ${onClick ? "cursor-pointer" : ""} ${className || ""}`}>
     {children}
   </div>
 );
@@ -779,17 +779,17 @@ const Admin = () => {
                     <Btn variant="outline" onClick={() => setActiveTab("activity")}>View All</Btn>
                   </div>
                   <TableHeader>
-                    <span className="flex-1">User</span>
-                    <span className="w-32">Action</span>
-                    <span className="w-24 text-right">Positions</span>
-                    <span className="w-28 text-right">Date</span>
+                    <span className="flex-1 min-w-0">User</span>
+                    <span className="w-24 shrink-0">Action</span>
+                    <span className="w-20 shrink-0 text-right">Positions</span>
+                    <span className="w-24 shrink-0 text-right">Date</span>
                   </TableHeader>
                   {activities.slice(0, 6).map((a) => (
                     <TableRow key={a.id}>
-                      <span className="flex-1 text-[12px] text-muted-foreground font-mono">{a.user_id.slice(0, 12)}...</span>
-                      <span className="w-32 text-[12px] text-foreground capitalize">{a.action_type}</span>
-                      <span className="w-24 text-right text-[12px] font-semibold text-primary">+{a.positions_moved}</span>
-                      <span className="w-28 text-right text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
+                      <span className="flex-1 min-w-0 text-[11px] text-muted-foreground font-mono truncate">{a.user_id.slice(0, 12)}...</span>
+                      <span className="w-24 shrink-0 text-[11px] text-foreground capitalize truncate">{a.action_type}</span>
+                      <span className="w-20 shrink-0 text-right text-[11px] font-semibold text-primary">+{a.positions_moved}</span>
+                      <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
                     </TableRow>
                   ))}
                   {activities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No activity yet</div>}
@@ -803,17 +803,17 @@ const Admin = () => {
                 <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
                   <h3 className="text-[13px] font-semibold text-foreground">Registered Users ({filteredProfiles.length})</h3>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <TableHeader>
-                  <span className="flex-1 min-w-[160px]">User</span>
-                  <span className="w-24">Spend</span>
-                  <span className="w-16">Queue</span>
-                  <span className="w-16">Points</span>
-                  <span className="w-14">Refs</span>
-                  <span className="w-20">Status</span>
-                  <span className="w-10"></span>
+                  <span className="flex-1 min-w-0">User</span>
+                  <span className="w-20 shrink-0">Spend</span>
+                  <span className="w-14 shrink-0">Queue</span>
+                  <span className="w-16 shrink-0">Points</span>
+                  <span className="w-10 shrink-0">Refs</span>
+                  <span className="w-16 shrink-0">Status</span>
+                  <span className="w-8 shrink-0"></span>
                 </TableHeader>
-                <div className="max-h-[600px] overflow-y-auto">
+                <div className="max-h-[600px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                   {filteredProfiles.map((p) => {
                     const isSelected = selectedUserId === p.id;
                     const pWarnings = userWarnings.filter(w => w.user_id === p.id);
@@ -821,27 +821,27 @@ const Admin = () => {
                     return (
                       <div key={p.id}>
                         <TableRow onClick={() => { setSelectedUserId(isSelected ? null : p.id); setEditingProfile(null); }}>
-                          <div className="flex-1 min-w-[160px] overflow-hidden">
-                            <p className="text-[12px] font-medium text-foreground truncate">{p.email}</p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">Joined {new Date(p.created_at).toLocaleDateString()}</p>
+                          <div className="flex-1 min-w-0 overflow-hidden">
+                            <p className="text-[11px] font-medium text-foreground truncate">{p.email}</p>
+                            <p className="text-[9px] text-muted-foreground mt-0.5">Joined {new Date(p.created_at).toLocaleDateString()}</p>
                           </div>
-                          <span className="w-24 text-[11px] text-foreground truncate">{formatNaira(p.total_annual_spend || 0)}</span>
-                          <span className="w-16 text-[11px] text-muted-foreground">#{p.queue_position}</span>
-                          <span className="w-16 text-[11px] text-foreground">{p.points_balance.toLocaleString()}</span>
-                          <span className="w-14 text-[11px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
-                          <span className="w-20">
-                            {p.is_banned ? <StatusBadge status="BANNED" /> : pDuplicates.length > 0 ? <span className="text-[9px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full border border-destructive/20">{pDuplicates.length} dup</span> : <StatusBadge status="active" />}
+                          <span className="w-20 shrink-0 text-[11px] text-foreground truncate">{formatNaira(p.total_annual_spend || 0)}</span>
+                          <span className="w-14 shrink-0 text-[11px] text-muted-foreground">#{p.queue_position}</span>
+                          <span className="w-16 shrink-0 text-[11px] text-foreground truncate">{p.points_balance.toLocaleString()}</span>
+                          <span className="w-10 shrink-0 text-[11px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
+                          <span className="w-16 shrink-0">
+                            {p.is_banned ? <StatusBadge status="BANNED" /> : pDuplicates.length > 0 ? <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full border border-destructive/20">{pDuplicates.length} dup</span> : <StatusBadge status="active" />}
                           </span>
-                          <span className="w-10 flex justify-end">
-                            {isSelected ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                          <span className="w-8 shrink-0 flex justify-end">
+                            {isSelected ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
                           </span>
                         </TableRow>
 
                         {isSelected && (
-                          <div className="px-5 py-4 bg-muted/10 border-b border-border/20 space-y-3">
-                            <div className="grid grid-cols-4 gap-3 text-[10px] text-muted-foreground">
-                              <span>ID: {p.id.slice(0, 16)}...</span>
-                              <span>Goal: {p.selected_goal || 'None'}</span>
+                          <div className="px-5 py-4 bg-muted/10 border-b border-border/20 space-y-3 overflow-hidden">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-[10px] text-muted-foreground">
+                              <span className="truncate">ID: {p.id.slice(0, 16)}...</span>
+                              <span className="truncate">Goal: {p.selected_goal || 'None'}</span>
                               <span>Warnings: {pWarnings.length}</span>
                               <span>Duplicates: {pDuplicates.length}</span>
                             </div>
@@ -1162,26 +1162,26 @@ const Admin = () => {
                     <h3 className="text-[13px] font-semibold text-foreground">User Transactions</h3>
                   </div>
                   <TableHeader>
-                    <span className="flex-1">User</span>
-                    <span className="flex-1">Transaction ID</span>
-                    <span className="w-24 text-right">Status</span>
+                    <span className="flex-1 min-w-0">User</span>
+                    <span className="flex-1 min-w-0">Transaction ID</span>
+                    <span className="w-24 shrink-0 text-right">Status</span>
                   </TableHeader>
-                  <div className="max-h-[500px] overflow-y-auto">
+                  <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                     {verificationTxs.map(tx => {
                       const userEmail = profiles.find(p => p.id === tx.user_id)?.email || tx.user_id.slice(0, 8);
                       return (
                         <TableRow key={tx.id} className={tx.is_duplicate ? "bg-destructive/5" : ""}>
-                          <span className="flex-1 text-[12px] text-muted-foreground">{userEmail}</span>
-                          <div className="flex-1">
-                            <p className="text-[12px] font-mono text-foreground">{tx.transaction_id}</p>
-                            {tx.is_duplicate && <p className="text-[9px] text-destructive">{tx.duplicate_note || 'Duplicate'}</p>}
+                          <span className="flex-1 min-w-0 text-[11px] text-muted-foreground truncate">{userEmail}</span>
+                          <div className="flex-1 min-w-0 overflow-hidden">
+                            <p className="text-[11px] font-mono text-foreground truncate">{tx.transaction_id}</p>
+                            {tx.is_duplicate && <p className="text-[9px] text-destructive truncate">{tx.duplicate_note || 'Duplicate'}</p>}
                           </div>
-                          <span className="w-24 flex justify-end">
+                          <span className="w-24 shrink-0 flex justify-end">
                             {tx.is_duplicate ? (
-                              <span className="flex items-center gap-1 text-destructive text-[10px]"><AlertTriangle className="w-3 h-3" /> Duplicate</span>
+                              <span className="flex items-center gap-1 text-destructive text-[10px]"><AlertTriangle className="w-3 h-3 shrink-0" /> Dup</span>
                             ) : tx.is_verified ? (
-                              <span className="flex items-center gap-1 text-primary text-[11px]"><CheckCircle2 className="w-3 h-3" /> ₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
-                            ) : <span className="text-[11px] text-muted-foreground">Pending</span>}
+                              <span className="flex items-center gap-1 text-primary text-[10px]"><CheckCircle2 className="w-3 h-3 shrink-0" /> ₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
+                            ) : <span className="text-[10px] text-muted-foreground">Pending</span>}
                           </span>
                         </TableRow>
                       );
@@ -1385,19 +1385,19 @@ const Admin = () => {
                     <h3 className="text-[13px] font-semibold text-foreground">Referral History</h3>
                   </div>
                   <TableHeader>
-                    <span className="flex-1">Influencer → Referred</span>
-                    <span className="w-24 text-right">Reward</span>
-                    <span className="w-28 text-right">Date</span>
+                    <span className="flex-1 min-w-0">Influencer → Referred</span>
+                    <span className="w-20 shrink-0 text-right">Reward</span>
+                    <span className="w-24 shrink-0 text-right">Date</span>
                   </TableHeader>
-                  <div className="max-h-[500px] overflow-y-auto">
+                  <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                     {infReferrals.map((r: any) => {
                       const infEmail = profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8);
                       const refEmail = profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8);
                       return (
                         <TableRow key={r.id}>
-                          <span className="flex-1 text-[12px] text-foreground">{infEmail} → {refEmail}</span>
-                          <span className="w-24 text-right text-[12px] text-primary font-semibold">{formatNaira(r.reward_amount)}</span>
-                          <span className="w-28 text-right text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                          <span className="flex-1 min-w-0 text-[11px] text-foreground truncate">{infEmail} → {refEmail}</span>
+                          <span className="w-20 shrink-0 text-right text-[11px] text-primary font-semibold">{formatNaira(r.reward_amount)}</span>
+                          <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
                         </TableRow>
                       );
                     })}
