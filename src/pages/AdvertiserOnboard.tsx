@@ -78,8 +78,12 @@ const AdvertiserOnboard = () => {
   };
 
   const handleSendVerification = async () => {
-    if (!emailMatchesWebsite()) {
+    if (brandedEmailRequired && !emailMatchesWebsite()) {
       toast({ title: "Email must match website domain", description: `Use an email @${getDomain(websiteUrl)}` });
+      return;
+    }
+    if (!email) {
+      toast({ title: "Please enter an email address" });
       return;
     }
     setVerifying(true);
