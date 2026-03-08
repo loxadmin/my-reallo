@@ -1447,12 +1447,10 @@ const Admin = () => {
                         <div className="p-4 space-y-2">
                           <p className="text-[11px] text-primary font-semibold mb-2">Pending Approvals ({pendingApprovals.length})</p>
                           {pendingApprovals.map(pr => {
-                            const userEmail = profiles.find(p => p.id === pr.user_id)?.email || pr.user_id.slice(0, 8);
-                            const screenshotUrl = getPublicScreenshotUrl(pr.referral_screenshot_url);
                             return (
                               <div key={pr.id} className="flex items-center justify-between rounded-lg border border-border/40 p-3">
                                 <div>
-                                  <span className="text-[11px] text-foreground">{userEmail}</span>
+                                  <UserLink userId={pr.user_id} />
                                   {screenshotUrl && pr.referral_screenshot_url !== "pending_review" && (
                                     <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5"><ExternalLink className="w-2.5 h-2.5" /> Screenshot</a>
                                   )}
