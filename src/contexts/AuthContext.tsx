@@ -122,6 +122,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, performSignOut]);
 
   useEffect(() => {
+    let initialSessionHandled = false;
+
+    // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
@@ -129,24 +132,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (session?.user) {
           updateLastActivity();
+          // Use setTimeout to avoid Supabase deadlock
           setTimeout(async () => {
             await fetchProfile(session.user.id);
             await checkAdmin(session.user.id);
-            setLoading(false);
+            if (initialSessionHandled) {
+              // Only set loading false here for subsequent auth changes (sign in/out)
+              setLoading(false);
+            }
           }, 0);
         } else {
           setProfile(null);
           setIsAdmin(false);
-          setLoading(false);
+          if (initialSessionHandled) {
+            setLoading(false);
+          }
         }
       }
     );
 
+    // Then get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       // Check inactivity before restoring session
       if (session?.user && isSessionExpiredByInactivity()) {
         supabase.auth.signOut();
         clearActivityTimestamp();
+        initialSessionHandled = true;
         setLoading(false);
         return;
       }
@@ -158,6 +169,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await fetchProfile(session.user.id);
         await checkAdmin(session.user.id);
       }
+      initialSessionHandled = true;
       setLoading(false);
     });
 
