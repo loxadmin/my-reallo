@@ -77,7 +77,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         supabase.from("waitlist_activity").select("positions_moved").eq("user_id", profile.id).gte("created_at", new Date().toISOString().split("T")[0]),
         supabase.from("admin_settings").select("value").eq("key", "verify_expense_link").single(),
         supabase.from("vouchers").select("amount_naira").eq("user_id", user.id),
-        supabase.from("spend_verifications").select("status").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+        supabase.from("spend_verifications").select("status, spend_type").eq("user_id", user.id),
         supabase.from("admin_settings").select("value").eq("key", "verify_page_active").single(),
         supabase.from("referrals").select("referred_user_id, created_at, profiles!referrals_referred_user_id_fkey(email)").eq("referrer_id", profile.id).order("created_at", { ascending: false }),
       ]);
