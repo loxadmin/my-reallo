@@ -1656,12 +1656,11 @@ const Admin = () => {
                     <h3 className="text-[13px] font-semibold text-foreground">Applications</h3>
                   </div>
                   {infApps.map((app: any) => {
-                    const userEmail = profiles.find(p => p.id === app.user_id)?.email || app.user_id?.slice(0, 8);
                     return (
                       <div key={app.id} className="px-5 py-4 border-b border-border/20 last:border-0">
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                            <UserLink userId={app.user_id} />
                             <a href={app.social_link} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline flex items-center gap-1"><ExternalLink className="w-2.5 h-2.5" /> {app.social_link}</a>
                           </div>
                           <StatusBadge status={app.status} />
