@@ -14,6 +14,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "@/hooks/use-toast";
 import { sendNotification } from "@/lib/notifications";
 import WaterBackground from "@/components/WaterBackground";
+import UserProfileDrawer from "@/components/UserProfileDrawer";
 import {
   SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
   SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton,
@@ -313,6 +314,7 @@ const Admin = () => {
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
   const [searchQuery, setSearchQuery] = useState("");
+  const [drawerUserId, setDrawerUserId] = useState<string | null>(null);
   const [adminCurrency, setAdminCurrency] = useState<AdminCurrency>("NGN");
   const [chartView, setChartView] = useState<"bar" | "line" | "area" | "pie">("bar");
   const adminRates: Record<AdminCurrency, number> = useMemo(() => ({
@@ -858,6 +860,15 @@ const Admin = () => {
     }
   };
 
+  // Clickable user email that opens profile drawer
+  const UserLink = ({ userId }: { userId: string }) => {
+    const email = profiles.find(p => p.id === userId)?.email || userId?.slice(0, 8);
+    return (
+      <button onClick={() => setDrawerUserId(userId)} className="text-[12px] font-semibold text-primary hover:underline cursor-pointer text-left truncate">
+        {email}
+      </button>
+    );
+  };
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -1436,12 +1447,11 @@ const Admin = () => {
                         <div className="p-4 space-y-2">
                           <p className="text-[11px] text-primary font-semibold mb-2">Pending Approvals ({pendingApprovals.length})</p>
                           {pendingApprovals.map(pr => {
-                            const userEmail = profiles.find(p => p.id === pr.user_id)?.email || pr.user_id.slice(0, 8);
                             const screenshotUrl = getPublicScreenshotUrl(pr.referral_screenshot_url);
                             return (
                               <div key={pr.id} className="flex items-center justify-between rounded-lg border border-border/40 p-3">
                                 <div>
-                                  <span className="text-[11px] text-foreground">{userEmail}</span>
+                                  <UserLink userId={pr.user_id} />
                                   {screenshotUrl && pr.referral_screenshot_url !== "pending_review" && (
                                     <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5"><ExternalLink className="w-2.5 h-2.5" /> Screenshot</a>
                                   )}
@@ -1525,10 +1535,9 @@ const Admin = () => {
                   </TableHeader>
                   <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                     {verificationTxs.map(tx => {
-                      const userEmail = profiles.find(p => p.id === tx.user_id)?.email || tx.user_id.slice(0, 8);
                       return (
                         <TableRow key={tx.id} className={tx.is_duplicate ? "bg-destructive/5" : ""}>
-                          <span className="flex-1 min-w-0 text-[11px] text-muted-foreground truncate">{userEmail}</span>
+                          <span className="flex-1 min-w-0"><UserLink userId={tx.user_id} /></span>
                           <div className="flex-1 min-w-0 overflow-hidden">
                             <p className="text-[11px] font-mono text-foreground truncate">{tx.transaction_id}</p>
                             {tx.is_duplicate && <p className="text-[9px] text-destructive truncate">{tx.duplicate_note || 'Duplicate'}</p>}
@@ -1645,12 +1654,11 @@ const Admin = () => {
                     <h3 className="text-[13px] font-semibold text-foreground">Applications</h3>
                   </div>
                   {infApps.map((app: any) => {
-                    const userEmail = profiles.find(p => p.id === app.user_id)?.email || app.user_id?.slice(0, 8);
                     return (
                       <div key={app.id} className="px-5 py-4 border-b border-border/20 last:border-0">
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                            <UserLink userId={app.user_id} />
                             <a href={app.social_link} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline flex items-center gap-1"><ExternalLink className="w-2.5 h-2.5" /> {app.social_link}</a>
                           </div>
                           <StatusBadge status={app.status} />
@@ -1687,13 +1695,12 @@ const Admin = () => {
                   <h3 className="text-[13px] font-semibold text-foreground">Influencer Wallet Activations</h3>
                 </div>
                 {infWallets.map((w: any) => {
-                  const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id?.slice(0, 8);
                   const bank = infBankAccounts.find((b: any) => b.user_id === w.user_id);
                   return (
                     <div key={w.id} className="px-5 py-4 border-b border-border/20 last:border-0">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                          <UserLink userId={w.user_id} />
                           {bank && <p className="text-[10px] text-muted-foreground">{bank.bank_name} · {bank.account_number} · {bank.account_name}</p>}
                         </div>
                         <div className="flex items-center gap-2">
@@ -1748,11 +1755,9 @@ const Admin = () => {
                   </TableHeader>
                   <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                     {infReferrals.map((r: any) => {
-                      const infEmail = profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8);
-                      const refEmail = profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8);
                       return (
                         <TableRow key={r.id}>
-                          <span className="flex-1 min-w-0 text-[11px] text-foreground truncate">{infEmail} → {refEmail}</span>
+                          <span className="flex-1 min-w-0 flex items-center gap-1 text-[11px]"><button onClick={() => setDrawerUserId(r.influencer_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8)}</button> → <button onClick={() => setDrawerUserId(r.referred_user_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8)}</button></span>
                           <span className="w-20 shrink-0 text-right text-[11px] text-primary font-semibold">{formatNaira(r.reward_amount)}</span>
                           <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
                         </TableRow>
@@ -1771,13 +1776,12 @@ const Admin = () => {
                   <h3 className="text-[13px] font-semibold text-foreground">Influencer Withdrawals</h3>
                 </div>
                 {infWithdrawals.map((w: any) => {
-                  const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id?.slice(0, 8);
                   const bank = infBankAccounts.find((b: any) => b.id === w.bank_account_id);
                   return (
                     <div key={w.id} className="px-5 py-4 border-b border-border/20 last:border-0">
                       <div className="flex items-center justify-between mb-1">
                         <div>
-                          <p className="text-[12px] font-semibold text-foreground">{userEmail}</p>
+                          <UserLink userId={w.user_id} />
                           {bank && <p className="text-[10px] text-muted-foreground">{bank.bank_name} · {bank.account_number} · {bank.account_name}</p>}
                         </div>
                         <div className="flex items-center gap-3">
@@ -1978,10 +1982,8 @@ const Admin = () => {
                       </TableHeader>
                       <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                         {pending.map((sub: any) => {
-                          const userEmail = profiles.find(p => p.id === sub.user_id)?.email || sub.user_id?.slice(0, 8);
                           const challenge = infChallenges.find((c: any) => c.id === sub.challenge_id);
                           const enrollment = infChallengeEnrollments.find((e: any) => e.user_id === sub.user_id && e.challenge_id === sub.challenge_id);
-                          // Count prior rejections for same user + challenge + video_number
                           const priorRejections = infChallengeSubmissions.filter((s: any) =>
                             s.user_id === sub.user_id && s.challenge_id === sub.challenge_id &&
                             s.video_number === sub.video_number && (s.status === "rejected" || s.status === "closed") && s.id !== sub.id
@@ -1989,7 +1991,7 @@ const Admin = () => {
 
                           return (
                             <TableRow key={sub.id}>
-                              <span className="flex-1 text-[11px] font-medium text-foreground truncate">{userEmail}</span>
+                              <span className="flex-1 truncate"><UserLink userId={sub.user_id} /></span>
                               <span className="flex-1 text-[11px] text-muted-foreground truncate">{challenge?.title || "Unknown"}</span>
                               <span className="w-20 text-center text-[11px] text-foreground">#{sub.video_number}{challenge ? ` / ${challenge.total_videos}` : ""}</span>
                               <span className="w-20 text-center">
@@ -2060,11 +2062,10 @@ const Admin = () => {
                   <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                     {infChallengeSubmissions.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No submissions yet</div>}
                     {[...infChallengeSubmissions].sort((a: any, b: any) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()).map((sub: any) => {
-                      const userEmail = profiles.find(p => p.id === sub.user_id)?.email || sub.user_id?.slice(0, 8);
                       const challenge = infChallenges.find((c: any) => c.id === sub.challenge_id);
                       return (
                         <TableRow key={sub.id}>
-                          <span className="flex-1 text-[11px] font-medium text-foreground truncate">{userEmail}</span>
+                          <span className="flex-1 truncate"><UserLink userId={sub.user_id} /></span>
                           <span className="flex-1 text-[11px] text-muted-foreground truncate">{challenge?.title || "Unknown"}</span>
                           <span className="w-20 text-center text-[11px]">#{sub.video_number}</span>
                           <span className="w-24 text-center"><StatusBadge status={sub.status} /></span>
@@ -2144,6 +2145,27 @@ const Admin = () => {
           </main>
         </div>
       </div>
+      {/* User Profile Drawer */}
+      {(() => {
+        const drawerProfile = drawerUserId ? profiles.find(p => p.id === drawerUserId) : null;
+        const dp = drawerProfile as any;
+        return (
+          <UserProfileDrawer
+            open={!!drawerUserId}
+            onClose={() => setDrawerUserId(null)}
+            profile={dp ? { ...dp, total_annual_spend: dp.total_annual_spend || 0 } : null}
+            referralCount={drawerUserId ? (referralCounts[drawerUserId] || 0) : 0}
+            infApp={drawerUserId ? infApps.find((a: any) => a.user_id === drawerUserId) : undefined}
+            infWallet={drawerUserId ? infWallets.find((w: any) => w.user_id === drawerUserId) : undefined}
+            bankAccount={drawerUserId ? infBankAccounts.find((b: any) => b.user_id === drawerUserId) : undefined}
+            withdrawals={drawerUserId ? infWithdrawals.filter((w: any) => w.user_id === drawerUserId) : undefined}
+            challengeSubmissions={drawerUserId ? infChallengeSubmissions.filter((s: any) => s.user_id === drawerUserId) : undefined}
+            verificationTxs={drawerUserId ? verificationTxs.filter((t: any) => t.user_id === drawerUserId) : undefined}
+            decisionResponses={drawerUserId ? decisionResponses.filter((r: any) => r.user_id === drawerUserId) : undefined}
+            formatNaira={formatNaira}
+          />
+        );
+      })()}
     </SidebarProvider>
   );
 };
