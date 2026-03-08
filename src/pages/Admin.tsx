@@ -2062,11 +2062,10 @@ const Admin = () => {
                   <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                     {infChallengeSubmissions.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No submissions yet</div>}
                     {[...infChallengeSubmissions].sort((a: any, b: any) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()).map((sub: any) => {
-                      const userEmail = profiles.find(p => p.id === sub.user_id)?.email || sub.user_id?.slice(0, 8);
                       const challenge = infChallenges.find((c: any) => c.id === sub.challenge_id);
                       return (
                         <TableRow key={sub.id}>
-                          <span className="flex-1 text-[11px] font-medium text-foreground truncate">{userEmail}</span>
+                          <span className="flex-1 truncate"><UserLink userId={sub.user_id} /></span>
                           <span className="flex-1 text-[11px] text-muted-foreground truncate">{challenge?.title || "Unknown"}</span>
                           <span className="w-20 text-center text-[11px]">#{sub.video_number}</span>
                           <span className="w-24 text-center"><StatusBadge status={sub.status} /></span>
