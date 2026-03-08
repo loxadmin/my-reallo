@@ -1821,11 +1821,11 @@ const Admin = () => {
                         </div>
                       </div>
                       {bank?.id_document_url && (
-                        <button onClick={async () => {
+                        <Btn variant="outline" onClick={async () => {
                           const { data, error } = await supabase.storage.from("id-documents").createSignedUrl(bank.id_document_url!, 3600);
                           if (error || !data?.signedUrl) { alert("Failed to load document"); return; }
                           window.open(data.signedUrl, "_blank");
-                        }} className="text-primary hover:underline text-[10px] flex items-center gap-1 mb-2"><ExternalLink className="w-2.5 h-2.5" /> View ID Document</button>
+                        }}><ExternalLink className="w-3 h-3" /> View ID Document</Btn>
                       )}
                       {w.status === "pending_activation" && (
                         <div className="flex gap-2 mt-1">
