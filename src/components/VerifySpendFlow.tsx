@@ -149,9 +149,12 @@ const VerifySpendFlow = () => {
   };
 
   const handleSubmitTx = async (index: number, type: SpendType) => {
-    const inputs = type === "data" ? dataTxInputs : elecTxInputs;
-    const transactions = type === "data" ? dataTxs : elecTxs;
-    const verification = type === "data" ? dataVerification : elecVerification;
+    const inputsMap: Record<SpendType, string[]> = { data: dataTxInputs, electricity: elecTxInputs, food: foodTxInputs, transport: transportTxInputs };
+    const txsMap: Record<SpendType, Transaction[]> = { data: dataTxs, electricity: elecTxs, food: foodTxs, transport: transportTxs };
+    const vMap: Record<SpendType, Verification | null> = { data: dataVerification, electricity: elecVerification, food: foodVerification, transport: transportVerification };
+    const inputs = inputsMap[type];
+    const transactions = txsMap[type];
+    const verification = vMap[type];
     const txId = inputs[index]?.trim();
     if (!txId || !verification || !user) return;
 
