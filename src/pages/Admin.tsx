@@ -458,12 +458,41 @@ const Admin = () => {
               duplicateCount++;
             }
             const { data: allTxs } = await supabase.from("verification_transactions").select("is_verified, verified_amount").eq("verification_id", firstMatch.verification_id);
-            const { data: verif } = await supabase.from("spend_verifications").select("frequency").eq("id", firstMatch.verification_id).single();
+            const { data: verif } = await supabase.from("spend_verifications").select("frequency, spend_type").eq("id", firstMatch.verification_id).single();
             if (allTxs && verif) {
               const verifiedTxs = allTxs.filter(t => t.is_verified);
               const totalAmount = verifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
               const freq = (verif as any).frequency;
-              const updateProfileSpend = async (userId: string, annualSpend: number, markVerified = false) => {
+              const spendType = (verif as any).spend_type || "data";
+
+              const recalcForVerification = async (verId: string, userId: string) => {
+                const multiplier = freq === "daily" ? 12 : freq === "weekly" ? 13 : 12;
+                const thisAnnual = freq === "monthly"
+                  ? Math.round(Number(verifiedTxs[0]?.verified_amount || 0) * 12)
+                  : Math.round(totalAmount * multiplier);
+                await supabase.from("spend_verifications").update({
+                  recalculated_amount: thisAnnual,
+                  ...(freq === "monthly" ? { status: "verified" } : {})
+                }).eq("id", verId);
+                if (freq !== "monthly") {
+                  const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", verId).single();
+                  if (vData && new Date() >= new Date((vData as any).ends_at)) {
+                    await supabase.from("spend_verifications").update({ status: "verified" }).eq("id", verId);
+                  }
+                }
+
+                // Now recalculate total: data + electricity
+                const { data: allVerifs } = await supabase.from("spend_verifications")
+                  .select("spend_type, recalculated_amount, status")
+                  .eq("user_id", userId);
+                const verifList = (allVerifs || []) as { spend_type: string; recalculated_amount: number | null; status: string }[];
+                const dataV = verifList.find(v => v.spend_type === "data");
+                const elecV = verifList.find(v => v.spend_type === "electricity");
+                const dataAmt = dataV?.recalculated_amount || 0;
+                const elecAmt = elecV?.recalculated_amount || 0;
+                const totalAnnual = dataAmt + elecAmt;
+                const bothVerified = dataV?.status === "verified" && elecV?.status === "verified";
+
                 const { data: userProfile } = await supabase.from("profiles").select("selected_goal").eq("id", userId).single();
                 let newTarget: number | undefined;
                 if (userProfile?.selected_goal) {
@@ -473,29 +502,15 @@ const Admin = () => {
                   if (goalSub) query = query.eq("subcategory", goalSub);
                   else query = query.is("subcategory", null);
                   const { data: goalCat } = await query.limit(1).maybeSingle();
-                  if (goalCat) { newTarget = Math.min(annualSpend, (goalCat as any).max_price); }
+                  if (goalCat) { newTarget = Math.min(totalAnnual, (goalCat as any).max_price); }
                 }
-                const updateData: Record<string, any> = { total_annual_spend: annualSpend };
-                if (markVerified) updateData.spend_verified = true;
+                const updateData: Record<string, any> = { total_annual_spend: totalAnnual };
+                if (bothVerified) updateData.spend_verified = true;
                 if (newTarget !== undefined) updateData.target_amount = newTarget;
                 await supabase.from("profiles").update(updateData).eq("id", userId);
               };
-              const multiplier = freq === "daily" ? 12 : freq === "weekly" ? 13 : 12;
-              const annualSpend = freq === "monthly"
-                ? Math.round(Number(verifiedTxs[0]?.verified_amount || 0) * 12)
-                : Math.round(totalAmount * multiplier);
-              await supabase.from("spend_verifications").update({
-                recalculated_amount: annualSpend,
-                ...(freq === "monthly" ? { status: "verified" } : {})
-              }).eq("id", firstMatch.verification_id);
-              await updateProfileSpend(firstMatch.user_id, annualSpend, freq === "monthly");
-              if (freq !== "monthly") {
-                const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", firstMatch.verification_id).single();
-                if (vData && new Date() >= new Date((vData as any).ends_at)) {
-                  await supabase.from("spend_verifications").update({ status: "verified" }).eq("id", firstMatch.verification_id);
-                  await updateProfileSpend(firstMatch.user_id, annualSpend, true);
-                }
-              }
+
+              await recalcForVerification(firstMatch.verification_id, firstMatch.user_id);
             }
           }
         }
