@@ -738,7 +738,81 @@ const Admin = () => {
     inf_withdrawals: "Influencer Withdrawals", inf_challenges: "Influencer Challenges", warnings: "Warnings",
   };
 
-  return (
+  const downloadFinancialStatement = (format: "csv" | "pdf") => {
+    const sym = ADMIN_CURRENCY_SYMBOLS[adminCurrency];
+    const rate = adminRates[adminCurrency];
+    const cv = (n: number) => adminCurrency === "NGN" ? n : n / rate;
+    const fmtVal = (n: number) => cv(n).toFixed(2);
+    const today = new Date().toISOString().split("T")[0];
+
+    const verifiedTxs = verificationTxs.filter(t => t.is_verified);
+    const totalVerified = verifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
+    const totalInfluencerPayouts = infWithdrawals.filter((w: any) => w.status === "approved").reduce((s: number, w: any) => s + (w.amount || 0), 0);
+    const totalVoucherValue = 0; // placeholder if vouchers data available
+
+    const lines = [
+      ["Reallo Financial Statement"],
+      [`Generated: ${today}`, `Currency: ${adminCurrency}`],
+      [],
+      ["PLATFORM OVERVIEW"],
+      ["Metric", "Value"],
+      ["Total Users", String(profiles.length)],
+      ["Active Users", String(activeUsers)],
+      ["Banned Users", String(bannedCount)],
+      [],
+      ["REVENUE"],
+      ["Metric", `Amount (${sym})`],
+      ["Total Annual Spend (all users)", `${sym}${fmtVal(totalSpend)}`],
+      ["Processed Revenue (verified txns)", `${sym}${fmtVal(totalRevenue)}`],
+      ["Verified Transactions Count", String(verifiedTxs.length)],
+      [],
+      ["POINTS ECONOMY"],
+      ["Metric", "Value"],
+      ["Total Points in Circulation", String(totalPoints)],
+      [`Points Value (${sym})`, `${sym}${fmtVal(totalPoints * 0.5)}`],
+      [],
+      ["INFLUENCER PAYOUTS"],
+      ["Metric", `Amount (${sym})`],
+      ["Total Influencer Referral Earnings", `${sym}${fmtVal(infReferrals.reduce((s: number, r: any) => s + (r.reward_amount || 0), 0))}`],
+      ["Total Approved Withdrawals", `${sym}${fmtVal(totalInfluencerPayouts)}`],
+      ["Pending Withdrawals", String(pendingWithdrawals)],
+      [],
+      ["VERIFIED TRANSACTIONS"],
+      ["Transaction ID", `Amount (${sym})`, "Date", "User ID"],
+      ...verifiedTxs.slice(0, 500).map(t => [
+        t.transaction_id,
+        `${sym}${fmtVal(Number(t.verified_amount || 0))}`,
+        new Date(t.submitted_at).toLocaleDateString(),
+        t.user_id.slice(0, 8),
+      ]),
+    ];
+
+    if (format === "csv") {
+      const csv = lines.map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `reallo-financial-statement-${today}.csv`; a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "CSV Downloaded", description: "Financial statement exported successfully." });
+    } else {
+      // Generate a printable HTML and open as PDF
+      const htmlRows = lines.map(row => {
+        if (row.length === 0) return "<tr><td>&nbsp;</td></tr>";
+        if (row.length === 1) return `<tr><td colspan="4" style="font-size:16px;font-weight:bold;padding:12px 0 4px;">${row[0]}</td></tr>`;
+        const isHeader = ["Metric", "Transaction ID"].includes(row[0]);
+        const tag = isHeader ? "th" : "td";
+        return `<tr>${row.map(c => `<${tag} style="padding:4px 12px 4px 0;text-align:left;${isHeader ? "font-weight:600;border-bottom:1px solid #ccc;" : ""}">${c}</${tag}>`)
+          .join("")}</tr>`;
+      }).join("\n");
+      const html = `<!DOCTYPE html><html><head><title>Reallo Financial Statement</title><style>body{font-family:system-ui,sans-serif;padding:40px;color:#1a1a1a}table{border-collapse:collapse;width:100%}th,td{font-size:12px}</style></head><body><table>${htmlRows}</table></body></html>`;
+      const w = window.open("", "_blank");
+      if (w) { w.document.write(html); w.document.close(); w.print(); }
+      toast({ title: "PDF Ready", description: "Print dialog opened. Save as PDF." });
+    }
+  };
+
+
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background relative">
         {/* Water background behind everything */}
