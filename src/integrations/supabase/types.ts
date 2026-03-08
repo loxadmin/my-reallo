@@ -270,6 +270,144 @@ export type Database = {
           },
         ]
       }
+      influencer_challenge_enrollments: {
+        Row: {
+          approved_earnings: number
+          challenge_id: string
+          completed: boolean
+          enrolled_at: string
+          id: string
+          pending_earnings: number
+          user_id: string
+        }
+        Insert: {
+          approved_earnings?: number
+          challenge_id: string
+          completed?: boolean
+          enrolled_at?: string
+          id?: string
+          pending_earnings?: number
+          user_id: string
+        }
+        Update: {
+          approved_earnings?: number
+          challenge_id?: string
+          completed?: boolean
+          enrolled_at?: string
+          id?: string
+          pending_earnings?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_challenge_enrollments_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "influencer_challenge_enrollments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      influencer_challenge_submissions: {
+        Row: {
+          admin_notes: string | null
+          challenge_id: string
+          id: string
+          reviewed_at: string | null
+          status: string
+          submitted_at: string
+          user_id: string
+          video_number: number
+          video_url: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          challenge_id: string
+          id?: string
+          reviewed_at?: string | null
+          status?: string
+          submitted_at?: string
+          user_id: string
+          video_number?: number
+          video_url: string
+        }
+        Update: {
+          admin_notes?: string | null
+          challenge_id?: string
+          id?: string
+          reviewed_at?: string | null
+          status?: string
+          submitted_at?: string
+          user_id?: string
+          video_number?: number
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_challenge_submissions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "influencer_challenge_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      influencer_challenges: {
+        Row: {
+          challenge_type: string
+          created_at: string
+          description: string
+          hashtag: string
+          id: string
+          instructions: string
+          is_active: boolean
+          posting_interval_days: number
+          reward_per_video: number
+          title: string
+          total_videos: number
+        }
+        Insert: {
+          challenge_type?: string
+          created_at?: string
+          description?: string
+          hashtag?: string
+          id?: string
+          instructions?: string
+          is_active?: boolean
+          posting_interval_days?: number
+          reward_per_video?: number
+          title: string
+          total_videos?: number
+        }
+        Update: {
+          challenge_type?: string
+          created_at?: string
+          description?: string
+          hashtag?: string
+          id?: string
+          instructions?: string
+          is_active?: boolean
+          posting_interval_days?: number
+          reward_per_video?: number
+          title?: string
+          total_videos?: number
+        }
+        Relationships: []
+      }
       influencer_referrals: {
         Row: {
           created_at: string
