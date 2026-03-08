@@ -103,6 +103,12 @@ const navGroups = [
     ],
   },
   {
+    label: "ADVERTISERS",
+    items: [
+      { id: "advertisers" as AdminTab, label: "Advertisers", icon: Building },
+    ],
+  },
+  {
     label: "ACCOUNT",
     items: [
       { id: "settings" as AdminTab, label: "Settings", icon: Link },
