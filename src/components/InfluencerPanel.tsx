@@ -18,6 +18,48 @@ interface Withdrawal { id: string; amount: number; status: string; created_at: s
 
 const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
 
+const BankSearchSelect = ({
+  banks, selectedBank, banksLoading, onSelect,
+}: {
+  banks: Bank[]; selectedBank: string; banksLoading: boolean; onSelect: (name: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const filtered = banks.filter(b => b.name.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div>
+      <label className="text-[11px] text-muted-foreground mb-1 block">Select Bank</label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button type="button" className="w-full glass-input rounded-xl px-4 py-3 text-[13px] flex items-center justify-between text-left">
+            <span className={selectedBank ? "text-foreground" : "text-muted-foreground"}>
+              {banksLoading ? "Loading banks..." : selectedBank || "Select a bank..."}
+            </span>
+            <ChevronsUpDown className="h-4 w-4 text-muted-foreground shrink-0" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+          <div className="flex items-center border-b border-border px-3">
+            <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search banks..." className="flex-1 bg-transparent py-2.5 px-2 text-[13px] outline-none placeholder:text-muted-foreground" />
+          </div>
+          <div className="max-h-60 overflow-y-auto p-1">
+            {filtered.length === 0 && <p className="text-[12px] text-muted-foreground text-center py-4">No bank found.</p>}
+            {filtered.map(b => (
+              <button key={b.code} type="button" onClick={() => { onSelect(b.name); setOpen(false); setSearch(""); }}
+                className={cn("w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] text-left transition-colors", selectedBank === b.name ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-foreground")}>
+                {selectedBank === b.name && <Check className="h-3.5 w-3.5 shrink-0" />}
+                <span className={selectedBank !== b.name ? "pl-[22px]" : ""}>{b.name}</span>
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
+
 const InfluencerPanel = () => {
   const { user, profile } = useAuth();
   const [application, setApplication] = useState<InfluencerApp | null>(null);
