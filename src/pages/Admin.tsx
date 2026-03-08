@@ -48,13 +48,28 @@ interface UserWarning {
   id: string; user_id: string; reason: string; issued_by: string; created_at: string;
 }
 
-const formatNaira = (n: number) => "₦" + n.toLocaleString("en-NG");
+type AdminCurrency = "NGN" | "USD" | "EUR" | "GBP";
+const ADMIN_CURRENCY_SYMBOLS: Record<AdminCurrency, string> = { NGN: "₦", USD: "$", EUR: "€", GBP: "£" };
+const ADMIN_CURRENCY_DEFAULTS: Record<AdminCurrency, number> = { NGN: 1, USD: 1600, EUR: 1700, GBP: 2000 };
+
 const formatCompact = (n: number): string => {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1) + "K";
-  return String(n);
+  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
+  if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1) + "K";
+  return String(Math.round(n));
 };
-const formatNairaCompact = (n: number): string => "₦" + formatCompact(n);
+
+const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, number>) => {
+  const sym = ADMIN_CURRENCY_SYMBOLS[currency];
+  const rate = rates[currency];
+  const convert = (naira: number) => currency === "NGN" ? naira : naira / rate;
+  const fmt = (naira: number) => {
+    const v = convert(naira);
+    if (currency === "NGN") return sym + v.toLocaleString("en-NG");
+    return sym + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  const fmtCompact = (naira: number) => sym + formatCompact(convert(naira));
+  return { fmt, fmtCompact };
+};
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
@@ -296,6 +311,14 @@ const Admin = () => {
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
   const [searchQuery, setSearchQuery] = useState("");
+  const [adminCurrency, setAdminCurrency] = useState<AdminCurrency>("NGN");
+  const adminRates: Record<AdminCurrency, number> = useMemo(() => ({
+    NGN: 1,
+    USD: Number(currencyRateUsd) || ADMIN_CURRENCY_DEFAULTS.USD,
+    EUR: Number(currencyRateEur) || ADMIN_CURRENCY_DEFAULTS.EUR,
+    GBP: Number(currencyRateGbp) || ADMIN_CURRENCY_DEFAULTS.GBP,
+  }), [currencyRateUsd, currencyRateEur, currencyRateGbp]);
+  const { fmt: formatNaira, fmtCompact: formatNairaCompact } = useMemo(() => makeAdminFormat(adminCurrency, adminRates), [adminCurrency, adminRates]);
   const [newApp, setNewApp] = useState({
     app_name: "", app_logo_url: "", category: "yes_no" as string,
     points_select: 500, points_switch_intent: 2000, points_switch_complete: 10000,
@@ -741,6 +764,15 @@ const Admin = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <select
+                value={adminCurrency}
+                onChange={e => setAdminCurrency(e.target.value as AdminCurrency)}
+                className="rounded-lg border border-border/40 bg-muted/30 text-[11px] text-foreground px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-pointer"
+              >
+                {(["NGN", "USD", "EUR", "GBP"] as AdminCurrency[]).map(c => (
+                  <option key={c} value={c}>{ADMIN_CURRENCY_SYMBOLS[c]} {c}</option>
+                ))}
+              </select>
               <ThemeToggle />
               <Btn variant="outline" onClick={fetchData} disabled={refreshing}>
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
