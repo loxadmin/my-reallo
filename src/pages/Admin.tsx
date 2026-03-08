@@ -1492,6 +1492,94 @@ const Admin = () => {
               </div>
             )}
 
+            {/* ═══ DECISION SUBMISSIONS ═══ */}
+            {activeTab === "dec_submissions" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-4">
+                  <MetricCard label="Total Submissions" value={decisionResponses.length} icon={FileSpreadsheet} trend="up" trendLabel="All responses" />
+                  <MetricCard label="Pending Approval" value={decisionResponses.filter(r => r.referral_screenshot_url && !r.referral_approved).length} icon={Eye} trend={decisionResponses.filter(r => r.referral_screenshot_url && !r.referral_approved).length > 0 ? "down" : "neutral"} trendLabel="Needs review" />
+                  <MetricCard label="Approved" value={decisionResponses.filter(r => r.referral_approved).length} icon={Check} trend="up" trendLabel="Completed" />
+                </div>
+
+                {decisionApps.map(app => {
+                  const appResponses = decisionResponses.filter(r => r.app_id === app.id);
+                  if (appResponses.length === 0) return null;
+                  const pending = appResponses.filter(r => r.referral_screenshot_url && !r.referral_approved);
+                  const approved = appResponses.filter(r => r.referral_approved);
+                  return (
+                    <TableCard key={app.id}>
+                      <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {app.app_logo_url ? (
+                            <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary">{app.app_name.charAt(0)}</div>
+                          )}
+                          <div>
+                            <h4 className="font-semibold text-foreground text-[13px]">{app.app_name}</h4>
+                            <p className="text-[10px] text-muted-foreground capitalize">{app.category === "yes_no" ? "Yes/No" : app.category === "referral" ? "Referral" : "Robust"} · {appResponses.length} responses · {pending.length} pending · {approved.length} approved</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Pending approvals first */}
+                      {pending.length > 0 && (
+                        <div className="p-4 space-y-2 border-b border-border/20">
+                          <p className="text-[11px] text-primary font-semibold mb-2">⏳ Pending Approvals ({pending.length})</p>
+                          {pending.map(pr => {
+                            const screenshotUrl = getPublicScreenshotUrl(pr.referral_screenshot_url);
+                            return (
+                              <div key={pr.id} className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3">
+                                <div className="flex-1 min-w-0">
+                                  <UserLink userId={pr.user_id} />
+                                  <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
+                                    <span>{new Date(pr.created_at).toLocaleDateString()}</span>
+                                    <span>Has app: {pr.has_app ? "Yes" : "No"}</span>
+                                    {pr.would_switch !== null && <span>Would switch: {pr.would_switch ? "Yes" : "No"}</span>}
+                                    <span>Points: {pr.points_awarded}</span>
+                                  </div>
+                                  {screenshotUrl && pr.referral_screenshot_url !== "pending_review" && (
+                                    <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-1"><ExternalLink className="w-2.5 h-2.5" /> View Screenshot</a>
+                                  )}
+                                </div>
+                                <Btn variant="primary" onClick={() => handleApproveReferral(pr.id, pr.app_id, pr.user_id)}><Check className="w-3 h-3" /> Approve</Btn>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* All responses */}
+                      <div className="p-4">
+                        <p className="text-[11px] text-muted-foreground font-semibold mb-2">All Responses ({appResponses.length})</p>
+                        <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
+                          {appResponses.map(r => (
+                            <div key={r.id} className="flex items-center justify-between rounded-lg border border-border/30 p-3 hover:bg-muted/15 transition-colors">
+                              <div className="flex-1 min-w-0">
+                                <UserLink userId={r.user_id} />
+                                <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground flex-wrap">
+                                  <span>{new Date(r.created_at).toLocaleDateString()}</span>
+                                  <span>Has app: {r.has_app ? "✓" : "✗"}</span>
+                                  {r.would_switch !== null && <span>Switch: {r.would_switch ? "✓" : "✗"}</span>}
+                                  <span>Completed: {r.switch_completed ? "✓" : "✗"}</span>
+                                  <span>Pts: {r.points_awarded}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {r.referral_approved && <StatusBadge status="approved" />}
+                                {r.referral_screenshot_url && !r.referral_approved && <StatusBadge status="pending_review" />}
+                                {!r.referral_screenshot_url && !r.referral_approved && r.referral_clicked && <StatusBadge status="pending" />}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </TableCard>
+                  );
+                })}
+              </div>
+            )}
+
             {/* ═══ ANALYTICS ═══ */}
             {activeTab === "analytics" && (
               <div className="space-y-6">
