@@ -38,10 +38,16 @@ const VerifySpendFlow = () => {
   const { user, profile, refreshProfile } = useAuth();
   const [dataVerification, setDataVerification] = useState<Verification | null>(null);
   const [elecVerification, setElecVerification] = useState<Verification | null>(null);
+  const [foodVerification, setFoodVerification] = useState<Verification | null>(null);
+  const [transportVerification, setTransportVerification] = useState<Verification | null>(null);
   const [dataTxs, setDataTxs] = useState<Transaction[]>([]);
   const [elecTxs, setElecTxs] = useState<Transaction[]>([]);
+  const [foodTxs, setFoodTxs] = useState<Transaction[]>([]);
+  const [transportTxs, setTransportTxs] = useState<Transaction[]>([]);
   const [dataTxInputs, setDataTxInputs] = useState<string[]>([]);
   const [elecTxInputs, setElecTxInputs] = useState<string[]>([]);
+  const [foodTxInputs, setFoodTxInputs] = useState<string[]>([]);
+  const [transportTxInputs, setTransportTxInputs] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">("daily");
   const [verifySettings, setVerifySettings] = useState({ link: "", description: "" });
@@ -49,6 +55,8 @@ const VerifySpendFlow = () => {
   const [activeTab, setActiveTab] = useState<SpendType>("data");
   const [editingTxId, setEditingTxId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [verifyFoodActive, setVerifyFoodActive] = useState(false);
+  const [verifyTransportActive, setVerifyTransportActive] = useState(false);
 
   useEffect(() => {
     if (user) fetchData();
