@@ -860,6 +860,15 @@ const Admin = () => {
     }
   };
 
+  // Clickable user email that opens profile drawer
+  const UserLink = ({ userId }: { userId: string }) => {
+    const email = profiles.find(p => p.id === userId)?.email || userId?.slice(0, 8);
+    return (
+      <button onClick={() => setDrawerUserId(userId)} className="text-[12px] font-semibold text-primary hover:underline cursor-pointer text-left truncate">
+        {email}
+      </button>
+    );
+  };
 
   return (
     <SidebarProvider defaultOpen={true}>
