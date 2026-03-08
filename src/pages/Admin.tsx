@@ -1365,7 +1365,7 @@ const Admin = () => {
                           <input value={edited.subcategory ?? (cat.subcategory || "")} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], subcategory: e.target.value || null } }))} className={`w-32 ${inputCls}`} />
                           <input value={edited.label ?? cat.label} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], label: e.target.value } }))} className={`flex-1 ${inputCls}`} />
                           <input type="number" value={edited.max_price ?? cat.max_price} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], max_price: parseInt(e.target.value) || 0 } }))} className={`w-28 ${inputCls}`} />
-                          <button onClick={() => handleDeleteGoal(cat.id)} className="w-12 flex justify-center text-destructive/60 hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <Btn variant="destructive" onClick={() => handleDeleteGoal(cat.id)}><Trash2 className="w-3 h-3" /></Btn>
                         </div>
                       </div>
                     );
