@@ -183,16 +183,6 @@ const WalletCarousel = ({ pointsBalance, nairaValue }: WalletCarouselProps) => {
           </motion.div>
         </AnimatePresence>
 
-        {activeIndex > 0 && (
-          <button onClick={() => handleSwipe("right")} className="absolute left-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-muted/60 backdrop-blur-sm flex items-center justify-center text-foreground/60 hover:text-foreground transition-colors">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-        )}
-        {activeIndex < wallets.length - 1 && (
-          <button onClick={() => handleSwipe("left")} className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-muted/60 backdrop-blur-sm flex items-center justify-center text-foreground/60 hover:text-foreground transition-colors">
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
       </div>
 
       {/* Dot indicators */}
