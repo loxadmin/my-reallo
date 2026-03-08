@@ -164,7 +164,7 @@ const WalletCarousel = ({
                     </p>
 
                     <button
-                      onClick={() => setShowSpendPopup(true)}
+                      onClick={() => { setPopupIndex(selectedIndex); setShowSpendPopup(true); }}
                       className="w-full text-left space-y-1.5 mb-5 cursor-pointer group/goal"
                     >
                       <div className="flex justify-between items-end">
