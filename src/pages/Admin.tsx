@@ -803,14 +803,15 @@ const Admin = () => {
                 <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
                   <h3 className="text-[13px] font-semibold text-foreground">Registered Users ({filteredProfiles.length})</h3>
                 </div>
+                <div className="overflow-x-auto">
                 <TableHeader>
-                  <span className="flex-1 min-w-[180px]">User</span>
-                  <span className="w-28">Spend</span>
-                  <span className="w-20">Queue</span>
-                  <span className="w-20">Points</span>
-                  <span className="w-16">Refs</span>
+                  <span className="flex-1 min-w-[160px]">User</span>
+                  <span className="w-24">Spend</span>
+                  <span className="w-16">Queue</span>
+                  <span className="w-16">Points</span>
+                  <span className="w-14">Refs</span>
                   <span className="w-20">Status</span>
-                  <span className="w-12"></span>
+                  <span className="w-10"></span>
                 </TableHeader>
                 <div className="max-h-[600px] overflow-y-auto">
                   {filteredProfiles.map((p) => {
