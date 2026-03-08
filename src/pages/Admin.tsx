@@ -821,18 +821,18 @@ const Admin = () => {
                     return (
                       <div key={p.id}>
                         <TableRow onClick={() => { setSelectedUserId(isSelected ? null : p.id); setEditingProfile(null); }}>
-                          <div className="flex-1 min-w-[180px]">
-                            <p className="text-[12px] font-medium text-foreground">{p.email}</p>
+                          <div className="flex-1 min-w-[160px] overflow-hidden">
+                            <p className="text-[12px] font-medium text-foreground truncate">{p.email}</p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">Joined {new Date(p.created_at).toLocaleDateString()}</p>
                           </div>
-                          <span className="w-28 text-[12px] text-foreground">{formatNaira(p.total_annual_spend || 0)}</span>
-                          <span className="w-20 text-[12px] text-muted-foreground">#{p.queue_position}</span>
-                          <span className="w-20 text-[12px] text-foreground">{p.points_balance.toLocaleString()}</span>
-                          <span className="w-16 text-[12px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
+                          <span className="w-24 text-[11px] text-foreground truncate">{formatNaira(p.total_annual_spend || 0)}</span>
+                          <span className="w-16 text-[11px] text-muted-foreground">#{p.queue_position}</span>
+                          <span className="w-16 text-[11px] text-foreground">{p.points_balance.toLocaleString()}</span>
+                          <span className="w-14 text-[11px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
                           <span className="w-20">
                             {p.is_banned ? <StatusBadge status="BANNED" /> : pDuplicates.length > 0 ? <span className="text-[9px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full border border-destructive/20">{pDuplicates.length} dup</span> : <StatusBadge status="active" />}
                           </span>
-                          <span className="w-12 flex justify-end">
+                          <span className="w-10 flex justify-end">
                             {isSelected ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                           </span>
                         </TableRow>
