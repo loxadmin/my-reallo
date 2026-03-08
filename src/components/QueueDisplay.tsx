@@ -385,6 +385,13 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             <InfluencerPanel />
           </motion.div>
         )}
+
+        {/* ═══ NOTIFICATIONS VIEW ═══ */}
+        {view === "notifications" && (
+          <motion.div key="notifications" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <NotificationsPanel />
+          </motion.div>
+        )}
       </div>
     </section>
   );
