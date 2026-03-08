@@ -84,6 +84,7 @@ const navGroups = [
       { id: "users" as AdminTab, label: "Users", icon: Users },
       { id: "goals" as AdminTab, label: "Goals", icon: Settings },
       { id: "decisions" as AdminTab, label: "Decision Apps", icon: Smartphone },
+      { id: "dec_submissions" as AdminTab, label: "Decision Submissions", icon: FileSpreadsheet },
       { id: "verification" as AdminTab, label: "Verification", icon: CheckCircle2 },
       { id: "warnings" as AdminTab, label: "Warnings", icon: AlertTriangle },
     ],
