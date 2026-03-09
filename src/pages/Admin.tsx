@@ -693,7 +693,8 @@ const Admin = () => {
       description: newSurvey.description,
       points_reward: newSurvey.points_reward,
       completion_link: newSurvey.completion_link,
-      completion_instructions: newSurvey.completion_instructions
+      completion_instructions: newSurvey.completion_instructions,
+      is_active: true
     }).select().single();
 
     if (surveyError) {
@@ -2105,6 +2106,7 @@ const Admin = () => {
                         challenge_type: newChallenge.challenge_type,
                         total_videos: newChallenge.challenge_type === "single" ? 1 : newChallenge.total_videos,
                         reward_per_video: newChallenge.reward_per_video, posting_interval_days: newChallenge.posting_interval_days,
+                        is_active: true
                       } as any);
                       toast({ title: "Challenge created" });
                       setNewChallenge({ title: "", description: "", instructions: "", hashtag: "", challenge_type: "single", total_videos: 1, reward_per_video: 3000, posting_interval_days: 1 });
