@@ -938,6 +938,154 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_options: {
+        Row: {
+          created_at: string
+          id: string
+          is_correct: boolean
+          option_text: string
+          question_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          option_text: string
+          question_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          option_text?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "survey_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_questions: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number
+          question_text: string
+          survey_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          question_text: string
+          survey_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          question_text?: string
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_questions_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_responses: {
+        Row: {
+          created_at: string
+          id: string
+          points_awarded: number
+          reviewed_at: string | null
+          screenshot_url: string | null
+          status: string
+          survey_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points_awarded?: number
+          reviewed_at?: string | null
+          screenshot_url?: string | null
+          status?: string
+          survey_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points_awarded?: number
+          reviewed_at?: string | null
+          screenshot_url?: string | null
+          status?: string
+          survey_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surveys: {
+        Row: {
+          completion_instructions: string | null
+          completion_link: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          points_reward: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completion_instructions?: string | null
+          completion_link?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          points_reward?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completion_instructions?: string | null
+          completion_link?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          points_reward?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       spend_verifications: {
         Row: {
           created_at: string

@@ -15,7 +15,7 @@ import LeaderboardTicker from "./LeaderboardTicker";
 import WalletCarousel from "./WalletCarousel";
 import ActivateWalletModal from "./ActivateWalletModal";
 import type { WalletType } from "./WalletCarousel";
-import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2, Star } from "lucide-react";
+import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2, Star, MessageSquare, ChevronLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
 
@@ -424,9 +424,9 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
           </motion.div>
         )}
 
-        {/* ═══ EARN VIEW ═══ */}
-        {view === "earn" && (
-          <motion.div key="earn" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+        {/* ═══ EARN VIEWS ═══ */}
+        {(view === "earn" || view === "tasks" || view === "surveys") && (
+          <motion.div key="earn-group" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <GlassCard variant="strong" className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Award className="w-4 h-4 text-primary" />
@@ -435,7 +435,55 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               <h2 className="font-display text-2xl font-bold gradient-text">{pointsBalance.toLocaleString()}</h2>
               <p className="text-muted-foreground mt-1 text-[11px]">= {formatNaira(nairaValue)} value</p>
             </GlassCard>
-            <DecisionFlow />
+
+            {view === "earn" && (
+              <div className="grid grid-cols-1 gap-4">
+                <button
+                  onClick={() => onViewChange?.("tasks")}
+                  className="glass-card p-6 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Zap className="w-6 h-6 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-bold text-foreground">Tasks</h3>
+                      <p className="text-[12px] text-muted-foreground">Complete simple tasks to earn points</p>
+                    </div>
+                  </div>
+                  <Check className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                </button>
+
+                <button
+                  onClick={() => onViewChange?.("surveys")}
+                  className="glass-card p-6 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <MessageSquare className="w-6 h-6 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-bold text-foreground">Surveys</h3>
+                      <p className="text-[12px] text-muted-foreground">Share your feedback and get rewarded</p>
+                    </div>
+                  </div>
+                  <Check className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                </button>
+              </div>
+            )}
+
+            {(view === "tasks" || view === "surveys") && (
+              <div className="space-y-4">
+                <button
+                  onClick={() => onViewChange?.("earn")}
+                  className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors px-1"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back to Earn
+                </button>
+                <DecisionFlow mode={view as "tasks" | "surveys"} />
+              </div>
+            )}
           </motion.div>
         )}
 

@@ -14,9 +14,9 @@ import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useNotifications } from "@/contexts/NotificationContext";
 
-export type DashView = "home" | "earn" | "goal" | "verify" | "influencer" | "notifications";
+export type DashView = "home" | "earn" | "tasks" | "surveys" | "goal" | "verify" | "influencer" | "notifications";
 
-const validViews: DashView[] = ["home", "earn", "goal", "verify", "influencer", "notifications"];
+const validViews: DashView[] = ["home", "earn", "tasks", "surveys", "goal", "verify", "influencer", "notifications"];
 
 type DashStep = "calculator" | "goal" | "queue";
 
@@ -144,6 +144,8 @@ const Dashboard = () => {
     { id: "notifications" as DashView, label: "Notifications", icon: Bell },
   ];
 
+  const isEarnActive = activeView === "earn" || activeView === "tasks" || activeView === "surveys";
+
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <WaterBackground />
@@ -154,7 +156,7 @@ const Dashboard = () => {
             onClick={() => setActiveView(item.id)}
             className={cn(
               "flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] transition-colors",
-              activeView === item.id ? "text-primary bg-primary/10" : "text-muted-foreground"
+              (activeView === item.id || (item.id === "earn" && isEarnActive)) ? "text-primary bg-primary/10" : "text-muted-foreground"
             )}
           >
             <item.icon className="w-4 h-4" />
@@ -179,7 +181,7 @@ const Dashboard = () => {
                     onClick={() => setActiveView(item.id)}
                     className={cn(
                       "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200",
-                      activeView === item.id
+                      (activeView === item.id || (item.id === "earn" && isEarnActive))
                         ? "text-primary bg-primary/10"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}

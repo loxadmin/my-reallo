@@ -43,9 +43,9 @@ type EarnTab = "earn" | "ongoing" | "past";
 type FlowStep = "checklist" | "sequential" | "done";
 type EarnView = "tasks" | "surveys";
 
-const DecisionFlow = () => {
+const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
   const { user, refreshProfile } = useAuth();
-  const [activeEarnView, setActiveEarnView] = useState<EarnView>("tasks");
+  const [activeEarnView, setActiveEarnView] = useState<EarnView>(mode || "tasks");
 
   // Tasks state
   const [apps, setApps] = useState<DecisionApp[]>([]);
@@ -902,27 +902,29 @@ const DecisionFlow = () => {
     <div className="space-y-4">
       {fileInput}
 
-      {/* Top Level View Tabs */}
-      <div className="flex gap-2 p-1 rounded-xl glass-strong">
-        <button
-          onClick={() => setActiveEarnView("tasks")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${
-            activeEarnView === "tasks" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Zap className="w-4 h-4" />
-          Tasks
-        </button>
-        <button
-          onClick={() => setActiveEarnView("surveys")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${
-            activeEarnView === "surveys" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <MessageSquare className="w-4 h-4" />
-          Surveys
-        </button>
-      </div>
+      {/* Top Level View Tabs - hidden when mode prop is passed */}
+      {!mode && (
+        <div className="flex gap-2 p-1 rounded-xl glass-strong">
+          <button
+            onClick={() => setActiveEarnView("tasks")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${
+              activeEarnView === "tasks" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Zap className="w-4 h-4" />
+            Tasks
+          </button>
+          <button
+            onClick={() => setActiveEarnView("surveys")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${
+              activeEarnView === "surveys" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            Surveys
+          </button>
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         <motion.div
