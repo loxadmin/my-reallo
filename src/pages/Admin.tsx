@@ -345,7 +345,14 @@ const Admin = () => {
     switch_to_referral_app_ids: [] as string[],
   });
   const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0 });
-  const [newSurvey, setNewSurvey] = useState({ title: "", description: "", points_reward: 1000, completion_link: "", completion_instructions: "" });
+  const [newSurvey, setNewSurvey] = useState({
+    title: "",
+    description: "",
+    points_reward: 1000,
+    completion_link: "",
+    completion_instructions: "",
+    questions: [{ question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] }]
+  });
   const [newSurveyQuestion, setNewSurveyQuestion] = useState({ survey_id: "", question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] });
 
   useEffect(() => {
@@ -679,10 +686,57 @@ const Admin = () => {
 
   const handleCreateSurvey = async () => {
     if (!newSurvey.title) return;
-    const { data, error } = await supabase.from("surveys").insert(newSurvey).select().single();
-    if (error) { toast({ title: "Error", description: error.message }); return; }
-    toast({ title: "Survey created" });
-    setNewSurvey({ title: "", description: "", points_reward: 1000, completion_link: "", completion_instructions: "" });
+
+    // 1. Insert Survey
+    const { data: surveyData, error: surveyError } = await supabase.from("surveys").insert({
+      title: newSurvey.title,
+      description: newSurvey.description,
+      points_reward: newSurvey.points_reward,
+      completion_link: newSurvey.completion_link,
+      completion_instructions: newSurvey.completion_instructions
+    }).select().single();
+
+    if (surveyError) {
+      toast({ title: "Error", description: surveyError.message });
+      return;
+    }
+
+    // 2. Insert Questions and Options
+    for (let i = 0; i < newSurvey.questions.length; i++) {
+      const q = newSurvey.questions[i];
+      if (!q.question_text) continue;
+
+      const { data: questionData, error: questionError } = await supabase.from("survey_questions").insert({
+        survey_id: surveyData.id,
+        question_text: q.question_text,
+        order_index: i
+      }).select().single();
+
+      if (questionError) {
+        console.error("Error creating question:", questionError);
+        continue;
+      }
+
+      const optionsToInsert = q.options.filter(o => o.option_text).map(o => ({
+        question_id: questionData.id,
+        option_text: o.option_text,
+        is_correct: o.is_correct
+      }));
+
+      if (optionsToInsert.length > 0) {
+        await supabase.from("survey_options").insert(optionsToInsert);
+      }
+    }
+
+    toast({ title: "Survey created with questions" });
+    setNewSurvey({
+      title: "",
+      description: "",
+      points_reward: 1000,
+      completion_link: "",
+      completion_instructions: "",
+      questions: [{ question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] }]
+    });
     await fetchData();
   };
 
@@ -1558,7 +1612,7 @@ const Admin = () => {
                         <div className="p-4 space-y-2">
                           <p className="text-[11px] text-primary font-semibold mb-2">Pending Approvals ({pendingApprovals.length})</p>
                           {pendingApprovals.map(pr => {
-                            const screenshotUrl = getPublicScreenshotUrl(pr.referral_screenshot_url);
+                            const screenshotUrl = getPublicUrl(pr.referral_screenshot_url);
                             return (
                               <div key={pr.id} className="flex items-center justify-between rounded-lg border border-border/40 p-3">
                                 <div>
@@ -1614,7 +1668,7 @@ const Admin = () => {
                         <div className="p-4 space-y-2 border-b border-border/20">
                           <p className="text-[11px] text-primary font-semibold mb-2">⏳ Pending Approvals ({pending.length})</p>
                           {pending.map(pr => {
-                            const screenshotUrl = getPublicScreenshotUrl(pr.referral_screenshot_url);
+                            const screenshotUrl = getPublicUrl(pr.referral_screenshot_url);
                             return (
                               <div key={pr.id} className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3">
                                 <div className="flex-1 min-w-0">
@@ -2354,6 +2408,77 @@ const Admin = () => {
                       <div><p className="text-[10px] text-muted-foreground mb-1">Completion Link</p><input value={newSurvey.completion_link} onChange={e => setNewSurvey(p => ({ ...p, completion_link: e.target.value }))} placeholder="https://..." className={inputCls} /></div>
                     </div>
                     <textarea value={newSurvey.completion_instructions} onChange={e => setNewSurvey(p => ({ ...p, completion_instructions: e.target.value }))} placeholder="Completion Instructions" className={`${inputCls} min-h-[60px] resize-none`} />
+
+                    {/* Questions in Create Form */}
+                    <div className="space-y-4 pt-2">
+                      <p className="text-[12px] font-bold text-foreground">Questions</p>
+                      {newSurvey.questions.map((q, qIdx) => (
+                        <div key={qIdx} className="p-3 border border-border/40 rounded-xl space-y-3 bg-muted/5">
+                          <div className="flex justify-between items-center">
+                            <p className="text-[11px] font-semibold">Question {qIdx + 1}</p>
+                            {newSurvey.questions.length > 1 && (
+                              <button onClick={() => {
+                                const nextQs = [...newSurvey.questions];
+                                nextQs.splice(qIdx, 1);
+                                setNewSurvey(p => ({ ...p, questions: nextQs }));
+                              }} className="text-destructive hover:text-destructive/80"><Trash2 className="w-3.5 h-3.5" /></button>
+                            )}
+                          </div>
+                          <input
+                            value={q.question_text}
+                            onChange={e => {
+                              const nextQs = [...newSurvey.questions];
+                              nextQs[qIdx].question_text = e.target.value;
+                              setNewSurvey(p => ({ ...p, questions: nextQs }));
+                            }}
+                            placeholder="Question text"
+                            className={inputCls}
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            {q.options.map((opt, oIdx) => (
+                              <div key={oIdx} className="flex gap-2 items-center">
+                                <input
+                                  value={opt.option_text}
+                                  onChange={e => {
+                                    const nextQs = [...newSurvey.questions];
+                                    nextQs[qIdx].options[oIdx].option_text = e.target.value;
+                                    setNewSurvey(p => ({ ...p, questions: nextQs }));
+                                  }}
+                                  placeholder={`Option ${oIdx + 1}`}
+                                  className={inputCls}
+                                />
+                                <input
+                                  type="checkbox"
+                                  checked={opt.is_correct}
+                                  onChange={e => {
+                                    const nextQs = [...newSurvey.questions];
+                                    nextQs[qIdx].options = nextQs[qIdx].options.map((o, idx) => ({ ...o, is_correct: idx === oIdx ? e.target.checked : false }));
+                                    setNewSurvey(p => ({ ...p, questions: nextQs }));
+                                  }}
+                                  className="accent-primary"
+                                />
+                                {q.options.length > 2 && (
+                                  <button onClick={() => {
+                                    const nextQs = [...newSurvey.questions];
+                                    nextQs[qIdx].options.splice(oIdx, 1);
+                                    setNewSurvey(p => ({ ...p, questions: nextQs }));
+                                  }} className="text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <Btn variant="outline" className="w-full py-1 h-8" onClick={() => {
+                            const nextQs = [...newSurvey.questions];
+                            nextQs[qIdx].options.push({ option_text: "", is_correct: false });
+                            setNewSurvey(p => ({ ...p, questions: nextQs }));
+                          }}>+ Add Option</Btn>
+                        </div>
+                      ))}
+                      <Btn variant="outline" className="w-full" onClick={() => {
+                        setNewSurvey(p => ({ ...p, questions: [...p.questions, { question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] }] }));
+                      }}>+ Add Question</Btn>
+                    </div>
+
                     <Btn variant="primary" onClick={handleCreateSurvey}><Plus className="w-3 h-3" /> Create Survey</Btn>
                   </div>
                 </div>
