@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
-import { Award, CheckSquare, ExternalLink, Clock, Upload, X, History, Zap } from "lucide-react";
+import { Award, CheckSquare, ExternalLink, Clock, Upload, X, History, Zap, MessageSquare, ChevronRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface DecisionApp {
@@ -41,9 +41,13 @@ const fromResponses = () => supabase.from("decision_responses" as any);
 
 type EarnTab = "earn" | "ongoing" | "past";
 type FlowStep = "checklist" | "sequential" | "done";
+type EarnView = "tasks" | "surveys";
 
 const DecisionFlow = () => {
   const { user, refreshProfile } = useAuth();
+  const [activeEarnView, setActiveEarnView] = useState<EarnView>("tasks");
+
+  // Tasks state
   const [apps, setApps] = useState<DecisionApp[]>([]);
   const [responses, setResponses] = useState<DecisionResponse[]>([]);
   const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
@@ -57,6 +61,15 @@ const DecisionFlow = () => {
   const [pendingInteractions, setPendingInteractions] = useState<DecisionApp[]>([]);
   const [currentInteraction, setCurrentInteraction] = useState<DecisionApp | null>(null);
 
+  // Survey state
+  const [surveys, setSurveys] = useState<any[]>([]);
+  const [surveyResponses, setSurveyResponses] = useState<any[]>([]);
+  const [activeSurvey, setActiveSurvey] = useState<any>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [surveyStep, setSurveyStep] = useState<"quiz" | "completion" | "done">("quiz");
+  const [surveyUploading, setSurveyUploading] = useState(false);
+  const surveyFileRef = useRef<HTMLInputElement>(null);
+
   const unansweredApps = apps.filter(app => !responses.some(r => r.app_id === app.id));
 
   useEffect(() => {
@@ -65,14 +78,18 @@ const DecisionFlow = () => {
 
   const fetchData = async () => {
     if (!user) return;
-    const [appsRes, respRes] = await Promise.all([
+    const [appsRes, respRes, surveysRes, sRespRes] = await Promise.all([
       fromApps().select("*").eq("is_active", true).order("app_name"),
       fromResponses().select("*").eq("user_id", user.id),
+      supabase.from("surveys").select("*, survey_questions(*, survey_options(*))").eq("is_active", true).order("created_at", { ascending: false }),
+      supabase.from("survey_responses").select("*").eq("user_id", user.id),
     ]);
     const allApps = (appsRes.data || []) as unknown as DecisionApp[];
     setApps(allApps);
     const resps = (respRes.data || []) as unknown as DecisionResponse[];
     setResponses(resps);
+    setSurveys(surveysRes.data || []);
+    setSurveyResponses(sRespRes.data || []);
   };
 
   const toggleApp = (id: string) => {
@@ -301,6 +318,60 @@ const DecisionFlow = () => {
     await refreshProfile();
   };
 
+  const handleStartSurvey = (survey: any) => {
+    setActiveSurvey(survey);
+    setCurrentQuestionIndex(0);
+    setSurveyStep("quiz");
+  };
+
+  const handleAnswerQuestion = (option: any) => {
+    if (!option.is_correct) {
+      toast({ title: "Incorrect answer", description: "Please try again.", variant: "destructive" });
+      return;
+    }
+
+    if (currentQuestionIndex < activeSurvey.survey_questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else {
+      setSurveyStep("completion");
+    }
+  };
+
+  const handleSurveyScreenshotUpload = async (file: File) => {
+    if (!user || !activeSurvey) return;
+    setSurveyUploading(true);
+
+    const fileExt = file.name.split(".").pop();
+    const filePath = `${user.id}/${activeSurvey.id}-${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("survey_screenshots")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast({ title: "Upload failed", description: uploadError.message });
+      setSurveyUploading(false);
+      return;
+    }
+
+    const { error: respError } = await supabase.from("survey_responses").upsert({
+      user_id: user.id,
+      survey_id: activeSurvey.id,
+      screenshot_url: filePath,
+      status: "pending"
+    });
+
+    if (respError) {
+      toast({ title: "Submission failed", description: respError.message });
+    } else {
+      toast({ title: "Survey submitted", description: "Admin will review your proof." });
+      setSurveyStep("done");
+      setActiveSurvey(null);
+      await fetchData();
+    }
+    setSurveyUploading(false);
+  };
+
   if (!user) return null;
 
   const fileInput = (
@@ -314,6 +385,20 @@ const DecisionFlow = () => {
         if (file && uploadingFor) {
           handleScreenshotUpload(uploadingFor, file);
         }
+        e.target.value = "";
+      }}
+    />
+  );
+
+  const surveyFileInput = (
+    <input
+      ref={surveyFileRef}
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) handleSurveyScreenshotUpload(file);
         e.target.value = "";
       }}
     />
@@ -453,6 +538,92 @@ const DecisionFlow = () => {
     }
     return "past";
   };
+
+  // ═══ SURVEY QUIZ VIEW ═══
+  if (activeSurvey) {
+    const question = activeSurvey.survey_questions[currentQuestionIndex];
+    const options = question?.survey_options || [];
+
+    return (
+      <div className="space-y-4">
+        {surveyFileInput}
+        <GlassCard variant="glow" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-foreground text-[13px]">{activeSurvey.title}</h3>
+            <button onClick={() => setActiveSurvey(null)} className="text-muted-foreground hover:text-foreground">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {surveyStep === "quiz" && question && (
+              <motion.div key={question.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
+                    Question {currentQuestionIndex + 1} of {activeSurvey.survey_questions.length}
+                  </span>
+                </div>
+                <p className="text-[14px] font-medium text-foreground leading-relaxed">
+                  {question.question_text}
+                </p>
+                <div className="space-y-2">
+                  {options.map((opt: any) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => handleAnswerQuestion(opt)}
+                      className="w-full text-left p-3 rounded-xl border border-border/40 hover:border-primary/40 hover:bg-primary/5 transition-all text-[13px] font-medium"
+                    >
+                      {opt.option_text}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {surveyStep === "completion" && (
+              <motion.div key="completion" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4 text-center py-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                  <CheckCircle2 className="w-6 h-6 text-primary" />
+                </div>
+                <h4 className="font-bold text-foreground">Quiz Completed!</h4>
+                <p className="text-[12px] text-muted-foreground">
+                  Follow the instructions below to complete the survey and earn <span className="text-primary font-bold">{activeSurvey.points_reward} points</span>.
+                </p>
+
+                <div className="p-4 rounded-xl bg-muted/20 border border-border/40 text-left space-y-3">
+                  <p className="text-[12px] font-medium text-foreground">
+                    {activeSurvey.completion_instructions}
+                  </p>
+                  {activeSurvey.completion_link && (
+                    <a href={activeSurvey.completion_link} target="_blank" rel="noopener noreferrer">
+                      <GlassButton variant="primary" className="w-full text-[12px]">
+                        <ExternalLink className="w-3.5 h-3.5 mr-2" /> Open Link
+                      </GlassButton>
+                    </a>
+                  )}
+                </div>
+
+                <div className="pt-4 space-y-3">
+                  <p className="text-[11px] text-muted-foreground">
+                    Upload a screenshot as proof of completion
+                  </p>
+                  <GlassButton
+                    variant="outline"
+                    onClick={() => surveyFileRef.current?.click()}
+                    disabled={surveyUploading}
+                    className="w-full text-[12px]"
+                  >
+                    <Upload className="w-3.5 h-3.5 mr-2" />
+                    {surveyUploading ? "Uploading..." : "Upload Screenshot"}
+                  </GlassButton>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </GlassCard>
+      </div>
+    );
+  }
 
   // ═══ RESULTS VIEW (with tabs) ═══
   if (responses.length > 0 && unansweredApps.length === 0 && step !== "sequential") {
@@ -611,9 +782,164 @@ const DecisionFlow = () => {
     ? "Have you used this app before?"
     : "Which of these apps have you used before?";
 
-  return (
-    <div className="space-y-4">
-      {fileInput}
+  const renderTasks = () => {
+    // ═══ RESULTS VIEW (with tabs) ═══
+    if (responses.length > 0 && unansweredApps.length === 0 && step !== "sequential") {
+      const earnResponses = responses.filter(r => getResponseStatus(r, apps.find(a => a.id === r.app_id)) === "earn");
+      const ongoingResponses = responses.filter(r => getResponseStatus(r, apps.find(a => a.id === r.app_id)) === "ongoing");
+      const pastResponses = responses.filter(r => getResponseStatus(r, apps.find(a => a.id === r.app_id)) === "past");
+
+      const currentList = earnTab === "earn" ? earnResponses : earnTab === "ongoing" ? ongoingResponses : pastResponses;
+
+      return (
+        <div className="space-y-3">
+          <div className="flex gap-1 p-1 rounded-xl glass">
+            {([
+              { id: "earn" as EarnTab, label: "Earn", icon: Zap, count: earnResponses.length },
+              { id: "ongoing" as EarnTab, label: "Ongoing", icon: Clock, count: ongoingResponses.length },
+              { id: "past" as EarnTab, label: "Past", icon: History, count: pastResponses.length },
+            ]).map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setEarnTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium transition-all ${
+                  earnTab === tab.id ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <tab.icon className="w-3.5 h-3.5" />
+                {tab.label} ({tab.count})
+              </button>
+            ))}
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div key={earnTab} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2">
+              {currentList.length === 0 && (
+                <GlassCard className="text-center py-8">
+                  <p className="text-muted-foreground text-[12px]">No {earnTab === "earn" ? "available" : earnTab} earnings</p>
+                </GlassCard>
+              )}
+
+              {currentList.map((resp) => {
+                const app = apps.find(a => a.id === resp.app_id);
+                if (!app) return null;
+
+                const now = new Date();
+                const switchAvailable = resp.switch_available_at ? new Date(resp.switch_available_at) : null;
+                const canSwitch = switchAvailable && now >= switchAvailable && !resp.switch_completed;
+                const daysUntilSwitch = switchAvailable && now < switchAvailable
+                  ? Math.ceil((switchAvailable.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+                  : 0;
+
+                return (
+                  <GlassCard key={resp.id} className="p-4" animate={false}>
+                    <div className="flex items-center gap-3">
+                      {app.app_logo_url ? (
+                        <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">
+                          {app.app_name.charAt(0)}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-foreground">{app.app_name}</p>
+                      </div>
+                      <div className="text-right">
+                        {resp.points_awarded > 0 && (
+                          <p className="text-[12px] text-primary font-semibold">+{resp.points_awarded} pts</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Yes/No or Robust: switch offer available */}
+                    {(app.category === "yes_no" || app.category === "robust") && resp.has_app && resp.would_switch === null && (
+                      <div className="mt-3 flex gap-2">
+                        <GlassButton variant="primary" onClick={() => {
+                          setCurrentInteraction(app);
+                          setStep("sequential");
+                        }} className="flex-1 text-[12px]">
+                          View Switch Offer
+                        </GlassButton>
+                      </div>
+                    )}
+
+                    {/* Yes/No: waiting for switch */}
+                    {(app.category === "yes_no" || app.category === "robust") && resp.would_switch === true && !resp.switch_completed && (
+                      <div className="mt-3">
+                        {canSwitch ? (
+                          <GlassButton variant="primary" onClick={() => handleSwitchComplete(app)} className="w-full text-[12px]">
+                            <ExternalLink className="inline w-3 h-3 mr-1" /> Switch Now (+{app.points_switch_complete} pts)
+                          </GlassButton>
+                        ) : (
+                          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            <span>Switch available in {daysUntilSwitch} days</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {(app.category === "yes_no" || app.category === "robust") && resp.switch_completed && (
+                      <p className="text-[11px] text-primary mt-2">✓ Switched</p>
+                    )}
+
+                    {/* Referral: offer to try */}
+                    {app.category === "referral" && !resp.has_app && !resp.referral_clicked && (
+                      <div className="mt-3">
+                        <GlassButton variant="primary" onClick={() => {
+                          setCurrentInteraction(app);
+                          setStep("sequential");
+                        }} className="w-full text-[12px]">
+                          Try It Out Offer
+                        </GlassButton>
+                      </div>
+                    )}
+
+                    {/* Referral: clicked but no screenshot - show upload */}
+                    {app.category === "referral" && resp.referral_clicked && !resp.referral_screenshot_url && (
+                      <div className="mt-3">
+                        <GlassButton
+                          variant="outline"
+                          onClick={() => {
+                            setUploadingFor(resp.app_id);
+                            fileInputRef.current?.click();
+                          }}
+                          className="w-full text-[12px]"
+                        >
+                          <Upload className="inline w-3 h-3 mr-1" /> Upload Screenshot
+                        </GlassButton>
+                      </div>
+                    )}
+
+                    {app.category === "referral" && resp.referral_screenshot_url && !resp.referral_approved && (
+                      <p className="text-[11px] text-muted-foreground mt-2">📋 Screenshot pending admin review</p>
+                    )}
+
+                    {app.category === "referral" && resp.referral_approved && (
+                      <p className="text-[11px] text-primary mt-2">✓ Approved — {app.referral_points} pts awarded</p>
+                    )}
+                  </GlassCard>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      );
+    }
+
+    // ═══ CHECKLIST VIEW ═══
+    if (unansweredApps.length === 0) return (
+      <GlassCard className="text-center py-8">
+        <Award className="w-6 h-6 text-primary mx-auto mb-2" />
+        <p className="text-muted-foreground text-[12px]">No new apps to review. Check back later!</p>
+      </GlassCard>
+    );
+
+    const questionText = unansweredApps.length === 1
+      ? "Have you used this app before?"
+      : "Which of these apps have you used before?";
+
+    return (
       <GlassCard variant="strong">
         <div className="flex items-center gap-2 mb-3">
           <CheckSquare className="w-4 h-4 text-primary" />
@@ -660,6 +986,116 @@ const DecisionFlow = () => {
           {submitting ? "Processing..." : "Submit & Earn Points"}
         </GlassButton>
       </GlassCard>
+    );
+  };
+
+  const renderSurveys = () => {
+    return (
+      <div className="space-y-3">
+        {surveys.length === 0 && (
+          <GlassCard className="text-center py-8">
+            <p className="text-muted-foreground text-[12px]">No active surveys available.</p>
+          </GlassCard>
+        )}
+
+        {surveys.map(survey => {
+          const response = surveyResponses.find(r => r.survey_id === survey.id);
+          const isPending = response?.status === "pending";
+          const isApproved = response?.status === "approved";
+          const isRejected = response?.status === "rejected";
+
+          return (
+            <GlassCard key={survey.id} className="p-4 overflow-hidden relative">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-[13px] font-semibold text-foreground truncate">{survey.title}</h4>
+                  <p className="text-[11px] text-muted-foreground line-clamp-1">{survey.description}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[12px] text-primary font-bold">+{survey.points_reward} pts</p>
+                </div>
+              </div>
+
+              {!response && (
+                <div className="mt-3">
+                  <GlassButton variant="primary" onClick={() => handleStartSurvey(survey)} className="w-full text-[12px]">
+                    Start Survey <ChevronRight className="w-3 h-3 ml-1" />
+                  </GlassButton>
+                </div>
+              )}
+
+              {isPending && (
+                <div className="mt-3 flex items-center gap-2 text-[11px] text-accent-foreground bg-accent/10 p-2 rounded-lg border border-accent/20">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>Proof submitted. Pending review.</span>
+                </div>
+              )}
+
+              {isApproved && (
+                <div className="mt-3 flex items-center gap-2 text-[11px] text-primary bg-primary/10 p-2 rounded-lg border border-primary/20">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Completed. {survey.points_reward} pts awarded!</span>
+                </div>
+              )}
+
+              {isRejected && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center gap-2 text-[11px] text-destructive bg-destructive/10 p-2 rounded-lg border border-destructive/20">
+                    <X className="w-3.5 h-3.5" />
+                    <span>Proof rejected. Please try again.</span>
+                  </div>
+                  <GlassButton variant="outline" onClick={() => handleStartSurvey(survey)} className="w-full text-[12px]">
+                    Retry Survey
+                  </GlassButton>
+                </div>
+              )}
+            </GlassCard>
+          );
+        })}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      {fileInput}
+
+      {/* Top Level View Tabs */}
+      <div className="flex gap-2 p-1 rounded-xl glass-strong">
+        <button
+          onClick={() => setActiveEarnView("tasks")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${
+            activeEarnView === "tasks" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Zap className="w-4 h-4" />
+          Tasks
+        </button>
+        <button
+          onClick={() => setActiveEarnView("surveys")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${
+            activeEarnView === "surveys" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          Surveys
+        </button>
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeEarnView}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {activeEarnView === "tasks" ? renderTasks() : renderSurveys()}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };

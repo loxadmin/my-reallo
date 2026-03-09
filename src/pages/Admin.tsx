@@ -76,7 +76,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "warnings" | "advertisers";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "warnings" | "advertisers" | "surveys";
 
 const navGroups = [
   {
@@ -87,6 +87,7 @@ const navGroups = [
       { id: "goals" as AdminTab, label: "Goals", icon: Settings },
       { id: "decisions" as AdminTab, label: "Decision Apps", icon: Smartphone },
       { id: "dec_submissions" as AdminTab, label: "Decision Submissions", icon: FileSpreadsheet },
+      { id: "surveys" as AdminTab, label: "Surveys", icon: FileSpreadsheet },
       { id: "verification" as AdminTab, label: "Verification", icon: CheckCircle2 },
       { id: "warnings" as AdminTab, label: "Warnings", icon: AlertTriangle },
     ],
@@ -277,6 +278,10 @@ const Admin = () => {
   const { isAdmin, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
+  const [surveys, setSurveys] = useState<any[]>([]);
+  const [surveyQuestions, setSurveyQuestions] = useState<any[]>([]);
+  const [surveyOptions, setSurveyOptions] = useState<any[]>([]);
+  const [surveyResponses, setSurveyResponses] = useState<any[]>([]);
   const [ghostCount, setGhostCount] = useState(0);
   const [activities, setActivities] = useState<ActivityRow[]>([]);
   const [goalCategories, setGoalCategories] = useState<GoalCategoryRow[]>([]);
@@ -340,6 +345,8 @@ const Admin = () => {
     switch_to_referral_app_ids: [] as string[],
   });
   const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0 });
+  const [newSurvey, setNewSurvey] = useState({ title: "", description: "", points_reward: 1000, completion_link: "", completion_instructions: "" });
+  const [newSurveyQuestion, setNewSurveyQuestion] = useState({ survey_id: "", question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] });
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate("/");
@@ -347,7 +354,7 @@ const Admin = () => {
 
   const fetchData = async () => {
     setRefreshing(true);
-    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes] = await Promise.all([
+    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, surveyRes, sQuestionRes, sOptionRes, sRespRes] = await Promise.all([
       supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
       supabase.from("ghost_users").select("id", { count: "exact", head: true }),
       supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
@@ -356,9 +363,17 @@ const Admin = () => {
       supabase.from("verification_transactions").select("*").order("submitted_at", { ascending: false }).limit(200),
       fromApps().select("*").order("created_at", { ascending: false }),
       fromDResponses().select("*").order("created_at", { ascending: false }),
+      supabase.from("surveys").select("*").order("created_at", { ascending: false }),
+      supabase.from("survey_questions").select("*").order("order_index", { ascending: true }),
+      supabase.from("survey_options").select("*").order("created_at", { ascending: true }),
+      supabase.from("survey_responses").select("*").order("created_at", { ascending: false }),
     ]);
     const profs = (profilesRes.data as ProfileRow[]) || [];
     setProfiles(profs);
+    setSurveys(surveyRes.data || []);
+    setSurveyQuestions(sQuestionRes.data || []);
+    setSurveyOptions(sOptionRes.data || []);
+    setSurveyResponses(sRespRes.data || []);
     setGhostCount(ghostsRes.count || 0);
     setActivities((activityRes.data as ActivityRow[]) || []);
     setGoalCategories((goalsRes.data as GoalCategoryRow[]) || []);
@@ -515,10 +530,10 @@ const Admin = () => {
     } catch (error) { toast({ title: "Approval failed", description: (error as Error).message }); }
   };
 
-  const getPublicScreenshotUrl = (path: string | null) => {
+  const getPublicUrl = (path: string | null, bucket: string = "referral_screenshots") => {
     if (!path) return null;
     if (path.startsWith("http")) return path;
-    const { data } = supabase.storage.from("referral_screenshots").getPublicUrl(path);
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
     return data.publicUrl;
   };
 
@@ -662,6 +677,66 @@ const Admin = () => {
     await fetchData();
   };
 
+  const handleCreateSurvey = async () => {
+    if (!newSurvey.title) return;
+    const { data, error } = await supabase.from("surveys").insert(newSurvey).select().single();
+    if (error) { toast({ title: "Error", description: error.message }); return; }
+    toast({ title: "Survey created" });
+    setNewSurvey({ title: "", description: "", points_reward: 1000, completion_link: "", completion_instructions: "" });
+    await fetchData();
+  };
+
+  const handleDeleteSurvey = async (id: string) => {
+    await supabase.from("surveys").delete().eq("id", id);
+    toast({ title: "Survey deleted" });
+    await fetchData();
+  };
+
+  const handleAddQuestion = async (surveyId: string) => {
+    if (!newSurveyQuestion.question_text) return;
+    const { data: question, error: qError } = await supabase.from("survey_questions").insert({
+      survey_id: surveyId,
+      question_text: newSurveyQuestion.question_text,
+      order_index: surveyQuestions.filter(q => q.survey_id === surveyId).length
+    }).select().single();
+
+    if (qError) { toast({ title: "Error", description: qError.message }); return; }
+
+    const optionsToInsert = newSurveyQuestion.options.filter(o => o.option_text).map(o => ({
+      question_id: question.id,
+      option_text: o.option_text,
+      is_correct: o.is_correct
+    }));
+
+    if (optionsToInsert.length > 0) {
+      await supabase.from("survey_options").insert(optionsToInsert);
+    }
+
+    toast({ title: "Question added" });
+    setNewSurveyQuestion({ survey_id: "", question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] });
+    await fetchData();
+  };
+
+  const handleDeleteQuestion = async (id: string) => {
+    await supabase.from("survey_questions").delete().eq("id", id);
+    toast({ title: "Question deleted" });
+    await fetchData();
+  };
+
+  const handleApproveSurveySubmission = async (responseId: string, userId: string, points: number) => {
+    await supabase.from("survey_responses").update({ status: "approved", reviewed_at: new Date().toISOString(), points_awarded: points }).eq("id", responseId);
+    const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", userId).single();
+    await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + points }).eq("id", userId);
+    toast({ title: "Submission approved" });
+    await fetchData();
+  };
+
+  const handleRejectSurveySubmission = async (responseId: string) => {
+    await supabase.from("survey_responses").update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", responseId);
+    toast({ title: "Submission rejected" });
+    await fetchData();
+  };
+
   const downloadDecisionAnalytics = () => {
     const rows = [["App Name", "Category", "Total Responses", "Has App", "Doesn't Have", "Would Switch", "Switch Completed", "Referral Clicked", "Referral Approved", "% Selected"]];
     for (const app of decisionApps) {
@@ -722,6 +797,7 @@ const Admin = () => {
   const activeUsers = profiles.filter(p => !p.is_banned).length;
 
   const pendingDecisionApprovals = decisionResponses.filter(r => r.referral_screenshot_url && !r.referral_approved).length;
+  const pendingSurveyApprovals = surveyResponses.filter(r => r.screenshot_url && r.status === "pending").length;
 
   const counts: Record<string, number> = {
     users: profiles.length,
@@ -731,6 +807,7 @@ const Admin = () => {
     goals: goalCategories.length,
     decisions: decisionApps.length,
     dec_submissions: pendingDecisionApprovals,
+    surveys: pendingSurveyApprovals,
     analytics: decisionResponses.length,
     verification: verificationTxs.length,
     inf_apps: pendingApps,
@@ -755,6 +832,7 @@ const Admin = () => {
     inf_wallets: "Influencer Wallets", inf_referrals: "Influencer Referrals",
     inf_withdrawals: "Influencer Withdrawals", inf_challenges: "Influencer Challenges", inf_submissions: "Challenge Submissions", warnings: "Warnings",
     advertisers: "Advertisers",
+    surveys: "Surveys",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
@@ -2260,6 +2338,141 @@ const Admin = () => {
                   <p className="text-[10px] text-muted-foreground">Geolocation mapping: Nigeria → ₦, USA → $, UK → £, Europe → €, Others → $</p>
                   <Btn variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full"><Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save Settings"}</Btn>
                 </div>
+              </div>
+            )}
+
+            {/* ═══ SURVEYS ═══ */}
+            {activeTab === "surveys" && (
+              <div className="space-y-6">
+                <div className={cardCls}>
+                  <SectionHeader title="Create New Survey" />
+                  <div className="space-y-3">
+                    <input value={newSurvey.title} onChange={e => setNewSurvey(p => ({ ...p, title: e.target.value }))} placeholder="Survey Title" className={inputCls} />
+                    <textarea value={newSurvey.description} onChange={e => setNewSurvey(p => ({ ...p, description: e.target.value }))} placeholder="Description" className={`${inputCls} min-h-[60px] resize-none`} />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><p className="text-[10px] text-muted-foreground mb-1">Points Reward</p><input type="number" value={newSurvey.points_reward} onChange={e => setNewSurvey(p => ({ ...p, points_reward: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
+                      <div><p className="text-[10px] text-muted-foreground mb-1">Completion Link</p><input value={newSurvey.completion_link} onChange={e => setNewSurvey(p => ({ ...p, completion_link: e.target.value }))} placeholder="https://..." className={inputCls} /></div>
+                    </div>
+                    <textarea value={newSurvey.completion_instructions} onChange={e => setNewSurvey(p => ({ ...p, completion_instructions: e.target.value }))} placeholder="Completion Instructions" className={`${inputCls} min-h-[60px] resize-none`} />
+                    <Btn variant="primary" onClick={handleCreateSurvey}><Plus className="w-3 h-3" /> Create Survey</Btn>
+                  </div>
+                </div>
+
+                {surveys.map(survey => {
+                  const sQuestions = surveyQuestions.filter(q => q.survey_id === survey.id);
+                  const sResponses = surveyResponses.filter(r => r.survey_id === survey.id);
+                  const pending = sResponses.filter(r => r.screenshot_url && r.status === "pending");
+
+                  return (
+                    <TableCard key={survey.id}>
+                      <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold text-foreground text-[13px]">{survey.title}</h4>
+                          <p className="text-[10px] text-muted-foreground">{survey.points_reward} pts · {sQuestions.length} questions · {sResponses.length} total responses</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Btn variant="outline" onClick={async () => {
+                            await supabase.from("surveys").update({ is_active: !survey.is_active }).eq("id", survey.id);
+                            await fetchData();
+                          }}>{survey.is_active ? "Deactivate" : "Activate"}</Btn>
+                          <button onClick={() => handleDeleteSurvey(survey.id)} className="text-destructive/60 hover:text-destructive p-1"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      </div>
+
+                      {/* Add Question UI */}
+                      <div className="p-4 bg-muted/5 border-b border-border/10">
+                        <p className="text-[11px] font-semibold mb-2">Add Question</p>
+                        <div className="space-y-2">
+                          <input
+                            value={newSurveyQuestion.survey_id === survey.id ? newSurveyQuestion.question_text : ""}
+                            onChange={e => setNewSurveyQuestion(p => ({ ...p, survey_id: survey.id, question_text: e.target.value }))}
+                            placeholder="Question text"
+                            className={inputCls}
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            {newSurveyQuestion.survey_id === survey.id && newSurveyQuestion.options.map((opt, i) => (
+                              <div key={i} className="flex gap-2 items-center">
+                                <input
+                                  value={opt.option_text}
+                                  onChange={e => {
+                                    const nextOpts = [...newSurveyQuestion.options];
+                                    nextOpts[i].option_text = e.target.value;
+                                    setNewSurveyQuestion(p => ({ ...p, options: nextOpts }));
+                                  }}
+                                  placeholder={`Option ${i + 1}`}
+                                  className={inputCls}
+                                />
+                                <input
+                                  type="checkbox"
+                                  checked={opt.is_correct}
+                                  onChange={e => {
+                                    const nextOpts = newSurveyQuestion.options.map((o, idx) => ({ ...o, is_correct: idx === i ? e.target.checked : false }));
+                                    setNewSurveyQuestion(p => ({ ...p, options: nextOpts }));
+                                  }}
+                                  className="accent-primary"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <Btn variant="outline" onClick={() => setNewSurveyQuestion(p => ({ ...p, survey_id: survey.id, options: [...p.options, { option_text: "", is_correct: false }] }))}>+ Add Option</Btn>
+                            <Btn variant="primary" onClick={() => handleAddQuestion(survey.id)}>Save Question</Btn>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* List Questions */}
+                      <div className="p-4 border-b border-border/10">
+                        <p className="text-[11px] text-muted-foreground font-semibold mb-2">Questions ({sQuestions.length})</p>
+                        <div className="space-y-2">
+                          {sQuestions.map((q, idx) => {
+                            const qOpts = surveyOptions.filter(o => o.question_id === q.id);
+                            return (
+                              <div key={q.id} className="text-[11px] p-2 rounded-lg border border-border/40">
+                                <div className="flex justify-between items-start">
+                                  <p className="font-medium">{idx + 1}. {q.question_text}</p>
+                                  <button onClick={() => handleDeleteQuestion(q.id)} className="text-destructive/60 hover:text-destructive"><X className="w-3 h-3" /></button>
+                                </div>
+                                <div className="mt-1 flex flex-wrap gap-2">
+                                  {qOpts.map(o => (
+                                    <span key={o.id} className={`px-2 py-0.5 rounded-full border ${o.is_correct ? "bg-primary/10 border-primary text-primary" : "border-border text-muted-foreground"}`}>{o.option_text}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Pending Approvals */}
+                      {pending.length > 0 && (
+                        <div className="p-4">
+                          <p className="text-[11px] text-primary font-semibold mb-2">⏳ Pending Approvals ({pending.length})</p>
+                          <div className="space-y-2">
+                            {pending.map(pr => {
+                              const screenshotUrl = getPublicUrl(pr.screenshot_url, "survey_screenshots");
+                              return (
+                                <div key={pr.id} className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3">
+                                  <div className="flex-1 min-w-0">
+                                    <UserLink userId={pr.user_id} />
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{new Date(pr.created_at).toLocaleDateString()}</p>
+                                    {screenshotUrl && (
+                                      <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-1"><ExternalLink className="w-2.5 h-2.5" /> View Proof</a>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Btn variant="primary" onClick={() => handleApproveSurveySubmission(pr.id, pr.user_id, survey.points_reward)}><Check className="w-3 h-3" /> Approve</Btn>
+                                    <Btn variant="outline" onClick={() => handleRejectSurveySubmission(pr.id)}>Reject</Btn>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </TableCard>
+                  );
+                })}
               </div>
             )}
 
