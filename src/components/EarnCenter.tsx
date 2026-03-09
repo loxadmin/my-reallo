@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Award, FileText, AlertCircle } from "lucide-react";
+import { Award, FileText, CircleAlert as AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import GlassCard from "@/components/GlassCard";

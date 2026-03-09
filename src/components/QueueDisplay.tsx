@@ -16,7 +16,7 @@ import LeaderboardTicker from "./LeaderboardTicker";
 import WalletCarousel from "./WalletCarousel";
 import ActivateWalletModal from "./ActivateWalletModal";
 import type { WalletType } from "./WalletCarousel";
-import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2, Star } from "lucide-react";
+import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Star } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
 
