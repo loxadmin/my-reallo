@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import DecisionFlow from "./DecisionFlow";
-import EarnCenter from "./EarnCenter";
 import VerifySpendFlow from "./VerifySpendFlow";
 import InfluencerPanel from "./InfluencerPanel";
 import NotificationsPanel from "./NotificationsPanel";
@@ -16,7 +15,7 @@ import LeaderboardTicker from "./LeaderboardTicker";
 import WalletCarousel from "./WalletCarousel";
 import ActivateWalletModal from "./ActivateWalletModal";
 import type { WalletType } from "./WalletCarousel";
-import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Star } from "lucide-react";
+import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2, Star } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
 
@@ -427,8 +426,16 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
 
         {/* ═══ EARN VIEW ═══ */}
         {view === "earn" && (
-          <motion.div key="earn" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <EarnCenter />
+          <motion.div key="earn" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <GlassCard variant="strong" className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Award className="w-4 h-4 text-primary" />
+                <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px]">Points Balance</p>
+              </div>
+              <h2 className="font-display text-2xl font-bold gradient-text">{pointsBalance.toLocaleString()}</h2>
+              <p className="text-muted-foreground mt-1 text-[11px]">= {formatNaira(nairaValue)} value</p>
+            </GlassCard>
+            <DecisionFlow />
           </motion.div>
         )}
 
