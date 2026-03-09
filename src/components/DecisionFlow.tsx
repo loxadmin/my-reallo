@@ -78,17 +78,39 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
 
   const fetchData = async () => {
     if (!user) return;
-    const [appsRes, respRes, surveysRes, sRespRes] = await Promise.all([
+    const [appsRes, respRes, surveysRes, questionsRes, optionsRes, sRespRes] = await Promise.all([
       fromApps().select("*").eq("is_active", true).order("app_name"),
       fromResponses().select("*").eq("user_id", user.id),
-      supabase.from("surveys").select("*, survey_questions(*, survey_options(*))").eq("is_active", true).order("created_at", { ascending: false }),
+      supabase.from("surveys").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+      supabase.from("survey_questions").select("*").order("order_index", { ascending: true }),
+      supabase.from("survey_options").select("*").order("created_at", { ascending: true }),
       supabase.from("survey_responses").select("*").eq("user_id", user.id),
     ]);
+
+    if (surveysRes.error) console.error("surveysRes.error", surveysRes.error);
+    if (questionsRes.error) console.error("questionsRes.error", questionsRes.error);
+    if (optionsRes.error) console.error("optionsRes.error", optionsRes.error);
+    if (sRespRes.error) console.error("sRespRes.error", sRespRes.error);
+
+    const surveysData = surveysRes.data || [];
+    const questionsData = questionsRes.data || [];
+    const optionsData = optionsRes.data || [];
+
+    const surveysWithQuestions = surveysData.map((survey: any) => ({
+      ...survey,
+      survey_questions: questionsData
+        .filter((q: any) => q.survey_id === survey.id)
+        .map((q: any) => ({
+          ...q,
+          survey_options: optionsData.filter((opt: any) => opt.question_id === q.id),
+        })),
+    }));
+
     const allApps = (appsRes.data || []) as unknown as DecisionApp[];
     setApps(allApps);
     const resps = (respRes.data || []) as unknown as DecisionResponse[];
     setResponses(resps);
-    setSurveys(surveysRes.data || []);
+    setSurveys(surveysWithQuestions);
     setSurveyResponses(sRespRes.data || []);
   };
 
