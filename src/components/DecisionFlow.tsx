@@ -84,6 +84,15 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
       supabase.from("surveys").select("*, survey_questions(*, survey_options(*))").eq("is_active", true).order("created_at", { ascending: false }),
       supabase.from("survey_responses").select("*").eq("user_id", user.id),
     ]);
+
+    if (surveysRes.error) {
+      console.error("surveysRes.error", surveysRes.error);
+    }
+
+    if (sRespRes.error) {
+      console.error("sRespRes.error", sRespRes.error);
+    }
+
     const allApps = (appsRes.data || []) as unknown as DecisionApp[];
     setApps(allApps);
     const resps = (respRes.data || []) as unknown as DecisionResponse[];
