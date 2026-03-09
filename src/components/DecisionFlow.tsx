@@ -910,6 +910,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
   return (
     <div className="space-y-4">
       {fileInput}
+      {surveyFileInput}
 
       {/* Top Level View Tabs - hidden when mode prop is passed */}
       {!mode && (
