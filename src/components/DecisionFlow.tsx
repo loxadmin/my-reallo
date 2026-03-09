@@ -92,7 +92,20 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
     if (optionsRes.error) console.error("optionsRes.error", optionsRes.error);
     if (sRespRes.error) console.error("sRespRes.error", sRespRes.error);
 
-    const surveysData = surveysRes.data || [];
+    let surveysData = surveysRes.data || [];
+    if (surveysRes.error) {
+      const fallbackSurveysRes = await supabase
+        .from("surveys")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (fallbackSurveysRes.error) {
+        console.error("fallbackSurveysRes.error", fallbackSurveysRes.error);
+      } else {
+        surveysData = (fallbackSurveysRes.data || []).filter((survey: any) => survey.is_active !== false);
+      }
+    }
+
     const questionsData = questionsRes.data || [];
     const optionsData = optionsRes.data || [];
 
