@@ -181,9 +181,6 @@ const WalletCarousel = ({
                         {formatCurrency(wallet.amount)}
                       </h2>
                     </div>
-                    <p className="text-[11px] text-muted-foreground mb-4">
-                      Claimable: <span className="text-primary font-semibold">{formatCurrency(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
-                    </p>
 
                     <button
                       onClick={() => setShowSpendPopup(true)}

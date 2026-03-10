@@ -40,7 +40,7 @@ type CategoryVerifStatus = Record<string, boolean>; // spend_type -> verified
 
 const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange }: QueueDisplayProps) => {
   const { user, profile, refreshProfile } = useAuth();
-  const { formatCurrency: formatNaira } = useCurrency();
+  const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
@@ -278,7 +278,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                     className="flex-1 h-10 rounded-xl text-[12px]"
                     disabled={!isOffQueue}
                   >
-                    {isOffQueue ? <><Wallet className="w-3.5 h-3.5" /> Claim</> : <><Lock className="w-3.5 h-3.5" /> Claim</>}
+                    {isOffQueue ? <><Wallet className="w-3.5 h-3.5" /> Claim {formatCurrency(nairaValue)}</> : <><Lock className="w-3.5 h-3.5" /> Claim {formatCurrency(nairaValue)}</>}
                   </GlassButton>
                   <GlassButton
                     variant="outline"
@@ -433,7 +433,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px]">Points Balance</p>
               </div>
               <h2 className="font-display text-2xl font-bold gradient-text">{pointsBalance.toLocaleString()}</h2>
-              <p className="text-muted-foreground mt-1 text-[11px]">= {formatNaira(nairaValue)} value</p>
+              <p className="text-muted-foreground mt-1 text-[11px]">= {formatCurrency(nairaValue)} value</p>
             </GlassCard>
 
             {view === "earn" && (
@@ -498,21 +498,21 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 </div>
                 <div className="text-right">
                   <p className="text-muted-foreground uppercase tracking-widest text-[10px]">Claimable</p>
-                  <p className="font-semibold text-primary text-[13px]">{formatNaira(nairaValue)}</p>
+                  <p className="font-semibold text-primary text-[13px]">{formatCurrency(nairaValue)}</p>
                 </div>
               </div>
               <div className="mt-3 w-full h-1.5 bg-muted rounded-full overflow-hidden">
                 <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min((nairaValue / targetAmount) * 100, 100)}%` }} transition={{ duration: 1, delay: 0.3 }} />
               </div>
-              <p className="text-muted-foreground mt-2 text-[11px]">{formatNaira(nairaValue)} / {formatNaira(targetAmount)}</p>
-              {claimedTotal > 0 && <p className="text-muted-foreground mt-1 text-[10px]">Already claimed: {formatNaira(claimedTotal)}</p>}
+              <p className="text-muted-foreground mt-2 text-[11px]">{formatCurrency(nairaValue)} / {formatCurrency(targetAmount)}</p>
+              {claimedTotal > 0 && <p className="text-muted-foreground mt-1 text-[10px]">Already claimed: {formatCurrency(claimedTotal)}</p>}
             </GlassCard>
 
             <GlassButton variant="primary" onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })} className="w-full" disabled={!isOffQueue}>
               {!isOffQueue ? (
-                <><Lock className="inline w-4 h-4" /> Complete Queue to Claim</>
+                <><Lock className="inline w-4 h-4" /> Complete Queue to Claim {formatCurrency(nairaValue)}</>
               ) : (
-                <><Wallet className="inline w-4 h-4" /> Claim Amount — Create Voucher</>
+                <><Wallet className="inline w-4 h-4" /> Claim {formatCurrency(nairaValue)} — Create Voucher</>
               )}
             </GlassButton>
           </motion.div>
