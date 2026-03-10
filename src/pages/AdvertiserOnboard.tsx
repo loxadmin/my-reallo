@@ -214,7 +214,7 @@ const AdvertiserOnboard = () => {
           <p className="text-muted-foreground text-sm mb-4">
             Your Letter of Intent application has been submitted for review. We'll notify you at <strong>{email}</strong> once it's processed.
           </p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[12px] text-muted-foreground">
             You can check your status at your advertiser dashboard anytime.
           </p>
           <button
@@ -280,7 +280,7 @@ const AdvertiserOnboard = () => {
           {/* Email */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-1.5">
-              <Mail className="w-4 h-4 text-primary" /> Official Email * {brandedEmailRequired && <span className="text-[10px] text-muted-foreground">(must match website domain)</span>}
+              <Mail className="w-4 h-4 text-primary" /> Official Email * {brandedEmailRequired && <span className="text-[12px] text-muted-foreground">(must match website domain)</span>}
             </label>
             <div className="flex gap-2">
               <input
@@ -294,13 +294,13 @@ const AdvertiserOnboard = () => {
                 <button
                   onClick={verificationSent ? handleVerifyCode : handleSendVerification}
                   disabled={verifying || !email || (!verificationSent && brandedEmailRequired && !emailMatchesWebsite())}
-                  className="clay-primary text-primary-foreground rounded-xl px-4 py-2.5 text-xs font-semibold whitespace-nowrap disabled:opacity-50"
+                  className="clay-primary text-primary-foreground rounded-xl px-4 py-2.5 text-[13px] font-semibold whitespace-nowrap disabled:opacity-50"
                 >
                   {verifying ? "..." : verificationSent ? "Verify" : "Send Code"}
                 </button>
               )}
               {emailVerified && (
-                <div className="flex items-center gap-1 text-primary text-xs font-semibold px-3">
+                <div className="flex items-center gap-1 text-primary text-[13px] font-semibold px-3">
                   <CheckCircle2 className="w-4 h-4" /> Verified
                 </div>
               )}
@@ -315,7 +315,7 @@ const AdvertiserOnboard = () => {
               />
             )}
             {brandedEmailRequired && email && websiteUrl && !emailMatchesWebsite() && !emailVerified && (
-              <p className="text-destructive text-xs mt-1">Email domain must match website: @{getDomain(websiteUrl)}</p>
+              <p className="text-destructive text-[13px] mt-1">Email domain must match website: @{getDomain(websiteUrl)}</p>
             )}
           </div>
 
@@ -338,7 +338,7 @@ const AdvertiserOnboard = () => {
           {/* Signature Upload */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-1.5">
-              <Upload className="w-4 h-4 text-primary" /> Signature * <span className="text-[10px] text-muted-foreground">(signed on white paper, photographed)</span>
+              <Upload className="w-4 h-4 text-primary" /> Signature * <span className="text-[12px] text-muted-foreground">(signed on white paper, photographed)</span>
             </label>
             <div className="flex items-center gap-4">
               {signaturePreview && (
@@ -365,7 +365,7 @@ const AdvertiserOnboard = () => {
             </button>
           </div>
 
-          <p className="text-[10px] text-muted-foreground text-center">
+          <p className="text-[12px] text-muted-foreground text-center">
             By submitting, you agree that this is a non-binding Letter of Intent for a minimum $50,000 advertising commitment once REALLO reaches 100,000 users.
           </p>
         </div>

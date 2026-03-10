@@ -81,8 +81,8 @@ const ActivateWalletModal = ({ type, onClose, onComplete }: ActivateWalletModalP
                     <Icon className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="text-[13px] font-bold text-foreground">{label} Spend</h2>
-                    <p className="text-[12px] text-muted-foreground">How much per week?</p>
+                    <h2 className="text-sm font-bold text-foreground">{label} Spend</h2>
+                    <p className="text-[13px] text-muted-foreground">How much per week?</p>
                   </div>
                 </div>
                 <GlassInput
@@ -95,13 +95,13 @@ const ActivateWalletModal = ({ type, onClose, onComplete }: ActivateWalletModalP
                   min="0"
                 />
                 {weeklyAmount && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[12px] text-primary mt-3">
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[13px] text-primary mt-3">
                     Annual: {formatCurrency(annualAmount)}
                   </motion.p>
                 )}
                 <GlassButton
                   variant="primary"
-                  className="w-full mt-6 text-[13px]"
+                  className="w-full mt-6 text-sm"
                   onClick={() => setStep("confirm")}
                   disabled={!weeklyAmount || Number(weeklyAmount) <= 0}
                 >
@@ -113,12 +113,12 @@ const ActivateWalletModal = ({ type, onClose, onComplete }: ActivateWalletModalP
             {step === "confirm" && (
               <motion.div key="confirm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
                 <Icon className="w-8 h-8 text-primary mx-auto mb-3" />
-                <p className="text-[12px] text-muted-foreground uppercase tracking-widest mb-2">Annual {label} Spend</p>
+                <p className="text-[13px] text-muted-foreground uppercase tracking-widest mb-2">Annual {label} Spend</p>
                 <h2 className="font-display text-2xl font-bold gradient-text mb-4">{formatCurrency(annualAmount)}</h2>
-                <p className="text-[12px] text-muted-foreground mb-6">
+                <p className="text-[13px] text-muted-foreground mb-6">
                   You'll need to verify this spend with transaction IDs to claim.
                 </p>
-                <GlassButton variant="primary" className="w-full text-[13px]" onClick={handleConfirm}>
+                <GlassButton variant="primary" className="w-full text-sm" onClick={handleConfirm}>
                   Save & Activate
                 </GlassButton>
               </motion.div>
