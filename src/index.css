@@ -80,11 +80,26 @@
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
     font-size: 13px;
+    line-height: 1.55;
+    font-weight: 400;
+    letter-spacing: 0.002em;
   }
-  h1 { font-size: 60px; @apply font-bold tracking-tight; }
-  h2 { font-size: 40px; @apply font-bold tracking-tight; }
-  h3 { font-size: 22px; @apply font-bold tracking-tight; }
-  button, input, select, textarea { font-size: 13px !important; }
+  p { line-height: 1.62; }
+  h1 { font-size: 56px; @apply font-semibold tracking-tight; line-height: 1.06; letter-spacing: -0.02em; }
+  h2 { font-size: 36px; @apply font-semibold tracking-tight; line-height: 1.12; letter-spacing: -0.018em; }
+  h3 { font-size: 21px; @apply font-semibold tracking-tight; line-height: 1.2; letter-spacing: -0.012em; }
+  button, input, select, textarea {
+    font-size: 13px !important;
+    letter-spacing: 0.004em;
+  }
+
+  :root {
+    --muted-foreground: 0 0% 28%;
+  }
+
+  :root.dark {
+    --muted-foreground: 150 5% 78%;
+  }
 
   /* Hide scrollbar on sidebar */
   [data-sidebar="content"]::-webkit-scrollbar { display: none; }
