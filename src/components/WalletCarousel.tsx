@@ -112,13 +112,13 @@ const WalletCarousel = ({
         <div className="flex">
           {wallets.map((wallet, idx) => (
             <div key={wallet.type} className="min-w-0 shrink-0 grow-0 basis-full">
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                       {wallet.icon}
                     </div>
-                    <p className="text-muted-foreground uppercase tracking-[0.18em] text-[12px] font-semibold">
+                    <p className="text-muted-foreground uppercase tracking-[0.16em] text-[11px] font-semibold">
                       {wallet.label}
                     </p>
                   </div>
@@ -176,22 +176,22 @@ const WalletCarousel = ({
 
                 {wallet.active ? (
                   <>
-                    <div className="flex items-baseline gap-3 mb-1">
+                    <div className="flex items-baseline gap-3 mb-0.5">
                       <h2 className="font-display text-2xl font-bold gradient-text tabular-nums leading-none">
                         {formatCurrency(wallet.amount)}
                       </h2>
                     </div>
-                    <p className="text-[13px] text-muted-foreground mb-5">
-                      Claimable: <span className="text-primary font-bold">{formatCurrency(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
+                    <p className="text-[12px] text-muted-foreground mb-4">
+                      Claimable <span className="text-primary font-bold">{formatCurrency(nairaValue)}</span>
                     </p>
 
                     <button
                       onClick={() => setShowSpendPopup(true)}
-                      className="w-full text-left space-y-2 mb-6 cursor-pointer group/goal"
+                      className="w-full text-left space-y-2 mb-4 cursor-pointer group/goal"
                     >
                       <div className="flex justify-between items-end">
-                        <p className="font-semibold text-foreground text-sm group-hover/goal:text-primary transition-colors">GOAL - {goalLabel}</p>
-                        <p className="text-muted-foreground text-[13px] font-medium">
+                        <p className="font-semibold text-foreground text-sm group-hover/goal:text-primary transition-colors">GOAL — {goalLabel}</p>
+                        <p className="text-muted-foreground text-[12px] font-medium">
                           {targetAmount > 0 ? Math.round((nairaValue / targetAmount) * 100) : 0}%
                         </p>
                       </div>
@@ -203,6 +203,7 @@ const WalletCarousel = ({
                           transition={{ duration: 1.2, ease: "easeOut" }}
                         />
                       </div>
+                      <p className="text-[11px] text-muted-foreground">{formatCurrency(nairaValue)} of {formatCurrency(targetAmount)}</p>
                     </button>
                   </>
                 ) : (
