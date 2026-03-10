@@ -544,28 +544,23 @@ const InfluencerPanel = () => {
           </div>
 
           <div className="flex gap-2 mb-4">
-            <button onClick={() => setTab("overview")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "overview" ? "clay-primary text-foreground" : "glass-button text-muted-foreground"}`}>
+            <button onClick={() => setTab("overview")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "overview" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
               Overview
             </button>
-            <button onClick={() => setTab("withdraw")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "withdraw" ? "clay-primary text-foreground" : "glass-button text-muted-foreground"}`}>
+            <button onClick={() => setTab("withdraw")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "withdraw" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
               Withdraw
             </button>
-            <button onClick={() => setTab("challenges")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "challenges" ? "clay-primary text-foreground" : "glass-button text-muted-foreground"}`}>
+            <button onClick={() => setTab("challenges")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "challenges" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
               Challenges
             </button>
           </div>
 
           {tab === "overview" && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="glass rounded-xl p-4 text-center md:col-span-2">
-                  <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px]">Balance</p>
-                  <h2 className="font-display text-2xl font-bold gradient-text">{formatNaira(wallet.balance)}</h2>
-                  <p className="text-muted-foreground text-[11px] mt-1">Total earned: {formatNaira(totalEarned)}</p>
-                </div>
-                <div className="glass rounded-xl p-3">
-                  <InfluencerSurveyPanel mode="highlight" />
-                </div>
+              <div className="text-center py-3">
+                <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px]">Balance</p>
+                <h2 className="font-display text-2xl font-bold gradient-text">{formatNaira(wallet.balance)}</h2>
+                <p className="text-muted-foreground text-[11px] mt-1">Total earned: {formatNaira(totalEarned)}</p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -618,6 +613,13 @@ const InfluencerPanel = () => {
                 </div>
               )}
 
+              <div className="space-y-3">
+                <h3 className="font-semibold text-foreground text-[15px]">Influencer Surveys</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Complete surveys to earn direct cash rewards.
+                </p>
+                <InfluencerSurveyPanel />
+              </div>
             </div>
           )}
 
