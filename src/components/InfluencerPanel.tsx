@@ -535,35 +535,38 @@ const InfluencerPanel = () => {
     const totalEarned = referralEarnings + challengeEarnings + surveyEarnings;
 
     return (
-      <div className="space-y-4 sm:space-y-6">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,1fr)] xl:items-stretch">
-          <GlassCard variant="glow" className="p-6 sm:p-7 lg:p-8">
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
-              <div className="space-y-5">
-                <div className="flex items-center gap-2">
-                  <Wallet className="w-5 h-5 text-primary" />
-                  <h3 className="font-semibold text-foreground text-[15px]">Influencer Wallet</h3>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px]">Balance</p>
-                  <h2 className="font-display text-4xl sm:text-5xl font-bold gradient-text">{formatNaira(wallet.balance)}</h2>
-                  <p className="text-muted-foreground text-[11px]">Total earned: {formatNaira(totalEarned)}</p>
-                </div>
+      <div className="space-y-4 sm:space-y-5">
+        <GlassCard variant="glow" className="p-5 sm:p-6">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold text-foreground text-[15px]">Influencer Wallet</h3>
               </div>
-
-              <div className="space-y-3 lg:justify-self-end w-full lg:max-w-[220px]">
-                <div className="glass rounded-2xl px-3 py-2.5 text-center">
-                  <p className="text-[10px] text-muted-foreground">Wallet Status</p>
-                  <p className="text-[12px] text-foreground font-semibold capitalize">{wallet.status.replace("_", " ")}</p>
-                </div>
-                <GlassButton variant="primary" onClick={() => setTab("withdraw")} className="w-full text-[12px]">
-                  <ArrowDownToLine className="w-3.5 h-3.5" /> Request Withdrawal
-                </GlassButton>
+              <div className="space-y-1">
+                <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px]">Balance</p>
+                <h2 className="font-display text-3xl sm:text-4xl font-bold gradient-text">{formatNaira(wallet.balance)}</h2>
+                <p className="text-muted-foreground text-[11px]">Total earned: {formatNaira(totalEarned)}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {bankAccount && (
+                  <div className="glass rounded-2xl p-3">
+                    <p className="text-[10px] text-muted-foreground mb-1">Bank Account</p>
+                    <p className="text-foreground text-[12px] font-semibold">{bankAccount.account_name}</p>
+                    <p className="text-muted-foreground text-[11px]">{bankAccount.bank_name} • {bankAccount.account_number}</p>
+                  </div>
+                )}
+                {influencerLink && (
+                  <div className="glass rounded-2xl p-3">
+                    <p className="text-[10px] text-muted-foreground mb-1">Your Referral Link</p>
+                    <p className="text-[10px] text-foreground font-mono truncate">{influencerLink}</p>
+                    <GlassButton variant="outline" onClick={() => { navigator.clipboard.writeText(influencerLink); toast({ title: "Copied!" }); }} className="w-full mt-2 text-[11px]">
+                      Copy Referral Link
+                    </GlassButton>
+                  </div>
+                )}
               </div>
             </div>
-          </GlassCard>
-
-          <GlassCard className="p-5 sm:p-6">
             <div className="space-y-3">
               <h3 className="font-semibold text-foreground text-[15px]">Influencer Surveys</h3>
               <p className="text-[11px] text-muted-foreground">
@@ -571,36 +574,36 @@ const InfluencerPanel = () => {
               </p>
               <InfluencerSurveyPanel compact />
             </div>
-          </GlassCard>
-        </div>
+          </div>
+        </GlassCard>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <GlassCard className="p-3.5 sm:p-4 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <GlassCard className="p-3 sm:p-4 text-center">
             <p className="text-lg font-bold text-primary">{referrals.length}</p>
             <p className="text-[10px] text-muted-foreground">Referrals</p>
           </GlassCard>
-          <GlassCard className="p-3.5 sm:p-4 text-center">
+          <GlassCard className="p-3 sm:p-4 text-center">
             <p className="text-lg font-bold text-foreground">{formatNaira(totalEarned)}</p>
             <p className="text-[10px] text-muted-foreground">Earned</p>
           </GlassCard>
-          <GlassCard className="p-3.5 sm:p-4 text-center">
+          <GlassCard className="p-3 sm:p-4 text-center col-span-2 sm:col-span-1">
             <p className="text-lg font-bold text-foreground">{withdrawals.filter(w => w.status === "approved").length}</p>
             <p className="text-[10px] text-muted-foreground">Withdrawals</p>
           </GlassCard>
         </div>
 
-        <GlassCard className="p-2.5 sm:p-3">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-            <button onClick={() => setTab("overview")} className={`py-2.5 rounded-lg text-[11px] font-medium transition-all ${tab === "overview" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
+        <GlassCard className="p-3 sm:p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button onClick={() => setTab("overview")} className={`py-2.5 rounded-xl text-[12px] font-medium transition-all ${tab === "overview" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
               Overview
             </button>
-            <button onClick={() => setTab("surveys")} className={`py-2.5 rounded-lg text-[11px] font-medium transition-all ${tab === "surveys" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
+            <button onClick={() => setTab("surveys")} className={`py-2.5 rounded-xl text-[12px] font-medium transition-all ${tab === "surveys" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
               Surveys
             </button>
-            <button onClick={() => setTab("challenges")} className={`py-2.5 rounded-lg text-[11px] font-medium transition-all ${tab === "challenges" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
+            <button onClick={() => setTab("challenges")} className={`py-2.5 rounded-xl text-[12px] font-medium transition-all ${tab === "challenges" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
               Challenges
             </button>
-            <button onClick={() => setTab("withdraw")} className={`py-2.5 rounded-lg text-[11px] font-medium transition-all ${tab === "withdraw" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
+            <button onClick={() => setTab("withdraw")} className={`py-2.5 rounded-xl text-[12px] font-medium transition-all ${tab === "withdraw" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
               Withdraw
             </button>
           </div>
