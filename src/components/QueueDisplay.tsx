@@ -474,20 +474,13 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {view === "goal" && (
           <motion.div key="goal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <GlassCard>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-muted-foreground uppercase tracking-widest text-[12px]">Your Goal</p>
-                  <p className="font-semibold text-foreground text-sm">GOAL - {goalLabels[goal] || goal}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-muted-foreground uppercase tracking-widest text-[12px]">Claimable</p>
-                  <p className="font-semibold text-primary text-sm">{formatNaira(nairaValue)}</p>
-                </div>
+              <div>
+                <p className="text-muted-foreground uppercase tracking-widest text-[12px]">Your Goal</p>
+                <p className="font-semibold text-foreground text-sm">GOAL - {goalLabels[goal] || goal}</p>
               </div>
               <div className="mt-3 w-full h-1.5 bg-muted rounded-full overflow-hidden">
                 <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min((nairaValue / targetAmount) * 100, 100)}%` }} transition={{ duration: 1, delay: 0.3 }} />
               </div>
-              <p className="text-muted-foreground mt-2 text-[12px]">{formatNaira(nairaValue)} / {formatNaira(targetAmount)}</p>
               {claimedTotal > 0 && <p className="text-muted-foreground mt-1 text-[12px]">Already claimed: {formatNaira(claimedTotal)}</p>}
             </GlassCard>
 
@@ -495,7 +488,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               {!isOffQueue ? (
                 <><Lock className="inline w-4 h-4" /> Complete Queue to Claim</>
               ) : (
-                <><Wallet className="inline w-4 h-4" /> Claim Amount — Create Voucher</>
+                <><Wallet className="inline w-4 h-4" /> Claim {formatNaira(nairaValue)} amount</>
               )}
             </GlassButton>
           </motion.div>
