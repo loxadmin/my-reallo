@@ -695,7 +695,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
 
       return (
         <div className="space-y-3">
-          <div className="flex gap-1 p-1 rounded-xl glass">
+          <div className="flex gap-1 p-1 rounded-xl glass-strong">
             {([
               { id: "earn" as EarnTab, label: "Earn", icon: Zap, count: earnResponses.length },
               { id: "ongoing" as EarnTab, label: "Ongoing", icon: Clock, count: ongoingResponses.length },
@@ -704,8 +704,8 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
               <button
                 key={tab.id}
                 onClick={() => setEarnTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-medium transition-all ${
-                  earnTab === tab.id ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-semibold transition-all ${
+                  earnTab === tab.id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <tab.icon className="w-3.5 h-3.5" />
@@ -737,18 +737,16 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                   <GlassCard key={resp.id} className="p-4" animate={false}>
                     <div className="flex items-center gap-3">
                       {app.app_logo_url ? (
-                        <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
+                        <img src={app.app_logo_url} alt={app.app_name} className="w-10 h-10 rounded-xl object-cover" />
                       ) : (
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[12px] font-semibold text-primary">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-[13px] font-semibold text-primary">
                           {app.app_name.charAt(0)}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground">{app.app_name}</p>
-                      </div>
-                      <div className="text-right">
+                        <p className="text-sm font-bold text-foreground leading-tight">{app.app_name}</p>
                         {resp.points_awarded > 0 && (
-                          <p className="text-[13px] text-primary font-semibold">+{resp.points_awarded} pts</p>
+                          <p className="text-[12px] text-primary font-semibold mt-0.5">+{resp.points_awarded} pts earned</p>
                         )}
                       </div>
                     </div>
@@ -1009,15 +1007,15 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
           return (
             <GlassCard key={survey.id} className="p-4 overflow-hidden relative">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <MessageSquare className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-semibold text-foreground truncate">{survey.title}</h4>
-                  <p className="text-[12px] text-muted-foreground line-clamp-1">{survey.description}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[13px] text-primary font-bold">+{survey.points_reward} pts</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="text-sm font-bold text-foreground truncate leading-tight">{survey.title}</h4>
+                    <p className="text-[12px] text-primary font-bold shrink-0">+{survey.points_reward} pts</p>
+                  </div>
+                  <p className="text-[12px] text-muted-foreground line-clamp-1 mt-0.5">{survey.description}</p>
                 </div>
               </div>
 
@@ -1096,23 +1094,23 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
 
       {/* Top Level View Tabs - hidden when mode prop is passed */}
       {!mode && (
-        <div className="flex gap-2 p-1 rounded-xl glass-strong">
+        <div className="flex gap-1 p-1 rounded-xl glass-strong">
           <button
             onClick={() => setActiveEarnView("tasks")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              activeEarnView === "tasks" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-bold transition-all ${
+              activeEarnView === "tasks" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Zap className="w-4 h-4" />
+            <Zap className="w-3.5 h-3.5" />
             Tasks
           </button>
           <button
             onClick={() => setActiveEarnView("surveys")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              activeEarnView === "surveys" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-bold transition-all ${
+              activeEarnView === "surveys" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <MessageSquare className="w-4 h-4" />
+            <MessageSquare className="w-3.5 h-3.5" />
             Surveys
           </button>
         </div>

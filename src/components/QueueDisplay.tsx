@@ -318,7 +318,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                     transition={{ duration: 1 }}
                   />
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="text-center">
                     <p className="text-sm font-bold text-foreground">{todaySkipped}</p>
                     <p className="text-[12px] text-muted-foreground">Skipped Today</p>
@@ -327,13 +327,9 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                     <p className="text-sm font-bold text-primary">{`${nextUnlock.hours}h ${nextUnlock.minutes}m`}</p>
                     <p className="text-[12px] text-muted-foreground">Next Advance</p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-sm font-bold text-foreground">50/day</p>
-                    <p className="text-[12px] text-muted-foreground">Auto Skip</p>
-                  </div>
                 </div>
-                <p className="text-[12px] text-muted-foreground mt-3 text-center">
-                  Refer friends to skip 20 positions each
+                <p className="text-[12px] text-muted-foreground mt-4 text-center">
+                  Refer friends to skip faster
                 </p>
               </GlassCard>
             )}
@@ -351,39 +347,35 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             <div className="space-y-3">
               <p className="text-foreground font-bold text-sm px-1 tracking-tight">Services</p>
               <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => onViewChange?.("earn")} className="layout-grid-item group">
+                <button onClick={() => onViewChange?.("earn")} className="layout-grid-item group h-32">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Award className="w-4 h-4 text-primary" />
                   </div>
-                  <p className="font-semibold text-foreground text-[13px] mb-0.5">Earn Points</p>
-                  <p className="text-muted-foreground text-[12px] leading-relaxed">Complete tasks to earn</p>
+                  <p className="font-semibold text-foreground text-[13px]">Earn Points</p>
                 </button>
 
                 <button
                   onClick={() => isOffQueue ? onViewChange?.("verify") : toast({ title: "Queue Locked", description: "Complete the queue to unlock verification." })}
-                  className="layout-grid-item group"
+                  className="layout-grid-item group h-32"
                 >
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Check className="w-4 h-4 text-primary" />
                   </div>
-                  <p className="font-semibold text-foreground text-[13px] mb-0.5">Verify Spend</p>
-                  <p className="text-muted-foreground text-[12px] leading-relaxed">Submit receipts</p>
+                  <p className="font-semibold text-foreground text-[13px]">Verify Spend</p>
                 </button>
 
-                <button onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })} className="layout-grid-item group">
+                <button onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })} className="layout-grid-item group h-32">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Gift className="w-4 h-4 text-primary" />
                   </div>
-                  <p className="font-semibold text-foreground text-[13px] mb-0.5">Vouchers</p>
-                  <p className="text-muted-foreground text-[12px] leading-relaxed">Claim your vouchers</p>
+                  <p className="font-semibold text-foreground text-[13px]">Vouchers</p>
                 </button>
 
-                <button onClick={handleShare} className="layout-grid-item group">
+                <button onClick={handleShare} className="layout-grid-item group h-32">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Share2 className="w-4 h-4 text-primary" />
                   </div>
-                  <p className="font-semibold text-foreground text-[13px] mb-0.5">Refer & Earn</p>
-                  <p className="text-muted-foreground text-[12px] leading-relaxed">{referralCount} referrals</p>
+                  <p className="font-semibold text-foreground text-[13px]">Refer & Earn</p>
                 </button>
               </div>
             </div>
@@ -427,45 +419,36 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {/* ═══ EARN VIEWS ═══ */}
         {(view === "earn" || view === "tasks" || view === "surveys") && (
           <motion.div key="earn-group" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <GlassCard variant="strong" className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Award className="w-4 h-4 text-primary" />
-                <p className="text-muted-foreground uppercase tracking-[0.2em] text-[12px]">Points Balance</p>
-              </div>
-              <h2 className="font-display text-2xl font-bold gradient-text">{pointsBalance.toLocaleString()}</h2>
-              <p className="text-muted-foreground mt-1 text-[12px]">= {formatNaira(nairaValue)} value</p>
+            <GlassCard variant="strong" className="text-center py-6">
+              <p className="text-muted-foreground uppercase tracking-[0.25em] text-[12px] font-semibold mb-2">Points Balance</p>
+              <h2 className="font-display text-3xl font-bold gradient-text mb-1">{pointsBalance.toLocaleString()}</h2>
+              <p className="text-muted-foreground text-[13px] font-medium">= {formatNaira(nairaValue)} value</p>
             </GlassCard>
 
             {view === "earn" && (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 <button
                   onClick={() => onViewChange?.("tasks")}
-                  className="glass-card p-6 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
+                  className="glass-card p-4 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Zap className="w-6 h-6 text-primary" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Zap className="w-5 h-5 text-primary" />
                     </div>
-                    <div className="text-left">
-                      <h3 className="font-bold text-foreground">Tasks</h3>
-                      <p className="text-[13px] text-muted-foreground">Complete simple tasks to earn points</p>
-                    </div>
+                    <h3 className="font-bold text-foreground text-sm">Tasks</h3>
                   </div>
                   <Check className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
                 </button>
 
                 <button
                   onClick={() => onViewChange?.("surveys")}
-                  className="glass-card p-6 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
+                  className="glass-card p-4 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <MessageSquare className="w-6 h-6 text-primary" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <MessageSquare className="w-5 h-5 text-primary" />
                     </div>
-                    <div className="text-left">
-                      <h3 className="font-bold text-foreground">Surveys</h3>
-                      <p className="text-[13px] text-muted-foreground">Share your feedback and get rewarded</p>
-                    </div>
+                    <h3 className="font-bold text-foreground text-sm">Surveys</h3>
                   </div>
                   <Check className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
                 </button>

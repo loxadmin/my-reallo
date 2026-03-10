@@ -181,16 +181,18 @@ const WalletCarousel = ({
                         {formatCurrency(wallet.amount)}
                       </h2>
                     </div>
-                    <p className="text-[13px] text-muted-foreground mb-5">
-                      Claimable: <span className="text-primary font-bold">{formatCurrency(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
+                    <p className="text-[13px] text-muted-foreground mb-3 flex items-center gap-2">
+                      <span className="text-primary font-bold">{formatCurrency(nairaValue)}</span>
+                      <span className="opacity-40">•</span>
+                      <span>{pointsBalance.toLocaleString()} pts</span>
                     </p>
 
                     <button
                       onClick={() => setShowSpendPopup(true)}
-                      className="w-full text-left space-y-2 mb-6 cursor-pointer group/goal"
+                      className="w-full text-left space-y-2 mb-4 cursor-pointer group/goal"
                     >
                       <div className="flex justify-between items-end">
-                        <p className="font-semibold text-foreground text-sm group-hover/goal:text-primary transition-colors">GOAL - {goalLabel}</p>
+                        <p className="font-semibold text-foreground text-sm group-hover/goal:text-primary transition-colors">{goalLabel}</p>
                         <p className="text-muted-foreground text-[13px] font-medium">
                           {targetAmount > 0 ? Math.round((nairaValue / targetAmount) * 100) : 0}%
                         </p>
