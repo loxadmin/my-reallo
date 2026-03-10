@@ -25,7 +25,7 @@ type InfluencerSurveyResponse = {
   reward_amount: number;
 };
 
-export default function InfluencerSurveyPanel() {
+export default function InfluencerSurveyPanel({ mode = "full" }: { mode?: "full" | "highlight" }) {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -248,6 +248,19 @@ export default function InfluencerSurveyPanel() {
     [surveys, responses]
   );
 
+  const highlightSurvey = useMemo(() => {
+    const actionable = visibleSurveys.find((survey) => {
+      const response = getResponse(survey.id);
+      if (!response) return true;
+      if (response.status === "in_progress" || response.status === "rejected") {
+        return true;
+      }
+      return false;
+    });
+
+    return actionable || visibleSurveys[0] || null;
+  }, [visibleSurveys, responses]);
+
   if (activeSurvey) {
     const questions = activeSurvey.influencer_survey_questions || [];
     const question = questions[currentQuestionIndex];
@@ -326,6 +339,75 @@ export default function InfluencerSurveyPanel() {
     );
   }
 
+  const renderSurveyCard = (survey: InfluencerSurvey) => {
+    const response = getResponse(survey.id);
+    const expired = response && (response.status === "in_progress" || response.status === "rejected") && isExpired(response);
+    const timeLeft = response ? getTimeLeftLabel(response) : "";
+
+    return (
+      <GlassCard key={survey.id} className="p-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h4 className="font-semibold">{survey.title}</h4>
+            {survey.description ? <p className="text-sm text-muted-foreground">{survey.description}</p> : null}
+          </div>
+          <div className="font-bold text-primary whitespace-nowrap">{formatNaira(Number(survey.reward_amount))}</div>
+        </div>
+
+        {!response && (
+          <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>
+            Complete survey to earn {formatNaira(Number(survey.reward_amount))}
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </GlassButton>
+        )}
+
+        {response?.status === "in_progress" && !expired && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-accent/10">
+              <Clock className="w-4 h-4" />
+              <span>Quiz passed. {timeLeft} to upload proof.</span>
+            </div>
+            <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>Continue survey</GlassButton>
+          </div>
+        )}
+
+        {response?.status === "pending" && (
+          <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-accent/10">
+            <AlertCircle className="w-4 h-4" />
+            <span>Proof submitted. Pending review.</span>
+          </div>
+        )}
+
+        {response?.status === "approved" && (
+          <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-primary/10">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Earned {formatNaira(Number(response.reward_amount))}</span>
+          </div>
+        )}
+
+        {response?.status === "rejected" && !expired && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-destructive/10">
+              <X className="w-4 h-4" />
+              <span>Proof rejected. {timeLeft} to upload again.</span>
+            </div>
+            <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>Upload proof again</GlassButton>
+          </div>
+        )}
+
+        {expired && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-destructive/10">
+              <Clock className="w-4 h-4" />
+              <span>Your 20-day window expired. You can restart this survey.</span>
+            </div>
+            <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>Restart survey</GlassButton>
+          </div>
+        )}
+      </GlassCard>
+    );
+  };
+
   return (
     <div className="space-y-4">
       {visibleSurveys.length === 0 ? (
@@ -333,74 +415,9 @@ export default function InfluencerSurveyPanel() {
           <p className="text-sm text-muted-foreground">No influencer surveys available right now.</p>
         </GlassCard>
       ) : (
-        visibleSurveys.map((survey) => {
-          const response = getResponse(survey.id);
-          const expired = response && (response.status === "in_progress" || response.status === "rejected") && isExpired(response);
-          const timeLeft = response ? getTimeLeftLabel(response) : "";
-
-          return (
-            <GlassCard key={survey.id} className="p-4 space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h4 className="font-semibold">{survey.title}</h4>
-                  {survey.description ? <p className="text-sm text-muted-foreground">{survey.description}</p> : null}
-                </div>
-                <div className="font-bold text-primary whitespace-nowrap">{formatNaira(Number(survey.reward_amount))}</div>
-              </div>
-
-              {!response && (
-                <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>
-                  Complete survey to earn {formatNaira(Number(survey.reward_amount))}
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </GlassButton>
-              )}
-
-              {response?.status === "in_progress" && !expired && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-accent/10">
-                    <Clock className="w-4 h-4" />
-                    <span>Quiz passed. {timeLeft} to upload proof.</span>
-                  </div>
-                  <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>Continue survey</GlassButton>
-                </div>
-              )}
-
-              {response?.status === "pending" && (
-                <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-accent/10">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>Proof submitted. Pending review.</span>
-                </div>
-              )}
-
-              {response?.status === "approved" && (
-                <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-primary/10">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Earned {formatNaira(Number(response.reward_amount))}</span>
-                </div>
-              )}
-
-              {response?.status === "rejected" && !expired && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-destructive/10">
-                    <X className="w-4 h-4" />
-                    <span>Proof rejected. {timeLeft} to upload again.</span>
-                  </div>
-                  <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>Upload proof again</GlassButton>
-                </div>
-              )}
-
-              {expired && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-destructive/10">
-                    <Clock className="w-4 h-4" />
-                    <span>Your 20-day window expired. You can restart this survey.</span>
-                  </div>
-                  <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>Restart survey</GlassButton>
-                </div>
-              )}
-            </GlassCard>
-          );
-        })
+        mode === "highlight"
+          ? highlightSurvey && renderSurveyCard(highlightSurvey)
+          : visibleSurveys.map((survey) => renderSurveyCard(survey))
       )}
     </div>
   );
