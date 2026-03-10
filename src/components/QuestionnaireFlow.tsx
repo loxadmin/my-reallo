@@ -238,9 +238,9 @@ const QuestionnaireFlow = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-display font-semibold text-foreground text-sm">{q.title}</p>
-              <p className="text-[13px] text-muted-foreground mt-1">Earn {q.points_reward} points</p>
+              <p className="text-xs text-muted-foreground mt-1">Earn {q.points_reward} points</p>
             </div>
-            <GlassButton variant="primary" onClick={() => handleStart(q)} className="px-4 py-2 text-[13px]">
+            <GlassButton variant="primary" onClick={() => handleStart(q)} className="px-4 py-2 text-xs">
               Start
             </GlassButton>
           </div>
@@ -256,25 +256,25 @@ const QuestionnaireFlow = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-display font-semibold text-foreground text-sm">{q.title}</p>
-                <p className="text-[13px] text-primary mt-1">+{resp.points_awarded} pts earned</p>
+                <p className="text-xs text-primary mt-1">+{resp.points_awarded} pts earned</p>
               </div>
               <div className="text-right">
                 {resp.would_switch && daysLeft !== null && daysLeft > 0 && (
-                  <div className="flex items-center gap-1 text-[13px] text-muted-foreground">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="w-3 h-3" />
                     <span>{daysLeft}d to switch</span>
                   </div>
                 )}
                 {resp.would_switch && daysLeft === 0 && q.switch_enabled && q.switch_link && (
                   <a href={q.switch_link} target="_blank" rel="noopener noreferrer">
-                    <GlassButton variant="primary" className="px-3 py-1.5 text-[13px]">
+                    <GlassButton variant="primary" className="px-3 py-1.5 text-xs">
                       <ExternalLink className="w-3 h-3 mr-1 inline" />
                       Switch Now
                     </GlassButton>
                   </a>
                 )}
                 {!resp.would_switch && (
-                  <span className="text-[13px] text-muted-foreground">Declined</span>
+                  <span className="text-xs text-muted-foreground">Declined</span>
                 )}
               </div>
             </div>

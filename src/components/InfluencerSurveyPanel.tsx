@@ -296,7 +296,7 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
 
           {surveyStep === "quiz" && question && (
             <div className="space-y-4">
-              <div className="text-[13px] text-muted-foreground">Question {currentQuestionIndex + 1} of {questions.length}</div>
+              <div className="text-xs text-muted-foreground">Question {currentQuestionIndex + 1} of {questions.length}</div>
               <div className="font-medium">{question.question_text}</div>
               <div className="space-y-2">
                 {(question.influencer_survey_options || []).map((option) => (

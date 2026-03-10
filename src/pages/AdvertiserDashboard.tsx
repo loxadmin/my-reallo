@@ -203,7 +203,7 @@ const AdvertiserDashboard = () => {
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold gradient-text mb-1">REALLO</h1>
             <h2 className="text-sm font-semibold text-foreground mb-1">Advertiser Dashboard</h2>
-            <p className="text-muted-foreground text-[13px]">Sign in with your verified email to access your dashboard.</p>
+            <p className="text-muted-foreground text-xs">Sign in with your verified email to access your dashboard.</p>
           </div>
 
           <div className="space-y-3">
@@ -245,7 +245,7 @@ const AdvertiserDashboard = () => {
             {otpSent && (
               <button
                 onClick={() => { setOtpSent(false); setOtpCode(""); }}
-                className="w-full text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+                className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 Use a different email
               </button>
@@ -283,7 +283,7 @@ const AdvertiserDashboard = () => {
             )}
             <div>
               <h3 className="font-bold text-foreground" style={{ fontSize: "16px" }}>{submission.brand_name}</h3>
-              <p className="text-muted-foreground text-[13px]">{submission.email}</p>
+              <p className="text-muted-foreground text-xs">{submission.email}</p>
             </div>
           </div>
 
@@ -297,7 +297,7 @@ const AdvertiserDashboard = () => {
             <button
               onClick={handleDownloadLoi}
               disabled={downloading}
-              className="flex items-center gap-2 clay-primary text-primary-foreground rounded-xl px-4 py-2.5 text-[13px] font-semibold w-fit"
+              className="flex items-center gap-2 clay-primary text-primary-foreground rounded-xl px-4 py-2.5 text-xs font-semibold w-fit"
             >
               <Download className="w-4 h-4" /> {downloading ? "Downloading..." : "Download LOI PDF"}
             </button>
@@ -305,7 +305,7 @@ const AdvertiserDashboard = () => {
 
           {submission.status === "declined" && submission.admin_notes && (
             <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3">
-              <p className="text-destructive text-[13px] font-medium">Reason: {submission.admin_notes}</p>
+              <p className="text-destructive text-xs font-medium">Reason: {submission.admin_notes}</p>
             </div>
           )}
         </div>
@@ -328,7 +328,7 @@ const AdvertiserDashboard = () => {
                   style={{ width: `${Math.min(100, (Number(userCount) / 100000) * 100)}%` }}
                 />
               </div>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {isReached ? "🎉 Milestone reached!" : `${((Number(userCount) / 100000) * 100).toFixed(1)}% of target`}
               </p>
               {isReached && userCountLink && (
@@ -336,7 +336,7 @@ const AdvertiserDashboard = () => {
                   href={userCountLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 flex items-center gap-2 clay-primary text-primary-foreground rounded-xl px-4 py-2.5 text-[13px] font-semibold w-fit"
+                  className="mt-3 flex items-center gap-2 clay-primary text-primary-foreground rounded-xl px-4 py-2.5 text-xs font-semibold w-fit"
                 >
                   <ExternalLink className="w-4 h-4" /> Proceed to Next Steps
                 </a>

@@ -141,7 +141,7 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
       <SidebarContent className={`${collapsed ? "px-1" : "px-4"} py-4 overflow-y-auto scrollbar-hide transition-all`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {navGroups.map((group) => (
           <SidebarGroup key={group.label} className="mb-3">
-            <SidebarGroupLabel className="text-[12px] uppercase tracking-[0.18em] text-sidebar-foreground/40 font-semibold mb-2 px-3">
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.18em] text-sidebar-foreground/40 font-semibold mb-2 px-3">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -163,9 +163,9 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
                         <item.icon className="w-[18px] h-[18px] shrink-0" />
                         {!collapsed && (
                           <div className="flex items-center justify-between w-full min-w-0">
-                            <span className="text-sm truncate">{item.label}</span>
+                            <span className="text-[13px] truncate">{item.label}</span>
                             {count !== undefined && count > 0 && (
-                              <span className={`text-[12px] min-w-[22px] text-center px-1.5 py-0.5 rounded-md font-bold shrink-0 ml-2 ${isActive ? "bg-primary-foreground/25 text-primary-foreground" : "bg-primary/15 text-primary"}`}>
+                              <span className={`text-[10px] min-w-[22px] text-center px-1.5 py-0.5 rounded-md font-bold shrink-0 ml-2 ${isActive ? "bg-primary-foreground/25 text-primary-foreground" : "bg-primary/15 text-primary"}`}>
                                 {count > 99 ? "99+" : count}
                               </span>
                             )}
@@ -189,7 +189,7 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
               className="rounded-xl h-10 px-3 text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10 border border-transparent transition-all"
             >
               <LogOut className="w-[18px] h-[18px] shrink-0" />
-              {!collapsed && <span className="text-sm">Logout</span>}
+              {!collapsed && <span className="text-[13px]">Logout</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -203,12 +203,12 @@ const MetricCard = ({ label, value, icon: Icon, trend, trendLabel }: {
   label: string; value: string | number; icon: any; trend?: "up" | "down" | "neutral"; trendLabel?: string;
 }) => (
   <div className="rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-5 space-y-2.5 hover:shadow-md transition-shadow overflow-hidden">
-    <p className="text-[12px] text-muted-foreground font-semibold uppercase tracking-wider">{label}</p>
+    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{label}</p>
     <p className="text-xl font-bold text-foreground leading-none">{value}</p>
     {trend && trendLabel && (
       <div className="flex items-center gap-1.5">
         {trend === "up" ? <TrendingUp className="w-3 h-3 text-primary shrink-0" /> : trend === "down" ? <TrendingDown className="w-3 h-3 text-destructive shrink-0" /> : null}
-        <span className={`text-[12px] font-medium ${trend === "up" ? "text-primary" : trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>{trendLabel}</span>
+        <span className={`text-[10px] font-medium ${trend === "up" ? "text-primary" : trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>{trendLabel}</span>
       </div>
     )}
   </div>
@@ -219,7 +219,7 @@ const SectionHeader = ({ title, subtitle, action }: { title: string; subtitle?: 
   <div className="flex items-center justify-between mb-5">
     <div>
       <p className="text-[15px] font-bold text-foreground">{title}</p>
-      {subtitle && <p className="text-[12px] text-muted-foreground mt-0.5">{subtitle}</p>}
+      {subtitle && <p className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</p>}
     </div>
     {action}
   </div>
@@ -240,12 +240,12 @@ const StatusBadge = ({ status, className }: { status: string; className?: string
     closed: "bg-destructive/10 text-destructive border-destructive/20",
     BANNED: "bg-destructive/10 text-destructive border-destructive/20",
   };
-  return <span className={`text-[12px] px-2.5 py-1 rounded-full font-medium border ${colors[status] || "bg-muted text-muted-foreground border-border"} ${className || ""}`}>{status.replace(/_/g, " ")}</span>;
+  return <span className={`text-[10px] px-2.5 py-1 rounded-full font-medium border ${colors[status] || "bg-muted text-muted-foreground border-border"} ${className || ""}`}>{status.replace(/_/g, " ")}</span>;
 };
 
 // ── Button ──
 const Btn = ({ children, variant = "default", className, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "primary" | "outline" | "destructive" }) => {
-  const base = "inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+  const base = "inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-[11px] font-semibold transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
   const variants: Record<string, string> = {
     default: "bg-muted text-foreground hover:bg-muted/80 border border-border/40",
     primary: "clay-primary text-primary-foreground",
@@ -264,7 +264,7 @@ const TableCard = ({ children, className }: { children: React.ReactNode; classNa
 
 const TableHeader = ({ children }: { children: React.ReactNode }) => (
   <div className="px-5 py-3 border-b border-border/30 bg-muted/20">
-    <div className="flex items-center text-[12px] font-semibold text-muted-foreground uppercase tracking-wider gap-3">
+    <div className="flex items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider gap-3">
       {children}
     </div>
   </div>
@@ -875,7 +875,7 @@ const Admin = () => {
     inf_submissions: infChallengeSubmissions.filter((s: any) => s.status === "pending_review").length,
   };
 
-  const inputCls = "w-full rounded-lg border border-border/60 bg-background/50 backdrop-blur-sm px-3 py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all";
+  const inputCls = "w-full rounded-lg border border-border/60 bg-background/50 backdrop-blur-sm px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all";
   const cardCls = "rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm p-6";
 
   const filteredProfiles = searchQuery
@@ -1033,7 +1033,7 @@ const Admin = () => {
   const UserLink = ({ userId }: { userId: string }) => {
     const email = profiles.find(p => p.id === userId)?.email || userId?.slice(0, 8);
     return (
-      <button onClick={() => setDrawerUserId(userId)} className="text-[13px] font-semibold text-primary hover:underline cursor-pointer text-left truncate">
+      <button onClick={() => setDrawerUserId(userId)} className="text-[12px] font-semibold text-primary hover:underline cursor-pointer text-left truncate">
         {email}
       </button>
     );
@@ -1060,7 +1060,7 @@ const Admin = () => {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search users, IDs..."
-                  className="pl-9 pr-4 py-1.5 rounded-lg border border-border/40 bg-muted/30 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 w-[240px]"
+                  className="pl-9 pr-4 py-1.5 rounded-lg border border-border/40 bg-muted/30 text-[12px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 w-[240px]"
                 />
               </div>
             </div>
@@ -1068,7 +1068,7 @@ const Admin = () => {
               <select
                 value={adminCurrency}
                 onChange={e => setAdminCurrency(e.target.value as AdminCurrency)}
-                className="rounded-lg border border-border/40 bg-muted/30 text-[12px] text-foreground px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-pointer"
+                className="rounded-lg border border-border/40 bg-muted/30 text-[11px] text-foreground px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-pointer"
               >
                 {(["NGN", "USD", "EUR", "GBP"] as AdminCurrency[]).map(c => (
                   <option key={c} value={c}>{ADMIN_CURRENCY_SYMBOLS[c]} {c}</option>
@@ -1090,7 +1090,7 @@ const Admin = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-lg font-bold text-foreground">{activeTab === "overview" ? "Welcome Back" : tabTitle[activeTab]}</p>
-                <p className="text-[13px] text-muted-foreground mt-0.5">
+                <p className="text-[12px] text-muted-foreground mt-0.5">
                   {activeTab === "overview" ? "Here's what's happening with your platform today" : `Manage ${tabTitle[activeTab].toLowerCase()}`}
                 </p>
               </div>
@@ -1123,10 +1123,10 @@ const Admin = () => {
                   <div className="px-6 py-5 flex items-center justify-between flex-wrap gap-3">
                     <div>
                       <h3 className="text-[14px] font-bold text-foreground">Platform Activity</h3>
-                      <p className="text-[12px] text-muted-foreground mt-0.5">Last 30 days overview</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Last 30 days overview</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-5 text-[12px] mr-4">
+                      <div className="flex items-center gap-5 text-[11px] mr-4">
                         {[
                           { label: "Signups", color: "hsl(var(--primary))" },
                           { label: "Referrals", color: "hsl(262 80% 60%)" },
@@ -1143,7 +1143,7 @@ const Admin = () => {
                           <button
                             key={v}
                             onClick={() => setChartView(v)}
-                            className={`px-3 py-1.5 text-[12px] font-medium capitalize transition-colors ${
+                            className={`px-3 py-1.5 text-[10px] font-medium capitalize transition-colors ${
                               chartView === v
                                 ? "bg-primary text-primary-foreground"
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
@@ -1258,7 +1258,7 @@ const Admin = () => {
                   {/* Pending actions */}
                   <TableCard>
                     <div className="px-5 py-4 border-b border-border/30">
-                      <h3 className="text-sm font-semibold text-foreground">Pending Actions</h3>
+                      <h3 className="text-[13px] font-semibold text-foreground">Pending Actions</h3>
                     </div>
                     <div className="divide-y divide-border/20">
                       {[
@@ -1268,8 +1268,8 @@ const Admin = () => {
                         { label: "Unverified Transactions", value: verificationTxs.filter(t => !t.is_verified && !t.is_duplicate).length, onClick: () => setActiveTab("verification") },
                       ].map((item) => (
                         <div key={item.label} onClick={item.onClick} className="px-5 py-3 flex items-center justify-between hover:bg-muted/20 cursor-pointer transition-colors">
-                          <span className="text-[13px] text-muted-foreground">{item.label}</span>
-                          <span className={`text-sm font-bold ${item.value > 0 ? "text-primary" : "text-foreground"}`}>{item.value}</span>
+                          <span className="text-[12px] text-muted-foreground">{item.label}</span>
+                          <span className={`text-[13px] font-bold ${item.value > 0 ? "text-primary" : "text-foreground"}`}>{item.value}</span>
                         </div>
                       ))}
                     </div>
@@ -1278,7 +1278,7 @@ const Admin = () => {
                   {/* User breakdown */}
                   <TableCard>
                     <div className="px-5 py-4 border-b border-border/30">
-                      <h3 className="text-sm font-semibold text-foreground">User Breakdown</h3>
+                      <h3 className="text-[13px] font-semibold text-foreground">User Breakdown</h3>
                     </div>
                     <div className="divide-y divide-border/20">
                       {[
@@ -1288,8 +1288,8 @@ const Admin = () => {
                         { label: "Duplicate Transactions", value: verificationTxs.filter(t => t.is_duplicate).length, color: "text-destructive" },
                       ].map((item) => (
                         <div key={item.label} className="px-5 py-3 flex items-center justify-between">
-                          <span className="text-[13px] text-muted-foreground">{item.label}</span>
-                          <span className={`text-sm font-bold ${item.color}`}>{item.value}</span>
+                          <span className="text-[12px] text-muted-foreground">{item.label}</span>
+                          <span className={`text-[13px] font-bold ${item.color}`}>{item.value}</span>
                         </div>
                       ))}
                     </div>
@@ -1298,7 +1298,7 @@ const Admin = () => {
                   {/* Quick actions */}
                   <TableCard>
                     <div className="px-5 py-4 border-b border-border/30">
-                      <h3 className="text-sm font-semibold text-foreground">Quick Actions</h3>
+                      <h3 className="text-[13px] font-semibold text-foreground">Quick Actions</h3>
                     </div>
                     <div className="p-4 space-y-2">
                       <Btn variant="outline" onClick={() => setActiveTab("users")} className="w-full justify-start"><Users className="w-3.5 h-3.5" /> Manage Users</Btn>
@@ -1312,7 +1312,7 @@ const Admin = () => {
                 {/* Recent Activity table */}
                 <TableCard>
                   <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">Recent Activity</h3>
+                    <h3 className="text-[13px] font-semibold text-foreground">Recent Activity</h3>
                     <Btn variant="outline" onClick={() => setActiveTab("activity")}>View All</Btn>
                   </div>
                   <TableHeader>
@@ -1323,13 +1323,13 @@ const Admin = () => {
                   </TableHeader>
                   {activities.slice(0, 6).map((a) => (
                     <TableRow key={a.id}>
-                      <span className="flex-1 min-w-0 text-[12px] text-muted-foreground font-mono truncate">{a.user_id.slice(0, 8)}</span>
-                      <span className="w-24 shrink-0 text-[12px] text-foreground capitalize">{a.action_type}</span>
-                      <span className="w-20 shrink-0 text-right text-[12px] font-semibold text-primary">+{a.positions_moved}</span>
-                      <span className="w-24 shrink-0 text-right text-[12px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
+                      <span className="flex-1 min-w-0 text-[11px] text-muted-foreground font-mono truncate">{a.user_id.slice(0, 8)}</span>
+                      <span className="w-24 shrink-0 text-[11px] text-foreground capitalize">{a.action_type}</span>
+                      <span className="w-20 shrink-0 text-right text-[11px] font-semibold text-primary">+{a.positions_moved}</span>
+                      <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
                     </TableRow>
                   ))}
-                  {activities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[13px]">No activity yet</div>}
+                  {activities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No activity yet</div>}
                 </TableCard>
               </>
             )}
@@ -1338,7 +1338,7 @@ const Admin = () => {
             {activeTab === "users" && (
               <TableCard>
                 <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-foreground">Registered Users ({filteredProfiles.length})</h3>
+                  <h3 className="text-[13px] font-semibold text-foreground">Registered Users ({filteredProfiles.length})</h3>
                 </div>
                 <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <TableHeader>
@@ -1359,15 +1359,15 @@ const Admin = () => {
                       <div key={p.id}>
                         <TableRow onClick={() => { setSelectedUserId(isSelected ? null : p.id); setEditingProfile(null); }}>
                           <div className="flex-1 min-w-0 overflow-hidden">
-                            <p className="text-[12px] font-medium text-foreground truncate">{p.email}</p>
-                            <p className="text-[12px] text-muted-foreground mt-0.5">Joined {new Date(p.created_at).toLocaleDateString()}</p>
+                            <p className="text-[11px] font-medium text-foreground truncate">{p.email}</p>
+                            <p className="text-[9px] text-muted-foreground mt-0.5">Joined {new Date(p.created_at).toLocaleDateString()}</p>
                           </div>
-                          <span className="w-20 shrink-0 text-[12px] text-foreground">{formatNairaCompact(p.total_annual_spend || 0)}</span>
-                          <span className="w-14 shrink-0 text-[12px] text-muted-foreground">#{p.queue_position}</span>
-                          <span className="w-16 shrink-0 text-[12px] text-foreground">{formatCompact(p.points_balance)}</span>
-                          <span className="w-10 shrink-0 text-[12px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
+                          <span className="w-20 shrink-0 text-[11px] text-foreground">{formatNairaCompact(p.total_annual_spend || 0)}</span>
+                          <span className="w-14 shrink-0 text-[11px] text-muted-foreground">#{p.queue_position}</span>
+                          <span className="w-16 shrink-0 text-[11px] text-foreground">{formatCompact(p.points_balance)}</span>
+                          <span className="w-10 shrink-0 text-[11px] text-muted-foreground">{referralCounts[p.id] || 0}</span>
                           <span className="w-16 shrink-0">
-                            {p.is_banned ? <StatusBadge status="BANNED" /> : pDuplicates.length > 0 ? <span className="text-[12px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full border border-destructive/20">{pDuplicates.length} dup</span> : <StatusBadge status="active" />}
+                            {p.is_banned ? <StatusBadge status="BANNED" /> : pDuplicates.length > 0 ? <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full border border-destructive/20">{pDuplicates.length} dup</span> : <StatusBadge status="active" />}
                           </span>
                           <span className="w-8 shrink-0 flex justify-end">
                             {isSelected ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -1376,7 +1376,7 @@ const Admin = () => {
 
                         {isSelected && (
                           <div className="px-5 py-4 bg-muted/10 border-b border-border/20 space-y-3 overflow-hidden">
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-[12px] text-muted-foreground">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-[10px] text-muted-foreground">
                               <span className="truncate">ID: {p.id.slice(0, 16)}...</span>
                               <span className="truncate">Goal: {p.selected_goal || 'None'}</span>
                               <span>Warnings: {pWarnings.length}</span>
@@ -1385,9 +1385,9 @@ const Admin = () => {
 
                             {pDuplicates.length > 0 && (
                               <div className="rounded-lg bg-destructive/5 border border-destructive/20 p-3">
-                                <p className="text-[12px] text-destructive font-semibold mb-1">Duplicate Transactions:</p>
+                                <p className="text-[10px] text-destructive font-semibold mb-1">Duplicate Transactions:</p>
                                 {pDuplicates.map(d => (
-                                  <p key={d.id} className="text-[12px] text-muted-foreground font-mono">{d.transaction_id} — {d.duplicate_note}</p>
+                                  <p key={d.id} className="text-[10px] text-muted-foreground font-mono">{d.transaction_id} — {d.duplicate_note}</p>
                                 ))}
                               </div>
                             )}
@@ -1396,11 +1396,11 @@ const Admin = () => {
                               <div className="space-y-2">
                                 <div className="grid grid-cols-2 gap-3">
                                   <div>
-                                    <p className="text-[12px] text-muted-foreground mb-1">Points</p>
+                                    <p className="text-[10px] text-muted-foreground mb-1">Points</p>
                                     <input type="number" value={editingProfile.points_balance} onChange={e => setEditingProfile(prev => prev ? { ...prev, points_balance: parseInt(e.target.value) || 0 } : null)} className={inputCls} />
                                   </div>
                                   <div>
-                                    <p className="text-[12px] text-muted-foreground mb-1">Queue #</p>
+                                    <p className="text-[10px] text-muted-foreground mb-1">Queue #</p>
                                     <input type="number" value={editingProfile.queue_position} onChange={e => setEditingProfile(prev => prev ? { ...prev, queue_position: parseInt(e.target.value) || 0 } : null)} className={inputCls} />
                                   </div>
                                 </div>
@@ -1429,9 +1429,9 @@ const Admin = () => {
 
                             {pWarnings.length > 0 && (
                               <div className="rounded-lg bg-destructive/5 border border-destructive/20 p-3">
-                                <p className="text-[12px] font-semibold text-destructive mb-1">Warning History:</p>
+                                <p className="text-[10px] font-semibold text-destructive mb-1">Warning History:</p>
                                 {pWarnings.map(w => (
-                                  <p key={w.id} className="text-[12px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()} — {w.reason}</p>
+                                  <p key={w.id} className="text-[10px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()} — {w.reason}</p>
                                 ))}
                               </div>
                             )}
@@ -1453,7 +1453,7 @@ const Admin = () => {
                     <Ghost className="w-8 h-8 text-muted-foreground/40" />
                   </div>
                   <p className="text-4xl font-bold text-foreground">{ghostCount}</p>
-                  <p className="text-[13px] text-muted-foreground mt-2">Ghost users seeded in the waitlist queue</p>
+                  <p className="text-[12px] text-muted-foreground mt-2">Ghost users seeded in the waitlist queue</p>
                 </div>
               </div>
             )}
@@ -1462,7 +1462,7 @@ const Admin = () => {
             {activeTab === "activity" && (
               <TableCard>
                 <div className="px-5 py-4 border-b border-border/30">
-                  <h3 className="text-sm font-semibold text-foreground">Activity Log ({activities.length})</h3>
+                  <h3 className="text-[13px] font-semibold text-foreground">Activity Log ({activities.length})</h3>
                 </div>
                 <TableHeader>
                   <span className="flex-1">User</span>
@@ -1473,13 +1473,13 @@ const Admin = () => {
                 <div className="max-h-[600px] overflow-y-auto">
                   {activities.map((a) => (
                     <TableRow key={a.id}>
-                      <span className="flex-1 text-[13px] text-muted-foreground font-mono">{a.user_id.slice(0, 12)}...</span>
-                      <span className="w-32 text-[13px] text-foreground capitalize">{a.action_type}</span>
-                      <span className="w-24 text-right text-[13px] font-semibold text-primary">+{a.positions_moved}</span>
-                      <span className="w-28 text-right text-[12px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
+                      <span className="flex-1 text-[12px] text-muted-foreground font-mono">{a.user_id.slice(0, 12)}...</span>
+                      <span className="w-32 text-[12px] text-foreground capitalize">{a.action_type}</span>
+                      <span className="w-24 text-right text-[12px] font-semibold text-primary">+{a.positions_moved}</span>
+                      <span className="w-28 text-right text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
                     </TableRow>
                   ))}
-                  {activities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[13px]">No activity yet</div>}
+                  {activities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No activity yet</div>}
                 </div>
               </TableCard>
             )}
@@ -1489,7 +1489,7 @@ const Admin = () => {
               <div className="space-y-6">
                 <TableCard>
                   <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">Goal Categories</h3>
+                    <h3 className="text-[13px] font-semibold text-foreground">Goal Categories</h3>
                     {Object.keys(editedGoals).length > 0 && (
                       <Btn variant="primary" onClick={handleSaveGoals} disabled={saving}><Save className="w-3 h-3" /> {saving ? "Saving..." : "Save All"}</Btn>
                     )}
@@ -1541,7 +1541,7 @@ const Admin = () => {
                       <input value={newApp.app_logo_url} onChange={e => setNewApp(p => ({ ...p, app_logo_url: e.target.value }))} placeholder="Logo URL (optional)" className={inputCls} />
                     </div>
                     <div>
-                      <p className="text-[12px] text-muted-foreground mb-1">Category</p>
+                      <p className="text-[10px] text-muted-foreground mb-1">Category</p>
                       <select value={newApp.category} onChange={e => setNewApp(p => ({ ...p, category: e.target.value }))} className={inputCls}>
                         <option value="yes_no">Yes/No (Switch Offer)</option>
                         <option value="referral">Referral (Try It Out)</option>
@@ -1551,17 +1551,17 @@ const Admin = () => {
                     {(newApp.category === "yes_no" || newApp.category === "robust") && (
                       <>
                         <div className="grid grid-cols-3 gap-3">
-                          <div><p className="text-[12px] text-muted-foreground mb-1">Select pts</p><input type="number" value={newApp.points_select} onChange={e => setNewApp(p => ({ ...p, points_select: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
-                          <div><p className="text-[12px] text-muted-foreground mb-1">Switch intent pts</p><input type="number" value={newApp.points_switch_intent} onChange={e => setNewApp(p => ({ ...p, points_switch_intent: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
-                          <div><p className="text-[12px] text-muted-foreground mb-1">Switch complete pts</p><input type="number" value={newApp.points_switch_complete} onChange={e => setNewApp(p => ({ ...p, points_switch_complete: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
+                          <div><p className="text-[10px] text-muted-foreground mb-1">Select pts</p><input type="number" value={newApp.points_select} onChange={e => setNewApp(p => ({ ...p, points_select: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
+                          <div><p className="text-[10px] text-muted-foreground mb-1">Switch intent pts</p><input type="number" value={newApp.points_switch_intent} onChange={e => setNewApp(p => ({ ...p, points_switch_intent: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
+                          <div><p className="text-[10px] text-muted-foreground mb-1">Switch complete pts</p><input type="number" value={newApp.points_switch_complete} onChange={e => setNewApp(p => ({ ...p, points_switch_complete: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
                         </div>
                         {newApp.category === "yes_no" && <input value={newApp.switch_link} onChange={e => setNewApp(p => ({ ...p, switch_link: e.target.value }))} placeholder="Switch link URL" className={inputCls} />}
                       </>
                     )}
                     {newApp.category === "robust" && (
                       <div>
-                        <p className="text-[12px] text-muted-foreground mb-1">Link to Referral Apps (switch options):</p>
-                        {referralApps.length === 0 && <p className="text-[12px] text-muted-foreground">Create referral apps first.</p>}
+                        <p className="text-[10px] text-muted-foreground mb-1">Link to Referral Apps (switch options):</p>
+                        {referralApps.length === 0 && <p className="text-[10px] text-muted-foreground">Create referral apps first.</p>}
                         <div className="space-y-1 max-h-[150px] overflow-y-auto">
                           {referralApps.map(ra => (
                             <label key={ra.id} className="flex items-center gap-2 rounded-lg border border-border/40 p-2 cursor-pointer hover:bg-muted/30">
@@ -1569,7 +1569,7 @@ const Admin = () => {
                                 if (e.target.checked) setNewApp(p => ({ ...p, switch_to_referral_app_ids: [...p.switch_to_referral_app_ids, ra.id] }));
                                 else setNewApp(p => ({ ...p, switch_to_referral_app_ids: p.switch_to_referral_app_ids.filter(id => id !== ra.id) }));
                               }} className="accent-primary" />
-                              <span className="text-[13px] text-foreground">{ra.app_name}</span>
+                              <span className="text-[12px] text-foreground">{ra.app_name}</span>
                             </label>
                           ))}
                         </div>
@@ -1579,7 +1579,7 @@ const Admin = () => {
                       <>
                         <textarea value={newApp.referral_message} onChange={e => setNewApp(p => ({ ...p, referral_message: e.target.value }))} placeholder="Referral message" className={`${inputCls} min-h-[60px] resize-none`} />
                         <input value={newApp.referral_link} onChange={e => setNewApp(p => ({ ...p, referral_link: e.target.value }))} placeholder="Referral/download link" className={inputCls} />
-                        <div><p className="text-[12px] text-muted-foreground mb-1">Referral points</p><input type="number" value={newApp.referral_points} onChange={e => setNewApp(p => ({ ...p, referral_points: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
+                        <div><p className="text-[10px] text-muted-foreground mb-1">Referral points</p><input type="number" value={newApp.referral_points} onChange={e => setNewApp(p => ({ ...p, referral_points: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
                       </>
                     )}
                     <Btn variant="primary" onClick={handleCreateDecisionApp}><Plus className="w-3 h-3" /> Add App</Btn>
@@ -1596,11 +1596,11 @@ const Admin = () => {
                           {app.app_logo_url ? (
                             <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[12px] font-bold text-primary">{app.app_name.charAt(0)}</div>
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary">{app.app_name.charAt(0)}</div>
                           )}
                           <div>
-                            <h4 className="font-semibold text-foreground text-sm">{app.app_name}</h4>
-                            <p className="text-[12px] text-muted-foreground capitalize">{app.category === "yes_no" ? "Yes/No" : app.category === "referral" ? "Referral" : "Robust"} · {appResponses.length} responses</p>
+                            <h4 className="font-semibold text-foreground text-[13px]">{app.app_name}</h4>
+                            <p className="text-[10px] text-muted-foreground capitalize">{app.category === "yes_no" ? "Yes/No" : app.category === "referral" ? "Referral" : "Robust"} · {appResponses.length} responses</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1610,11 +1610,11 @@ const Admin = () => {
                         </div>
                       </div>
                       {app.category === "robust" && (app.switch_to_referral_app_ids || []).length > 0 && (
-                        <div className="px-5 py-2 border-b border-border/20 text-[12px] text-primary">Linked: {(app.switch_to_referral_app_ids || []).map(id => decisionApps.find(a => a.id === id)?.app_name).filter(Boolean).join(", ")}</div>
+                        <div className="px-5 py-2 border-b border-border/20 text-[10px] text-primary">Linked: {(app.switch_to_referral_app_ids || []).map(id => decisionApps.find(a => a.id === id)?.app_name).filter(Boolean).join(", ")}</div>
                       )}
                       {pendingApprovals.length > 0 && (
                         <div className="p-4 space-y-2">
-                          <p className="text-[12px] text-primary font-semibold mb-2">Pending Approvals ({pendingApprovals.length})</p>
+                          <p className="text-[11px] text-primary font-semibold mb-2">Pending Approvals ({pendingApprovals.length})</p>
                           {pendingApprovals.map(pr => {
                             const screenshotUrl = getPublicUrl(pr.referral_screenshot_url);
                             return (
@@ -1622,7 +1622,7 @@ const Admin = () => {
                                 <div>
                                   <UserLink userId={pr.user_id} />
                                   {screenshotUrl && pr.referral_screenshot_url !== "pending_review" && (
-                                    <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary flex items-center gap-1 hover:underline mt-0.5"><ExternalLink className="w-2.5 h-2.5" /> Screenshot</a>
+                                    <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-0.5"><ExternalLink className="w-2.5 h-2.5" /> Screenshot</a>
                                   )}
                                 </div>
                                 <Btn variant="primary" onClick={() => handleApproveReferral(pr.id, pr.app_id, pr.user_id)}><Check className="w-3 h-3" /> Approve</Btn>
@@ -1658,11 +1658,11 @@ const Admin = () => {
                           {app.app_logo_url ? (
                             <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[12px] font-bold text-primary">{app.app_name.charAt(0)}</div>
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary">{app.app_name.charAt(0)}</div>
                           )}
                           <div>
-                            <h4 className="font-semibold text-foreground text-sm">{app.app_name}</h4>
-                            <p className="text-[12px] text-muted-foreground capitalize">{app.category === "yes_no" ? "Yes/No" : app.category === "referral" ? "Referral" : "Robust"} · {appResponses.length} responses · {pending.length} pending · {approved.length} approved</p>
+                            <h4 className="font-semibold text-foreground text-[13px]">{app.app_name}</h4>
+                            <p className="text-[10px] text-muted-foreground capitalize">{app.category === "yes_no" ? "Yes/No" : app.category === "referral" ? "Referral" : "Robust"} · {appResponses.length} responses · {pending.length} pending · {approved.length} approved</p>
                           </div>
                         </div>
                       </div>
@@ -1670,21 +1670,21 @@ const Admin = () => {
                       {/* Pending approvals first */}
                       {pending.length > 0 && (
                         <div className="p-4 space-y-2 border-b border-border/20">
-                          <p className="text-[12px] text-primary font-semibold mb-2">⏳ Pending Approvals ({pending.length})</p>
+                          <p className="text-[11px] text-primary font-semibold mb-2">⏳ Pending Approvals ({pending.length})</p>
                           {pending.map(pr => {
                             const screenshotUrl = getPublicUrl(pr.referral_screenshot_url);
                             return (
                               <div key={pr.id} className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3">
                                 <div className="flex-1 min-w-0">
                                   <UserLink userId={pr.user_id} />
-                                  <div className="flex items-center gap-3 mt-1 text-[12px] text-muted-foreground">
+                                  <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
                                     <span>{new Date(pr.created_at).toLocaleDateString()}</span>
                                     <span>Has app: {pr.has_app ? "Yes" : "No"}</span>
                                     {pr.would_switch !== null && <span>Would switch: {pr.would_switch ? "Yes" : "No"}</span>}
                                     <span>Points: {pr.points_awarded}</span>
                                   </div>
                                   {screenshotUrl && pr.referral_screenshot_url !== "pending_review" && (
-                                    <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary flex items-center gap-1 hover:underline mt-1"><ExternalLink className="w-2.5 h-2.5" /> View Screenshot</a>
+                                    <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-1"><ExternalLink className="w-2.5 h-2.5" /> View Screenshot</a>
                                   )}
                                 </div>
                                 <Btn variant="primary" onClick={() => handleApproveReferral(pr.id, pr.app_id, pr.user_id)}><Check className="w-3 h-3" /> Approve</Btn>
@@ -1696,13 +1696,13 @@ const Admin = () => {
 
                       {/* All responses */}
                       <div className="p-4">
-                        <p className="text-[12px] text-muted-foreground font-semibold mb-2">All Responses ({appResponses.length})</p>
+                        <p className="text-[11px] text-muted-foreground font-semibold mb-2">All Responses ({appResponses.length})</p>
                         <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
                           {appResponses.map(r => (
                             <div key={r.id} className="flex items-center justify-between rounded-lg border border-border/30 p-3 hover:bg-muted/15 transition-colors">
                               <div className="flex-1 min-w-0">
                                 <UserLink userId={r.user_id} />
-                                <div className="flex items-center gap-3 mt-1 text-[12px] text-muted-foreground flex-wrap">
+                                <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground flex-wrap">
                                   <span>{new Date(r.created_at).toLocaleDateString()}</span>
                                   <span>Has app: {r.has_app ? "✓" : "✗"}</span>
                                   {r.would_switch !== null && <span>Switch: {r.would_switch ? "✓" : "✗"}</span>}
@@ -1735,7 +1735,7 @@ const Admin = () => {
                 </div>
                 <TableCard>
                   <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">Decision Analytics</h3>
+                    <h3 className="text-[13px] font-semibold text-foreground">Decision Analytics</h3>
                     <Btn variant="outline" onClick={downloadDecisionAnalytics}><Download className="w-3 h-3" /> Download CSV</Btn>
                   </div>
                   {decisionApps.map(app => {
@@ -1747,13 +1747,13 @@ const Admin = () => {
                     return (
                       <div key={app.id} className="px-5 py-4 border-b border-border/20 last:border-0">
                         <div className="flex items-center justify-between mb-2">
-                          <p className="font-semibold text-foreground text-sm">{app.app_name}</p>
-                          <span className="text-[12px] text-muted-foreground capitalize">{app.category}</span>
+                          <p className="font-semibold text-foreground text-[13px]">{app.app_name}</p>
+                          <span className="text-[10px] text-muted-foreground capitalize">{app.category}</span>
                         </div>
                         <div className="w-full h-2 bg-muted/50 rounded-full overflow-hidden mb-2">
                           <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
                         </div>
-                        <div className="flex gap-6 text-[12px]">
+                        <div className="flex gap-6 text-[11px]">
                           <span className="text-primary font-medium">{hasApp} selected ({pct}%)</span>
                           <span className="text-muted-foreground">{wouldSwitch} would switch</span>
                           <span className="text-muted-foreground">{switched} switched</span>
@@ -1783,7 +1783,7 @@ const Admin = () => {
                 </div>
                 <TableCard>
                   <div className="px-5 py-4 border-b border-border/30">
-                    <h3 className="text-sm font-semibold text-foreground">User Transactions</h3>
+                    <h3 className="text-[13px] font-semibold text-foreground">User Transactions</h3>
                   </div>
                   <TableHeader>
                     <span className="flex-1 min-w-0">User</span>
@@ -1796,20 +1796,20 @@ const Admin = () => {
                         <TableRow key={tx.id} className={tx.is_duplicate ? "bg-destructive/5" : ""}>
                           <span className="flex-1 min-w-0"><UserLink userId={tx.user_id} /></span>
                           <div className="flex-1 min-w-0 overflow-hidden">
-                            <p className="text-[12px] font-mono text-foreground truncate">{tx.transaction_id}</p>
-                            {tx.is_duplicate && <p className="text-[12px] text-destructive truncate">{tx.duplicate_note || 'Duplicate'}</p>}
+                            <p className="text-[11px] font-mono text-foreground truncate">{tx.transaction_id}</p>
+                            {tx.is_duplicate && <p className="text-[9px] text-destructive truncate">{tx.duplicate_note || 'Duplicate'}</p>}
                           </div>
                           <span className="w-24 shrink-0 flex justify-end">
                             {tx.is_duplicate ? (
-                              <span className="flex items-center gap-1 text-destructive text-[12px]"><AlertTriangle className="w-3 h-3 shrink-0" /> Dup</span>
+                              <span className="flex items-center gap-1 text-destructive text-[10px]"><AlertTriangle className="w-3 h-3 shrink-0" /> Dup</span>
                             ) : tx.is_verified ? (
-                              <span className="flex items-center gap-1 text-primary text-[12px]"><CheckCircle2 className="w-3 h-3 shrink-0" /> ₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
-                            ) : <span className="text-[12px] text-muted-foreground">Pending</span>}
+                              <span className="flex items-center gap-1 text-primary text-[10px]"><CheckCircle2 className="w-3 h-3 shrink-0" /> ₦{tx.verified_amount?.toLocaleString("en-NG")}</span>
+                            ) : <span className="text-[10px] text-muted-foreground">Pending</span>}
                           </span>
                         </TableRow>
                       );
                     })}
-                    {verificationTxs.length === 0 && <div className="py-8 text-center text-muted-foreground text-[13px]">No transactions submitted yet</div>}
+                    {verificationTxs.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No transactions submitted yet</div>}
                   </div>
                 </TableCard>
               </div>
@@ -1832,7 +1832,7 @@ const Admin = () => {
                   return (
                     <TableCard>
                       <div className="px-5 py-4 border-b border-border/30">
-                        <h3 className="text-sm font-semibold text-foreground">🚩 Users with Duplicate Transaction IDs</h3>
+                        <h3 className="text-[13px] font-semibold text-foreground">🚩 Users with Duplicate Transaction IDs</h3>
                       </div>
                       {dupUserIds.map(uid => {
                         const prof = profiles.find(p => p.id === uid);
@@ -1841,17 +1841,17 @@ const Admin = () => {
                           <div key={uid} className="px-5 py-4 border-b border-border/20 last:border-0">
                             <div className="flex items-center justify-between mb-2">
                               <div>
-                                <p className="text-[13px] font-semibold text-foreground">{prof?.email || uid.slice(0, 8)}</p>
-                                <p className="text-[12px] text-muted-foreground">Queue: #{prof?.queue_position} • Points: {prof?.points_balance} • Spend: {formatNaira(prof?.total_annual_spend || 0)}</p>
+                                <p className="text-[12px] font-semibold text-foreground">{prof?.email || uid.slice(0, 8)}</p>
+                                <p className="text-[10px] text-muted-foreground">Queue: #{prof?.queue_position} • Points: {prof?.points_balance} • Spend: {formatNaira(prof?.total_annual_spend || 0)}</p>
                               </div>
                               <div className="flex items-center gap-2">
                                 {prof?.is_banned && <StatusBadge status="BANNED" />}
-                                <span className="text-[12px] bg-destructive/10 text-destructive px-2.5 py-1 rounded-full border border-destructive/20 font-medium">{userDups.length} dup{userDups.length > 1 ? "s" : ""}</span>
+                                <span className="text-[10px] bg-destructive/10 text-destructive px-2.5 py-1 rounded-full border border-destructive/20 font-medium">{userDups.length} dup{userDups.length > 1 ? "s" : ""}</span>
                               </div>
                             </div>
                             <div className="space-y-1 mb-3">
                               {userDups.map(dt => (
-                                <div key={dt.id} className="flex items-center justify-between text-[12px] bg-muted/30 rounded-lg px-3 py-2">
+                                <div key={dt.id} className="flex items-center justify-between text-[10px] bg-muted/30 rounded-lg px-3 py-2">
                                   <span className="text-foreground font-mono">{dt.transaction_id}</span>
                                   <span className="text-muted-foreground">{dt.duplicate_note || "Duplicate"}</span>
                                 </div>
@@ -1874,7 +1874,7 @@ const Admin = () => {
 
                 <TableCard>
                   <div className="px-5 py-4 border-b border-border/30">
-                    <h3 className="text-sm font-semibold text-foreground">Warning History</h3>
+                    <h3 className="text-[13px] font-semibold text-foreground">Warning History</h3>
                   </div>
                   <TableHeader>
                     <span className="flex-1">User</span>
@@ -1886,13 +1886,13 @@ const Admin = () => {
                       const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id.slice(0, 8);
                       return (
                         <TableRow key={w.id}>
-                          <span className="flex-1 text-[13px] font-medium text-foreground">{userEmail}</span>
-                          <span className="flex-[2] text-[12px] text-muted-foreground">{w.reason}</span>
-                          <span className="w-28 text-right text-[12px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</span>
+                          <span className="flex-1 text-[12px] font-medium text-foreground">{userEmail}</span>
+                          <span className="flex-[2] text-[11px] text-muted-foreground">{w.reason}</span>
+                          <span className="w-28 text-right text-[10px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</span>
                         </TableRow>
                       );
                     })}
-                    {userWarnings.length === 0 && <div className="py-8 text-center text-muted-foreground text-[13px]">No warnings issued yet</div>}
+                    {userWarnings.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No warnings issued yet</div>}
                   </div>
                 </TableCard>
               </div>
@@ -1908,7 +1908,7 @@ const Admin = () => {
                 </div>
                 <TableCard>
                   <div className="px-5 py-4 border-b border-border/30">
-                    <h3 className="text-sm font-semibold text-foreground">Applications</h3>
+                    <h3 className="text-[13px] font-semibold text-foreground">Applications</h3>
                   </div>
                   {infApps.map((app: any) => {
                     return (
@@ -1916,13 +1916,13 @@ const Admin = () => {
                         <div className="flex items-center justify-between mb-2">
                           <div>
                             <UserLink userId={app.user_id} />
-                            <a href={app.social_link} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary hover:underline flex items-center gap-1"><ExternalLink className="w-2.5 h-2.5" /> {app.social_link}</a>
+                            <a href={app.social_link} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline flex items-center gap-1"><ExternalLink className="w-2.5 h-2.5" /> {app.social_link}</a>
                           </div>
                           <StatusBadge status={app.status} />
                         </div>
                         {(app.status === "pending_review" || app.status === "pending_appeal") && (
                           <div className="flex gap-2 mt-2">
-                            {app.status === "pending_appeal" && <p className="text-[12px] text-primary w-full mb-1">⚡ Appeal</p>}
+                            {app.status === "pending_appeal" && <p className="text-[10px] text-primary w-full mb-1">⚡ Appeal</p>}
                             <Btn variant="primary" onClick={async () => {
                               await supabase.from("influencer_applications" as any).update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", app.id);
                               await supabase.from("profiles").update({ queue_position: 0, off_queue_at: new Date().toISOString() }).eq("id", app.user_id);
@@ -1940,7 +1940,7 @@ const Admin = () => {
                       </div>
                     );
                   })}
-                  {infApps.length === 0 && <div className="py-8 text-center text-muted-foreground text-[13px]">No applications yet</div>}
+                  {infApps.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No applications yet</div>}
                 </TableCard>
               </div>
             )}
@@ -1949,7 +1949,7 @@ const Admin = () => {
             {activeTab === "inf_wallets" && (
               <TableCard>
                 <div className="px-5 py-4 border-b border-border/30">
-                  <h3 className="text-sm font-semibold text-foreground">Influencer Wallet Activations</h3>
+                  <h3 className="text-[13px] font-semibold text-foreground">Influencer Wallet Activations</h3>
                 </div>
                 {infWallets.map((w: any) => {
                   const bank = infBankAccounts.find((b: any) => b.user_id === w.user_id);
@@ -1958,10 +1958,10 @@ const Admin = () => {
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <UserLink userId={w.user_id} />
-                          {bank && <p className="text-[12px] text-muted-foreground">{bank.bank_name} · {bank.account_number} · {bank.account_name}</p>}
+                          {bank && <p className="text-[10px] text-muted-foreground">{bank.bank_name} · {bank.account_number} · {bank.account_name}</p>}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[12px] font-semibold text-foreground">{formatNaira(w.balance || 0)}</span>
+                          <span className="text-[11px] font-semibold text-foreground">{formatNaira(w.balance || 0)}</span>
                           <StatusBadge status={w.status} />
                         </div>
                       </div>
@@ -1970,7 +1970,7 @@ const Admin = () => {
                           const { data, error } = await supabase.storage.from("id-documents").createSignedUrl(bank.id_document_url!, 3600);
                           if (error || !data?.signedUrl) { alert("Failed to load document"); return; }
                           window.open(data.signedUrl, "_blank");
-                        }} className="text-primary hover:underline text-[12px] flex items-center gap-1 mb-2"><ExternalLink className="w-2.5 h-2.5" /> View ID Document</button>
+                        }} className="text-primary hover:underline text-[10px] flex items-center gap-1 mb-2"><ExternalLink className="w-2.5 h-2.5" /> View ID Document</button>
                       )}
                       {w.status === "pending_activation" && (
                         <div className="flex gap-2 mt-1">
@@ -1990,7 +1990,7 @@ const Admin = () => {
                     </div>
                   );
                 })}
-                {infWallets.length === 0 && <div className="py-8 text-center text-muted-foreground text-[13px]">No wallet activations yet</div>}
+                {infWallets.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No wallet activations yet</div>}
               </TableCard>
             )}
 
@@ -2003,7 +2003,7 @@ const Admin = () => {
                 </div>
                 <TableCard>
                   <div className="px-5 py-4 border-b border-border/30">
-                    <h3 className="text-sm font-semibold text-foreground">Referral History</h3>
+                    <h3 className="text-[13px] font-semibold text-foreground">Referral History</h3>
                   </div>
                   <TableHeader>
                     <span className="flex-1 min-w-0">Influencer → Referred</span>
@@ -2014,13 +2014,13 @@ const Admin = () => {
                     {infReferrals.map((r: any) => {
                       return (
                         <TableRow key={r.id}>
-                          <span className="flex-1 min-w-0 flex items-center gap-1 text-[12px]"><button onClick={() => setDrawerUserId(r.influencer_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8)}</button> → <button onClick={() => setDrawerUserId(r.referred_user_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8)}</button></span>
-                          <span className="w-20 shrink-0 text-right text-[12px] text-primary font-semibold">{formatNaira(r.reward_amount)}</span>
-                          <span className="w-24 shrink-0 text-right text-[12px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                          <span className="flex-1 min-w-0 flex items-center gap-1 text-[11px]"><button onClick={() => setDrawerUserId(r.influencer_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8)}</button> → <button onClick={() => setDrawerUserId(r.referred_user_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8)}</button></span>
+                          <span className="w-20 shrink-0 text-right text-[11px] text-primary font-semibold">{formatNaira(r.reward_amount)}</span>
+                          <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
                         </TableRow>
                       );
                     })}
-                    {infReferrals.length === 0 && <div className="py-8 text-center text-muted-foreground text-[13px]">No influencer referrals yet</div>}
+                    {infReferrals.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No influencer referrals yet</div>}
                   </div>
                 </TableCard>
               </div>
@@ -2030,7 +2030,7 @@ const Admin = () => {
             {activeTab === "inf_withdrawals" && (
               <TableCard>
                 <div className="px-5 py-4 border-b border-border/30">
-                  <h3 className="text-sm font-semibold text-foreground">Influencer Withdrawals</h3>
+                  <h3 className="text-[13px] font-semibold text-foreground">Influencer Withdrawals</h3>
                 </div>
                 {infWithdrawals.map((w: any) => {
                   const bank = infBankAccounts.find((b: any) => b.id === w.bank_account_id);
@@ -2039,7 +2039,7 @@ const Admin = () => {
                       <div className="flex items-center justify-between mb-1">
                         <div>
                           <UserLink userId={w.user_id} />
-                          {bank && <p className="text-[12px] text-muted-foreground">{bank.bank_name} · {bank.account_number} · {bank.account_name}</p>}
+                          {bank && <p className="text-[10px] text-muted-foreground">{bank.bank_name} · {bank.account_number} · {bank.account_name}</p>}
                         </div>
                         <div className="flex items-center gap-3">
                           <p className="text-[14px] font-bold text-primary">{formatNaira(w.amount)}</p>
@@ -2069,7 +2069,7 @@ const Admin = () => {
                     </div>
                   );
                 })}
-                {infWithdrawals.length === 0 && <div className="py-8 text-center text-muted-foreground text-[13px]">No withdrawals yet</div>}
+                {infWithdrawals.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No withdrawals yet</div>}
               </TableCard>
             )}
 
@@ -2087,18 +2087,18 @@ const Admin = () => {
                     <textarea value={newChallenge.instructions} onChange={e => setNewChallenge(p => ({ ...p, instructions: e.target.value }))} placeholder="Instructions" className={`${inputCls} min-h-[60px] resize-none`} />
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-[12px] text-muted-foreground mb-1">Challenge Type</p>
+                        <p className="text-[10px] text-muted-foreground mb-1">Challenge Type</p>
                         <select value={newChallenge.challenge_type} onChange={e => setNewChallenge(p => ({ ...p, challenge_type: e.target.value, total_videos: e.target.value === "single" ? 1 : p.total_videos }))} className={inputCls}>
                           <option value="single">Single Video</option>
                           <option value="set">Set (Multiple Videos)</option>
                         </select>
                       </div>
-                      <div><p className="text-[12px] text-muted-foreground mb-1">Reward per video (₦)</p><input type="number" value={newChallenge.reward_per_video} onChange={e => setNewChallenge(p => ({ ...p, reward_per_video: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
+                      <div><p className="text-[10px] text-muted-foreground mb-1">Reward per video (₦)</p><input type="number" value={newChallenge.reward_per_video} onChange={e => setNewChallenge(p => ({ ...p, reward_per_video: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
                     </div>
                     {newChallenge.challenge_type === "set" && (
                       <div className="grid grid-cols-2 gap-3">
-                        <div><p className="text-[12px] text-muted-foreground mb-1">Total Videos</p><input type="number" value={newChallenge.total_videos} onChange={e => setNewChallenge(p => ({ ...p, total_videos: parseInt(e.target.value) || 1 }))} min={2} className={inputCls} /></div>
-                        <div><p className="text-[12px] text-muted-foreground mb-1">Post interval (days)</p><input type="number" value={newChallenge.posting_interval_days} onChange={e => setNewChallenge(p => ({ ...p, posting_interval_days: parseInt(e.target.value) || 1 }))} min={1} className={inputCls} /></div>
+                        <div><p className="text-[10px] text-muted-foreground mb-1">Total Videos</p><input type="number" value={newChallenge.total_videos} onChange={e => setNewChallenge(p => ({ ...p, total_videos: parseInt(e.target.value) || 1 }))} min={2} className={inputCls} /></div>
+                        <div><p className="text-[10px] text-muted-foreground mb-1">Post interval (days)</p><input type="number" value={newChallenge.posting_interval_days} onChange={e => setNewChallenge(p => ({ ...p, posting_interval_days: parseInt(e.target.value) || 1 }))} min={1} className={inputCls} /></div>
                       </div>
                     )}
                     <Btn variant="primary" onClick={async () => {
@@ -2125,8 +2125,8 @@ const Admin = () => {
                     <TableCard key={ch.id}>
                       <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
                         <div>
-                          <h4 className="font-semibold text-foreground text-sm">{ch.title}</h4>
-                          <p className="text-[12px] text-muted-foreground">
+                          <h4 className="font-semibold text-foreground text-[13px]">{ch.title}</h4>
+                          <p className="text-[10px] text-muted-foreground">
                             {ch.challenge_type === "single" ? "Single Video" : `Set of ${ch.total_videos}`} · {formatNaira(ch.reward_per_video)}/video · {ch.hashtag}
                           </p>
                         </div>
@@ -2143,25 +2143,25 @@ const Admin = () => {
                         </div>
                       </div>
                       <div className="px-5 py-3 border-b border-border/20">
-                        <p className="text-[12px] text-muted-foreground">{ch.description}</p>
+                        <p className="text-[11px] text-muted-foreground">{ch.description}</p>
                       </div>
                       <div className="grid grid-cols-3 gap-4 p-4">
                         <div className="text-center">
                           <p className="text-lg font-bold text-foreground">{enrollments.length}</p>
-                          <p className="text-[12px] text-muted-foreground">Enrolled</p>
+                          <p className="text-[10px] text-muted-foreground">Enrolled</p>
                         </div>
                         <div className="text-center">
                           <p className="text-lg font-bold text-foreground">{submissions.length}</p>
-                          <p className="text-[12px] text-muted-foreground">Submissions</p>
+                          <p className="text-[10px] text-muted-foreground">Submissions</p>
                         </div>
                         <div className="text-center">
                           <p className="text-lg font-bold text-primary">{pendingSubs.length}</p>
-                          <p className="text-[12px] text-muted-foreground">Pending</p>
+                          <p className="text-[10px] text-muted-foreground">Pending</p>
                         </div>
                       </div>
                       {pendingSubs.length > 0 && (
                         <div className="p-4 border-t border-border/20 space-y-2">
-                          <p className="text-[12px] text-primary font-semibold">Pending Approvals</p>
+                          <p className="text-[11px] text-primary font-semibold">Pending Approvals</p>
                           {pendingSubs.map((sub: any) => {
                             const userEmail = profiles.find(p => p.id === sub.user_id)?.email || sub.user_id?.slice(0, 8);
                             const enrollment = enrollments.find((e: any) => e.user_id === sub.user_id);
@@ -2169,10 +2169,10 @@ const Admin = () => {
                               <div key={sub.id} className="rounded-lg border border-border/40 p-3">
                                 <div className="flex items-center justify-between mb-2">
                                   <div>
-                                    <p className="text-[12px] text-foreground font-semibold">{userEmail}</p>
-                                    <p className="text-[12px] text-muted-foreground">Video #{sub.video_number} of {ch.total_videos}</p>
+                                    <p className="text-[11px] text-foreground font-semibold">{userEmail}</p>
+                                    <p className="text-[9px] text-muted-foreground">Video #{sub.video_number} of {ch.total_videos}</p>
                                   </div>
-                                  <a href={sub.video_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary hover:underline flex items-center gap-1"><ExternalLink className="w-2.5 h-2.5" /> View</a>
+                                  <a href={sub.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline flex items-center gap-1"><ExternalLink className="w-2.5 h-2.5" /> View</a>
                                 </div>
                                 <div className="flex gap-2">
                                   <Btn variant="primary" onClick={async () => {
@@ -2206,7 +2206,7 @@ const Admin = () => {
                     </TableCard>
                   );
                 })}
-                {infChallenges.length === 0 && <div className={cardCls}><p className="text-center py-8 text-muted-foreground text-[13px]">No challenges created yet</p></div>}
+                {infChallenges.length === 0 && <div className={cardCls}><p className="text-center py-8 text-muted-foreground text-[12px]">No challenges created yet</p></div>}
               </div>
             )}
 
@@ -2227,7 +2227,7 @@ const Admin = () => {
                   return (
                     <TableCard>
                       <div className="px-5 py-4 border-b border-border/30">
-                        <h3 className="text-sm font-semibold text-primary">Pending Review ({pending.length})</h3>
+                        <h3 className="text-[13px] font-semibold text-primary">Pending Review ({pending.length})</h3>
                       </div>
                       <TableHeader>
                         <span className="flex-1">Influencer</span>
@@ -2249,17 +2249,17 @@ const Admin = () => {
                           return (
                             <TableRow key={sub.id}>
                               <span className="flex-1 truncate"><UserLink userId={sub.user_id} /></span>
-                              <span className="flex-1 text-[12px] text-muted-foreground truncate">{challenge?.title || "Unknown"}</span>
-                              <span className="w-20 text-center text-[12px] text-foreground">#{sub.video_number}{challenge ? ` / ${challenge.total_videos}` : ""}</span>
+                              <span className="flex-1 text-[11px] text-muted-foreground truncate">{challenge?.title || "Unknown"}</span>
+                              <span className="w-20 text-center text-[11px] text-foreground">#{sub.video_number}{challenge ? ` / ${challenge.total_videos}` : ""}</span>
                               <span className="w-20 text-center">
                                 {priorRejections > 0
-                                  ? <span className="text-[12px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 font-medium">Last chance</span>
-                                  : <span className="text-[12px] text-muted-foreground">0</span>
+                                  ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 font-medium">Last chance</span>
+                                  : <span className="text-[10px] text-muted-foreground">0</span>
                                 }
                               </span>
-                              <span className="w-28 text-right text-[12px] text-muted-foreground">{new Date(sub.submitted_at).toLocaleDateString()}</span>
+                              <span className="w-28 text-right text-[10px] text-muted-foreground">{new Date(sub.submitted_at).toLocaleDateString()}</span>
                               <span className="w-40 flex gap-2 justify-end">
-                                <a href={sub.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[12px] text-primary hover:underline"><ExternalLink className="w-2.5 h-2.5" />View</a>
+                                <a href={sub.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline"><ExternalLink className="w-2.5 h-2.5" />View</a>
                                 <Btn variant="primary" onClick={async () => {
                                   await supabase.from("influencer_challenge_submissions" as any).update({ status: "approved", reviewed_at: new Date().toISOString() } as any).eq("id", sub.id);
                                   if (enrollment && challenge) {
@@ -2306,7 +2306,7 @@ const Admin = () => {
                 {/* All submissions history */}
                 <TableCard>
                   <div className="px-5 py-4 border-b border-border/30">
-                    <h3 className="text-sm font-semibold text-foreground">All Submissions</h3>
+                    <h3 className="text-[13px] font-semibold text-foreground">All Submissions</h3>
                   </div>
                   <TableHeader>
                     <span className="flex-1">Influencer</span>
@@ -2317,17 +2317,17 @@ const Admin = () => {
                     <span className="w-16 text-right">Link</span>
                   </TableHeader>
                   <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-                    {infChallengeSubmissions.length === 0 && <div className="py-8 text-center text-muted-foreground text-[13px]">No submissions yet</div>}
+                    {infChallengeSubmissions.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No submissions yet</div>}
                     {[...infChallengeSubmissions].sort((a: any, b: any) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()).map((sub: any) => {
                       const challenge = infChallenges.find((c: any) => c.id === sub.challenge_id);
                       return (
                         <TableRow key={sub.id}>
                           <span className="flex-1 truncate"><UserLink userId={sub.user_id} /></span>
-                          <span className="flex-1 text-[12px] text-muted-foreground truncate">{challenge?.title || "Unknown"}</span>
-                          <span className="w-20 text-center text-[12px]">#{sub.video_number}</span>
+                          <span className="flex-1 text-[11px] text-muted-foreground truncate">{challenge?.title || "Unknown"}</span>
+                          <span className="w-20 text-center text-[11px]">#{sub.video_number}</span>
                           <span className="w-24 text-center"><StatusBadge status={sub.status} /></span>
-                          <span className="w-28 text-right text-[12px] text-muted-foreground">{new Date(sub.submitted_at).toLocaleDateString()}</span>
-                          <span className="w-16 text-right"><a href={sub.video_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary hover:underline"><ExternalLink className="w-3 h-3 inline" /></a></span>
+                          <span className="w-28 text-right text-[10px] text-muted-foreground">{new Date(sub.submitted_at).toLocaleDateString()}</span>
+                          <span className="w-16 text-right"><a href={sub.video_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline"><ExternalLink className="w-3 h-3 inline" /></a></span>
                         </TableRow>
                       );
                     })}
@@ -2342,12 +2342,12 @@ const Admin = () => {
                 <div className="space-y-5">
                   <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
                     <div>
-                      <label className="text-[13px] font-medium text-foreground">Verify Page Active</label>
-                      <p className="text-[12px] text-muted-foreground">If disabled, users will see "Coming Soon".</p>
+                      <label className="text-[12px] font-medium text-foreground">Verify Page Active</label>
+                      <p className="text-[11px] text-muted-foreground">If disabled, users will see "Coming Soon".</p>
                     </div>
                     <input type="checkbox" checked={verifyPageActive} onChange={e => setVerifyPageActive(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer rounded" />
                   </div>
-                  <p className="text-[13px] font-medium text-foreground">Per-Category Verification Toggles</p>
+                  <p className="text-[12px] font-medium text-foreground">Per-Category Verification Toggles</p>
                   <div className="grid grid-cols-2 gap-3">
                     {([
                       { key: "data", label: "Data", state: verifyDataActive, setter: setVerifyDataActive },
@@ -2356,44 +2356,44 @@ const Admin = () => {
                       { key: "transport", label: "Transport", state: verifyTransportActive, setter: setVerifyTransportActive },
                     ] as const).map(item => (
                       <div key={item.key} className="flex items-center justify-between rounded-lg border border-border/40 p-3">
-                        <label className="text-[12px] font-medium text-foreground">{item.label}</label>
+                        <label className="text-[11px] font-medium text-foreground">{item.label}</label>
                         <input type="checkbox" checked={item.state} onChange={e => item.setter(e.target.checked)} className="w-4 h-4 accent-primary cursor-pointer rounded" />
                       </div>
                     ))}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="text-[12px] text-muted-foreground font-medium">Verify Expense Button Link</label><input value={verifyExpenseLink} onChange={e => setVerifyExpenseLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1.5`} /></div>
-                    <div><label className="text-[12px] text-muted-foreground font-medium">Post-Queue Referral Points</label><input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Verify Expense Button Link</label><input value={verifyExpenseLink} onChange={e => setVerifyExpenseLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Post-Queue Referral Points</label><input type="number" value={postQueueReferralPoints} onChange={e => setPostQueueReferralPoints(e.target.value)} className={`${inputCls} mt-1.5`} /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="text-[12px] text-muted-foreground font-medium">Verify Spend Link</label><input value={verifySpendLink} onChange={e => setVerifySpendLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1.5`} /></div>
-                    <div><label className="text-[12px] text-muted-foreground font-medium">Verify Spend Description</label><textarea value={verifySpendDescription} onChange={e => setVerifySpendDescription(e.target.value)} className={`${inputCls} mt-1.5 min-h-[60px] resize-none`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Verify Spend Link</label><input value={verifySpendLink} onChange={e => setVerifySpendLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Verify Spend Description</label><textarea value={verifySpendDescription} onChange={e => setVerifySpendDescription(e.target.value)} className={`${inputCls} mt-1.5 min-h-[60px] resize-none`} /></div>
                   </div>
                   <hr className="border-border/30" />
-                  <h4 className="text-sm font-semibold text-foreground">Footer Content</h4>
+                  <h4 className="text-[13px] font-semibold text-foreground">Footer Content</h4>
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div><label className="text-[12px] text-muted-foreground font-medium">About Us</label><textarea value={footerAboutUs} onChange={e => setFooterAboutUs(e.target.value)} className={`${inputCls} mt-1.5 min-h-[80px] resize-none`} /></div>
-                    <div><label className="text-[12px] text-muted-foreground font-medium">Contact Us</label><textarea value={footerContactUs} onChange={e => setFooterContactUs(e.target.value)} className={`${inputCls} mt-1.5 min-h-[80px] resize-none`} /></div>
-                    <div><label className="text-[12px] text-muted-foreground font-medium">Invest With Us</label><textarea value={footerInvestWithUs} onChange={e => setFooterInvestWithUs(e.target.value)} className={`${inputCls} mt-1.5 min-h-[80px] resize-none`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">About Us</label><textarea value={footerAboutUs} onChange={e => setFooterAboutUs(e.target.value)} className={`${inputCls} mt-1.5 min-h-[80px] resize-none`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Contact Us</label><textarea value={footerContactUs} onChange={e => setFooterContactUs(e.target.value)} className={`${inputCls} mt-1.5 min-h-[80px] resize-none`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">Invest With Us</label><textarea value={footerInvestWithUs} onChange={e => setFooterInvestWithUs(e.target.value)} className={`${inputCls} mt-1.5 min-h-[80px] resize-none`} /></div>
                   </div>
                   <hr className="border-border/30" />
-                  <h4 className="text-sm font-semibold text-foreground">Currency Exchange Rates</h4>
-                  <p className="text-[12px] text-muted-foreground -mt-3">Set how many Naira (₦) equals 1 unit of each currency. Users see amounts in their local currency based on geolocation.</p>
+                  <h4 className="text-[13px] font-semibold text-foreground">Currency Exchange Rates</h4>
+                  <p className="text-[11px] text-muted-foreground -mt-3">Set how many Naira (₦) equals 1 unit of each currency. Users see amounts in their local currency based on geolocation.</p>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="text-[12px] text-muted-foreground font-medium">1 USD = ₦</label>
+                      <label className="text-[11px] text-muted-foreground font-medium">1 USD = ₦</label>
                       <input type="number" value={currencyRateUsd} onChange={e => setCurrencyRateUsd(e.target.value)} placeholder="1600" className={`${inputCls} mt-1.5`} />
                     </div>
                     <div>
-                      <label className="text-[12px] text-muted-foreground font-medium">1 EUR = ₦</label>
+                      <label className="text-[11px] text-muted-foreground font-medium">1 EUR = ₦</label>
                       <input type="number" value={currencyRateEur} onChange={e => setCurrencyRateEur(e.target.value)} placeholder="1700" className={`${inputCls} mt-1.5`} />
                     </div>
                     <div>
-                      <label className="text-[12px] text-muted-foreground font-medium">1 GBP = ₦</label>
+                      <label className="text-[11px] text-muted-foreground font-medium">1 GBP = ₦</label>
                       <input type="number" value={currencyRateGbp} onChange={e => setCurrencyRateGbp(e.target.value)} placeholder="2000" className={`${inputCls} mt-1.5`} />
                     </div>
                   </div>
-                  <p className="text-[12px] text-muted-foreground">Geolocation mapping: Nigeria → ₦, USA → $, UK → £, Europe → €, Others → $</p>
+                  <p className="text-[10px] text-muted-foreground">Geolocation mapping: Nigeria → ₦, USA → $, UK → £, Europe → €, Others → $</p>
                   <Btn variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full"><Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save Settings"}</Btn>
                 </div>
               </div>
@@ -2423,18 +2423,18 @@ const Admin = () => {
                     <input value={newSurvey.title} onChange={e => setNewSurvey(p => ({ ...p, title: e.target.value }))} placeholder="Survey Title" className={inputCls} />
                     <textarea value={newSurvey.description} onChange={e => setNewSurvey(p => ({ ...p, description: e.target.value }))} placeholder="Description" className={`${inputCls} min-h-[60px] resize-none`} />
                     <div className="grid grid-cols-2 gap-3">
-                      <div><p className="text-[12px] text-muted-foreground mb-1">Points Reward</p><input type="number" value={newSurvey.points_reward} onChange={e => setNewSurvey(p => ({ ...p, points_reward: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
-                      <div><p className="text-[12px] text-muted-foreground mb-1">Completion Link</p><input value={newSurvey.completion_link} onChange={e => setNewSurvey(p => ({ ...p, completion_link: e.target.value }))} placeholder="https://..." className={inputCls} /></div>
+                      <div><p className="text-[10px] text-muted-foreground mb-1">Points Reward</p><input type="number" value={newSurvey.points_reward} onChange={e => setNewSurvey(p => ({ ...p, points_reward: parseInt(e.target.value) || 0 }))} className={inputCls} /></div>
+                      <div><p className="text-[10px] text-muted-foreground mb-1">Completion Link</p><input value={newSurvey.completion_link} onChange={e => setNewSurvey(p => ({ ...p, completion_link: e.target.value }))} placeholder="https://..." className={inputCls} /></div>
                     </div>
                     <textarea value={newSurvey.completion_instructions} onChange={e => setNewSurvey(p => ({ ...p, completion_instructions: e.target.value }))} placeholder="Completion Instructions" className={`${inputCls} min-h-[60px] resize-none`} />
 
                     {/* Questions in Create Form */}
                     <div className="space-y-4 pt-2">
-                      <p className="text-[13px] font-bold text-foreground">Questions</p>
+                      <p className="text-[12px] font-bold text-foreground">Questions</p>
                       {newSurvey.questions.map((q, qIdx) => (
                         <div key={qIdx} className="p-3 border border-border/40 rounded-xl space-y-3 bg-muted/5">
                           <div className="flex justify-between items-center">
-                            <p className="text-[12px] font-semibold">Question {qIdx + 1}</p>
+                            <p className="text-[11px] font-semibold">Question {qIdx + 1}</p>
                             {newSurvey.questions.length > 1 && (
                               <button onClick={() => {
                                 const nextQs = [...newSurvey.questions];
@@ -2511,8 +2511,8 @@ const Admin = () => {
                     <TableCard key={survey.id}>
                       <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
                         <div>
-                          <h4 className="font-semibold text-foreground text-sm">{survey.title}</h4>
-                          <p className="text-[12px] text-muted-foreground">{survey.points_reward} pts · {sQuestions.length} questions · {sResponses.length} total responses</p>
+                          <h4 className="font-semibold text-foreground text-[13px]">{survey.title}</h4>
+                          <p className="text-[10px] text-muted-foreground">{survey.points_reward} pts · {sQuestions.length} questions · {sResponses.length} total responses</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <Btn variant="outline" onClick={async () => {
@@ -2525,7 +2525,7 @@ const Admin = () => {
 
                       {/* Add Question UI */}
                       <div className="p-4 bg-muted/5 border-b border-border/10">
-                        <p className="text-[12px] font-semibold mb-2">Add Question</p>
+                        <p className="text-[11px] font-semibold mb-2">Add Question</p>
                         <div className="space-y-2">
                           <input
                             value={newSurveyQuestion.survey_id === survey.id ? newSurveyQuestion.question_text : ""}
@@ -2567,12 +2567,12 @@ const Admin = () => {
 
                       {/* List Questions */}
                       <div className="p-4 border-b border-border/10">
-                        <p className="text-[12px] text-muted-foreground font-semibold mb-2">Questions ({sQuestions.length})</p>
+                        <p className="text-[11px] text-muted-foreground font-semibold mb-2">Questions ({sQuestions.length})</p>
                         <div className="space-y-2">
                           {sQuestions.map((q, idx) => {
                             const qOpts = surveyOptions.filter(o => o.question_id === q.id);
                             return (
-                              <div key={q.id} className="text-[12px] p-2 rounded-lg border border-border/40">
+                              <div key={q.id} className="text-[11px] p-2 rounded-lg border border-border/40">
                                 <div className="flex justify-between items-start">
                                   <p className="font-medium">{idx + 1}. {q.question_text}</p>
                                   <button onClick={() => handleDeleteQuestion(q.id)} className="text-destructive/60 hover:text-destructive"><X className="w-3 h-3" /></button>
@@ -2591,7 +2591,7 @@ const Admin = () => {
                       {/* Pending Approvals */}
                       {pending.length > 0 && (
                         <div className="p-4">
-                          <p className="text-[12px] text-primary font-semibold mb-2">⏳ Pending Approvals ({pending.length})</p>
+                          <p className="text-[11px] text-primary font-semibold mb-2">⏳ Pending Approvals ({pending.length})</p>
                           <div className="space-y-2">
                             {pending.map(pr => {
                               const screenshotUrl = getPublicUrl(pr.screenshot_url, "survey_screenshots");
@@ -2599,9 +2599,9 @@ const Admin = () => {
                                 <div key={pr.id} className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3">
                                   <div className="flex-1 min-w-0">
                                     <UserLink userId={pr.user_id} />
-                                    <p className="text-[12px] text-muted-foreground mt-0.5">{new Date(pr.created_at).toLocaleDateString()}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{new Date(pr.created_at).toLocaleDateString()}</p>
                                     {screenshotUrl && (
-                                      <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary flex items-center gap-1 hover:underline mt-1"><ExternalLink className="w-2.5 h-2.5" /> View Proof</a>
+                                      <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline mt-1"><ExternalLink className="w-2.5 h-2.5" /> View Proof</a>
                                     )}
                                   </div>
                                   <div className="flex gap-2">
