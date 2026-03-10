@@ -583,30 +583,30 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
         return (
           <GlassCard variant="glow" className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-foreground text-[13px]">Switch Offer</h3>
-              <p className="text-[10px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
+              <h3 className="font-semibold text-foreground text-sm">Switch Offer</h3>
+              <p className="text-[12px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
             </div>
             <div className="flex items-center gap-3">
               {app.app_logo_url ? (
                 <img src={app.app_logo_url} alt={app.app_name} className="w-10 h-10 rounded-lg object-cover" />
               ) : (
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-[13px] font-semibold text-primary">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
                   {app.app_name.charAt(0)}
                 </div>
               )}
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-[13px] text-muted-foreground">
                 Would you switch from <span className="font-semibold text-foreground">{app.app_name}</span> to an alternative?
               </p>
             </div>
             <div className="flex gap-3">
-              <GlassButton variant="primary" onClick={() => handleSwitchYes(app)} className="flex-1 text-[12px]">
+              <GlassButton variant="primary" onClick={() => handleSwitchYes(app)} className="flex-1 text-[13px]">
                 Yes (+{app.points_switch_intent} pts)
               </GlassButton>
-              <GlassButton variant="outline" onClick={() => handleSwitchNo(app)} className="flex-1 text-[12px]">
+              <GlassButton variant="outline" onClick={() => handleSwitchNo(app)} className="flex-1 text-[13px]">
                 No, thanks
               </GlassButton>
             </div>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[12px] text-muted-foreground">
               After 30 days, complete switch for +{app.points_switch_complete} extra points
             </p>
           </GlassCard>
@@ -617,28 +617,28 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
         return (
           <GlassCard variant="glow" className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-foreground text-[13px]">Try This App</h3>
-              <p className="text-[10px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
+              <h3 className="font-semibold text-foreground text-sm">Try This App</h3>
+              <p className="text-[12px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
             </div>
             <div className="flex items-center gap-3">
               {app.app_logo_url ? (
                 <img src={app.app_logo_url} alt={app.app_name} className="w-10 h-10 rounded-lg object-cover" />
               ) : (
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-[13px] font-semibold text-primary">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
                   {app.app_name.charAt(0)}
                 </div>
               )}
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-[13px] text-muted-foreground">
                 {app.referral_message || `Would you like to try ${app.app_name}?`}
               </p>
             </div>
-            <GlassButton variant="primary" onClick={() => handleReferralClick(app)} className="w-full text-[12px]">
+            <GlassButton variant="primary" onClick={() => handleReferralClick(app)} className="w-full text-[13px]">
               <ExternalLink className="inline w-3 h-3 mr-1" /> Try It Out (+{app.referral_points} pts after approval)
             </GlassButton>
-            <GlassButton variant="outline" onClick={() => handleReferralDismiss(app)} className="w-full text-[12px]">
+            <GlassButton variant="outline" onClick={() => handleReferralDismiss(app)} className="w-full text-[13px]">
               No, thanks
             </GlassButton>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[12px] text-muted-foreground">
               Submit a screenshot after completing the action. Admin will approve for points.
             </p>
           </GlassCard>
@@ -658,19 +658,19 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
           return (
             <GlassCard variant="glow" className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-foreground text-[13px]">Switch Offer</h3>
-                <p className="text-[10px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
+                <h3 className="font-semibold text-foreground text-sm">Switch Offer</h3>
+                <p className="text-[12px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
               </div>
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-[13px] text-muted-foreground">
                 Since you use <span className="font-semibold text-foreground">{app.app_name}</span>, would you like to try <span className="font-semibold text-foreground">{switchApp.app_name}</span>?
               </p>
               {switchApp.referral_message && (
-                <p className="text-[11px] text-muted-foreground">{switchApp.referral_message}</p>
+                <p className="text-[12px] text-muted-foreground">{switchApp.referral_message}</p>
               )}
-              <GlassButton variant="primary" onClick={() => handleRobustSwitchOffer(app, switchApp)} className="w-full text-[12px]">
+              <GlassButton variant="primary" onClick={() => handleRobustSwitchOffer(app, switchApp)} className="w-full text-[13px]">
                 <ExternalLink className="inline w-3 h-3 mr-1" /> Try {switchApp.app_name} (+{switchApp.referral_points} pts after approval)
               </GlassButton>
-              <GlassButton variant="outline" onClick={() => { handleSwitchNo(app); }} className="w-full text-[12px]">
+              <GlassButton variant="outline" onClick={() => { handleSwitchNo(app); }} className="w-full text-[13px]">
                 No, thanks
               </GlassButton>
             </GlassCard>
@@ -704,7 +704,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
               <button
                 key={tab.id}
                 onClick={() => setEarnTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-medium transition-all ${
                   earnTab === tab.id ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -718,7 +718,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
             <motion.div key={earnTab} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2">
               {currentList.length === 0 && (
                 <GlassCard className="text-center py-8">
-                  <p className="text-muted-foreground text-[12px]">No {earnTab === "earn" ? "available" : earnTab} earnings</p>
+                  <p className="text-muted-foreground text-[13px]">No {earnTab === "earn" ? "available" : earnTab} earnings</p>
                 </GlassCard>
               )}
 
@@ -739,16 +739,16 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                       {app.app_logo_url ? (
                         <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
                       ) : (
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[12px] font-semibold text-primary">
                           {app.app_name.charAt(0)}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-foreground">{app.app_name}</p>
+                        <p className="text-sm font-semibold text-foreground">{app.app_name}</p>
                       </div>
                       <div className="text-right">
                         {resp.points_awarded > 0 && (
-                          <p className="text-[12px] text-primary font-semibold">+{resp.points_awarded} pts</p>
+                          <p className="text-[13px] text-primary font-semibold">+{resp.points_awarded} pts</p>
                         )}
                       </div>
                     </div>
@@ -759,7 +759,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                         <GlassButton variant="primary" onClick={() => {
                           setCurrentInteraction(app);
                           setStep("sequential");
-                        }} className="flex-1 text-[12px]">
+                        }} className="flex-1 text-[13px]">
                           View Switch Offer
                         </GlassButton>
                       </div>
@@ -769,11 +769,11 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                     {(app.category === "yes_no" || app.category === "robust") && resp.would_switch === true && !resp.switch_completed && (
                       <div className="mt-3">
                         {canSwitch ? (
-                          <GlassButton variant="primary" onClick={() => handleSwitchComplete(app)} className="w-full text-[12px]">
+                          <GlassButton variant="primary" onClick={() => handleSwitchComplete(app)} className="w-full text-[13px]">
                             <ExternalLink className="inline w-3 h-3 mr-1" /> Switch Now (+{app.points_switch_complete} pts)
                           </GlassButton>
                         ) : (
-                          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
                             <Clock className="w-3 h-3" />
                             <span>Switch available in {daysUntilSwitch} days</span>
                           </div>
@@ -782,7 +782,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                     )}
 
                     {(app.category === "yes_no" || app.category === "robust") && resp.switch_completed && (
-                      <p className="text-[11px] text-primary mt-2">✓ Switched</p>
+                      <p className="text-[12px] text-primary mt-2">✓ Switched</p>
                     )}
 
                     {/* Referral: offer to try */}
@@ -791,7 +791,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                         <GlassButton variant="primary" onClick={() => {
                           setCurrentInteraction(app);
                           setStep("sequential");
-                        }} className="w-full text-[12px]">
+                        }} className="w-full text-[13px]">
                           Try It Out Offer
                         </GlassButton>
                       </div>
@@ -806,7 +806,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                             setUploadingFor(resp.app_id);
                             fileInputRef.current?.click();
                           }}
-                          className="w-full text-[12px]"
+                          className="w-full text-[13px]"
                         >
                           <Upload className="inline w-3 h-3 mr-1" /> Upload Screenshot
                         </GlassButton>
@@ -814,11 +814,11 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                     )}
 
                     {app.category === "referral" && resp.referral_screenshot_url && !resp.referral_approved && (
-                      <p className="text-[11px] text-muted-foreground mt-2">📋 Screenshot pending admin review</p>
+                      <p className="text-[12px] text-muted-foreground mt-2">📋 Screenshot pending admin review</p>
                     )}
 
                     {app.category === "referral" && resp.referral_approved && (
-                      <p className="text-[11px] text-primary mt-2">✓ Approved — {app.referral_points} pts awarded</p>
+                      <p className="text-[12px] text-primary mt-2">✓ Approved — {app.referral_points} pts awarded</p>
                     )}
                   </GlassCard>
                 );
@@ -833,7 +833,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
     if (unansweredApps.length === 0) return (
       <GlassCard className="text-center py-8">
         <Award className="w-6 h-6 text-primary mx-auto mb-2" />
-        <p className="text-muted-foreground text-[12px]">No new apps to review. Check back later!</p>
+        <p className="text-muted-foreground text-[13px]">No new apps to review. Check back later!</p>
       </GlassCard>
     );
 
@@ -845,9 +845,9 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
       <GlassCard variant="strong">
         <div className="flex items-center gap-2 mb-3">
           <CheckSquare className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-foreground text-[13px]">{questionText}</h3>
+          <h3 className="font-semibold text-foreground text-sm">{questionText}</h3>
         </div>
-        <p className="text-[12px] text-muted-foreground mb-4">
+        <p className="text-[13px] text-muted-foreground mb-4">
           Select all apps you currently have on your phone.
         </p>
 
@@ -865,15 +865,15 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
               {app.app_logo_url ? (
                 <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
               ) : (
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[12px] font-semibold text-primary">
                   {app.app_name.charAt(0)}
                 </div>
               )}
-              <span className="text-[13px] font-medium text-foreground flex-1 text-left">{app.app_name}</span>
+              <span className="text-sm font-medium text-foreground flex-1 text-left">{app.app_name}</span>
               <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
                 selectedApps.has(app.id) ? "bg-primary border-primary" : "border-muted-foreground/30"
               }`}>
-                {selectedApps.has(app.id) && <span className="text-primary-foreground text-[10px]">✓</span>}
+                {selectedApps.has(app.id) && <span className="text-primary-foreground text-[12px]">✓</span>}
               </div>
             </button>
           ))}
@@ -881,7 +881,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
 
         <GlassButton
           variant="primary"
-          className="w-full mt-4 text-[13px]"
+          className="w-full mt-4 text-sm"
           onClick={handleSubmitChecklist}
           disabled={submitting}
         >
@@ -901,7 +901,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
         <div className="space-y-4">
           <GlassCard variant="glow" className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-foreground text-[13px]">{activeSurvey.title}</h3>
+              <h3 className="font-semibold text-foreground text-sm">{activeSurvey.title}</h3>
               <button onClick={() => setActiveSurvey(null)} className="text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
               </button>
@@ -911,7 +911,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
               {surveyStep === "quiz" && question && (
                 <motion.div key={question.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
                       Question {currentQuestionIndex + 1} of {activeSurvey.survey_questions.length}
                     </span>
                   </div>
@@ -923,7 +923,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                       <button
                         key={opt.id}
                         onClick={() => handleAnswerQuestion(opt)}
-                        className="w-full text-left p-3 rounded-xl border border-border/40 hover:border-primary/40 hover:bg-primary/5 transition-all text-[13px] font-medium"
+                        className="w-full text-left p-3 rounded-xl border border-border/40 hover:border-primary/40 hover:bg-primary/5 transition-all text-sm font-medium"
                       >
                         {opt.option_text}
                       </button>
@@ -938,17 +938,17 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                     <CheckCircle2 className="w-6 h-6 text-primary" />
                   </div>
                   <h4 className="font-bold text-foreground">Quiz Completed!</h4>
-                  <p className="text-[12px] text-muted-foreground">
+                  <p className="text-[13px] text-muted-foreground">
                     Follow the instructions below to complete the survey and earn <span className="text-primary font-bold">{activeSurvey.points_reward} points</span>.
                   </p>
 
                   <div className="p-4 rounded-xl bg-muted/20 border border-border/40 text-left space-y-3">
-                    <p className="text-[12px] font-medium text-foreground">
+                    <p className="text-[13px] font-medium text-foreground">
                       {activeSurvey.completion_instructions}
                     </p>
                     {activeSurvey.completion_link && (
                       <a href={activeSurvey.completion_link} target="_blank" rel="noopener noreferrer">
-                        <GlassButton variant="primary" className="w-full text-[12px]">
+                        <GlassButton variant="primary" className="w-full text-[13px]">
                           <ExternalLink className="w-3.5 h-3.5 mr-2" /> Open Link
                         </GlassButton>
                       </a>
@@ -956,14 +956,14 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                   </div>
 
                   <div className="pt-4 space-y-3">
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[12px] text-muted-foreground">
                       Upload a screenshot as proof of completion
                     </p>
                     <GlassButton
                       variant="outline"
                       onClick={() => surveyFileRef.current?.click()}
                       disabled={surveyUploading}
-                      className="w-full text-[12px]"
+                      className="w-full text-[13px]"
                     >
                       <Upload className="w-3.5 h-3.5 mr-2" />
                       {surveyUploading ? "Uploading..." : "Upload Screenshot"}
@@ -981,7 +981,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
       <div className="space-y-3">
         {surveys.length === 0 && (
           <GlassCard className="text-center py-8">
-            <p className="text-muted-foreground text-[12px]">No active surveys available.</p>
+            <p className="text-muted-foreground text-[13px]">No active surveys available.</p>
           </GlassCard>
         )}
 
@@ -1013,17 +1013,17 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                   <MessageSquare className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-[13px] font-semibold text-foreground truncate">{survey.title}</h4>
-                  <p className="text-[11px] text-muted-foreground line-clamp-1">{survey.description}</p>
+                  <h4 className="text-sm font-semibold text-foreground truncate">{survey.title}</h4>
+                  <p className="text-[12px] text-muted-foreground line-clamp-1">{survey.description}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[12px] text-primary font-bold">+{survey.points_reward} pts</p>
+                  <p className="text-[13px] text-primary font-bold">+{survey.points_reward} pts</p>
                 </div>
               </div>
 
               {!response && (
                 <div className="mt-3">
-                  <GlassButton variant="primary" onClick={() => handleStartSurvey(survey)} className="w-full text-[12px]">
+                  <GlassButton variant="primary" onClick={() => handleStartSurvey(survey)} className="w-full text-[13px]">
                     Start Survey <ChevronRight className="w-3 h-3 ml-1" />
                   </GlassButton>
                 </div>
@@ -1031,11 +1031,11 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
 
               {isInProgress && (
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center gap-2 text-[11px] text-accent-foreground bg-accent/10 p-2 rounded-lg border border-accent/20">
+                  <div className="flex items-center gap-2 text-[12px] text-accent-foreground bg-accent/10 p-2 rounded-lg border border-accent/20">
                     <Clock className="w-3.5 h-3.5" />
                     <span>Quiz passed. {timeLeft} to upload proof.</span>
                   </div>
-                  <GlassButton variant="outline" onClick={() => handleStartSurvey(survey)} className="w-full text-[12px]">
+                  <GlassButton variant="outline" onClick={() => handleStartSurvey(survey)} className="w-full text-[13px]">
                     Continue Survey
                   </GlassButton>
                 </div>
@@ -1043,14 +1043,14 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
 
               {isExpiredRestartable && (
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center gap-2 text-[11px] text-destructive bg-destructive/10 p-2 rounded-lg border border-destructive/20">
+                  <div className="flex items-center gap-2 text-[12px] text-destructive bg-destructive/10 p-2 rounded-lg border border-destructive/20">
                     <Clock className="w-3.5 h-3.5" />
                     <span>Your 20-day window expired. You can restart this survey.</span>
                   </div>
                   <GlassButton
                     variant="outline"
                     onClick={() => handleStartSurvey(survey)}
-                    className="w-full text-[12px]"
+                    className="w-full text-[13px]"
                   >
                     Restart Survey
                   </GlassButton>
@@ -1058,14 +1058,14 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
               )}
 
               {isPending && (
-                <div className="mt-3 flex items-center gap-2 text-[11px] text-accent-foreground bg-accent/10 p-2 rounded-lg border border-accent/20">
+                <div className="mt-3 flex items-center gap-2 text-[12px] text-accent-foreground bg-accent/10 p-2 rounded-lg border border-accent/20">
                   <AlertCircle className="w-3.5 h-3.5" />
                   <span>Proof submitted. Pending review.</span>
                 </div>
               )}
 
               {isApproved && (
-                <div className="mt-3 flex items-center gap-2 text-[11px] text-primary bg-primary/10 p-2 rounded-lg border border-primary/20">
+                <div className="mt-3 flex items-center gap-2 text-[12px] text-primary bg-primary/10 p-2 rounded-lg border border-primary/20">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Completed. {survey.points_reward} pts awarded!</span>
                 </div>
@@ -1073,11 +1073,11 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
 
               {isRejected && (
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center gap-2 text-[11px] text-destructive bg-destructive/10 p-2 rounded-lg border border-destructive/20">
+                  <div className="flex items-center gap-2 text-[12px] text-destructive bg-destructive/10 p-2 rounded-lg border border-destructive/20">
                     <X className="w-3.5 h-3.5" />
                     <span>Proof rejected. {timeLeft} to upload again.</span>
                   </div>
-                  <GlassButton variant="outline" onClick={() => handleStartSurvey(survey)} className="w-full text-[12px]">
+                  <GlassButton variant="outline" onClick={() => handleStartSurvey(survey)} className="w-full text-[13px]">
                     Upload Again
                   </GlassButton>
                 </div>
@@ -1099,7 +1099,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
         <div className="flex gap-2 p-1 rounded-xl glass-strong">
           <button
             onClick={() => setActiveEarnView("tasks")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
               activeEarnView === "tasks" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -1108,7 +1108,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
           </button>
           <button
             onClick={() => setActiveEarnView("surveys")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
               activeEarnView === "surveys" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
