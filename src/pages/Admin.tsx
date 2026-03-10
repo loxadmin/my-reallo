@@ -16,6 +16,8 @@ import { sendNotification } from "@/lib/notifications";
 import WaterBackground from "@/components/WaterBackground";
 import UserProfileDrawer from "@/components/UserProfileDrawer";
 import AdvertiserManagement from "@/components/admin/AdvertiserManagement";
+import AdminInfluencerSurveys from "@/components/admin/AdminInfluencerSurveys";
+import AdminInfluencerSurveyResponses from "@/components/admin/AdminInfluencerSurveyResponses";
 import PageSkeleton from "@/components/PageSkeleton";
 import {
   SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
@@ -76,7 +78,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "warnings" | "advertisers" | "surveys";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys";
 
 const navGroups = [
   {
@@ -101,6 +103,7 @@ const navGroups = [
       { id: "inf_withdrawals" as AdminTab, label: "Withdrawals", icon: ArrowDownToLine },
       { id: "inf_challenges" as AdminTab, label: "Challenges", icon: Upload },
       { id: "inf_submissions" as AdminTab, label: "Submissions", icon: Eye },
+      { id: "inf_surveys" as AdminTab, label: "Survey Rewards", icon: DollarSign },
     ],
   },
   {
@@ -275,7 +278,7 @@ const TableRow = ({ children, className, onClick }: { children: React.ReactNode;
 
 // ── Main Admin ──
 const Admin = () => {
-  const { isAdmin, loading, signOut } = useAuth();
+  const { isAdmin, loading, signOut, user: authUser } = useAuth();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [surveys, setSurveys] = useState<any[]>([]);
@@ -887,6 +890,7 @@ const Admin = () => {
     inf_withdrawals: "Influencer Withdrawals", inf_challenges: "Influencer Challenges", inf_submissions: "Challenge Submissions", warnings: "Warnings",
     advertisers: "Advertisers",
     surveys: "Surveys",
+    inf_surveys: "Influencer Survey Rewards",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
@@ -2396,6 +2400,21 @@ const Admin = () => {
             )}
 
             {/* ═══ SURVEYS ═══ */}
+
+            {activeTab === "inf_surveys" && (
+              <div className="space-y-4">
+                <SectionHeader
+                  title="Influencer Surveys"
+                  subtitle="Separate admin CRUD and approval flow for influencer cash rewards."
+                />
+                <AdminInfluencerSurveys />
+                <SectionHeader
+                  title="Influencer Survey Responses"
+                  subtitle="Review screenshots, approve/reject, and trigger wallet transactions."
+                />
+                <AdminInfluencerSurveyResponses adminUserId={(authUser?.id || "") as string} />
+              </div>
+            )}
             {activeTab === "surveys" && (
               <div className="space-y-6">
                 <div className={cardCls}>
