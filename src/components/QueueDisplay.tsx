@@ -321,18 +321,18 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 <div className="grid grid-cols-3 gap-3">
                   <div className="text-center">
                     <p className="text-sm font-bold text-foreground tracking-tight">{todaySkipped}</p>
-                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Skipped Today</p>
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Skipped Today</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-bold text-primary tracking-tight">{`${nextUnlock.hours}h ${nextUnlock.minutes}m`}</p>
-                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Next Advance</p>
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Next Advance</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-bold text-foreground tracking-tight">50/day</p>
-                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Auto Skip</p>
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Auto Skip</p>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-3 text-center font-medium">
+                <p className="text-sm text-muted-foreground mt-3 text-center font-medium">
                   Refer friends to skip 20 positions each
                 </p>
               </GlassCard>
@@ -344,19 +344,19 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                   <CheckCircle2 className="w-5 h-5 text-primary" />
                   <p className="text-sm font-semibold text-foreground tracking-tight">You're off the queue!</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1.5 font-medium leading-relaxed">Earn points and verify your spend to claim your goal.</p>
+                <p className="text-sm text-muted-foreground mt-1.5 font-medium leading-relaxed">Earn points and verify your spend to claim your goal.</p>
               </GlassCard>
             )}
 
             <div className="space-y-4">
-              <p className="text-foreground font-bold text-sm px-1 uppercase tracking-widest-more">Services</p>
+              <p className="text-foreground font-bold text-sm px-1 uppercase tracking-widest">Services</p>
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => onViewChange?.("earn")} className="layout-grid-item group">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     <Award className="w-5 h-5 text-primary" />
                   </div>
                   <p className="font-bold text-foreground text-sm mb-1 tracking-tight">Earn Points</p>
-                  <p className="text-muted-foreground text-xs leading-relaxed font-medium">Complete tasks to earn</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed font-medium">Complete tasks to earn</p>
                 </button>
 
                 <button
@@ -367,7 +367,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                     <Check className="w-5 h-5 text-primary" />
                   </div>
                   <p className="font-bold text-foreground text-sm mb-1 tracking-tight">Verify Spend</p>
-                  <p className="text-muted-foreground text-xs leading-relaxed font-medium">Submit receipts</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed font-medium">Submit receipts</p>
                 </button>
 
                 <button onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })} className="layout-grid-item group">
@@ -375,7 +375,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                     <Gift className="w-5 h-5 text-primary" />
                   </div>
                   <p className="font-bold text-foreground text-sm mb-1 tracking-tight">Vouchers</p>
-                  <p className="text-muted-foreground text-xs leading-relaxed font-medium">Claim your vouchers</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed font-medium">Claim your vouchers</p>
                 </button>
 
                 <button onClick={handleShare} className="layout-grid-item group">
@@ -383,7 +383,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                     <Share2 className="w-5 h-5 text-primary" />
                   </div>
                   <p className="font-bold text-foreground text-sm mb-1 tracking-tight">Refer & Earn</p>
-                  <p className="text-muted-foreground text-xs leading-relaxed font-medium">{referralCount} referrals</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed font-medium">{referralCount} referrals</p>
                 </button>
               </div>
             </div>
@@ -430,7 +430,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             <GlassCard variant="strong" className="text-center py-8">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Award className="w-5 h-5 text-primary" />
-                <p className="text-muted-foreground uppercase tracking-widest-more text-[11px] font-bold">Points Balance</p>
+                <p className="text-muted-foreground uppercase tracking-widest text-xs font-bold">Points Balance</p>
               </div>
               <h2 className="font-display text-4xl font-bold gradient-text mb-2">{pointsBalance.toLocaleString()}</h2>
               <p className="text-muted-foreground text-sm font-medium">Estimated Value: <span className="text-foreground">{formatNaira(nairaValue)}</span></p>
@@ -493,11 +493,11 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             <GlassCard className="p-7">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <p className="text-muted-foreground uppercase tracking-widest-more text-[11px] font-bold mb-1">Your Selected Goal</p>
+                  <p className="text-muted-foreground uppercase tracking-widest text-xs font-bold mb-1">Your Selected Goal</p>
                   <p className="font-bold text-foreground text-lg tracking-tight">GOAL - {goalLabels[goal] || goal}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-muted-foreground uppercase tracking-widest-more text-[11px] font-bold mb-1">Claimable Value</p>
+                  <p className="text-muted-foreground uppercase tracking-widest text-xs font-bold mb-1">Claimable Value</p>
                   <p className="font-bold text-primary text-lg tracking-tight">{formatNaira(nairaValue)}</p>
                 </div>
               </div>
@@ -507,7 +507,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               <div className="flex justify-between mt-3">
                 <p className="text-muted-foreground text-sm font-medium">{formatNaira(nairaValue)} / {formatNaira(targetAmount)}</p>
               </div>
-              {claimedTotal > 0 && <p className="text-muted-foreground mt-3 text-xs font-medium bg-primary/5 p-2 rounded-lg inline-block">Already claimed: {formatNaira(claimedTotal)}</p>}
+              {claimedTotal > 0 && <p className="text-muted-foreground mt-3 text-sm font-medium bg-primary/5 p-2 rounded-lg inline-block">Already claimed: {formatNaira(claimedTotal)}</p>}
             </GlassCard>
 
             <GlassButton variant="primary" onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })} className="w-full" disabled={!isOffQueue}>
