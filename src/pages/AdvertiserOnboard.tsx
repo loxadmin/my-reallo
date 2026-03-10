@@ -211,10 +211,10 @@ const AdvertiserOnboard = () => {
         <div className="glass-card rounded-2xl p-8 max-w-md text-center relative z-10">
           <CheckCircle2 className="w-16 h-16 text-primary mx-auto mb-4" />
           <h2 className="text-xl font-bold text-foreground mb-2">Application Submitted!</h2>
-          <p className="text-muted-foreground text-sm mb-4">
+          <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
             Your Letter of Intent application has been submitted for review. We'll notify you at <strong>{email}</strong> once it's processed.
           </p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight opacity-70">
             You can check your status at your advertiser dashboard anytime.
           </p>
           <button
@@ -280,7 +280,7 @@ const AdvertiserOnboard = () => {
           {/* Email */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-1.5">
-              <Mail className="w-4 h-4 text-primary" /> Official Email * {brandedEmailRequired && <span className="text-[10px] text-muted-foreground">(must match website domain)</span>}
+              <Mail className="w-4 h-4 text-primary" /> Official Email * {brandedEmailRequired && <span className="text-xs text-muted-foreground font-normal">(must match website domain)</span>}
             </label>
             <div className="flex gap-2">
               <input
@@ -338,7 +338,7 @@ const AdvertiserOnboard = () => {
           {/* Signature Upload */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-1.5">
-              <Upload className="w-4 h-4 text-primary" /> Signature * <span className="text-[10px] text-muted-foreground">(signed on white paper, photographed)</span>
+              <Upload className="w-4 h-4 text-primary" /> Signature * <span className="text-xs text-muted-foreground font-normal">(signed on white paper, photographed)</span>
             </label>
             <div className="flex items-center gap-4">
               {signaturePreview && (
@@ -365,7 +365,7 @@ const AdvertiserOnboard = () => {
             </button>
           </div>
 
-          <p className="text-[10px] text-muted-foreground text-center">
+          <p className="text-xs text-muted-foreground text-center leading-relaxed opacity-80 px-4">
             By submitting, you agree that this is a non-binding Letter of Intent for a minimum $50,000 advertising commitment once REALLO reaches 100,000 users.
           </p>
         </div>

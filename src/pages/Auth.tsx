@@ -186,14 +186,14 @@ const Auth = () => {
             <RealloLogo size={28} />
             <h1 className="font-display text-xl font-bold gradient-text">Reallo</h1>
           </div>
-          <p className="text-[12px] text-muted-foreground">Reclaim what's yours</p>
+          <p className="text-sm text-muted-foreground font-medium uppercase tracking-tight">Reclaim what's yours</p>
         </div>
 
         {signupSuccess ? (
           <GlassCard variant="glow" className="text-center">
             <Mail className="w-10 h-10 text-primary mx-auto mb-4" />
             <h2 className="font-display text-lg font-bold text-foreground mb-2">Check Your Email</h2>
-            <p className="text-[13px] text-muted-foreground mb-6">
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
               We've sent a confirmation link to <strong className="text-foreground">{email}</strong>.
               Click the link to activate your account.
             </p>
@@ -206,7 +206,7 @@ const Auth = () => {
             <div className="flex gap-2 mb-6">
               <button
                 onClick={() => { setMode("login"); setError(""); setFieldErrors({}); }}
-                className={`flex-1 py-2.5 rounded-xl font-display text-[13px] font-medium transition-all duration-300 ${
+                className={`flex-1 py-2.5 rounded-xl font-display text-sm font-medium transition-all duration-300 ${
                   mode === "login" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"
                 }`}
               >
@@ -214,7 +214,7 @@ const Auth = () => {
               </button>
               <button
                 onClick={() => { setMode("signup"); setError(""); setFieldErrors({}); }}
-                className={`flex-1 py-2.5 rounded-xl font-display text-[13px] font-medium transition-all duration-300 ${
+                className={`flex-1 py-2.5 rounded-xl font-display text-sm font-medium transition-all duration-300 ${
                   mode === "signup" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"
                 }`}
               >
@@ -222,7 +222,7 @@ const Auth = () => {
               </button>
             </div>
 
-              <div className="space-y-4 animate-fade-in">
+              <div className="space-y-5 animate-fade-in">
                 <div>
                   <GlassInput
                     label="Email"
@@ -233,7 +233,7 @@ const Auth = () => {
                     autoComplete="email"
                   />
                   {fieldErrors.email && (
-                    <p className="text-[11px] text-destructive mt-1">{fieldErrors.email}</p>
+                    <p className="text-xs text-destructive mt-1.5 font-medium">{fieldErrors.email}</p>
                   )}
                 </div>
 
@@ -257,10 +257,10 @@ const Auth = () => {
                     </button>
                   </div>
                   {fieldErrors.password && (
-                    <p className="text-[11px] text-destructive mt-1">{fieldErrors.password}</p>
+                    <p className="text-xs text-destructive mt-1.5 font-medium">{fieldErrors.password}</p>
                   )}
                   {mode === "signup" && password.length > 0 && passwordStrength && (
-                    <div className="mt-2 space-y-1">
+                    <div className="mt-3 space-y-1.5">
                       <div className="flex gap-1">
                         {[0, 1, 2, 3].map((i) => (
                           <div
@@ -275,7 +275,7 @@ const Auth = () => {
                           />
                         ))}
                       </div>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground font-medium">
                         Strength: <span style={{ color: passwordStrength.color }}>{passwordStrength.label}</span>
                       </p>
                     </div>
@@ -284,38 +284,38 @@ const Auth = () => {
 
                 <div className={`grid transition-all duration-300 ease-in-out ${mode === "signup" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
                   <div className="overflow-hidden">
-                    <div className="pt-1">
+                    <div className="pt-2">
                       <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
-                      <p className="text-[11px] text-primary/60 mt-1 flex items-center gap-1">
-                        <Gift className="w-3 h-3" /> You and your referrer both benefit
+                      <p className="text-xs text-primary/70 mt-1.5 flex items-center gap-1.5 font-medium">
+                        <Gift className="w-3.5 h-3.5" /> You and your referrer both benefit
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {error && (
-                  <p className="text-[13px] text-destructive font-medium">
+                  <p className="text-sm text-destructive font-semibold bg-destructive/5 p-3 rounded-xl border border-destructive/10 leading-relaxed">
                     {error}
                   </p>
                 )}
 
-                <GlassButton variant="primary" className="w-full mt-4 text-[13px] py-3.5" onClick={handleSubmit} disabled={loading || !email || !password}>
+                <GlassButton variant="primary" className="w-full mt-4 text-sm py-3.5" onClick={handleSubmit} disabled={loading || !email || !password}>
                   {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
                 </GlassButton>
 
-                <div className="relative my-5">
+                <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-border/40" />
                   </div>
-                  <div className="relative flex justify-center text-[11px]">
-                    <span className="bg-card px-3 text-muted-foreground">or continue with</span>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-card px-4 text-muted-foreground font-medium uppercase tracking-widest opacity-60">or continue with</span>
                   </div>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
-                  className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl glass-button text-foreground font-display text-[13px] font-medium transition-all duration-300 hover:scale-[1.02]"
+                  className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl glass-button text-foreground font-display text-sm font-medium transition-all duration-300 hover:scale-[1.02]"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
