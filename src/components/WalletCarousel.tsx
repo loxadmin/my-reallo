@@ -118,13 +118,13 @@ const WalletCarousel = ({
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                       {wallet.icon}
                     </div>
-                    <p className="text-muted-foreground uppercase tracking-[0.15em] text-xs font-medium">
+                    <p className="text-muted-foreground uppercase tracking-[0.15em] text-[10px] font-medium">
                       {wallet.label}
                     </p>
                   </div>
                   {idx === 0 && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-muted-foreground font-medium uppercase tracking-tight">Total</span>
+                      <span className="text-[9px] text-muted-foreground">Total</span>
                       <button
                         onClick={() => setShowTotal(!showTotal)}
                         className={cn(
@@ -181,7 +181,7 @@ const WalletCarousel = ({
                         {formatCurrency(wallet.amount)}
                       </h2>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-4">
+                    <p className="text-[11px] text-muted-foreground mb-4">
                       Claimable: <span className="text-primary font-semibold">{formatCurrency(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
                     </p>
 
@@ -190,8 +190,8 @@ const WalletCarousel = ({
                       className="w-full text-left space-y-1.5 mb-5 cursor-pointer group/goal"
                     >
                       <div className="flex justify-between items-end">
-                        <p className="font-medium text-foreground text-sm group-hover/goal:text-primary transition-colors">GOAL - {goalLabel}</p>
-                        <p className="text-muted-foreground text-xs">
+                        <p className="font-medium text-foreground text-[12px] group-hover/goal:text-primary transition-colors">GOAL - {goalLabel}</p>
+                        <p className="text-muted-foreground text-[11px]">
                           {targetAmount > 0 ? Math.round((nairaValue / targetAmount) * 100) : 0}%
                         </p>
                       </div>
@@ -207,12 +207,12 @@ const WalletCarousel = ({
                   </>
                 ) : (
                   <div className="py-4 text-center">
-                    <p className="text-muted-foreground text-sm mb-3">
+                    <p className="text-muted-foreground text-[12px] mb-3">
                       You haven't calculated your {wallet.type} spend yet.
                     </p>
                     <button
                       onClick={() => onActivateWallet(wallet.type as "food" | "transport")}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-[12px] font-medium hover:bg-primary/90 transition-colors"
                     >
                       Activate
                     </button>
@@ -271,7 +271,7 @@ const WalletCarousel = ({
                         <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center mb-2">
                           {wallet.icon}
                         </div>
-                        <p className="text-muted-foreground uppercase tracking-[0.15em] text-xs font-semibold mb-2 text-center opacity-80">
+                        <p className="text-muted-foreground uppercase tracking-[0.15em] text-[9px] font-medium mb-2 text-center">
                           {showTotal && wallet.type === "utility" ? "Total Annual Spend" : wallet.label}
                         </p>
                         <p className="font-display text-2xl font-bold gradient-text tabular-nums">
@@ -298,7 +298,7 @@ const WalletCarousel = ({
 
                 {/* Total toggle */}
                 <div className="flex items-center gap-1.5 mt-3">
-                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-tight">Total</span>
+                  <span className="text-[9px] text-muted-foreground">Total</span>
                   <button
                     onClick={() => setShowTotal(!showTotal)}
                     className={cn(

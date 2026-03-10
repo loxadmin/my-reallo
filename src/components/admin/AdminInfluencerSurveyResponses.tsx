@@ -53,23 +53,23 @@ export default function AdminInfluencerSurveyResponses({ adminUserId }: Props) {
 
         return (
           <GlassCard key={response.id} className="p-4 space-y-3">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-sm font-semibold text-foreground">{survey?.title || "Unknown survey"}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{profile?.email || response.user_id}</p>
-                <p className="text-xs text-primary font-medium mt-1">Reward: {formatNaira(Number(response.reward_amount || 0))}</p>
+                <p className="text-sm font-semibold">{survey?.title || "Unknown survey"}</p>
+                <p className="text-xs text-muted-foreground">{profile?.email || response.user_id}</p>
+                <p className="text-xs text-muted-foreground">Reward: {formatNaira(Number(response.reward_amount || 0))}</p>
               </div>
-              <span className="text-xs uppercase tracking-widest font-bold px-2.5 py-1 rounded-full border border-border bg-muted/20 text-muted-foreground">{response.status}</span>
+              <span className="text-xs px-2 py-1 rounded-full border">{response.status}</span>
             </div>
 
             {screenshotUrl ? (
-              <a href={screenshotUrl} target="_blank" rel="noreferrer" className="text-xs font-medium underline text-primary hover:text-primary/80 transition-colors">View screenshot</a>
+              <a href={screenshotUrl} target="_blank" rel="noreferrer" className="text-xs underline text-primary">View screenshot</a>
             ) : (
-              <p className="text-xs text-muted-foreground italic">No screenshot uploaded yet.</p>
+              <p className="text-xs text-muted-foreground">No screenshot uploaded yet.</p>
             )}
 
             <textarea
-              className="w-full glass-input rounded-xl px-3 py-2 text-sm"
+              className="w-full glass-input rounded-xl px-3 py-2 text-xs"
               rows={2}
               placeholder="Review notes (optional)"
               value={reviewNotes[response.id] || ""}
@@ -78,7 +78,7 @@ export default function AdminInfluencerSurveyResponses({ adminUserId }: Props) {
 
             {isActionable && (
               <div className="flex gap-2">
-                <GlassButton onClick={async () => {
+                <GlassButton className="text-xs" onClick={async () => {
                   try {
                     await approveInfluencerSurveyResponse(response, adminUserId, reviewNotes[response.id]);
                     toast({ title: "Approved", description: "Response approved and payout recorded." });
@@ -105,11 +105,11 @@ export default function AdminInfluencerSurveyResponses({ adminUserId }: Props) {
               </div>
             )}
 
-            {response.review_notes && <p className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-lg border border-border/20">Last note: {response.review_notes}</p>}
+            {response.review_notes && <p className="text-xs text-muted-foreground">Last note: {response.review_notes}</p>}
           </GlassCard>
         );
       })}
-      {responses.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">No influencer survey responses yet.</p>}
+      {responses.length === 0 && <p className="text-xs text-muted-foreground">No influencer survey responses yet.</p>}
     </div>
   );
 }

@@ -135,9 +135,9 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
     await fetchData();
   };
 
-  const inputCls = "w-full rounded-xl border border-border/40 bg-card/60 px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
+  const inputCls = "w-full rounded-xl border border-border/40 bg-card/60 px-3 py-2.5 text-foreground text-[12px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
   const cardCls = "rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-5 space-y-4";
-  const tabCls = (active: boolean) => `px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${active ? "clay-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`;
+  const tabCls = (active: boolean) => `px-4 py-2 rounded-xl text-[11px] font-semibold transition-all cursor-pointer ${active ? "clay-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`;
 
   const pendingCount = submissions.filter((s: any) => s.status === "pending_review").length;
 
@@ -154,7 +154,7 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
         <button onClick={() => setTab("submissions")} className={tabCls(tab === "submissions")}>
           <span className="flex items-center gap-1.5">
             <Building className="w-3.5 h-3.5" /> Submissions
-            {pendingCount > 0 && <span className="bg-destructive text-destructive-foreground text-xs font-bold px-1.5 py-0.5 rounded-full leading-none">{pendingCount}</span>}
+            {pendingCount > 0 && <span className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded-full">{pendingCount}</span>}
           </span>
         </button>
       </div>
@@ -162,23 +162,23 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
       {/* Setup Tab */}
       {tab === "setup" && (
         <div className={cardCls}>
-          <h3 className="text-sm font-bold text-foreground">Founder & Platform Settings</h3>
-          <p className="text-xs text-muted-foreground -mt-2">Configure founder credentials for the Letter of Intent.</p>
+          <h3 className="text-[14px] font-bold text-foreground">Founder & Platform Settings</h3>
+          <p className="text-[11px] text-muted-foreground -mt-2">Configure founder credentials for the Letter of Intent.</p>
 
           <div>
-            <label className="text-xs text-muted-foreground font-medium">Founder Full Name</label>
+            <label className="text-[11px] text-muted-foreground font-medium">Founder Full Name</label>
             <input value={founderName} onChange={e => setFounderName(e.target.value)} placeholder="Full legal name" className={`${inputCls} mt-1`} />
           </div>
 
           <div>
-            <label className="text-xs text-muted-foreground font-medium">Founder Signature</label>
+            <label className="text-[11px] text-muted-foreground font-medium">Founder Signature</label>
             <div className="flex items-center gap-3 mt-1">
               {founderSigUrl && (
                 <img src={founderSigUrl} alt="Founder sig" className="w-24 h-12 rounded-lg object-contain border border-border/40 bg-white" />
               )}
               <label className="flex items-center gap-2 rounded-xl border border-dashed border-border/50 px-4 py-2.5 cursor-pointer hover:border-primary/30 transition-colors">
                 <Upload className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">{founderSigFile ? founderSigFile.name : "Upload signature"}</span>
+                <span className="text-[11px] text-muted-foreground">{founderSigFile ? founderSigFile.name : "Upload signature"}</span>
                 <input ref={sigInputRef} type="file" accept="image/*" className="hidden" onChange={e => {
                   const f = e.target.files?.[0];
                   if (f) setFounderSigFile(f);
@@ -189,8 +189,8 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
 
           <div className="flex items-center justify-between">
             <div>
-              <label className="text-xs text-muted-foreground font-medium">Branded Email Required</label>
-              <p className="text-xs text-muted-foreground opacity-80">When enabled, advertiser email must match their website domain.</p>
+              <label className="text-[11px] text-muted-foreground font-medium">Branded Email Required</label>
+              <p className="text-[10px] text-muted-foreground">When enabled, advertiser email must match their website domain.</p>
             </div>
             <button
               onClick={() => setBrandedEmailRequired(!brandedEmailRequired)}
@@ -201,21 +201,21 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
           </div>
 
           <hr className="border-border/30" />
-          <h4 className="text-sm font-semibold text-foreground">User Milestone Notification</h4>
-          <p className="text-xs text-muted-foreground -mt-2">When updated, advertisers will see the count on their dashboard.</p>
+          <h4 className="text-[13px] font-semibold text-foreground">User Milestone Notification</h4>
+          <p className="text-[11px] text-muted-foreground -mt-2">When updated, advertisers will see the count on their dashboard.</p>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-muted-foreground font-medium">Current User Count</label>
+              <label className="text-[11px] text-muted-foreground font-medium">Current User Count</label>
               <input type="number" value={advUserCount} onChange={e => setAdvUserCount(e.target.value)} placeholder="e.g. 50000" className={`${inputCls} mt-1`} />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground font-medium">Proceed Link (when 100k reached)</label>
+              <label className="text-[11px] text-muted-foreground font-medium">Proceed Link (when 100k reached)</label>
               <input value={advUserCountLink} onChange={e => setAdvUserCountLink(e.target.value)} placeholder="https://..." className={`${inputCls} mt-1`} />
             </div>
           </div>
 
-          <button onClick={handleSaveSettings} disabled={saving} className="clay-primary text-primary-foreground rounded-xl px-5 py-2.5 text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50">
+          <button onClick={handleSaveSettings} disabled={saving} className="clay-primary text-primary-foreground rounded-xl px-5 py-2.5 text-[11px] font-semibold flex items-center gap-1.5 disabled:opacity-50">
             <Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save Settings"}
           </button>
         </div>
@@ -226,23 +226,23 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
         <div className={cardCls}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-foreground">Onboarding Links</h3>
-              <p className="text-xs text-muted-foreground">Generate unique links for advertisers to fill the LOI form.</p>
+              <h3 className="text-[14px] font-bold text-foreground">Onboarding Links</h3>
+              <p className="text-[11px] text-muted-foreground">Generate unique links for advertisers to fill the LOI form.</p>
             </div>
-            <button onClick={handleGenerateToken} disabled={generating} className="clay-primary text-primary-foreground rounded-xl px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50">
+            <button onClick={handleGenerateToken} disabled={generating} className="clay-primary text-primary-foreground rounded-xl px-4 py-2.5 text-[11px] font-semibold flex items-center gap-1.5 disabled:opacity-50">
               <Plus className="w-3.5 h-3.5" /> {generating ? "..." : "Generate Link"}
             </button>
           </div>
 
           <div className="space-y-2 max-h-[400px] overflow-y-auto">
-            {tokens.length === 0 && <p className="text-muted-foreground text-sm text-center py-4">No links generated yet.</p>}
+            {tokens.length === 0 && <p className="text-muted-foreground text-xs text-center py-4">No links generated yet.</p>}
             {tokens.map((tk: any) => (
               <div key={tk.id} className="flex items-center gap-3 rounded-xl border border-border/30 p-3 hover:bg-muted/10 transition-colors">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-mono text-foreground truncate">{tk.token.slice(0, 16)}...</p>
-                  <p className="text-xs text-muted-foreground opacity-70 font-medium">{new Date(tk.created_at).toLocaleDateString()} · {tk.status}</p>
+                  <p className="text-[11px] font-mono text-foreground truncate">{tk.token.slice(0, 16)}...</p>
+                  <p className="text-[10px] text-muted-foreground">{new Date(tk.created_at).toLocaleDateString()} · {tk.status}</p>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-widest ${tk.status === "active" ? "bg-primary/15 text-primary" : tk.status === "used" ? "bg-muted text-muted-foreground" : "bg-destructive/10 text-destructive"}`}>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${tk.status === "active" ? "bg-primary/15 text-primary" : tk.status === "used" ? "bg-muted text-muted-foreground" : "bg-destructive/10 text-destructive"}`}>
                   {tk.status}
                 </span>
                 {tk.status === "active" && (
@@ -264,8 +264,8 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
         <div className={cardCls}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-foreground">Advertiser Submissions</h3>
-              <p className="text-xs text-muted-foreground">Review and approve advertiser LOI applications.</p>
+              <h3 className="text-[14px] font-bold text-foreground">Advertiser Submissions</h3>
+              <p className="text-[11px] text-muted-foreground">Review and approve advertiser LOI applications.</p>
             </div>
             <button onClick={fetchData} className="text-muted-foreground hover:text-foreground transition-colors">
               <RefreshCw className="w-4 h-4" />
@@ -273,20 +273,20 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
           </div>
 
           <div className="space-y-3 max-h-[600px] overflow-y-auto">
-            {submissions.length === 0 && <p className="text-muted-foreground text-sm text-center py-4">No submissions yet.</p>}
+            {submissions.length === 0 && <p className="text-muted-foreground text-xs text-center py-4">No submissions yet.</p>}
             {submissions.map((sub: any) => (
-              <div key={sub.id} className="rounded-xl border border-border/30 p-4 space-y-4">
+              <div key={sub.id} className="rounded-xl border border-border/30 p-4 space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     {sub.brand_logo_url && (
                       <img src={sub.brand_logo_url} alt="Logo" className="w-10 h-10 rounded-lg object-contain border border-border/40 bg-white" />
                     )}
                     <div>
-                      <p className="text-sm font-bold text-foreground">{sub.brand_name}</p>
-                      <p className="text-xs text-muted-foreground opacity-80">{sub.email}</p>
+                      <p className="text-[13px] font-bold text-foreground">{sub.brand_name}</p>
+                      <p className="text-[10px] text-muted-foreground">{sub.email}</p>
                     </div>
                   </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-widest border ${
+                  <span className={`text-[10px] px-2.5 py-1 rounded-full font-medium border ${
                     sub.status === "approved" ? "bg-primary/15 text-primary border-primary/20" :
                     sub.status === "declined" ? "bg-destructive/10 text-destructive border-destructive/20" :
                     "bg-amber-500/10 text-amber-600 border-amber-500/20"
@@ -295,34 +295,34 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div><span className="text-muted-foreground">Website:</span> <a href={sub.website_url} target="_blank" rel="noopener" className="text-primary hover:underline ml-1">{sub.website_url}</a></div>
-                  <div><span className="text-muted-foreground">CEO/Manager:</span> <span className="text-foreground font-medium ml-1">{sub.ceo_name}</span></div>
-                  <div><span className="text-muted-foreground">Contact:</span> <span className="text-foreground ml-1">{sub.contact_number}</span></div>
-                  <div><span className="text-muted-foreground">Submitted:</span> <span className="text-foreground ml-1">{new Date(sub.created_at).toLocaleDateString()}</span></div>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div><span className="text-muted-foreground">Website:</span> <a href={sub.website_url} target="_blank" rel="noopener" className="text-primary hover:underline">{sub.website_url}</a></div>
+                  <div><span className="text-muted-foreground">CEO/Manager:</span> <span className="text-foreground font-medium">{sub.ceo_name}</span></div>
+                  <div><span className="text-muted-foreground">Contact:</span> <span className="text-foreground">{sub.contact_number}</span></div>
+                  <div><span className="text-muted-foreground">Submitted:</span> <span className="text-foreground">{new Date(sub.created_at).toLocaleDateString()}</span></div>
                 </div>
 
                 {sub.signature_url && (
-                  <div className="bg-muted/5 p-3 rounded-xl border border-border/10">
-                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest mb-2 opacity-70">Signature Proof:</p>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground mb-1">Signature:</p>
                     <img src={sub.signature_url} alt="Signature" className="w-32 h-16 rounded-lg object-contain border border-border/40 bg-white" />
                   </div>
                 )}
 
                 {sub.status === "pending_review" && (
-                  <div className="space-y-3 pt-3 border-t border-border/20">
+                  <div className="space-y-2 pt-2 border-t border-border/20">
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleApprove(sub.id)}
                         disabled={!!processingId}
-                        className="clay-primary text-primary-foreground rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50"
+                        className="clay-primary text-primary-foreground rounded-xl px-4 py-2 text-[11px] font-semibold flex items-center gap-1.5 disabled:opacity-50"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" /> {processingId === sub.id ? "Processing..." : "Approve & Generate LOI"}
                       </button>
                       <button
                         onClick={() => handleDecline(sub.id)}
                         disabled={!!processingId}
-                        className="rounded-xl px-4 py-2 text-xs font-semibold bg-destructive/10 text-destructive border border-destructive/20 flex items-center gap-1.5 disabled:opacity-50"
+                        className="rounded-xl px-4 py-2 text-[11px] font-semibold bg-destructive/10 text-destructive border border-destructive/20 flex items-center gap-1.5 disabled:opacity-50"
                       >
                         <XCircle className="w-3.5 h-3.5" /> Decline
                       </button>
@@ -337,19 +337,19 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
                 )}
 
                 {sub.status === "approved" && sub.loi_pdf_url && (
-                  <div className="flex items-center gap-4 pt-2">
+                  <div className="flex items-center gap-3">
                     <a
                       href={sub.loi_pdf_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-primary text-xs font-semibold hover:underline w-fit"
+                      className="flex items-center gap-1.5 text-primary text-[11px] font-semibold hover:underline w-fit"
                     >
                       <Download className="w-3.5 h-3.5" /> Download LOI PDF
                     </a>
                     <button
                       onClick={() => handleApprove(sub.id)}
                       disabled={processingId === sub.id}
-                      className="flex items-center gap-1 text-muted-foreground text-xs font-medium hover:text-primary transition-colors"
+                      className="flex items-center gap-1 text-muted-foreground text-[10px] hover:text-primary transition-colors"
                     >
                       <RefreshCw className={`w-3 h-3 ${processingId === sub.id ? "animate-spin" : ""}`} />
                       {processingId === sub.id ? "Regenerating..." : "Regenerate"}
@@ -358,7 +358,7 @@ const AdvertiserManagement = ({ onRefresh }: Props) => {
                 )}
 
                 {sub.status === "declined" && sub.admin_notes && (
-                  <p className="text-destructive text-xs bg-destructive/5 p-2 rounded-lg border border-destructive/10">Notes: {sub.admin_notes}</p>
+                  <p className="text-destructive text-[11px]">Notes: {sub.admin_notes}</p>
                 )}
               </div>
             ))}

@@ -286,8 +286,8 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
         <GlassCard className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-sm">{activeSurvey.title}</h3>
-              <p className="text-xs text-muted-foreground">Earn {formatNaira(Number(activeSurvey.reward_amount))}</p>
+              <h3 className="font-semibold">{activeSurvey.title}</h3>
+              <p className="text-sm text-muted-foreground">Earn {formatNaira(Number(activeSurvey.reward_amount))}</p>
             </div>
             <button type="button" className="text-muted-foreground hover:text-foreground" onClick={closeSurveyView}>
               <X className="w-4 h-4" />
@@ -297,13 +297,13 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
           {surveyStep === "quiz" && question && (
             <div className="space-y-4">
               <div className="text-xs text-muted-foreground">Question {currentQuestionIndex + 1} of {questions.length}</div>
-              <div className="font-medium text-sm">{question.question_text}</div>
+              <div className="font-medium">{question.question_text}</div>
               <div className="space-y-2">
                 {(question.influencer_survey_options || []).map((option) => (
                   <button
                     key={option.id}
                     type="button"
-                    className="w-full rounded-xl border px-4 py-3 text-left transition hover:bg-accent/30 text-sm"
+                    className="w-full rounded-xl border px-4 py-3 text-left transition hover:bg-accent/30"
                     onClick={() => handleAnswerQuestion(option)}
                   >
                     {option.option_text}
@@ -316,7 +316,7 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
           {surveyStep === "completion" && (
             <div className="space-y-4">
               <div className="rounded-xl border p-3 bg-accent/10">
-                <div className="flex items-center gap-2 text-xs">
+                <div className="flex items-center gap-2 text-sm">
                   <Clock className="w-4 h-4" />
                   <span>Upload proof to complete this survey.</span>
                 </div>
@@ -329,10 +329,10 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
               )}
 
               {activeSurvey.completion_instructions && (
-                <p className="text-xs text-muted-foreground">{activeSurvey.completion_instructions}</p>
+                <p className="text-sm text-muted-foreground">{activeSurvey.completion_instructions}</p>
               )}
 
-              <GlassButton type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="w-full text-sm">
+              <GlassButton type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="w-full">
                 <Upload className="w-4 h-4 mr-2" />
                 {uploading ? "Uploading..." : "Upload Screenshot"}
               </GlassButton>
@@ -359,15 +359,15 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
             <GlassCard key={survey.id} className="p-4 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h4 className="font-semibold text-sm">{survey.title}</h4>
-                  {survey.description ? <p className="text-xs text-muted-foreground">{survey.description}</p> : null}
+                  <h4 className="font-semibold">{survey.title}</h4>
+                  {survey.description ? <p className="text-sm text-muted-foreground">{survey.description}</p> : null}
                 </div>
-                <div className="font-bold text-primary whitespace-nowrap text-sm">{formatNaira(Number(survey.reward_amount))}</div>
+                <div className="font-bold text-primary whitespace-nowrap">{formatNaira(Number(survey.reward_amount))}</div>
               </div>
 
               {!response && (
                 <GlassButton
-                  className="w-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/40 active:bg-primary/15 text-sm"
+                  className="w-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/40 active:bg-primary/15"
                   onClick={() => handleStartSurvey(survey)}
                 >
                   Complete survey to earn {formatNaira(Number(survey.reward_amount))}
@@ -377,23 +377,23 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
 
               {response?.status === "in_progress" && !expired && (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs rounded-xl border p-3 bg-accent/10">
+                  <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-accent/10">
                     <Clock className="w-4 h-4" />
                     <span>Quiz passed. {timeLeft} to upload proof.</span>
                   </div>
-                  <GlassButton className="w-full text-sm" onClick={() => handleStartSurvey(survey)}>Continue survey</GlassButton>
+                  <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>Continue survey</GlassButton>
                 </div>
               )}
 
               {response?.status === "pending" && (
-                <div className="flex items-center gap-2 text-xs rounded-xl border p-3 bg-accent/10">
+                <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-accent/10">
                   <AlertCircle className="w-4 h-4" />
                   <span>Proof submitted. Pending review.</span>
                 </div>
               )}
 
               {response?.status === "approved" && (
-                <div className="flex items-center gap-2 text-xs rounded-xl border p-3 bg-primary/10">
+                <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-primary/10">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Earned {formatNaira(Number(response.reward_amount))}</span>
                 </div>
@@ -401,21 +401,21 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
 
               {response?.status === "rejected" && !expired && (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs rounded-xl border p-3 bg-destructive/10">
+                  <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-destructive/10">
                     <X className="w-4 h-4" />
                     <span>Proof rejected. {timeLeft} to upload again.</span>
                   </div>
-                  <GlassButton className="w-full text-sm" onClick={() => handleStartSurvey(survey)}>Upload proof again</GlassButton>
+                  <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>Upload proof again</GlassButton>
                 </div>
               )}
 
               {expired && (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs rounded-xl border p-3 bg-destructive/10">
+                  <div className="flex items-center gap-2 text-sm rounded-xl border p-3 bg-destructive/10">
                     <Clock className="w-4 h-4" />
                     <span>Your 20-day window expired. You can restart this survey.</span>
                   </div>
-                  <GlassButton className="w-full text-sm" onClick={() => handleStartSurvey(survey)}>Restart survey</GlassButton>
+                  <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>Restart survey</GlassButton>
                 </div>
               )}
             </GlassCard>

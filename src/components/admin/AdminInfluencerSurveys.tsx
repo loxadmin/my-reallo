@@ -116,48 +116,48 @@ export default function AdminInfluencerSurveys() {
   return (
     <div className="space-y-4">
       <GlassCard className="p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Create Influencer Survey</h3>
+        <h3 className="text-sm font-semibold">Create Influencer Survey</h3>
         <div className="grid md:grid-cols-2 gap-2">
-          <input className="glass-input rounded-xl px-3 py-2 text-sm" placeholder="Title" value={draft.title} onChange={(e) => setDraft((p) => ({ ...p, title: e.target.value }))} />
-          <input className="glass-input rounded-xl px-3 py-2 text-sm" placeholder="Reward amount" type="number" value={draft.reward_amount} onChange={(e) => setDraft((p) => ({ ...p, reward_amount: Number(e.target.value || 0) }))} />
-          <input className="glass-input rounded-xl px-3 py-2 text-sm md:col-span-2" placeholder="Description" value={draft.description} onChange={(e) => setDraft((p) => ({ ...p, description: e.target.value }))} />
-          <input className="glass-input rounded-xl px-3 py-2 text-sm" placeholder="Completion link" value={draft.completion_link} onChange={(e) => setDraft((p) => ({ ...p, completion_link: e.target.value }))} />
-          <input className="glass-input rounded-xl px-3 py-2 text-sm" placeholder="Completion instructions" value={draft.completion_instructions} onChange={(e) => setDraft((p) => ({ ...p, completion_instructions: e.target.value }))} />
+          <input className="glass-input rounded-xl px-3 py-2 text-xs" placeholder="Title" value={draft.title} onChange={(e) => setDraft((p) => ({ ...p, title: e.target.value }))} />
+          <input className="glass-input rounded-xl px-3 py-2 text-xs" placeholder="Reward amount" type="number" value={draft.reward_amount} onChange={(e) => setDraft((p) => ({ ...p, reward_amount: Number(e.target.value || 0) }))} />
+          <input className="glass-input rounded-xl px-3 py-2 text-xs md:col-span-2" placeholder="Description" value={draft.description} onChange={(e) => setDraft((p) => ({ ...p, description: e.target.value }))} />
+          <input className="glass-input rounded-xl px-3 py-2 text-xs" placeholder="Completion link" value={draft.completion_link} onChange={(e) => setDraft((p) => ({ ...p, completion_link: e.target.value }))} />
+          <input className="glass-input rounded-xl px-3 py-2 text-xs" placeholder="Completion instructions" value={draft.completion_instructions} onChange={(e) => setDraft((p) => ({ ...p, completion_instructions: e.target.value }))} />
         </div>
 
-        <label className="text-sm flex items-center gap-2 text-muted-foreground cursor-pointer">
-          <input type="checkbox" checked={draft.is_active} onChange={(e) => setDraft((p) => ({ ...p, is_active: e.target.checked }))} className="rounded border-border text-primary focus:ring-primary/20" /> Active
+        <label className="text-xs flex items-center gap-2">
+          <input type="checkbox" checked={draft.is_active} onChange={(e) => setDraft((p) => ({ ...p, is_active: e.target.checked }))} /> Active
         </label>
 
         <div className="space-y-3">
           {draft.questions.map((question, qi) => (
-            <div key={qi} className="border border-border/40 rounded-xl p-3 space-y-2">
-              <input className="glass-input rounded-xl px-3 py-2 text-sm w-full" placeholder={`Question ${qi + 1}`} value={question.question_text} onChange={(e) => setDraft((p) => {
+            <div key={qi} className="border rounded-xl p-3 space-y-2">
+              <input className="glass-input rounded-xl px-3 py-2 text-xs w-full" placeholder={`Question ${qi + 1}`} value={question.question_text} onChange={(e) => setDraft((p) => {
                 const questionsDraft = [...p.questions];
                 questionsDraft[qi] = { ...questionsDraft[qi], question_text: e.target.value };
                 return { ...p, questions: questionsDraft };
               })} />
               {question.options.map((opt, oi) => (
                 <div key={`${qi}-${oi}`} className="flex items-center gap-2">
-                  <input className="glass-input rounded-xl px-3 py-2 text-sm flex-1" placeholder={`Option ${oi + 1}`} value={opt.option_text} onChange={(e) => setDraft((p) => {
+                  <input className="glass-input rounded-xl px-3 py-2 text-xs flex-1" placeholder={`Option ${oi + 1}`} value={opt.option_text} onChange={(e) => setDraft((p) => {
                     const questionsDraft = [...p.questions];
                     const optionsDraft = [...questionsDraft[qi].options];
                     optionsDraft[oi] = { ...optionsDraft[oi], option_text: e.target.value };
                     questionsDraft[qi] = { ...questionsDraft[qi], options: optionsDraft };
                     return { ...p, questions: questionsDraft };
                   })} />
-                  <label className="text-xs flex items-center gap-1 text-muted-foreground cursor-pointer">
+                  <label className="text-xs flex items-center gap-1">
                     <input type="checkbox" checked={opt.is_correct} onChange={(e) => setDraft((p) => {
                       const questionsDraft = [...p.questions];
                       const optionsDraft = [...questionsDraft[qi].options];
                       optionsDraft[oi] = { ...optionsDraft[oi], is_correct: e.target.checked };
                       questionsDraft[qi] = { ...questionsDraft[qi], options: optionsDraft };
                       return { ...p, questions: questionsDraft };
-                    })} className="rounded border-border text-primary focus:ring-primary/20" /> Correct
+                    })} /> Correct
                   </label>
                 </div>
               ))}
-              <GlassButton variant="outline" onClick={() => setDraft((p) => {
+              <GlassButton className="text-xs" variant="outline" onClick={() => setDraft((p) => {
                 const questionsDraft = [...p.questions];
                 questionsDraft[qi] = {
                   ...questionsDraft[qi],
@@ -176,17 +176,17 @@ export default function AdminInfluencerSurveys() {
       </GlassCard>
 
       <div className="space-y-3">
-        {loading ? <p className="text-sm text-muted-foreground text-center py-4">Loading influencer surveys...</p> : surveys.map((survey) => {
+        {loading ? <p className="text-xs text-muted-foreground">Loading influencer surveys...</p> : surveys.map((survey) => {
           const sQuestions = questions.filter((q) => q.survey_id === survey.id);
           return (
-            <GlassCard key={survey.id} className="p-4 space-y-3">
-              <div className="flex justify-between items-start gap-4">
+            <GlassCard key={survey.id} className="p-4 space-y-2">
+              <div className="flex justify-between items-start gap-2">
                 <div>
-                  <p className="font-semibold text-sm text-foreground">{survey.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{formatNaira(Number(survey.reward_amount))} · {sQuestions.length} questions</p>
+                  <p className="font-semibold text-sm">{survey.title}</p>
+                  <p className="text-xs text-muted-foreground">{formatNaira(Number(survey.reward_amount))} · {sQuestions.length} questions</p>
                 </div>
-                <div className="flex gap-2 shrink-0">
-                  <GlassButton variant="outline" onClick={async () => {
+                <div className="flex gap-2">
+                  <GlassButton variant="outline" className="text-xs" onClick={async () => {
                     const { error: toggleError } = await supabase.from("influencer_surveys" as any).update({ is_active: !survey.is_active }).eq("id", survey.id);
                     if (toggleError) {
                       console.error("toggle influencer survey error", toggleError);
@@ -194,28 +194,25 @@ export default function AdminInfluencerSurveys() {
                     }
                     await fetchData();
                   }}>{survey.is_active ? "Deactivate" : "Activate"}</GlassButton>
-                  <button className="p-2 text-muted-foreground hover:text-destructive transition-colors" onClick={async () => {
+                  <button onClick={async () => {
                     const { error: deleteError } = await supabase.from("influencer_surveys" as any).delete().eq("id", survey.id);
                     if (deleteError) {
                       console.error("delete influencer survey error", deleteError);
                       toast({ title: "Error", description: deleteError.message, variant: "destructive" });
                     }
                     await fetchData();
-                  }}><Trash2 className="w-4 h-4" /></button>
+                  }}><Trash2 className="w-4 h-4 text-destructive" /></button>
                 </div>
               </div>
 
               {sQuestions.map((q) => {
                 const qOpts = options.filter((o) => o.question_id === q.id);
                 return (
-                  <div key={q.id} className="border border-border/30 rounded-lg p-3 bg-muted/5">
-                    <p className="text-sm font-medium text-foreground">{q.question_text}</p>
-                    <ul className="mt-2 text-xs text-muted-foreground space-y-1">
+                  <div key={q.id} className="border rounded-lg p-2">
+                    <p className="text-xs font-medium">{q.question_text}</p>
+                    <ul className="mt-1 text-xs text-muted-foreground space-y-1">
                       {qOpts.map((opt) => (
-                        <li key={opt.id} className={`flex items-center gap-1.5 ${opt.is_correct ? "text-primary font-medium" : ""}`}>
-                          <span className="w-1 h-1 rounded-full bg-current shrink-0" />
-                          {opt.option_text}{opt.is_correct ? " (correct)" : ""}
-                        </li>
+                        <li key={opt.id} className={opt.is_correct ? "text-primary" : ""}>• {opt.option_text}{opt.is_correct ? " (correct)" : ""}</li>
                       ))}
                     </ul>
                   </div>

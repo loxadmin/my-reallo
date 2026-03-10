@@ -32,8 +32,8 @@ interface UserProfileDrawerProps {
 
 const Field = ({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) => (
   <div className="flex items-center justify-between py-2 border-b border-border/15 last:border-0">
-    <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{label}</span>
-    <span className={`text-sm text-foreground font-medium ${mono ? "font-mono" : ""}`}>{value || "—"}</span>
+    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{label}</span>
+    <span className={`text-[12px] text-foreground font-medium ${mono ? "font-mono" : ""}`}>{value || "—"}</span>
   </div>
 );
 
@@ -49,7 +49,7 @@ const StatusPill = ({ status }: { status: string }) => {
     closed: "bg-destructive/10 text-destructive",
     appeal_rejected: "bg-destructive/10 text-destructive",
   };
-  return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${colors[status] || "bg-muted text-muted-foreground"}`}>{status.replace(/_/g, " ")}</span>;
+  return <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${colors[status] || "bg-muted text-muted-foreground"}`}>{status.replace(/_/g, " ")}</span>;
 };
 
 const UserProfileDrawer = ({
@@ -82,11 +82,11 @@ const UserProfileDrawer = ({
             {/* Header */}
             <div className="px-6 py-5 border-b border-border/30 flex items-center justify-between shrink-0">
               <div>
-                <p className="text-sm font-bold text-foreground">{profile.email}</p>
-                <p className="text-xs text-muted-foreground font-mono mt-0.5">{profile.id.slice(0, 16)}…</p>
+                <p className="text-[14px] font-bold text-foreground">{profile.email}</p>
+                <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{profile.id.slice(0, 16)}…</p>
               </div>
               <div className="flex items-center gap-2">
-                {profile.is_banned && <span className="text-xs px-2 py-1 bg-destructive/10 text-destructive rounded-full font-medium flex items-center gap-1"><Ban className="w-3 h-3" /> Banned</span>}
+                {profile.is_banned && <span className="text-[10px] px-2 py-1 bg-destructive/10 text-destructive rounded-full font-medium flex items-center gap-1"><Ban className="w-3 h-3" /> Banned</span>}
                 <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
                   <X className="w-4 h-4" />
                 </button>
@@ -97,7 +97,7 @@ const UserProfileDrawer = ({
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5" style={{ scrollbarWidth: "thin" }}>
               {/* Core Info */}
               <div className="rounded-xl border border-border/40 bg-muted/10 p-4">
-                <p className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> Account Details</p>
+                <p className="text-[11px] font-semibold text-foreground mb-3 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> Account Details</p>
                 <Field label="Email" value={profile.email} />
                 <Field label="Queue Position" value={`#${profile.queue_position}`} />
                 <Field label="Points Balance" value={profile.points_balance.toLocaleString()} />
@@ -112,10 +112,10 @@ const UserProfileDrawer = ({
               {/* Influencer Application */}
               {infApp && (
                 <div className="rounded-xl border border-border/40 bg-muted/10 p-4">
-                  <p className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-primary" /> Influencer Application</p>
+                  <p className="text-[11px] font-semibold text-foreground mb-3 flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-primary" /> Influencer Application</p>
                   <Field label="Status" value={<StatusPill status={infApp.status} />} />
                   <Field label="Social Link" value={
-                    <a href={infApp.social_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 text-xs">
+                    <a href={infApp.social_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 text-[11px]">
                       <ExternalLink className="w-2.5 h-2.5" /> View
                     </a>
                   } />
@@ -126,7 +126,7 @@ const UserProfileDrawer = ({
               {/* Wallet & Bank */}
               {infWallet && (
                 <div className="rounded-xl border border-border/40 bg-muted/10 p-4">
-                  <p className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5 text-primary" /> Influencer Wallet</p>
+                  <p className="text-[11px] font-semibold text-foreground mb-3 flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5 text-primary" /> Influencer Wallet</p>
                   <Field label="Status" value={<StatusPill status={infWallet.status} />} />
                   <Field label="Balance" value={formatNaira(infWallet.balance || 0)} />
                   {bankAccount && (
@@ -142,13 +142,13 @@ const UserProfileDrawer = ({
               {/* Withdrawals */}
               {withdrawals && withdrawals.length > 0 && (
                 <div className="rounded-xl border border-border/40 bg-muted/10 p-4">
-                  <p className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-primary" /> Withdrawals ({withdrawals.length})</p>
+                  <p className="text-[11px] font-semibold text-foreground mb-3 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-primary" /> Withdrawals ({withdrawals.length})</p>
                   {withdrawals.slice(0, 5).map((w: any) => (
                     <div key={w.id} className="flex items-center justify-between py-1.5 border-b border-border/10 last:border-0">
-                      <span className="text-sm font-medium text-foreground">{formatNaira(w.amount)}</span>
+                      <span className="text-[11px] font-medium text-foreground">{formatNaira(w.amount)}</span>
                       <div className="flex items-center gap-2">
                         <StatusPill status={w.status} />
-                        <span className="text-xs text-muted-foreground font-medium">{new Date(w.created_at).toLocaleDateString()}</span>
+                        <span className="text-[9px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
                   ))}
@@ -158,10 +158,10 @@ const UserProfileDrawer = ({
               {/* Challenge Submissions */}
               {challengeSubmissions && challengeSubmissions.length > 0 && (
                 <div className="rounded-xl border border-border/40 bg-muted/10 p-4">
-                  <p className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-primary" /> Challenge Submissions ({challengeSubmissions.length})</p>
+                  <p className="text-[11px] font-semibold text-foreground mb-3 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-primary" /> Challenge Submissions ({challengeSubmissions.length})</p>
                   {challengeSubmissions.slice(0, 5).map((s: any) => (
                     <div key={s.id} className="flex items-center justify-between py-1.5 border-b border-border/10 last:border-0">
-                      <span className="text-sm text-foreground">Video #{s.video_number}</span>
+                      <span className="text-[11px] text-foreground">Video #{s.video_number}</span>
                       <div className="flex items-center gap-2">
                         <StatusPill status={s.status} />
                         <a href={s.video_url} target="_blank" rel="noopener noreferrer" className="text-primary"><ExternalLink className="w-3 h-3" /></a>
@@ -174,14 +174,14 @@ const UserProfileDrawer = ({
               {/* Verification Transactions */}
               {verificationTxs && verificationTxs.length > 0 && (
                 <div className="rounded-xl border border-border/40 bg-muted/10 p-4">
-                  <p className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5"><Hash className="w-3.5 h-3.5 text-primary" /> Verification TXs ({verificationTxs.length})</p>
+                  <p className="text-[11px] font-semibold text-foreground mb-3 flex items-center gap-1.5"><Hash className="w-3.5 h-3.5 text-primary" /> Verification TXs ({verificationTxs.length})</p>
                   {verificationTxs.slice(0, 5).map((tx: any) => (
                     <div key={tx.id} className="flex items-center justify-between py-1.5 border-b border-border/10 last:border-0">
-                      <span className="text-sm font-mono text-foreground truncate max-w-[180px]">{tx.transaction_id}</span>
+                      <span className="text-[11px] font-mono text-foreground truncate max-w-[180px]">{tx.transaction_id}</span>
                       <div className="flex items-center gap-2">
-                        {tx.is_duplicate ? <span className="text-xs text-destructive">Dup</span> :
-                          tx.is_verified ? <span className="text-xs text-primary">✓ {formatNaira(tx.verified_amount || 0)}</span> :
-                          <span className="text-xs text-muted-foreground">Pending</span>}
+                        {tx.is_duplicate ? <span className="text-[10px] text-destructive">Dup</span> :
+                          tx.is_verified ? <span className="text-[10px] text-primary">✓ {formatNaira(tx.verified_amount || 0)}</span> :
+                          <span className="text-[10px] text-muted-foreground">Pending</span>}
                       </div>
                     </div>
                   ))}
@@ -191,11 +191,11 @@ const UserProfileDrawer = ({
               {/* Decision Responses */}
               {decisionResponses && decisionResponses.length > 0 && (
                 <div className="rounded-xl border border-border/40 bg-muted/10 p-4">
-                  <p className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-primary" /> Decision Responses ({decisionResponses.length})</p>
+                  <p className="text-[11px] font-semibold text-foreground mb-3 flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-primary" /> Decision Responses ({decisionResponses.length})</p>
                   {decisionResponses.slice(0, 5).map((dr: any) => (
                     <div key={dr.id} className="flex items-center justify-between py-1.5 border-b border-border/10 last:border-0">
-                      <span className="text-sm text-foreground">{dr.has_app ? "Has app" : "No app"}{dr.would_switch ? " · Would switch" : ""}</span>
-                      <span className="text-xs text-muted-foreground">{dr.points_awarded}pts</span>
+                      <span className="text-[11px] text-foreground">{dr.has_app ? "Has app" : "No app"}{dr.would_switch ? " · Would switch" : ""}</span>
+                      <span className="text-[10px] text-muted-foreground">{dr.points_awarded}pts</span>
                     </div>
                   ))}
                 </div>

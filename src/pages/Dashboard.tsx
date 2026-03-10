@@ -155,14 +155,14 @@ const Dashboard = () => {
             key={item.id}
             onClick={() => setActiveView(item.id)}
             className={cn(
-              "flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+              "flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] transition-colors",
               (activeView === item.id || (item.id === "earn" && isEarnActive)) ? "text-primary bg-primary/10" : "text-muted-foreground"
             )}
           >
             <item.icon className="w-4 h-4" />
             {item.label}
             {item.id === "notifications" && unreadCount > 0 && (
-              <span className="ml-auto text-xs font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full leading-none">{unreadCount}</span>
+              <span className="ml-auto text-[9px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full leading-none">{unreadCount}</span>
             )}
           </DropdownMenuItem>
         ))}
@@ -180,16 +180,16 @@ const Dashboard = () => {
                     key={item.id}
                     onClick={() => setActiveView(item.id)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                      "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200",
                       (activeView === item.id || (item.id === "earn" && isEarnActive))
-                        ? "text-primary bg-primary/10 shadow-sm"
+                        ? "text-primary bg-primary/10"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
                     {item.id === "notifications" && unreadCount > 0 && (
-                      <span className="ml-auto text-xs font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full leading-none">{unreadCount}</span>
+                      <span className="ml-auto text-[9px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full leading-none">{unreadCount}</span>
                     )}
                   </button>
                 );

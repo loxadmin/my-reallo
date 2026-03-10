@@ -45,13 +45,13 @@ const NotificationsPanel = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Bell className="w-4 h-4 text-primary" />
-            <h3 className="font-semibold text-foreground text-sm">Notifications</h3>
+            <h3 className="font-semibold text-foreground text-[13px]">Notifications</h3>
             {unreadCount > 0 && (
-              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{unreadCount} new</span>
+              <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{unreadCount} new</span>
             )}
           </div>
           {unreadCount > 0 && (
-            <GlassButton variant="outline" onClick={markAllRead} className="text-xs px-2 py-1">
+            <GlassButton variant="outline" onClick={markAllRead} className="text-[10px] px-2 py-1">
               <Check className="w-3 h-3 mr-1" /> Mark all read
             </GlassButton>
           )}
@@ -60,7 +60,7 @@ const NotificationsPanel = () => {
         {notifications.length === 0 ? (
           <div className="text-center py-8">
             <Bell className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No notifications yet</p>
+            <p className="text-[13px] text-muted-foreground">No notifications yet</p>
           </div>
         ) : (
           <div className="space-y-2 max-h-[500px] overflow-y-auto">
@@ -77,11 +77,11 @@ const NotificationsPanel = () => {
                     <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${color}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-foreground">{n.title}</p>
+                        <p className="text-[12px] font-semibold text-foreground">{n.title}</p>
                         {!n.is_read && <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1.5 font-medium opacity-70">{new Date(n.created_at).toLocaleString()}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{n.message}</p>
+                      <p className="text-[9px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
