@@ -26,7 +26,7 @@ const GlassButton = ({
       whileHover={{ scale: 1.02, y: -1 }}
       whileTap={{ scale: 0.98, y: 1 }}
       className={cn(
-        "px-6 py-3 rounded-2xl font-display text-sm tracking-tight font-semibold transition-all duration-300 flex items-center justify-center gap-2.5",
+        "px-6 py-3 rounded-2xl font-display text-[13px] tracking-wide transition-all duration-300 flex items-center justify-center gap-2",
         variants[variant],
         disabled && "opacity-50 cursor-not-allowed",
         className

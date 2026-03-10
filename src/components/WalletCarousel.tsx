@@ -118,13 +118,13 @@ const WalletCarousel = ({
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                       {wallet.icon}
                     </div>
-                    <p className="text-muted-foreground uppercase tracking-widest-more text-[11px] font-bold">
+                    <p className="text-muted-foreground uppercase tracking-[0.15em] text-[10px] font-medium">
                       {wallet.label}
                     </p>
                   </div>
                   {idx === 0 && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Total</span>
+                      <span className="text-[9px] text-muted-foreground">Total</span>
                       <button
                         onClick={() => setShowTotal(!showTotal)}
                         className={cn(
@@ -176,22 +176,22 @@ const WalletCarousel = ({
 
                 {wallet.active ? (
                   <>
-                    <div className="flex items-baseline gap-3 mb-1.5">
-                      <h2 className="font-display text-3xl font-bold gradient-text tabular-nums leading-none tracking-tight">
+                    <div className="flex items-baseline gap-3 mb-1">
+                      <h2 className="font-display text-2xl font-bold gradient-text tabular-nums leading-none">
                         {formatCurrency(wallet.amount)}
                       </h2>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-5 font-medium">
-                      Claimable: <span className="text-primary font-bold">{formatCurrency(nairaValue)}</span> <span className="opacity-60">({pointsBalance.toLocaleString()} pts)</span>
+                    <p className="text-[11px] text-muted-foreground mb-4">
+                      Claimable: <span className="text-primary font-semibold">{formatCurrency(nairaValue)}</span> ({pointsBalance.toLocaleString()} pts)
                     </p>
 
                     <button
                       onClick={() => setShowSpendPopup(true)}
-                      className="w-full text-left space-y-2 mb-6 cursor-pointer group/goal"
+                      className="w-full text-left space-y-1.5 mb-5 cursor-pointer group/goal"
                     >
                       <div className="flex justify-between items-end">
-                        <p className="font-bold text-foreground text-xs group-hover/goal:text-primary transition-colors uppercase tracking-wide">GOAL - {goalLabel}</p>
-                        <p className="text-muted-foreground text-xs font-bold">
+                        <p className="font-medium text-foreground text-[12px] group-hover/goal:text-primary transition-colors">GOAL - {goalLabel}</p>
+                        <p className="text-muted-foreground text-[11px]">
                           {targetAmount > 0 ? Math.round((nairaValue / targetAmount) * 100) : 0}%
                         </p>
                       </div>
@@ -206,13 +206,13 @@ const WalletCarousel = ({
                     </button>
                   </>
                 ) : (
-                  <div className="py-6 text-center">
-                    <p className="text-muted-foreground text-sm mb-4 font-medium">
+                  <div className="py-4 text-center">
+                    <p className="text-muted-foreground text-[12px] mb-3">
                       You haven't calculated your {wallet.type} spend yet.
                     </p>
                     <button
                       onClick={() => onActivateWallet(wallet.type as "food" | "transport")}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors tracking-tight"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-[12px] font-medium hover:bg-primary/90 transition-colors"
                     >
                       Activate
                     </button>
@@ -268,13 +268,13 @@ const WalletCarousel = ({
                   <div className="flex">
                     {wallets.map((wallet) => (
                       <div key={wallet.type} className="min-w-0 shrink-0 grow-0 basis-full flex flex-col items-center justify-center">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center mb-2">
                           {wallet.icon}
                         </div>
-                        <p className="text-muted-foreground uppercase tracking-widest-more text-[10px] font-bold mb-2 text-center">
+                        <p className="text-muted-foreground uppercase tracking-[0.15em] text-[9px] font-medium mb-2 text-center">
                           {showTotal && wallet.type === "utility" ? "Total Annual Spend" : wallet.label}
                         </p>
-                        <p className="font-display text-3xl font-bold gradient-text tabular-nums tracking-tight">
+                        <p className="font-display text-2xl font-bold gradient-text tabular-nums">
                           {formatCurrency(showTotal && wallet.type === "utility" ? totalAllSpend : wallet.amount)}
                         </p>
                       </div>
@@ -297,8 +297,8 @@ const WalletCarousel = ({
                 </div>
 
                 {/* Total toggle */}
-                <div className="flex items-center gap-1.5 mt-4">
-                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Total</span>
+                <div className="flex items-center gap-1.5 mt-3">
+                  <span className="text-[9px] text-muted-foreground">Total</span>
                   <button
                     onClick={() => setShowTotal(!showTotal)}
                     className={cn(

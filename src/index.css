@@ -79,14 +79,12 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
-    font-size: 14px;
-    line-height: 1.6;
-    letter-spacing: -0.005em;
+    font-size: 13px;
   }
-  h1 { font-size: 48px; @apply font-bold tracking-tighter; line-height: 1.1; }
-  h2 { font-size: 30px; @apply font-bold tracking-tight; line-height: 1.2; }
-  h3 { font-size: 20px; @apply font-semibold tracking-tight; line-height: 1.4; }
-  button, input, select, textarea { font-size: 14px !important; }
+  h1 { font-size: 60px; @apply font-bold tracking-tight; }
+  h2 { font-size: 40px; @apply font-bold tracking-tight; }
+  h3 { font-size: 22px; @apply font-bold tracking-tight; }
+  button, input, select, textarea { font-size: 13px !important; }
 
   /* Hide scrollbar on sidebar */
   [data-sidebar="content"]::-webkit-scrollbar { display: none; }

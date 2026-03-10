@@ -74,10 +74,10 @@ const LeaderboardTicker = () => {
           transition={{ duration: 0.35, ease: "easeInOut" }}
           className="flex items-center gap-2"
         >
-          <Icon className="w-3.5 h-3.5 text-primary shrink-0" />
-          <span className="text-xs text-foreground font-semibold tracking-tight">{current.label}</span>
-          <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{config.verb}</span>
-          <span className="text-xs text-primary font-bold tracking-tight">{formatCurrency(current.amount)}</span>
+          <Icon className="w-3 h-3 text-primary shrink-0" />
+          <span className="text-[11px] text-foreground font-medium">{current.label}</span>
+          <span className="text-[10px] text-muted-foreground">{config.verb}</span>
+          <span className="text-[11px] text-primary font-bold">{formatCurrency(current.amount)}</span>
         </motion.div>
       </AnimatePresence>
     </div>
