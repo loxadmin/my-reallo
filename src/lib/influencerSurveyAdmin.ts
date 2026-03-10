@@ -33,6 +33,19 @@ export const approveInfluencerSurveyResponse = async (
   if (updateError) throw updateError;
 
   if (!existingTxn) {
+    const { data: wallet, error: walletFetchError } = await supabase
+      .from("influencer_wallets" as any)
+      .select("id,balance,status")
+      .eq("user_id", response.user_id)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (walletFetchError) throw walletFetchError;
+
+    if (!wallet) {
+      throw new Error("No active influencer wallet found for this user.");
+    }
+
     const { error: txnInsertError } = await supabase
       .from("influencer_wallet_transactions" as any)
       .insert({
@@ -45,6 +58,16 @@ export const approveInfluencerSurveyResponse = async (
       });
 
     if (txnInsertError) throw txnInsertError;
+
+    const { error: walletUpdateError } = await supabase
+      .from("influencer_wallets" as any)
+      .update({
+        balance:
+          (Number(wallet.balance) || 0) + Number(response.reward_amount || 0),
+      })
+      .eq("id", wallet.id);
+
+    if (walletUpdateError) throw walletUpdateError;
   }
 };
 
