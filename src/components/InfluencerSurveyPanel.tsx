@@ -366,7 +366,10 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
               </div>
 
               {!response && (
-                <GlassButton className="w-full" onClick={() => handleStartSurvey(survey)}>
+                <GlassButton
+                  className="w-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/40 active:bg-primary/15"
+                  onClick={() => handleStartSurvey(survey)}
+                >
                   Complete survey to earn {formatNaira(Number(survey.reward_amount))}
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </GlassButton>
