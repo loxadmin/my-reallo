@@ -255,7 +255,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
       <div className="w-full max-w-md lg:max-w-2xl space-y-4">
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
-          <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 lg:space-y-5">
+          <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <LeaderboardTicker />
             <GlassCard variant="glow" className="relative overflow-hidden p-5">
               <p className="text-foreground text-sm font-semibold mb-3">
@@ -302,15 +302,15 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             </AnimatePresence>
 
             {!isOffQueue && (
-              <GlassCard className="p-4 lg:p-5">
-                <div className="flex items-center justify-between mb-4">
+              <GlassCard className="p-4">
+                <div className="flex items-center justify-between mb-3">
                   <p className="text-[13px] font-semibold text-foreground">Queue Progress</p>
                   <div className="flex items-center gap-1 text-[12px] text-primary font-semibold">
                     <Zap className="w-3 h-3" />
                     Position #{position}
                   </div>
                 </div>
-                <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden mb-4">
+                <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden mb-3">
                   <motion.div
                     className="h-full rounded-full bg-primary"
                     initial={{ width: 0 }}
@@ -318,21 +318,21 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                     transition={{ duration: 1 }}
                   />
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-3 gap-3">
                   <div className="text-center">
                     <p className="text-sm font-bold text-foreground">{todaySkipped}</p>
-                    <p className="text-[11px] text-muted-foreground">Skipped Today</p>
+                    <p className="text-[12px] text-muted-foreground">Skipped Today</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-bold text-primary">{`${nextUnlock.hours}h ${nextUnlock.minutes}m`}</p>
-                    <p className="text-[11px] text-muted-foreground">Next Advance</p>
+                    <p className="text-[12px] text-muted-foreground">Next Advance</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-bold text-foreground">50/day</p>
-                    <p className="text-[11px] text-muted-foreground">Auto Skip</p>
+                    <p className="text-[12px] text-muted-foreground">Auto Skip</p>
                   </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-3 text-center">
+                <p className="text-[12px] text-muted-foreground mt-3 text-center">
                   Refer friends to skip 20 positions each
                 </p>
               </GlassCard>
@@ -348,22 +348,22 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               </GlassCard>
             )}
 
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               <p className="text-foreground font-bold text-sm px-1 tracking-tight">Services</p>
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => onViewChange?.("earn")} className="layout-grid-item group">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Award className="w-4 h-4 text-primary" />
                   </div>
                   <p className="font-semibold text-foreground text-[13px] mb-0.5">Earn Points</p>
-                  <p className="text-muted-foreground text-[12px] leading-relaxed">Tasks & surveys</p>
+                  <p className="text-muted-foreground text-[12px] leading-relaxed">Complete tasks to earn</p>
                 </button>
 
                 <button
                   onClick={() => isOffQueue ? onViewChange?.("verify") : toast({ title: "Queue Locked", description: "Complete the queue to unlock verification." })}
                   className="layout-grid-item group"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Check className="w-4 h-4 text-primary" />
                   </div>
                   <p className="font-semibold text-foreground text-[13px] mb-0.5">Verify Spend</p>
@@ -371,19 +371,19 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                 </button>
 
                 <button onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })} className="layout-grid-item group">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Gift className="w-4 h-4 text-primary" />
                   </div>
                   <p className="font-semibold text-foreground text-[13px] mb-0.5">Vouchers</p>
-                  <p className="text-muted-foreground text-[12px] leading-relaxed">Claim rewards</p>
+                  <p className="text-muted-foreground text-[12px] leading-relaxed">Claim your vouchers</p>
                 </button>
 
                 <button onClick={handleShare} className="layout-grid-item group">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Share2 className="w-4 h-4 text-primary" />
                   </div>
                   <p className="font-semibold text-foreground text-[13px] mb-0.5">Refer & Earn</p>
-                  <p className="text-muted-foreground text-[12px] leading-relaxed">{referralCount} joined</p>
+                  <p className="text-muted-foreground text-[12px] leading-relaxed">{referralCount} referrals</p>
                 </button>
               </div>
             </div>
@@ -427,30 +427,28 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {/* ═══ EARN VIEWS ═══ */}
         {(view === "earn" || view === "tasks" || view === "surveys") && (
           <motion.div key="earn-group" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <GlassCard variant="strong" className="p-5 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1.5">
+            <GlassCard variant="strong" className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
                 <Award className="w-4 h-4 text-primary" />
-                <p className="text-muted-foreground uppercase tracking-[0.2em] text-[11px]">Points Balance</p>
+                <p className="text-muted-foreground uppercase tracking-[0.2em] text-[12px]">Points Balance</p>
               </div>
-              <h2 className="font-display text-3xl font-bold gradient-text">{pointsBalance.toLocaleString()}</h2>
-              <p className="text-muted-foreground mt-1 text-[12px]">{formatNaira(nairaValue)} value</p>
+              <h2 className="font-display text-2xl font-bold gradient-text">{pointsBalance.toLocaleString()}</h2>
+              <p className="text-muted-foreground mt-1 text-[12px]">= {formatNaira(nairaValue)} value</p>
             </GlassCard>
 
             {view === "earn" && (
-              <div className="space-y-2">
-                <p className="text-[12px] uppercase tracking-[0.14em] text-muted-foreground px-1">Ways to earn</p>
-                <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-4">
                 <button
                   onClick={() => onViewChange?.("tasks")}
-                  className="glass-card p-5 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
+                  className="glass-card p-6 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Zap className="w-5 h-5 text-primary" />
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Zap className="w-6 h-6 text-primary" />
                     </div>
                     <div className="text-left">
                       <h3 className="font-bold text-foreground">Tasks</h3>
-                      <p className="text-[12px] text-muted-foreground">Complete simple tasks</p>
+                      <p className="text-[13px] text-muted-foreground">Complete simple tasks to earn points</p>
                     </div>
                   </div>
                   <Check className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
@@ -458,20 +456,19 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
 
                 <button
                   onClick={() => onViewChange?.("surveys")}
-                  className="glass-card p-5 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
+                  className="glass-card p-6 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <MessageSquare className="w-5 h-5 text-primary" />
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <MessageSquare className="w-6 h-6 text-primary" />
                     </div>
                     <div className="text-left">
                       <h3 className="font-bold text-foreground">Surveys</h3>
-                      <p className="text-[12px] text-muted-foreground">Share feedback and earn</p>
+                      <p className="text-[13px] text-muted-foreground">Share your feedback and get rewarded</p>
                     </div>
                   </div>
                   <Check className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
                 </button>
-                </div>
               </div>
             )}
 
