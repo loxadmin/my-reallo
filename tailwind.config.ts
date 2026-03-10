@@ -17,6 +17,17 @@ export default {
         display: ['"Inter"', 'sans-serif'],
         body: ['"Inter"', 'sans-serif'],
       },
+      letterSpacing: {
+        tightest: "-0.04em",
+        tighter: "-0.03em",
+        tight: "-0.02em",
+        normal: "0",
+        wide: "0.01em",
+        wider: "0.02em",
+        widest: "0.1em",
+        "widest-more": "0.15em",
+        "widest-max": "0.25em",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
