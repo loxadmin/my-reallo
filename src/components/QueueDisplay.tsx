@@ -275,7 +275,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                   <GlassButton
                     variant="primary"
                     onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })}
-                    className="flex-1 h-10 rounded-xl text-[12px]"
+                    className="flex-1 h-10 rounded-xl text-[12px] whitespace-nowrap px-3"
                     disabled={!isOffQueue}
                   >
                     {isOffQueue ? <><Wallet className="w-3.5 h-3.5" /> Claim {formatCurrency(nairaValue)}</> : <><Lock className="w-3.5 h-3.5" /> Claim {formatCurrency(nairaValue)}</>}
@@ -283,7 +283,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                   <GlassButton
                     variant="outline"
                     onClick={() => onViewChange?.("earn")}
-                    className="flex-1 h-10 rounded-xl text-[12px]"
+                    className="flex-1 h-10 rounded-xl text-[12px] whitespace-nowrap px-3"
                   >
                     <Award className="w-3.5 h-3.5" /> Earn
                   </GlassButton>
@@ -508,7 +508,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               {claimedTotal > 0 && <p className="text-muted-foreground mt-1 text-[10px]">Already claimed: {formatCurrency(claimedTotal)}</p>}
             </GlassCard>
 
-            <GlassButton variant="primary" onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })} className="w-full" disabled={!isOffQueue}>
+            <GlassButton variant="primary" onClick={isOffQueue ? handleClaimClick : () => toast({ title: "Queue Locked", description: "Complete the queue first." })} className="w-full whitespace-nowrap" disabled={!isOffQueue}>
               {!isOffQueue ? (
                 <><Lock className="inline w-4 h-4" /> Complete Queue to Claim {formatCurrency(nairaValue)}</>
               ) : (
