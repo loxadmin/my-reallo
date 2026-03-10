@@ -535,34 +535,64 @@ const InfluencerPanel = () => {
     const totalEarned = referralEarnings + challengeEarnings + surveyEarnings;
 
     return (
-      <div className="space-y-4">
-        {/* Wallet Card */}
-        <GlassCard variant="glow" className="p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Wallet className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground text-[15px]">Influencer Wallet</h3>
-          </div>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Wallet Card */}
+          <GlassCard variant="glow" className="p-5 flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-3">
+              <Wallet className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold text-foreground text-[15px]">Influencer Wallet</h3>
+            </div>
+            <div className="text-center py-2 flex-grow flex flex-col justify-center">
+              <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px]">Balance</p>
+              <h2 className="font-display text-2xl font-bold gradient-text">{formatNaira(wallet.balance)}</h2>
+              <p className="text-muted-foreground text-[11px] mt-1">Total earned: {formatNaira(totalEarned)}</p>
+            </div>
+            <div className="space-y-3 mt-4">
+              <div>
+                <label className="text-[11px] text-muted-foreground mb-1 block">Amount (₦)</label>
+                <input
+                  type="number"
+                  value={withdrawAmount}
+                  onChange={e => setWithdrawAmount(e.target.value)}
+                  placeholder="30000"
+                  min={30000}
+                  className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]"
+                />
+              </div>
+              <GlassButton variant="primary" onClick={handleWithdraw} disabled={withdrawing} className="w-full text-[13px]">
+                <ArrowDownToLine className="w-3.5 h-3.5 mr-1" /> {withdrawing ? "Processing..." : "Request Withdrawal"}
+              </GlassButton>
+            </div>
+          </GlassCard>
 
-          <div className="flex gap-2 mb-4">
-            <button onClick={() => setTab("overview")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "overview" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
+          {/* Survey Highlight Card */}
+          <GlassCard variant="glow" className="p-5 flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-3">
+              <Star className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold text-foreground text-[15px]">Influencer Surveys</h3>
+            </div>
+            <div className="flex-grow overflow-auto">
+              <InfluencerSurveyPanel mode="highlight" />
+            </div>
+          </GlassCard>
+        </div>
+
+        <GlassCard className="p-5">
+          <div className="flex gap-2 mb-6">
+            <button onClick={() => setTab("overview")} className={`flex-1 py-2.5 rounded-xl text-[12px] font-medium transition-all ${tab === "overview" ? "bg-primary/10 text-primary" : "glass-button text-muted-foreground"}`}>
               Overview
             </button>
-            <button onClick={() => setTab("withdraw")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "withdraw" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
+            <button onClick={() => setTab("withdraw")} className={`flex-1 py-2.5 rounded-xl text-[12px] font-medium transition-all ${tab === "withdraw" ? "bg-primary/10 text-primary" : "glass-button text-muted-foreground"}`}>
               Withdraw
             </button>
-            <button onClick={() => setTab("challenges")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "challenges" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
+            <button onClick={() => setTab("challenges")} className={`flex-1 py-2.5 rounded-xl text-[12px] font-medium transition-all ${tab === "challenges" ? "bg-primary/10 text-primary" : "glass-button text-muted-foreground"}`}>
               Challenges
             </button>
           </div>
 
           {tab === "overview" && (
             <div className="space-y-4">
-              <div className="text-center py-3">
-                <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px]">Balance</p>
-                <h2 className="font-display text-2xl font-bold gradient-text">{formatNaira(wallet.balance)}</h2>
-                <p className="text-muted-foreground text-[11px] mt-1">Total earned: {formatNaira(totalEarned)}</p>
-              </div>
-
               <div className="grid grid-cols-3 gap-3">
                 <div className="glass rounded-xl p-3 text-center">
                   <p className="text-[15px] font-bold text-primary">{referrals.length}</p>
@@ -612,37 +642,11 @@ const InfluencerPanel = () => {
                   </div>
                 </div>
               )}
-
-              <div className="space-y-3">
-                <h3 className="font-semibold text-foreground text-[15px]">Influencer Surveys</h3>
-                <p className="text-[11px] text-muted-foreground">
-                  Complete surveys to earn direct cash rewards.
-                </p>
-                <InfluencerSurveyPanel />
-              </div>
             </div>
           )}
 
           {tab === "withdraw" && (
             <div className="space-y-4">
-              <div className="text-center py-2">
-                <p className="text-muted-foreground text-[10px]">Available Balance</p>
-                <h3 className="text-xl font-bold gradient-text">{formatNaira(wallet.balance)}</h3>
-                <p className="text-[10px] text-muted-foreground">Min withdrawal: ₦30,000</p>
-              </div>
-
-              <div>
-                <label className="text-[11px] text-muted-foreground mb-1 block">Amount (₦)</label>
-                <input
-                  type="number"
-                  value={withdrawAmount}
-                  onChange={e => setWithdrawAmount(e.target.value)}
-                  placeholder="30000"
-                  min={30000}
-                  className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]"
-                />
-              </div>
-
               {bankAccount && (
                 <div className="glass rounded-xl p-3">
                   <p className="text-[10px] text-muted-foreground">Withdraw to</p>
@@ -650,10 +654,6 @@ const InfluencerPanel = () => {
                   <p className="text-muted-foreground text-[11px]">{bankAccount.bank_name} • {bankAccount.account_number}</p>
                 </div>
               )}
-
-              <GlassButton variant="primary" onClick={handleWithdraw} disabled={withdrawing} className="w-full text-[13px]">
-                <ArrowDownToLine className="w-3.5 h-3.5 mr-1" /> {withdrawing ? "Processing..." : "Request Withdrawal"}
-              </GlassButton>
 
               {/* Withdrawal history */}
               {withdrawals.length > 0 && (

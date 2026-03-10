@@ -25,7 +25,11 @@ type InfluencerSurveyResponse = {
   reward_amount: number;
 };
 
-export default function InfluencerSurveyPanel() {
+interface InfluencerSurveyPanelProps {
+  mode?: "full" | "highlight";
+}
+
+export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurveyPanelProps) {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -248,6 +252,19 @@ export default function InfluencerSurveyPanel() {
     [surveys, responses]
   );
 
+  const actionableSurveys = useMemo(() => {
+    return visibleSurveys.filter(survey => {
+      const resp = getResponse(survey.id);
+      if (!resp) return true;
+      if (resp.status === "in_progress" || resp.status === "rejected") return true;
+      return false;
+    });
+  }, [visibleSurveys, responses]);
+
+  const displayedSurveys = mode === "highlight"
+    ? (actionableSurveys.length > 0 ? [actionableSurveys[0]] : [])
+    : visibleSurveys;
+
   if (activeSurvey) {
     const questions = activeSurvey.influencer_survey_questions || [];
     const question = questions[currentQuestionIndex];
@@ -328,12 +345,12 @@ export default function InfluencerSurveyPanel() {
 
   return (
     <div className="space-y-4">
-      {visibleSurveys.length === 0 ? (
+      {displayedSurveys.length === 0 ? (
         <GlassCard className="p-4">
           <p className="text-sm text-muted-foreground">No influencer surveys available right now.</p>
         </GlassCard>
       ) : (
-        visibleSurveys.map((survey) => {
+        displayedSurveys.map((survey) => {
           const response = getResponse(survey.id);
           const expired = response && (response.status === "in_progress" || response.status === "rejected") && isExpired(response);
           const timeLeft = response ? getTimeLeftLabel(response) : "";
