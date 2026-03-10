@@ -70,6 +70,27 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
   const [surveyUploading, setSurveyUploading] = useState(false);
   const surveyFileRef = useRef<HTMLInputElement>(null);
 
+  const getSurveyResponse = (surveyId: string) =>
+    surveyResponses.find((r: any) => r.survey_id === surveyId);
+
+  const isSurveyExpired = (response: any) => {
+    if (!response?.completion_expires_at) return false;
+    return new Date(response.completion_expires_at).getTime() < Date.now();
+  };
+
+  const getTimeLeftLabel = (response: any) => {
+    if (!response?.completion_expires_at) return "";
+    const ms = new Date(response.completion_expires_at).getTime() - Date.now();
+    if (ms <= 0) return "Expired";
+
+    const totalHours = Math.floor(ms / (1000 * 60 * 60));
+    const days = Math.floor(totalHours / 24);
+    const hours = totalHours % 24;
+
+    if (days > 0) return `${days}d ${hours}h left`;
+    return `${hours}h left`;
+  };
+
   const unansweredApps = apps.filter(app => !responses.some(r => r.app_id === app.id));
 
   useEffect(() => {
@@ -327,23 +348,138 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
     await refreshProfile();
   };
 
-  const handleStartSurvey = (survey: any) => {
+  const handleStartSurvey = async (survey: any) => {
+    if (!user) return;
+    const response = getSurveyResponse(survey.id);
+
+    if (response?.status === "failed_quiz") {
+      return;
+    }
+
+    if (
+      response &&
+      (response.status === "in_progress" || response.status === "rejected") &&
+      !isSurveyExpired(response)
+    ) {
+      setActiveSurvey(survey);
+      setCurrentQuestionIndex(0);
+      setSurveyStep("completion");
+      return;
+    }
+
+    if (
+      response &&
+      (response.status === "in_progress" || response.status === "rejected") &&
+      isSurveyExpired(response)
+    ) {
+      const { error } = await supabase
+        .from("survey_responses")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("survey_id", survey.id)
+        .in("status", ["in_progress", "rejected"]);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await fetchData();
+
+      toast({
+        title: "Survey restarted",
+        description: "Your 20-day window expired, so this survey is starting over.",
+      });
+
+      setActiveSurvey(survey);
+      setCurrentQuestionIndex(0);
+      setSurveyStep("quiz");
+      return;
+    }
+
     setActiveSurvey(survey);
     setCurrentQuestionIndex(0);
     setSurveyStep("quiz");
   };
 
-  const handleAnswerQuestion = (option: any) => {
+  const handleAnswerQuestion = async (option: any) => {
+    if (!user || !activeSurvey) return;
+
     if (!option.is_correct) {
-      toast({ title: "Incorrect answer", description: "Please try again.", variant: "destructive" });
+      const { error } = await supabase.from("survey_responses").upsert(
+        {
+          user_id: user.id,
+          survey_id: activeSurvey.id,
+          status: "failed_quiz",
+          screenshot_url: null,
+          points_awarded: 0,
+        },
+        { onConflict: "user_id,survey_id" }
+      );
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Oops! Nothing to see here",
+        description: "This survey has been closed for your account.",
+        variant: "destructive",
+      });
+
+      setActiveSurvey(null);
+      setSurveyStep("quiz");
+      setCurrentQuestionIndex(0);
+      await fetchData();
       return;
     }
 
     if (currentQuestionIndex < activeSurvey.survey_questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-    } else {
-      setSurveyStep("completion");
+      setCurrentQuestionIndex((prev) => prev + 1);
+      return;
     }
+
+    const now = new Date();
+    const expiresAt = new Date(now);
+    expiresAt.setDate(expiresAt.getDate() + 20);
+
+    const { error } = await supabase.from("survey_responses").upsert(
+      {
+        user_id: user.id,
+        survey_id: activeSurvey.id,
+        status: "in_progress",
+        quiz_completed_at: now.toISOString(),
+        completion_expires_at: expiresAt.toISOString(),
+        points_awarded: 0,
+      },
+      { onConflict: "user_id,survey_id" }
+    );
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Quiz passed",
+      description: "You have 20 days to finish the survey and upload proof.",
+    });
+
+    setSurveyStep("completion");
+    await fetchData();
   };
 
   const handleSurveyScreenshotUpload = async (file: File) => {
@@ -363,12 +499,15 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
       return;
     }
 
-    const { error: respError } = await supabase.from("survey_responses").upsert({
-      user_id: user.id,
-      survey_id: activeSurvey.id,
-      screenshot_url: filePath,
-      status: "pending"
-    });
+    const { error: respError } = await supabase.from("survey_responses").upsert(
+      {
+        user_id: user.id,
+        survey_id: activeSurvey.id,
+        screenshot_url: filePath,
+        status: "pending"
+      },
+      { onConflict: "user_id,survey_id" }
+    );
 
     if (respError) {
       toast({ title: "Submission failed", description: respError.message });
@@ -846,11 +985,26 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
           </GlassCard>
         )}
 
-        {surveys.map(survey => {
-          const response = surveyResponses.find(r => r.survey_id === survey.id);
+        {surveys
+          .filter((survey) => {
+            const response = getSurveyResponse(survey.id);
+
+            if (!response) return true;
+            if (response.status === "failed_quiz") return false;
+
+            return true;
+          })
+          .map(survey => {
+          const response = getSurveyResponse(survey.id);
+          const isExpiredRestartable =
+            response &&
+            (response.status === "in_progress" || response.status === "rejected") &&
+            isSurveyExpired(response);
+          const isInProgress = response?.status === "in_progress" && !isSurveyExpired(response);
           const isPending = response?.status === "pending";
           const isApproved = response?.status === "approved";
-          const isRejected = response?.status === "rejected";
+          const isRejected = response?.status === "rejected" && !isSurveyExpired(response);
+          const timeLeft = getTimeLeftLabel(response);
 
           return (
             <GlassCard key={survey.id} className="p-4 overflow-hidden relative">
@@ -875,6 +1029,34 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                 </div>
               )}
 
+              {isInProgress && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center gap-2 text-[11px] text-accent-foreground bg-accent/10 p-2 rounded-lg border border-accent/20">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Quiz passed. {timeLeft} to upload proof.</span>
+                  </div>
+                  <GlassButton variant="outline" onClick={() => handleStartSurvey(survey)} className="w-full text-[12px]">
+                    Continue Survey
+                  </GlassButton>
+                </div>
+              )}
+
+              {isExpiredRestartable && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center gap-2 text-[11px] text-destructive bg-destructive/10 p-2 rounded-lg border border-destructive/20">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Your 20-day window expired. You can restart this survey.</span>
+                  </div>
+                  <GlassButton
+                    variant="outline"
+                    onClick={() => handleStartSurvey(survey)}
+                    className="w-full text-[12px]"
+                  >
+                    Restart Survey
+                  </GlassButton>
+                </div>
+              )}
+
               {isPending && (
                 <div className="mt-3 flex items-center gap-2 text-[11px] text-accent-foreground bg-accent/10 p-2 rounded-lg border border-accent/20">
                   <AlertCircle className="w-3.5 h-3.5" />
@@ -893,10 +1075,10 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                 <div className="mt-3 space-y-2">
                   <div className="flex items-center gap-2 text-[11px] text-destructive bg-destructive/10 p-2 rounded-lg border border-destructive/20">
                     <X className="w-3.5 h-3.5" />
-                    <span>Proof rejected. Please try again.</span>
+                    <span>Proof rejected. {timeLeft} to upload again.</span>
                   </div>
                   <GlassButton variant="outline" onClick={() => handleStartSurvey(survey)} className="w-full text-[12px]">
-                    Retry Survey
+                    Upload Again
                   </GlassButton>
                 </div>
               )}
