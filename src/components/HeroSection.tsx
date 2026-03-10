@@ -75,7 +75,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           className="inline-flex items-center gap-2.5 glass-pill rounded-full px-5 py-2 mb-8"
         >
           <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
-          <span className="text-[11px] font-medium text-muted-foreground tracking-[0.12em] uppercase">
+          <span className="text-sm font-medium text-muted-foreground tracking-[0.12em] uppercase">
             Reclaim What's Yours
           </span>
         </motion.div>
@@ -127,10 +127,10 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           transition={{ delay: 0.7, duration: 0.5 }}
           className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto"
         >
-          <GlassButton variant="primary" onClick={onGetStarted} className="text-[13px] px-8 py-3.5 flex-1">
+          <GlassButton variant="primary" onClick={onGetStarted} className="text-sm px-8 py-3.5 flex-1">
             Calculate & Claim <MoveRight className="inline w-4 h-4 ml-2" />
           </GlassButton>
-          <GlassButton variant="outline" className="text-[13px] px-8 py-3.5 flex-1" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
+          <GlassButton variant="outline" className="text-sm px-8 py-3.5 flex-1" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
             How It Works
           </GlassButton>
         </motion.div>
@@ -147,17 +147,17 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
             <p className="font-display text-lg sm:text-xl font-bold text-primary glow-text">
               <CountUpAnimation end={queueCount} duration={2} suffix="+" />
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">In Queue</p>
+            <p className="text-xs text-muted-foreground mt-0.5">In Queue</p>
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
             <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1.5" />
             <p className="font-display text-lg sm:text-xl font-bold text-primary"><CyclingFreeLabel /></p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">To Join</p>
+            <p className="text-xs text-muted-foreground mt-0.5">To Join</p>
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
             <Shield className="w-4 h-4 text-primary mx-auto mb-1.5" />
             <p className="font-display text-lg sm:text-xl font-bold text-primary glow-text">20x</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Skip / Referral</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Skip / Referral</p>
           </div>
         </motion.div>
       </motion.div>
@@ -175,8 +175,8 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           { title: "Claim Back", desc: "Once off queue, claim your spend toward real goals." },
         ].map((item, i) => (
           <div key={i} className="glass-card rounded-2xl p-5 text-center">
-            <p className="text-[13px] font-semibold text-foreground mb-1">{item.title}</p>
-            <p className="text-[12px] text-muted-foreground leading-relaxed">{item.desc}</p>
+            <p className="text-sm font-semibold text-foreground mb-1">{item.title}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
           </div>
         ))}
       </motion.div>

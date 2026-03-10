@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontSize: {
+        xs: ["0.8125rem", { lineHeight: "1.45" }],
+        sm: ["0.875rem", { lineHeight: "1.5" }],
+      },
       fontFamily: {
         display: ['"Inter"', 'sans-serif'],
         body: ['"Inter"', 'sans-serif'],

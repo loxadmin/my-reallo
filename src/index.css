@@ -79,12 +79,16 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
-    font-size: 13px;
+    font-size: 14px;
+    line-height: 1.55;
+    letter-spacing: 0.002em;
   }
-  h1 { font-size: 60px; @apply font-bold tracking-tight; }
-  h2 { font-size: 40px; @apply font-bold tracking-tight; }
-  h3 { font-size: 22px; @apply font-bold tracking-tight; }
-  button, input, select, textarea { font-size: 13px !important; }
+  h1 { font-size: 60px; @apply font-bold tracking-tight leading-[1.05]; }
+  h2 { font-size: 40px; @apply font-semibold tracking-tight leading-[1.12]; }
+  h3 { font-size: 22px; @apply font-semibold tracking-tight leading-[1.2]; }
+  p { @apply text-sm leading-relaxed; }
+  small { @apply text-xs leading-relaxed; }
+  button, input, select, textarea { font-size: 14px !important; }
 
   /* Hide scrollbar on sidebar */
   [data-sidebar="content"]::-webkit-scrollbar { display: none; }
