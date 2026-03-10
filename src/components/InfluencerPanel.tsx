@@ -9,6 +9,7 @@ import { Users, Wallet, ArrowDownToLine, Star, Upload, CheckCircle2, Clock, Aler
 import { toast } from "@/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import InfluencerSurveyPanel from "./InfluencerSurveyPanel";
 
 interface Bank { name: string; code: string; }
 interface InfluencerApp { id: string; status: string; social_link: string; }
@@ -19,6 +20,7 @@ interface Withdrawal { id: string; amount: number; status: string; created_at: s
 interface Challenge { id: string; title: string; description: string; instructions: string; hashtag: string; challenge_type: string; total_videos: number; reward_per_video: number; posting_interval_days: number; is_active: boolean; }
 interface ChallengeEnrollment { id: string; challenge_id: string; user_id: string; completed: boolean; pending_earnings: number; approved_earnings: number; enrolled_at: string; }
 interface ChallengeSubmission { id: string; challenge_id: string; user_id: string; video_url: string; video_number: number; status: string; submitted_at: string; }
+interface InfluencerWalletTransaction { id: string; amount: number; status: string; source: string; }
 
 
 
@@ -75,6 +77,7 @@ const InfluencerPanel = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [enrollments, setEnrollments] = useState<ChallengeEnrollment[]>([]);
   const [submissions, setSubmissions] = useState<ChallengeSubmission[]>([]);
+  const [walletTransactions, setWalletTransactions] = useState<InfluencerWalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Application form
@@ -110,7 +113,7 @@ const InfluencerPanel = () => {
   const fetchData = async () => {
     if (!user) return;
     setLoading(true);
-    const [appRes, walletRes, bankRes, refRes, wdRes, chRes, enRes, subRes] = await Promise.all([
+    const [appRes, walletRes, bankRes, refRes, wdRes, chRes, enRes, subRes, txnRes] = await Promise.all([
       supabase.from("influencer_applications" as any).select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("influencer_wallets" as any).select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("influencer_bank_accounts" as any).select("*").eq("user_id", user.id).maybeSingle(),
@@ -119,6 +122,7 @@ const InfluencerPanel = () => {
       supabase.from("influencer_challenges" as any).select("*").eq("is_active", true).order("created_at", { ascending: false }),
       supabase.from("influencer_challenge_enrollments" as any).select("*").eq("user_id", user.id),
       supabase.from("influencer_challenge_submissions" as any).select("*").eq("user_id", user.id).order("submitted_at", { ascending: false }),
+      supabase.from("influencer_wallet_transactions" as any).select("*").eq("user_id", user.id).eq("status", "completed"),
     ]);
     setApplication((appRes.data as any) || null);
     setWallet((walletRes.data as any) || null);
@@ -130,6 +134,7 @@ const InfluencerPanel = () => {
     setChallenges(((chRes.data as any) || []) as Challenge[]);
     setEnrollments(((enRes.data as any) || []) as ChallengeEnrollment[]);
     setSubmissions(((subRes.data as any) || []) as ChallengeSubmission[]);
+    setWalletTransactions(((txnRes.data as any) || []) as InfluencerWalletTransaction[]);
     setLoading(false);
   };
 
@@ -526,7 +531,8 @@ const InfluencerPanel = () => {
       : "";
     const referralEarnings = referrals.reduce((s, r) => s + r.reward_amount, 0);
     const challengeEarnings = enrollments.reduce((s, e) => s + (e.approved_earnings || 0), 0);
-    const totalEarned = referralEarnings + challengeEarnings;
+    const surveyEarnings = walletTransactions.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
+    const totalEarned = referralEarnings + challengeEarnings + surveyEarnings;
 
     return (
       <div className="space-y-4">
@@ -606,6 +612,14 @@ const InfluencerPanel = () => {
                   </div>
                 </div>
               )}
+
+              <div className="space-y-3">
+                <h3 className="font-semibold text-foreground text-[15px]">Influencer Surveys</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Complete surveys to earn direct cash rewards.
+                </p>
+                <InfluencerSurveyPanel />
+              </div>
             </div>
           )}
 
