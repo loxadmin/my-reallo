@@ -25,7 +25,7 @@ type InfluencerSurveyResponse = {
   reward_amount: number;
 };
 
-export default function InfluencerSurveyPanel({ compact = false }: { compact?: boolean }) {
+export default function InfluencerSurveyPanel() {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -326,8 +326,6 @@ export default function InfluencerSurveyPanel({ compact = false }: { compact?: b
     );
   }
 
-  const surveysToRender = compact ? visibleSurveys.slice(0, 1) : visibleSurveys;
-
   return (
     <div className="space-y-4">
       {visibleSurveys.length === 0 ? (
@@ -335,7 +333,7 @@ export default function InfluencerSurveyPanel({ compact = false }: { compact?: b
           <p className="text-sm text-muted-foreground">No influencer surveys available right now.</p>
         </GlassCard>
       ) : (
-        surveysToRender.map((survey) => {
+        visibleSurveys.map((survey) => {
           const response = getResponse(survey.id);
           const expired = response && (response.status === "in_progress" || response.status === "rejected") && isExpired(response);
           const timeLeft = response ? getTimeLeftLabel(response) : "";

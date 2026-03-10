@@ -106,7 +106,7 @@ const InfluencerPanel = () => {
   const [withdrawing, setWithdrawing] = useState(false);
 
   // Tab
-  const [tab, setTab] = useState<"overview" | "surveys" | "withdraw" | "challenges">("overview");
+  const [tab, setTab] = useState<"overview" | "withdraw" | "challenges">("overview");
   const [challengeSubTab, setChallengeSubTab] = useState<"new" | "ongoing" | "past">("new");
   const [videoLinks, setVideoLinks] = useState<Record<string, string>>({});
 
@@ -535,81 +535,26 @@ const InfluencerPanel = () => {
     const totalEarned = referralEarnings + challengeEarnings + surveyEarnings;
 
     return (
-      <div className="space-y-4 sm:space-y-5">
-        <GlassCard variant="glow" className="p-5 sm:p-6">
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Wallet className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold text-foreground text-[15px]">Influencer Wallet</h3>
-              </div>
-              <div className="space-y-1">
-                <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px]">Balance</p>
-                <h2 className="font-display text-3xl sm:text-4xl font-bold gradient-text">{formatNaira(wallet.balance)}</h2>
-                <p className="text-muted-foreground text-[11px]">Total earned: {formatNaira(totalEarned)}</p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {bankAccount && (
-                  <div className="glass rounded-2xl p-3">
-                    <p className="text-[10px] text-muted-foreground mb-1">Bank Account</p>
-                    <p className="text-foreground text-[12px] font-semibold">{bankAccount.account_name}</p>
-                    <p className="text-muted-foreground text-[11px]">{bankAccount.bank_name} • {bankAccount.account_number}</p>
-                  </div>
-                )}
-                {influencerLink && (
-                  <div className="glass rounded-2xl p-3">
-                    <p className="text-[10px] text-muted-foreground mb-1">Your Referral Link</p>
-                    <p className="text-[10px] text-foreground font-mono truncate">{influencerLink}</p>
-                    <GlassButton variant="outline" onClick={() => { navigator.clipboard.writeText(influencerLink); toast({ title: "Copied!" }); }} className="w-full mt-2 text-[11px]">
-                      Copy Referral Link
-                    </GlassButton>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="space-y-3">
-              <h3 className="font-semibold text-foreground text-[15px]">Influencer Surveys</h3>
-              <p className="text-[11px] text-muted-foreground">
-                Complete surveys to earn direct cash rewards.
-              </p>
-              <InfluencerSurveyPanel compact />
-            </div>
+      <div className="space-y-4">
+        {/* Wallet Card */}
+        <GlassCard variant="glow" className="p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Wallet className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold text-foreground text-[15px]">Influencer Wallet</h3>
           </div>
-        </GlassCard>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <GlassCard className="p-3 sm:p-4 text-center">
-            <p className="text-lg font-bold text-primary">{referrals.length}</p>
-            <p className="text-[10px] text-muted-foreground">Referrals</p>
-          </GlassCard>
-          <GlassCard className="p-3 sm:p-4 text-center">
-            <p className="text-lg font-bold text-foreground">{formatNaira(totalEarned)}</p>
-            <p className="text-[10px] text-muted-foreground">Earned</p>
-          </GlassCard>
-          <GlassCard className="p-3 sm:p-4 text-center col-span-2 sm:col-span-1">
-            <p className="text-lg font-bold text-foreground">{withdrawals.filter(w => w.status === "approved").length}</p>
-            <p className="text-[10px] text-muted-foreground">Withdrawals</p>
-          </GlassCard>
-        </div>
-
-        <GlassCard className="p-3 sm:p-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button onClick={() => setTab("overview")} className={`py-2.5 rounded-xl text-[12px] font-medium transition-all ${tab === "overview" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
+          <div className="flex gap-2 mb-4">
+            <button onClick={() => setTab("overview")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "overview" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
               Overview
             </button>
-            <button onClick={() => setTab("surveys")} className={`py-2.5 rounded-xl text-[12px] font-medium transition-all ${tab === "surveys" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
-              Surveys
-            </button>
-            <button onClick={() => setTab("challenges")} className={`py-2.5 rounded-xl text-[12px] font-medium transition-all ${tab === "challenges" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
-              Challenges
-            </button>
-            <button onClick={() => setTab("withdraw")} className={`py-2.5 rounded-xl text-[12px] font-medium transition-all ${tab === "withdraw" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
+            <button onClick={() => setTab("withdraw")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "withdraw" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
               Withdraw
             </button>
+            <button onClick={() => setTab("challenges")} className={`flex-1 py-2 rounded-xl text-[12px] font-medium transition-all ${tab === "challenges" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"}`}>
+              Challenges
+            </button>
           </div>
-        </GlassCard>
 
-        <GlassCard className="p-5 sm:p-6">
           {tab === "overview" && (
             <div className="space-y-4">
               <div className="text-center py-3">
@@ -668,20 +613,15 @@ const InfluencerPanel = () => {
                 </div>
               )}
 
+              <div className="space-y-3">
+                <h3 className="font-semibold text-foreground text-[15px]">Influencer Surveys</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Complete surveys to earn direct cash rewards.
+                </p>
+                <InfluencerSurveyPanel />
+              </div>
             </div>
           )}
-
-
-          {tab === "surveys" && (
-            <div className="space-y-3">
-              <h3 className="font-semibold text-foreground text-[15px]">Influencer Surveys</h3>
-              <p className="text-[11px] text-muted-foreground">
-                Complete surveys to earn direct cash rewards.
-              </p>
-              <InfluencerSurveyPanel />
-            </div>
-          )}
-
 
           {tab === "withdraw" && (
             <div className="space-y-4">
@@ -736,8 +676,6 @@ const InfluencerPanel = () => {
               )}
             </div>
           )}
-
-
 
           {tab === "challenges" && (
             <div className="space-y-4">
@@ -916,6 +854,7 @@ const InfluencerPanel = () => {
       </div>
     );
   }
+
   return null;
 };
 
