@@ -543,9 +543,8 @@ const InfluencerPanel = () => {
               <Wallet className="w-5 h-5 text-primary" />
               <h3 className="font-semibold text-foreground text-[15px]">Influencer Wallet</h3>
             </div>
-            <div className="text-center py-3 flex-grow flex flex-col justify-center">
-              <p className="text-muted-foreground uppercase tracking-[0.25em] text-[12px] font-semibold">Balance</p>
-              <h2 className="font-display text-2xl font-bold gradient-text tabular-nums my-1">{formatNaira(wallet.balance)}</h2>
+            <div className="text-center py-4 flex-grow flex flex-col justify-center">
+              <h2 className="font-display text-3xl font-bold gradient-text tabular-nums mb-1">{formatNaira(wallet.balance)}</h2>
               <p className="text-muted-foreground text-[13px] font-medium">Total earned: {formatNaira(totalEarned)}</p>
             </div>
             <div className="space-y-3 mt-4">
@@ -579,14 +578,14 @@ const InfluencerPanel = () => {
         </div>
 
         <GlassCard className="p-5">
-          <div className="flex gap-2 mb-6">
-            <button onClick={() => setTab("overview")} className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all ${tab === "overview" ? "bg-primary/10 text-primary" : "glass-button text-muted-foreground"}`}>
+          <div className="flex gap-1 mb-6 glass-strong p-1 rounded-xl">
+            <button onClick={() => setTab("overview")} className={`flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-all ${tab === "overview" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
               Overview
             </button>
-            <button onClick={() => setTab("withdraw")} className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all ${tab === "withdraw" ? "bg-primary/10 text-primary" : "glass-button text-muted-foreground"}`}>
+            <button onClick={() => setTab("withdraw")} className={`flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-all ${tab === "withdraw" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
               Withdraw
             </button>
-            <button onClick={() => setTab("challenges")} className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all ${tab === "challenges" ? "bg-primary/10 text-primary" : "glass-button text-muted-foreground"}`}>
+            <button onClick={() => setTab("challenges")} className={`flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-all ${tab === "challenges" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
               Challenges
             </button>
           </div>
@@ -678,13 +677,13 @@ const InfluencerPanel = () => {
           )}
 
           {tab === "challenges" && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {/* Sub-tabs */}
-              <div className="flex gap-1 bg-muted/30 rounded-lg p-1">
+              <div className="flex gap-1 glass p-1 rounded-xl">
                 {(["new", "ongoing", "past"] as const).map(st => (
                   <button key={st} onClick={() => setChallengeSubTab(st)}
-                    className={`flex-1 py-1.5 rounded-md text-[12px] font-medium transition-all capitalize ${challengeSubTab === st ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>
-                    {st === "new" ? "New Challenges" : st === "ongoing" ? "Ongoing" : "Past"}
+                    className={`flex-1 py-1.5 rounded-lg text-[12px] font-bold transition-all capitalize ${challengeSubTab === st ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                    {st === "new" ? "New" : st === "ongoing" ? "Ongoing" : "Past"}
                   </button>
                 ))}
               </div>
@@ -734,40 +733,45 @@ const InfluencerPanel = () => {
                   const nextPostDate = !canPostNow ? new Date(nextAllowedTime) : null;
 
                   return (
-                    <div key={ch.id} className="glass rounded-xl p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h4 className="font-semibold text-foreground text-sm">{ch.title}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[12px] text-primary font-semibold flex items-center gap-1"><Hash className="w-3 h-3" />{ch.hashtag}</span>
-                            <span className="text-[12px] text-muted-foreground">{formatNaira(ch.reward_per_video)}/video</span>
+                    <div key={ch.id} className="glass rounded-2xl p-5 space-y-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1">
+                          <h4 className="font-bold text-foreground text-[15px] leading-tight">{ch.title}</h4>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[12px] text-primary font-bold flex items-center gap-1"><Hash className="w-3 h-3" />{ch.hashtag}</span>
+                            <span className="text-[12px] text-muted-foreground font-medium">{formatNaira(ch.reward_per_video)} / video</span>
                           </div>
                         </div>
-                        {isComplete && <span className="text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">Completed ✓</span>}
+                        {isComplete && <span className="text-[12px] font-bold bg-primary/10 text-primary px-3 py-1 rounded-full whitespace-nowrap">Completed ✓</span>}
                       </div>
-                      <p className="text-[12px] text-muted-foreground mb-2">{ch.description}</p>
+
+                      <p className="text-[13px] text-muted-foreground leading-relaxed">{ch.description}</p>
 
                       {ch.instructions && (
-                        <div className="glass rounded-lg p-3 mb-3">
-                          <p className="text-[12px] text-muted-foreground font-semibold mb-1">Instructions</p>
-                          <p className="text-[12px] text-foreground whitespace-pre-wrap">{ch.instructions}</p>
+                        <div className="glass-strong rounded-xl p-3">
+                          <p className="text-[12px] text-muted-foreground font-bold mb-1 uppercase tracking-wider">Instructions</p>
+                          <p className="text-[12px] text-foreground/90 whitespace-pre-wrap leading-relaxed">{ch.instructions}</p>
                         </div>
                       )}
 
-                      {/* Progress bar */}
-                      <div className="mb-3">
-                        <div className="flex justify-between text-[12px] text-muted-foreground mb-1">
-                          <span>{approvedCount}/{ch.total_videos} approved</span>
-                          <span>{isComplete ? formatNaira(enrollment?.approved_earnings || 0) + " earned" : formatNaira(enrollment?.pending_earnings || 0) + " pending"}</span>
+                      {/* Progress Area */}
+                      {enrollment && (
+                        <div className="space-y-3 pt-2">
+                          <div className="flex justify-between items-end">
+                            <div>
+                              <p className="text-[12px] text-muted-foreground font-medium mb-0.5">Progress</p>
+                              <p className="text-sm font-bold text-foreground">{approvedCount} / {ch.total_videos} approved</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[12px] text-muted-foreground font-medium mb-0.5">{isComplete ? "Earned" : "Pending"}</p>
+                              <p className="text-sm font-bold text-primary">{isComplete ? formatNaira(enrollment?.approved_earnings || 0) : formatNaira(enrollment?.pending_earnings || 0)}</p>
+                            </div>
+                          </div>
+                          <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${(approvedCount / ch.total_videos) * 100}%` }} />
+                          </div>
                         </div>
-                        <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(approvedCount / ch.total_videos) * 100}%` }} />
-                        </div>
-                        <p className="text-[12px] text-muted-foreground mt-1">
-                          Total possible: {formatNaira(totalPossibleEarnings)}
-                          {ch.challenge_type === "set" && !isComplete && ` • ${ch.total_videos - mySubs.length} videos remaining`}
-                        </p>
-                      </div>
+                      )}
 
                       {/* Enroll (new challenges only) */}
                       {!enrollment && !isComplete && (
