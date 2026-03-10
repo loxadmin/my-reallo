@@ -173,10 +173,10 @@
     transform: translateY(-1px);
   }
   .glass-outline {
-    background: hsl(160 60% 18% / 0.04);
+    background: hsl(160 60% 18% / 0.08);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid hsl(160 60% 18% / 0.2);
+    border: 1px solid hsl(160 60% 18% / 0.3);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .glass-outline:hover {
@@ -252,8 +252,8 @@
     background: hsl(160 42% 40%);
   }
   :root.dark .glass-outline {
-    background: hsl(160 45% 35% / 0.1);
-    border: 1px solid hsl(160 45% 35% / 0.25);
+    background: hsl(160 45% 35% / 0.15);
+    border: 1px solid hsl(160 45% 35% / 0.4);
   }
   :root.dark .glass-outline:hover {
     background: hsl(160 45% 35% / 0.2);

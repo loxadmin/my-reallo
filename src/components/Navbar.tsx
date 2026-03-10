@@ -118,7 +118,7 @@ const Navbar = ({ children }: NavbarProps) => {
           ) : (
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
-              <span className="text-[12px] text-muted-foreground font-medium">Live</span>
+              <span className="text-[13px] text-muted-foreground font-medium">Live</span>
             </div>
           )}
         </div>

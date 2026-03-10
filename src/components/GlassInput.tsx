@@ -22,7 +22,7 @@ const GlassInput = ({ label, prefix, className, ...props }: GlassInputProps) => 
         )}
         <input
           className={cn(
-            "w-full glass-input rounded-xl px-4 py-3.5 text-foreground font-body placeholder:text-muted-foreground/40 dark:placeholder:text-white/30",
+            "w-full glass-input rounded-xl px-4 py-3.5 text-foreground font-body placeholder:text-muted-foreground/60 dark:placeholder:text-white/50",
             prefix && "pl-10",
             className
           )}

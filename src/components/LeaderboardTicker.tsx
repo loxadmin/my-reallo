@@ -75,9 +75,9 @@ const LeaderboardTicker = () => {
           className="flex items-center gap-2"
         >
           <Icon className="w-3 h-3 text-primary shrink-0" />
-          <span className="text-[12px] text-foreground font-medium">{current.label}</span>
-          <span className="text-[12px] text-muted-foreground">{config.verb}</span>
-          <span className="text-[12px] text-primary font-bold">{formatCurrency(current.amount)}</span>
+          <span className="text-[13px] text-foreground font-medium">{current.label}</span>
+          <span className="text-[13px] text-muted-foreground">{config.verb}</span>
+          <span className="text-[13px] text-primary font-bold">{formatCurrency(current.amount)}</span>
         </motion.div>
       </AnimatePresence>
     </div>

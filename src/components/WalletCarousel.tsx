@@ -118,13 +118,13 @@ const WalletCarousel = ({
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                       {wallet.icon}
                     </div>
-                    <p className="text-muted-foreground uppercase tracking-[0.18em] text-[12px] font-semibold">
+                    <p className="text-muted-foreground uppercase tracking-[0.18em] text-[13px] font-semibold">
                       {wallet.label}
                     </p>
                   </div>
                   {idx === 0 && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[12px] text-muted-foreground">Total</span>
+                      <span className="text-[13px] text-muted-foreground">Total</span>
                       <button
                         onClick={() => setShowTotal(!showTotal)}
                         className={cn(
@@ -273,7 +273,7 @@ const WalletCarousel = ({
                         <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center mb-2">
                           {wallet.icon}
                         </div>
-                        <p className="text-muted-foreground uppercase tracking-[0.18em] text-[12px] font-semibold mb-2 text-center">
+                        <p className="text-muted-foreground uppercase tracking-[0.18em] text-[13px] font-semibold mb-2 text-center">
                           {showTotal && wallet.type === "utility" ? "Total Annual Spend" : wallet.label}
                         </p>
                         <p className="font-display text-2xl font-bold gradient-text tabular-nums">
@@ -300,7 +300,7 @@ const WalletCarousel = ({
 
                 {/* Total toggle */}
                 <div className="flex items-center gap-1.5 mt-3">
-                  <span className="text-[12px] text-muted-foreground">Total</span>
+                  <span className="text-[13px] text-muted-foreground">Total</span>
                   <button
                     onClick={() => setShowTotal(!showTotal)}
                     className={cn(

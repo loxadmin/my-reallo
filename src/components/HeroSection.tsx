@@ -75,7 +75,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           className="inline-flex items-center gap-2.5 glass-pill rounded-full px-5 py-2 mb-8"
         >
           <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
-          <span className="text-[12px] font-medium text-muted-foreground tracking-[0.12em] uppercase">
+          <span className="text-[13px] font-medium text-muted-foreground tracking-[0.12em] uppercase">
             Reclaim What's Yours
           </span>
         </motion.div>
@@ -147,17 +147,17 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
             <p className="font-display text-lg sm:text-xl font-bold text-primary glow-text">
               <CountUpAnimation end={queueCount} duration={2} suffix="+" />
             </p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">In Queue</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5">In Queue</p>
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
             <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1.5" />
             <p className="font-display text-lg sm:text-xl font-bold text-primary"><CyclingFreeLabel /></p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">To Join</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5">To Join</p>
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
             <Shield className="w-4 h-4 text-primary mx-auto mb-1.5" />
             <p className="font-display text-lg sm:text-xl font-bold text-primary glow-text">20x</p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">Skip / Referral</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5">Skip / Referral</p>
           </div>
         </motion.div>
       </motion.div>

@@ -242,7 +242,7 @@ const VerifySpendFlow = () => {
           </div>
           <div>
             <h3 className="font-semibold text-foreground text-sm">Spend Verified</h3>
-            <p className="text-[12px] text-muted-foreground">All categories verified</p>
+            <p className="text-[13px] text-muted-foreground">All categories verified</p>
           </div>
         </div>
         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass rounded-2xl p-5 text-center border border-primary/20">
@@ -253,7 +253,7 @@ const VerifySpendFlow = () => {
           <p className="text-sm text-primary font-semibold mt-1">
             {formatCurrency(totalVerifiedAnnualSpend)}
           </p>
-          <p className="text-[12px] text-muted-foreground">Total Verified Annual Spend</p>
+          <p className="text-[13px] text-muted-foreground">Total Verified Annual Spend</p>
           <div className="grid grid-cols-2 gap-2 mt-4">
             {allTypes.map(t => {
               const spend = getAnnualSpend(t);
@@ -262,7 +262,7 @@ const VerifySpendFlow = () => {
                 <div key={t} className="glass rounded-xl p-2.5 text-center">
                   <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
                     {spendMeta[t].icon}
-                    <span className="text-[12px]">{spendMeta[t].label}</span>
+                    <span className="text-[13px]">{spendMeta[t].label}</span>
                   </div>
                   <p className="text-[13px] font-semibold text-foreground">{formatCurrency(spend)}</p>
                 </div>
@@ -303,7 +303,7 @@ const VerifySpendFlow = () => {
           </div>
           <div>
             <h3 className="font-semibold text-foreground text-[14px]">{meta.label} Verification</h3>
-            <p className="text-[12px] text-muted-foreground">{meta.description}</p>
+            <p className="text-[13px] text-muted-foreground">{meta.description}</p>
           </div>
         </div>
 
@@ -339,7 +339,7 @@ const VerifySpendFlow = () => {
 
             {type === "data" && (
               <div className="space-y-2.5">
-                <p className="text-[12px] text-muted-foreground font-medium">How often do you buy data?</p>
+                <p className="text-[13px] text-muted-foreground font-medium">How often do you buy data?</p>
                 <div className="grid grid-cols-3 gap-2">
                   {(["daily", "weekly", "monthly"] as const).map(f => (
                     <button
@@ -355,7 +355,7 @@ const VerifySpendFlow = () => {
                     </button>
                   ))}
                 </div>
-                <p className="text-[12px] text-muted-foreground">
+                <p className="text-[13px] text-muted-foreground">
                   {frequency === "daily" && "Submit 30 transaction IDs (sum × 12 = annual)"}
                   {frequency === "weekly" && "Submit 4 transaction IDs (sum × 13 = annual)"}
                   {frequency === "monthly" && "Submit 1 transaction ID (amount × 12 = annual)"}
@@ -365,7 +365,7 @@ const VerifySpendFlow = () => {
 
             {isMonthlyType && (
               <div className="glass rounded-xl p-3 border border-border">
-                <p className="text-[12px] text-muted-foreground">
+                <p className="text-[13px] text-muted-foreground">
                   Submit 1 transaction ID — your monthly amount will be multiplied by 12 to estimate your annual spend.
                 </p>
               </div>
@@ -413,7 +413,7 @@ const VerifySpendFlow = () => {
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-foreground text-sm">Verify Your Spend</h3>
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             {completedCount}/{activeTypes.length} categories verified
           </p>
         </div>
@@ -422,7 +422,7 @@ const VerifySpendFlow = () => {
       {/* Overall progress */}
       <div className="space-y-2">
         <Progress value={overallProgress} className="h-1.5 bg-muted" />
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           Complete all categories to unlock full spend verification
         </p>
       </div>
@@ -455,16 +455,16 @@ const VerifySpendFlow = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] font-semibold text-foreground">{meta.label}</span>
-                  <span className={`text-[12px] px-2 py-0.5 rounded-full border font-medium ${config.badgeClass}`}>
+                  <span className={`text-[13px] px-2 py-0.5 rounded-full border font-medium ${config.badgeClass}`}>
                     {config.label}
                   </span>
                 </div>
                 {status === "completed" && annualSpend > 0 ? (
-                  <p className="text-[12px] text-primary font-medium mt-0.5">
+                  <p className="text-[13px] text-primary font-medium mt-0.5">
                     {formatCurrency(annualSpend)}/yr verified
                   </p>
                 ) : (
-                  <p className="text-[12px] text-muted-foreground mt-0.5">{meta.description}</p>
+                  <p className="text-[13px] text-muted-foreground mt-0.5">{meta.description}</p>
                 )}
               </div>
 
@@ -476,7 +476,7 @@ const VerifySpendFlow = () => {
 
       {completedCount < activeTypes.length && (
         <div className="glass rounded-xl p-3 border border-destructive/10">
-          <p className="text-[12px] text-destructive/80 flex items-center gap-1.5">
+          <p className="text-[13px] text-destructive/80 flex items-center gap-1.5">
             <AlertCircle className="w-3 h-3 shrink-0" />
             All active categories must be verified for spend verification to be complete.
           </p>
@@ -527,14 +527,14 @@ const VerificationActivePanel = ({
       {/* Status bar */}
       <div className="glass rounded-xl p-3.5 space-y-2.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+          <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
             <Clock className="w-3.5 h-3.5" />
             <span>{daysLeft > 0 ? `${daysLeft} days remaining` : "Period ended"}</span>
           </div>
-          <span className="text-[12px] font-medium text-foreground capitalize">{verification.frequency}</span>
+          <span className="text-[13px] font-medium text-foreground capitalize">{verification.frequency}</span>
         </div>
         <Progress value={txProgress} className="h-1 bg-muted" />
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           {submittedCount}/{maxBoxes} submitted · {verifiedCount} verified
         </p>
       </div>
@@ -542,9 +542,9 @@ const VerificationActivePanel = ({
       {/* Calculated spend */}
       {verifiedCount > 0 && annualSpend > 0 && (
         <div className="glass rounded-xl p-4 border border-primary/15 text-center">
-          <p className="text-[12px] text-muted-foreground mb-1">Estimated Annual {meta.label} Spend</p>
+          <p className="text-[13px] text-muted-foreground mb-1">Estimated Annual {meta.label} Spend</p>
           <p className="text-[16px] font-bold text-primary">{formatCurrency(annualSpend)}</p>
-          <p className="text-[12px] text-muted-foreground mt-1">
+          <p className="text-[13px] text-muted-foreground mt-1">
             {verifiedCount} verified × {isMonthlyType ? 12 : getMultiplier(verification.frequency)} multiplier
           </p>
         </div>
@@ -552,7 +552,7 @@ const VerificationActivePanel = ({
 
       {/* Transaction inputs */}
       <div className="space-y-2">
-        <p className="text-[12px] font-medium text-foreground">Transaction IDs</p>
+        <p className="text-[13px] font-medium text-foreground">Transaction IDs</p>
         <div className="space-y-2.5 max-h-[350px] overflow-y-auto pr-1">
           {txInputs.map((val, idx) => {
             const existingTx = transactions[idx];
@@ -564,7 +564,7 @@ const VerificationActivePanel = ({
             return (
               <div key={idx} className="space-y-1">
                 <div className="flex gap-2 items-center">
-                  <span className="text-[12px] text-muted-foreground w-5 text-right font-mono">{idx + 1}</span>
+                  <span className="text-[13px] text-muted-foreground w-5 text-right font-mono">{idx + 1}</span>
                   <div className="flex-1">
                     {isEditing ? (
                       <GlassInput
@@ -593,10 +593,10 @@ const VerificationActivePanel = ({
 
                   {isEditing ? (
                     <div className="flex gap-1">
-                      <GlassButton variant="primary" onClick={() => onEditTx(existingTx)} disabled={submitting || !editValue.trim()} className="px-3 py-2 text-[12px]">
+                      <GlassButton variant="primary" onClick={() => onEditTx(existingTx)} disabled={submitting || !editValue.trim()} className="px-3 py-2 text-[13px]">
                         Save
                       </GlassButton>
-                      <GlassButton variant="outline" onClick={() => { setEditingTxId(null); setEditValue(""); }} className="px-2 py-2 text-[12px]">
+                      <GlassButton variant="outline" onClick={() => { setEditingTxId(null); setEditValue(""); }} className="px-2 py-2 text-[13px]">
                         ✕
                       </GlassButton>
                     </div>
@@ -604,34 +604,34 @@ const VerificationActivePanel = ({
                     existingTx.is_verified ? (
                       <div className="flex items-center gap-1 text-primary shrink-0">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span className="text-[12px] font-medium">{formatCurrency(existingTx.verified_amount ?? 0)}</span>
+                        <span className="text-[13px] font-medium">{formatCurrency(existingTx.verified_amount ?? 0)}</span>
                       </div>
                     ) : isDuplicate ? (
                       canEdit ? (
                         <GlassButton
                           variant="outline"
                           onClick={() => { setEditingTxId(existingTx.id); setEditValue(""); }}
-                          className="px-3 py-2 text-[12px] text-destructive border-destructive/20"
+                          className="px-3 py-2 text-[13px] text-destructive border-destructive/20"
                         >
                           Fix
                         </GlassButton>
                       ) : (
-                        <span className="text-[12px] text-destructive font-medium shrink-0">Duplicate</span>
+                        <span className="text-[13px] text-destructive font-medium shrink-0">Duplicate</span>
                       )
                     ) : (
                       <div className="flex items-center gap-1 text-muted-foreground shrink-0">
                         <Loader2 className="w-3 h-3 animate-spin" />
-                        <span className="text-[12px]">Pending</span>
+                        <span className="text-[13px]">Pending</span>
                       </div>
                     )
                   ) : (
-                    <GlassButton variant="primary" onClick={() => onSubmitTx(idx)} disabled={submitting || !val.trim()} className="px-3 py-2 text-[12px]">
+                    <GlassButton variant="primary" onClick={() => onSubmitTx(idx)} disabled={submitting || !val.trim()} className="px-3 py-2 text-[13px]">
                       {submitting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Submit"}
                     </GlassButton>
                   )}
                 </div>
                 {isDuplicate && !isEditing && canEdit && (
-                  <p className="text-[12px] text-destructive/80 ml-7 flex items-center gap-1">
+                  <p className="text-[13px] text-destructive/80 ml-7 flex items-center gap-1">
                     <AlertCircle className="w-2.5 h-2.5" /> Duplicate detected — tap Fix to correct (one chance only)
                   </p>
                 )}

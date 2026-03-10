@@ -99,7 +99,7 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
                     <p className="font-semibold text-sm text-foreground flex items-center gap-1">
                       {meta.label} <ChevronRight className="w-3 h-3 text-muted-foreground" />
                     </p>
-                    <p className="text-[12px] text-muted-foreground mt-1">{meta.description}</p>
+                    <p className="text-[13px] text-muted-foreground mt-1">{meta.description}</p>
                   </motion.button>
                 );
               })}
@@ -124,10 +124,10 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-semibold text-foreground text-sm">{cat.label}</p>
-                        <p className="text-[12px] text-muted-foreground mt-1">Max: {formatNaira(cat.max_price)}</p>
+                        <p className="text-[13px] text-muted-foreground mt-1">Max: {formatNaira(cat.max_price)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[12px] text-muted-foreground">You can claim</p>
+                        <p className="text-[13px] text-muted-foreground">You can claim</p>
                         <p className="font-bold text-primary text-sm">{formatNaira(Math.min(totalAnnualSpend, cat.max_price))}</p>
                       </div>
                     </div>
@@ -147,18 +147,18 @@ const GoalSelector = ({ totalAnnualSpend, onSelect }: GoalSelectorProps) => {
               </button>
               <GlassCard variant="glow">
                 <div className="text-center">
-                  <p className="text-[12px] text-muted-foreground uppercase tracking-widest mb-1">{goalMeta[selectedType!]?.label || selectedType}</p>
+                  <p className="text-[13px] text-muted-foreground uppercase tracking-widest mb-1">{goalMeta[selectedType!]?.label || selectedType}</p>
                   <h3 className="text-lg font-bold text-foreground mb-1">{selectedCategory.label}</h3>
-                  <p className="text-[12px] text-muted-foreground mb-6">Max price set: {formatNaira(selectedCategory.max_price)}</p>
+                  <p className="text-[13px] text-muted-foreground mb-6">Max price set: {formatNaira(selectedCategory.max_price)}</p>
                   <p className="text-[13px] text-muted-foreground">Your Claimable Amount</p>
                   <p className="font-display text-2xl font-bold gradient-text mb-1">{formatNaira(claimableAmount)}</p>
-                  <p className="text-[12px] text-muted-foreground mb-4">
+                  <p className="text-[13px] text-muted-foreground mb-4">
                     {totalAnnualSpend >= selectedCategory.max_price ? "You qualify for the full amount!" : `Limited to your annual spend of ${formatNaira(totalAnnualSpend)}`}
                   </p>
                   <div className="w-full h-2 bg-muted rounded-full overflow-hidden mb-2">
                     <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 0.8, ease: "easeOut" }} />
                   </div>
-                  <p className="text-[12px] text-muted-foreground">{formatNaira(claimableAmount)} / {formatNaira(selectedCategory.max_price)} ({progress.toFixed(1)}%)</p>
+                  <p className="text-[13px] text-muted-foreground">{formatNaira(claimableAmount)} / {formatNaira(selectedCategory.max_price)} ({progress.toFixed(1)}%)</p>
                   <GlassButton variant="primary" className="w-full mt-6 text-sm py-3.5" onClick={() => onSelect(selectedCategory.subcategory ? `${selectedType}:${selectedCategory.subcategory}` : selectedType!, claimableAmount)}>
                     Claim Now
                   </GlassButton>

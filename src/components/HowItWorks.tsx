@@ -118,7 +118,7 @@ const CyclingPointValue = () => {
         className="text-lg font-bold text-primary glow-text"
       >
         {sym}{code === "NGN" ? "0.50" : pointVal.toFixed(4)}
-        <span className="text-[12px] font-medium text-primary/60">/pt</span>
+        <span className="text-[13px] font-medium text-primary/60">/pt</span>
       </motion.span>
     </AnimatePresence>
   );
@@ -281,7 +281,7 @@ const StepCard = ({ step, index, side }: { step: StepData; index: number; side: 
     >
       <div className="flex flex-col items-center gap-2 flex-shrink-0">
         <FloatingIcon Icon={step.icon} index={index} />
-        <span className="text-[12px] font-bold text-primary/50 tracking-widest">0{index + 1}</span>
+        <span className="text-[13px] font-bold text-primary/50 tracking-widest">0{index + 1}</span>
       </div>
 
       <div className="flex-1 min-w-0">
@@ -311,7 +311,7 @@ const StepCard = ({ step, index, side }: { step: StepData; index: number; side: 
             className="overflow-hidden"
           >
             <div className="pt-3 mt-3 border-t border-border/50">
-              <p className="text-[12px] text-primary/80 leading-relaxed font-medium">💡 {step.detail}</p>
+              <p className="text-[13px] text-primary/80 leading-relaxed font-medium">💡 {step.detail}</p>
             </div>
           </motion.div>
         </div>
@@ -336,7 +336,7 @@ const SectionHeader = ({ badge, title, subtitle, delay = 0 }: { badge: string; t
       viewport={{ once: true }}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-      <span className="text-[12px] font-semibold text-muted-foreground tracking-[0.15em] uppercase">{badge}</span>
+      <span className="text-[13px] font-semibold text-muted-foreground tracking-[0.15em] uppercase">{badge}</span>
     </motion.span>
     <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground mb-3">{title}</h2>
     <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">{subtitle}</p>
@@ -363,9 +363,9 @@ const StatsBar = () => {
         whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
       >
         <p className="text-lg font-bold text-primary glow-text">
-          50<span className="text-[12px] font-medium text-primary/60"> spots</span>
+          50<span className="text-[13px] font-medium text-primary/60"> spots</span>
         </p>
-        <p className="text-[12px] text-muted-foreground mt-1">Queue advances daily</p>
+        <p className="text-[13px] text-muted-foreground mt-1">Queue advances daily</p>
       </motion.div>
 
       {/* Stat 2: Referral queue skip */}
@@ -378,9 +378,9 @@ const StatsBar = () => {
         whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
       >
         <p className="text-lg font-bold text-primary glow-text">
-          +20<span className="text-[12px] font-medium text-primary/60"> spots</span>
+          +20<span className="text-[13px] font-medium text-primary/60"> spots</span>
         </p>
-        <p className="text-[12px] text-muted-foreground mt-1">Jump per friend invited</p>
+        <p className="text-[13px] text-muted-foreground mt-1">Jump per friend invited</p>
       </motion.div>
 
       {/* Stat 3: Point value — cycles through currencies */}
@@ -393,7 +393,7 @@ const StatsBar = () => {
         whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
       >
         <CyclingPointValue />
-        <p className="text-[12px] text-muted-foreground mt-1">Point value</p>
+        <p className="text-[13px] text-muted-foreground mt-1">Point value</p>
       </motion.div>
 
       {/* Stat 4: Influencer earnings — cycles through currencies */}
@@ -408,7 +408,7 @@ const StatsBar = () => {
         <p className="text-lg font-bold text-primary glow-text">
           <CyclingAmount naira={500} />
         </p>
-        <p className="text-[12px] text-muted-foreground mt-1">Influencer per referral</p>
+        <p className="text-[13px] text-muted-foreground mt-1">Influencer per referral</p>
       </motion.div>
     </motion.div>
   );
@@ -545,7 +545,7 @@ const HowItWorks = () => {
             transition={{ duration: 3, repeat: Infinity }}
           >
             <TrendingUp className="w-4 h-4 text-primary" />
-            <span className="text-[12px] font-bold text-primary tracking-wider">EARN MORE</span>
+            <span className="text-[13px] font-bold text-primary tracking-wider">EARN MORE</span>
           </motion.div>
           <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         </motion.div>

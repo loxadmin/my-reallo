@@ -170,24 +170,24 @@ const Vouchers = () => {
         <div className="w-full max-w-md space-y-4">
           <GlassCard variant="glow" className="text-center">
             <Wallet className="w-7 h-7 text-primary mx-auto mb-2" />
-            <p className="text-[12px] text-muted-foreground uppercase tracking-[0.2em]">
+            <p className="text-[13px] text-muted-foreground uppercase tracking-[0.2em]">
               {showTotal ? "Total" : walletLabel} Wallet
             </p>
             <motion.p key={pointsBalance} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="font-display text-3xl font-bold gradient-text">
               {pointsBalance.toLocaleString()}
             </motion.p>
-            <p className="text-[12px] text-muted-foreground mt-1">points</p>
+            <p className="text-[13px] text-muted-foreground mt-1">points</p>
             <div className="flex items-center justify-center gap-6 mt-3">
               <div>
-                <p className="text-[12px] text-muted-foreground">Claimable</p>
+                <p className="text-[13px] text-muted-foreground">Claimable</p>
                 <p className="text-sm font-semibold text-primary">{formatNaira(claimableAmount)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-muted-foreground">Already Claimed</p>
+                <p className="text-[13px] text-muted-foreground">Already Claimed</p>
                 <p className="text-sm font-semibold text-foreground">{formatNaira(claimedTotal)}</p>
               </div>
             </div>
-            <p className="text-[12px] text-muted-foreground mt-2">
+            <p className="text-[13px] text-muted-foreground mt-2">
               Wallet spend cap: {formatNaira(walletSpend)}
             </p>
           </GlassCard>
@@ -204,12 +204,12 @@ const Vouchers = () => {
               <h3 className="font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
                 <Gift className="w-4 h-4 text-primary" /> Create Voucher
               </h3>
-              <p className="text-[12px] text-muted-foreground mb-3">Minimum 100,000 points (₦50,000). Max claimable: {formatNaira(claimableAmount)}.</p>
+              <p className="text-[13px] text-muted-foreground mb-3">Minimum 100,000 points (₦50,000). Max claimable: {formatNaira(claimableAmount)}.</p>
               <input type="number" value={pointsToUse} onChange={(e) => setPointsToUse(e.target.value)} placeholder="Points to use (min 100,000)" max={Math.min(pointsBalance, claimableAmount * 2)} className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-sm mb-2" />
               {Number(pointsToUse) > 0 && (
                 <p className="text-sm text-primary font-semibold mb-3">
                   Voucher value: {formatNaira(nairaValue)}
-                  {nairaValue > claimableAmount && <span className="text-destructive text-[12px] ml-2">(exceeds claimable)</span>}
+                  {nairaValue > claimableAmount && <span className="text-destructive text-[13px] ml-2">(exceeds claimable)</span>}
                 </p>
               )}
               <GlassButton variant="primary" onClick={handleCreate} className="w-full text-sm" disabled={creating || !canCreate()}>
@@ -227,15 +227,15 @@ const Vouchers = () => {
                     <div className="relative overflow-hidden rounded-xl p-4 mb-2" style={{ background: "linear-gradient(135deg, hsl(160 60% 18% / 0.15), hsl(160 50% 25% / 0.1))", border: "1px solid hsl(160 60% 18% / 0.15)" }}>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-[12px] text-muted-foreground uppercase tracking-widest">Reallo Voucher</p>
+                          <p className="text-[13px] text-muted-foreground uppercase tracking-widest">Reallo Voucher</p>
                           <p className="font-display text-xl font-bold gradient-text">{formatNaira(v.amount_naira)}</p>
                         </div>
                         <Gift className="w-7 h-7 text-primary/20" />
                       </div>
-                      <p className="font-mono text-[12px] text-primary mt-2 tracking-widest">{v.voucher_code}</p>
+                      <p className="font-mono text-[13px] text-primary mt-2 tracking-widest">{v.voucher_code}</p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-[12px] text-muted-foreground">{new Date(v.created_at).toLocaleDateString()} • {v.points_used.toLocaleString()} pts</p>
+                      <p className="text-[13px] text-muted-foreground">{new Date(v.created_at).toLocaleDateString()} • {v.points_used.toLocaleString()} pts</p>
                       <button onClick={() => handleCopy(v.voucher_code, v.id)} className="text-primary">
                         {copiedId === v.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                       </button>

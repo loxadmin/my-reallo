@@ -190,22 +190,22 @@ const SpendCalculator = ({ onComplete }: SpendCalculatorProps) => {
                 <div className="grid grid-cols-2 gap-3 mb-8">
                   <div className="glass rounded-xl p-3">
                     <Wifi className="w-4 h-4 text-primary mx-auto mb-1" />
-                    <p className="text-[12px] text-muted-foreground">Data</p>
+                    <p className="text-[13px] text-muted-foreground">Data</p>
                     <p className="text-[13px] font-semibold text-foreground">{formatCurrency(annualData)}</p>
                   </div>
                   <div className="glass rounded-xl p-3">
                     <Zap className="w-4 h-4 text-primary mx-auto mb-1" />
-                    <p className="text-[12px] text-muted-foreground">Electricity</p>
+                    <p className="text-[13px] text-muted-foreground">Electricity</p>
                     <p className="text-[13px] font-semibold text-foreground">{formatCurrency(annualElectricity)}</p>
                   </div>
                   <div className="glass rounded-xl p-3">
                     <UtensilsCrossed className="w-4 h-4 text-primary mx-auto mb-1" />
-                    <p className="text-[12px] text-muted-foreground">Food</p>
+                    <p className="text-[13px] text-muted-foreground">Food</p>
                     <p className="text-[13px] font-semibold text-foreground">{formatCurrency(annualFood)}</p>
                   </div>
                   <div className="glass rounded-xl p-3">
                     <Car className="w-4 h-4 text-primary mx-auto mb-1" />
-                    <p className="text-[12px] text-muted-foreground">Transport</p>
+                    <p className="text-[13px] text-muted-foreground">Transport</p>
                     <p className="text-[13px] font-semibold text-foreground">{formatCurrency(annualTransport)}</p>
                   </div>
                 </div>

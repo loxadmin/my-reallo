@@ -584,7 +584,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
           <GlassCard variant="glow" className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-foreground text-sm">Switch Offer</h3>
-              <p className="text-[12px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
+              <p className="text-[13px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
             </div>
             <div className="flex items-center gap-3">
               {app.app_logo_url ? (
@@ -594,19 +594,19 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                   {app.app_name.charAt(0)}
                 </div>
               )}
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Would you switch from <span className="font-semibold text-foreground">{app.app_name}</span> to an alternative?
               </p>
             </div>
             <div className="flex gap-3">
-              <GlassButton variant="primary" onClick={() => handleSwitchYes(app)} className="flex-1 text-[13px]">
+              <GlassButton variant="primary" onClick={() => handleSwitchYes(app)} className="flex-1 text-sm">
                 Yes (+{app.points_switch_intent} pts)
               </GlassButton>
-              <GlassButton variant="outline" onClick={() => handleSwitchNo(app)} className="flex-1 text-[13px]">
+              <GlassButton variant="outline" onClick={() => handleSwitchNo(app)} className="flex-1 text-sm">
                 No, thanks
               </GlassButton>
             </div>
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               After 30 days, complete switch for +{app.points_switch_complete} extra points
             </p>
           </GlassCard>
@@ -618,7 +618,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
           <GlassCard variant="glow" className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-foreground text-sm">Try This App</h3>
-              <p className="text-[12px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
+              <p className="text-[13px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
             </div>
             <div className="flex items-center gap-3">
               {app.app_logo_url ? (
@@ -628,17 +628,17 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                   {app.app_name.charAt(0)}
                 </div>
               )}
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {app.referral_message || `Would you like to try ${app.app_name}?`}
               </p>
             </div>
-            <GlassButton variant="primary" onClick={() => handleReferralClick(app)} className="w-full text-[13px]">
+            <GlassButton variant="primary" onClick={() => handleReferralClick(app)} className="w-full text-sm">
               <ExternalLink className="inline w-3 h-3 mr-1" /> Try It Out (+{app.referral_points} pts after approval)
             </GlassButton>
-            <GlassButton variant="outline" onClick={() => handleReferralDismiss(app)} className="w-full text-[13px]">
+            <GlassButton variant="outline" onClick={() => handleReferralDismiss(app)} className="w-full text-sm">
               No, thanks
             </GlassButton>
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               Submit a screenshot after completing the action. Admin will approve for points.
             </p>
           </GlassCard>
@@ -659,18 +659,18 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
             <GlassCard variant="glow" className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-foreground text-sm">Switch Offer</h3>
-                <p className="text-[12px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
+                <p className="text-[13px] text-muted-foreground">{pendingInteractions.length + 1} remaining</p>
               </div>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Since you use <span className="font-semibold text-foreground">{app.app_name}</span>, would you like to try <span className="font-semibold text-foreground">{switchApp.app_name}</span>?
               </p>
               {switchApp.referral_message && (
-                <p className="text-[12px] text-muted-foreground">{switchApp.referral_message}</p>
+                <p className="text-[13px] text-muted-foreground">{switchApp.referral_message}</p>
               )}
-              <GlassButton variant="primary" onClick={() => handleRobustSwitchOffer(app, switchApp)} className="w-full text-[13px]">
+              <GlassButton variant="primary" onClick={() => handleRobustSwitchOffer(app, switchApp)} className="w-full text-sm">
                 <ExternalLink className="inline w-3 h-3 mr-1" /> Try {switchApp.app_name} (+{switchApp.referral_points} pts after approval)
               </GlassButton>
-              <GlassButton variant="outline" onClick={() => { handleSwitchNo(app); }} className="w-full text-[13px]">
+              <GlassButton variant="outline" onClick={() => { handleSwitchNo(app); }} className="w-full text-sm">
                 No, thanks
               </GlassButton>
             </GlassCard>
@@ -746,7 +746,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-foreground leading-tight">{app.app_name}</p>
                         {resp.points_awarded > 0 && (
-                          <p className="text-[12px] text-primary font-semibold mt-0.5">+{resp.points_awarded} pts earned</p>
+                          <p className="text-[13px] text-primary font-semibold mt-0.5">+{resp.points_awarded} pts earned</p>
                         )}
                       </div>
                     </div>
@@ -771,7 +771,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                             <ExternalLink className="inline w-3 h-3 mr-1" /> Switch Now (+{app.points_switch_complete} pts)
                           </GlassButton>
                         ) : (
-                          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+                          <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
                             <Clock className="w-3 h-3" />
                             <span>Switch available in {daysUntilSwitch} days</span>
                           </div>
@@ -780,7 +780,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                     )}
 
                     {(app.category === "yes_no" || app.category === "robust") && resp.switch_completed && (
-                      <p className="text-[12px] text-primary mt-2">✓ Switched</p>
+                      <p className="text-[13px] text-primary mt-2">✓ Switched</p>
                     )}
 
                     {/* Referral: offer to try */}
@@ -812,11 +812,11 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                     )}
 
                     {app.category === "referral" && resp.referral_screenshot_url && !resp.referral_approved && (
-                      <p className="text-[12px] text-muted-foreground mt-2">📋 Screenshot pending admin review</p>
+                      <p className="text-[13px] text-muted-foreground mt-2">📋 Screenshot pending admin review</p>
                     )}
 
                     {app.category === "referral" && resp.referral_approved && (
-                      <p className="text-[12px] text-primary mt-2">✓ Approved — {app.referral_points} pts awarded</p>
+                      <p className="text-[13px] text-primary mt-2">✓ Approved — {app.referral_points} pts awarded</p>
                     )}
                   </GlassCard>
                 );
@@ -863,7 +863,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
               {app.app_logo_url ? (
                 <img src={app.app_logo_url} alt={app.app_name} className="w-8 h-8 rounded-lg object-cover" />
               ) : (
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[12px] font-semibold text-primary">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[13px] font-semibold text-primary">
                   {app.app_name.charAt(0)}
                 </div>
               )}
@@ -871,7 +871,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
               <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
                 selectedApps.has(app.id) ? "bg-primary border-primary" : "border-muted-foreground/30"
               }`}>
-                {selectedApps.has(app.id) && <span className="text-primary-foreground text-[12px]">✓</span>}
+                {selectedApps.has(app.id) && <span className="text-primary-foreground text-[13px]">✓</span>}
               </div>
             </button>
           ))}
@@ -909,7 +909,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
               {surveyStep === "quiz" && question && (
                 <motion.div key={question.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-[13px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
                       Question {currentQuestionIndex + 1} of {activeSurvey.survey_questions.length}
                     </span>
                   </div>
@@ -954,7 +954,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                   </div>
 
                   <div className="pt-4 space-y-3">
-                    <p className="text-[12px] text-muted-foreground">
+                    <p className="text-[13px] text-muted-foreground">
                       Upload a screenshot as proof of completion
                     </p>
                     <GlassButton
@@ -1013,9 +1013,9 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <h4 className="text-sm font-bold text-foreground truncate leading-tight">{survey.title}</h4>
-                    <p className="text-[12px] text-primary font-bold shrink-0">+{survey.points_reward} pts</p>
+                    <p className="text-[13px] text-primary font-bold shrink-0">+{survey.points_reward} pts</p>
                   </div>
-                  <p className="text-[12px] text-muted-foreground line-clamp-1 mt-0.5">{survey.description}</p>
+                  <p className="text-[13px] text-muted-foreground line-clamp-1 mt-0.5">{survey.description}</p>
                 </div>
               </div>
 
@@ -1029,7 +1029,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
 
               {isInProgress && (
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center gap-2 text-[12px] text-accent-foreground bg-accent/10 p-2 rounded-lg border border-accent/20">
+                  <div className="flex items-center gap-2 text-[13px] text-accent bg-accent/10 p-2 rounded-lg border border-accent/20">
                     <Clock className="w-3.5 h-3.5" />
                     <span>Quiz passed. {timeLeft} to upload proof.</span>
                   </div>
@@ -1041,7 +1041,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
 
               {isExpiredRestartable && (
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center gap-2 text-[12px] text-destructive bg-destructive/10 p-2 rounded-lg border border-destructive/20">
+                  <div className="flex items-center gap-2 text-[13px] text-destructive bg-destructive/10 p-2 rounded-lg border border-destructive/20">
                     <Clock className="w-3.5 h-3.5" />
                     <span>Your 20-day window expired. You can restart this survey.</span>
                   </div>
@@ -1056,14 +1056,14 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
               )}
 
               {isPending && (
-                <div className="mt-3 flex items-center gap-2 text-[12px] text-accent-foreground bg-accent/10 p-2 rounded-lg border border-accent/20">
+                <div className="mt-3 flex items-center gap-2 text-[13px] text-accent bg-accent/10 p-2 rounded-lg border border-accent/20">
                   <AlertCircle className="w-3.5 h-3.5" />
                   <span>Proof submitted. Pending review.</span>
                 </div>
               )}
 
               {isApproved && (
-                <div className="mt-3 flex items-center gap-2 text-[12px] text-primary bg-primary/10 p-2 rounded-lg border border-primary/20">
+                <div className="mt-3 flex items-center gap-2 text-[13px] text-primary bg-primary/10 p-2 rounded-lg border border-primary/20">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Completed. {survey.points_reward} pts awarded!</span>
                 </div>
@@ -1071,7 +1071,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
 
               {isRejected && (
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center gap-2 text-[12px] text-destructive bg-destructive/10 p-2 rounded-lg border border-destructive/20">
+                  <div className="flex items-center gap-2 text-[13px] text-destructive bg-destructive/10 p-2 rounded-lg border border-destructive/20">
                     <X className="w-3.5 h-3.5" />
                     <span>Proof rejected. {timeLeft} to upload again.</span>
                   </div>

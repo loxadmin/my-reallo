@@ -233,7 +233,7 @@ const Auth = () => {
                     autoComplete="email"
                   />
                   {fieldErrors.email && (
-                    <p className="text-[12px] text-destructive mt-1">{fieldErrors.email}</p>
+                    <p className="text-[13px] text-destructive mt-1 font-medium">{fieldErrors.email}</p>
                   )}
                 </div>
 
@@ -257,7 +257,7 @@ const Auth = () => {
                     </button>
                   </div>
                   {fieldErrors.password && (
-                    <p className="text-[12px] text-destructive mt-1">{fieldErrors.password}</p>
+                    <p className="text-[13px] text-destructive mt-1 font-medium">{fieldErrors.password}</p>
                   )}
                   {mode === "signup" && password.length > 0 && passwordStrength && (
                     <div className="mt-2 space-y-1">
@@ -275,8 +275,8 @@ const Auth = () => {
                           />
                         ))}
                       </div>
-                      <p className="text-[12px] text-muted-foreground">
-                        Strength: <span style={{ color: passwordStrength.color }}>{passwordStrength.label}</span>
+                      <p className="text-[13px] text-muted-foreground">
+                        Strength: <span style={{ color: passwordStrength.color }} className="font-semibold">{passwordStrength.label}</span>
                       </p>
                     </div>
                   )}
@@ -286,8 +286,8 @@ const Auth = () => {
                   <div className="overflow-hidden">
                     <div className="pt-1">
                       <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
-                      <p className="text-[12px] text-primary/60 mt-1 flex items-center gap-1">
-                        <Gift className="w-3 h-3" /> You and your referrer both benefit
+                      <p className="text-[13px] text-primary/70 mt-1 flex items-center gap-1 font-medium">
+                        <Gift className="w-3.5 h-3.5" /> You and your referrer both benefit
                       </p>
                     </div>
                   </div>
@@ -303,12 +303,12 @@ const Auth = () => {
                   {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
                 </GlassButton>
 
-                <div className="relative my-5">
+                <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border/40" />
+                    <div className="w-full border-t border-border/60" />
                   </div>
-                  <div className="relative flex justify-center text-[12px]">
-                    <span className="bg-card px-3 text-muted-foreground">or continue with</span>
+                  <div className="relative flex justify-center text-[13px] font-medium">
+                    <span className="bg-card px-3 text-muted-foreground tracking-tight">or continue with</span>
                   </div>
                 </div>
 

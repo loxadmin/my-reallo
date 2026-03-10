@@ -47,11 +47,11 @@ const NotificationsPanel = () => {
             <Bell className="w-4 h-4 text-primary" />
             <h3 className="font-semibold text-foreground text-sm">Notifications</h3>
             {unreadCount > 0 && (
-              <span className="text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{unreadCount} new</span>
+              <span className="text-[13px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{unreadCount} new</span>
             )}
           </div>
           {unreadCount > 0 && (
-            <GlassButton variant="outline" onClick={markAllRead} className="text-[12px] px-2 py-1">
+            <GlassButton variant="outline" onClick={markAllRead} className="text-[13px] px-2 py-1">
               <Check className="w-3 h-3 mr-1" /> Mark all read
             </GlassButton>
           )}
@@ -80,8 +80,8 @@ const NotificationsPanel = () => {
                         <p className="text-[13px] font-semibold text-foreground">{n.title}</p>
                         {!n.is_read && <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
                       </div>
-                      <p className="text-[12px] text-muted-foreground mt-0.5">{n.message}</p>
-                      <p className="text-[12px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString()}</p>
+                      <p className="text-[13px] text-muted-foreground mt-0.5">{n.message}</p>
+                      <p className="text-[13px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
