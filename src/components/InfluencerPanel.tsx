@@ -535,18 +535,18 @@ const InfluencerPanel = () => {
     const totalEarned = referralEarnings + challengeEarnings + surveyEarnings;
 
     return (
-      <div className="space-y-5">
+      <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Wallet Card */}
           <GlassCard variant="glow" className="p-5 flex flex-col h-full">
-            <div className="flex items-center gap-2 mb-2.5">
+            <div className="flex items-center gap-2 mb-3">
               <Wallet className="w-5 h-5 text-primary" />
               <h3 className="font-semibold text-foreground text-[15px]">Influencer Wallet</h3>
             </div>
             <div className="text-center py-3 flex-grow flex flex-col justify-center">
-              <p className="text-muted-foreground uppercase tracking-[0.2em] text-[11px] font-semibold">Balance</p>
+              <p className="text-muted-foreground uppercase tracking-[0.25em] text-[12px] font-semibold">Balance</p>
               <h2 className="font-display text-2xl font-bold gradient-text tabular-nums my-1">{formatNaira(wallet.balance)}</h2>
-              <p className="text-muted-foreground text-[12px] font-medium">Total earned {formatNaira(totalEarned)}</p>
+              <p className="text-muted-foreground text-[13px] font-medium">Total earned: {formatNaira(totalEarned)}</p>
             </div>
             <div className="space-y-3 mt-4">
               <div>
@@ -568,7 +568,7 @@ const InfluencerPanel = () => {
 
           {/* Survey Highlight Card */}
           <GlassCard variant="glow" className="p-5 flex flex-col h-full">
-            <div className="flex items-center gap-2 mb-2.5">
+            <div className="flex items-center gap-2 mb-3">
               <Star className="w-5 h-5 text-primary" />
               <h3 className="font-semibold text-foreground text-[15px]">Influencer Surveys</h3>
             </div>
@@ -579,7 +579,7 @@ const InfluencerPanel = () => {
         </div>
 
         <GlassCard className="p-5">
-          <div className="flex gap-2 mb-5">
+          <div className="flex gap-2 mb-6">
             <button onClick={() => setTab("overview")} className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all ${tab === "overview" ? "bg-primary/10 text-primary" : "glass-button text-muted-foreground"}`}>
               Overview
             </button>
@@ -679,6 +679,7 @@ const InfluencerPanel = () => {
 
           {tab === "challenges" && (
             <div className="space-y-4">
+              {/* Sub-tabs */}
               <div className="flex gap-1 bg-muted/30 rounded-lg p-1">
                 {(["new", "ongoing", "past"] as const).map(st => (
                   <button key={st} onClick={() => setChallengeSubTab(st)}
@@ -716,7 +717,7 @@ const InfluencerPanel = () => {
                   );
                 }
 
-                  return currentList.map(ch => {
+                return currentList.map(ch => {
                   const enrollment = enrollments.find(e => e.challenge_id === ch.id);
                   const mySubs = submissions.filter(s => s.challenge_id === ch.id);
                   const approvedCount = mySubs.filter(s => s.status === "approved").length;
@@ -733,8 +734,8 @@ const InfluencerPanel = () => {
                   const nextPostDate = !canPostNow ? new Date(nextAllowedTime) : null;
 
                   return (
-                    <div key={ch.id} className="glass rounded-xl p-4 space-y-3">
-                      <div className="flex items-start justify-between gap-3">
+                    <div key={ch.id} className="glass rounded-xl p-4">
+                      <div className="flex items-start justify-between mb-2">
                         <div>
                           <h4 className="font-semibold text-foreground text-sm">{ch.title}</h4>
                           <div className="flex items-center gap-2 mt-1">
@@ -744,16 +745,17 @@ const InfluencerPanel = () => {
                         </div>
                         {isComplete && <span className="text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">Completed ✓</span>}
                       </div>
-                      <p className="text-[12px] text-muted-foreground">{ch.description}</p>
+                      <p className="text-[12px] text-muted-foreground mb-2">{ch.description}</p>
 
                       {ch.instructions && (
-                        <div className="glass rounded-lg p-3">
-                          <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-semibold mb-1.5">Instructions</p>
-                          <p className="text-[12px] text-foreground whitespace-pre-wrap leading-relaxed">{ch.instructions}</p>
+                        <div className="glass rounded-lg p-3 mb-3">
+                          <p className="text-[12px] text-muted-foreground font-semibold mb-1">Instructions</p>
+                          <p className="text-[12px] text-foreground whitespace-pre-wrap">{ch.instructions}</p>
                         </div>
                       )}
 
-                      <div>
+                      {/* Progress bar */}
+                      <div className="mb-3">
                         <div className="flex justify-between text-[12px] text-muted-foreground mb-1">
                           <span>{approvedCount}/{ch.total_videos} approved</span>
                           <span>{isComplete ? formatNaira(enrollment?.approved_earnings || 0) + " earned" : formatNaira(enrollment?.pending_earnings || 0) + " pending"}</span>
@@ -761,7 +763,7 @@ const InfluencerPanel = () => {
                         <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
                           <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(approvedCount / ch.total_videos) * 100}%` }} />
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-1.5">
+                        <p className="text-[12px] text-muted-foreground mt-1">
                           Total possible: {formatNaira(totalPossibleEarnings)}
                           {ch.challenge_type === "set" && !isComplete && ` • ${ch.total_videos - mySubs.length} videos remaining`}
                         </p>
@@ -783,14 +785,14 @@ const InfluencerPanel = () => {
 
                       {/* Submit (ongoing only) */}
                       {enrollment && !isComplete && canSubmitNext && (
-                        <div className="space-y-2.5">
+                        <div className="space-y-2">
                           {!canPostNow && nextPostDate && (
-                            <p className="text-[11px] text-primary text-center">Next video can be submitted after {nextPostDate.toLocaleString()}</p>
+                            <p className="text-[12px] text-primary text-center">Next video can be submitted after {nextPostDate.toLocaleString()}</p>
                           )}
                           {canPostNow && (
                             <>
                               <div>
-                                <label className="text-[11px] text-muted-foreground mb-1 block uppercase tracking-[0.12em]">Video #{nextVideoNumber} Link</label>
+                                <label className="text-[12px] text-muted-foreground mb-1 block">Video #{nextVideoNumber} Link (social media post URL)</label>
                                 <input
                                   value={videoLinks[ch.id] || ""}
                                   onChange={e => setVideoLinks(p => ({ ...p, [ch.id]: e.target.value }))}
@@ -825,9 +827,9 @@ const InfluencerPanel = () => {
 
                       {/* Submission history */}
                       {mySubs.length > 0 && (
-                        <div className="pt-1">
-                          <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-semibold mb-2">Your Submissions</p>
-                          <div className="space-y-1.5 max-h-[150px] overflow-y-auto">
+                        <div className="mt-3">
+                          <p className="text-[12px] text-muted-foreground font-semibold mb-1">Your Submissions</p>
+                          <div className="space-y-1 max-h-[150px] overflow-y-auto">
                             {mySubs.map(s => (
                               <div key={s.id} className="flex items-center justify-between glass rounded-lg p-2">
                                 <div className="flex items-center gap-2">
