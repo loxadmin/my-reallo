@@ -31,7 +31,7 @@ export function generateDeviceFingerprint(): string {
     if (ctx) {
       ctx.textBaseline = "top";
       ctx.font = "14px Arial";
-      ctx.fillText("Reallo🔒", 2, 2);
+      ctx.fillText("Karbali🔒", 2, 2);
       components.push(canvas.toDataURL().slice(-50));
     }
   } catch {
@@ -51,7 +51,7 @@ export function generateDeviceFingerprint(): string {
 
 // Get or create a persistent device ID
 export function getDeviceFingerprint(): string {
-  const KEY = "reallo-device-fp";
+  const KEY = "karbali-device-fp";
   let fp = localStorage.getItem(KEY);
   if (!fp) {
     fp = generateDeviceFingerprint();

@@ -198,7 +198,7 @@ const AdvertiserOnboard = () => {
         <div className="glass-card rounded-2xl p-8 max-w-md text-center relative z-10">
           <Shield className="w-12 h-12 text-destructive mx-auto mb-4" />
           <h2 className="text-xl font-bold text-foreground mb-2">Invalid or Expired Link</h2>
-          <p className="text-muted-foreground text-sm">This onboarding link is no longer valid. Please contact REALLO for a new link.</p>
+          <p className="text-muted-foreground text-sm">This onboarding link is no longer valid. Please contact KARBALI for a new link.</p>
         </div>
       </div>
     );
@@ -234,10 +234,10 @@ const AdvertiserOnboard = () => {
       <div className="relative z-10 max-w-2xl mx-auto px-4 pt-12">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold gradient-text mb-2" style={{ fontSize: "28px" }}>REALLO</h1>
+          <h1 className="text-3xl font-bold gradient-text mb-2" style={{ fontSize: "28px" }}>KARBALI</h1>
           <h2 className="text-lg font-semibold text-foreground" style={{ fontSize: "16px" }}>Advertiser Partnership — Letter of Intent</h2>
           <p className="text-muted-foreground text-sm mt-1">
-            Complete this form to express your intent to partner with REALLO. Minimum commitment: <strong>$50,000</strong>.
+            Complete this form to express your intent to partner with KARBALI. Minimum commitment: <strong>$50,000</strong>.
           </p>
         </div>
 
@@ -366,7 +366,7 @@ const AdvertiserOnboard = () => {
           </div>
 
           <p className="text-[10px] text-muted-foreground text-center">
-            By submitting, you agree that this is a non-binding Letter of Intent for a minimum $50,000 advertising commitment once REALLO reaches 100,000 users.
+            By submitting, you agree that this is a non-binding Letter of Intent for a minimum $50,000 advertising commitment once KARBALI reaches 100,000 users.
           </p>
         </div>
       </div>

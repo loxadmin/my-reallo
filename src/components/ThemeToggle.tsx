@@ -10,7 +10,7 @@ const ThemeToggle = () => {
     document.documentElement.classList.toggle("dark");
     const nowDark = document.documentElement.classList.contains("dark");
     setIsDark(nowDark);
-    localStorage.setItem("reallo-theme", nowDark ? "dark" : "light");
+    localStorage.setItem("karbali-theme", nowDark ? "dark" : "light");
   };
 
   return (

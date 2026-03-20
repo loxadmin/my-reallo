@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import RealloLogo from "./RealloLogo";
+import KarbaliLogo from "./KarbaliLogo";
 
 const Footer = () => {
   const [content, setContent] = useState({
@@ -31,7 +31,7 @@ const Footer = () => {
           {content.about_us && (
             <div>
               <h4 className="text-[13px] font-semibold text-foreground mb-2">About Us</h4>
-              <p className="text-[12px] text-muted-foreground leading-relaxed whitespace-pre-line"><RealloLogo size={12} className="inline-block align-middle mr-0.5" /> {content.about_us}</p>
+              <p className="text-[12px] text-muted-foreground leading-relaxed whitespace-pre-line"><KarbaliLogo size={12} className="inline-block align-middle mr-0.5" /> {content.about_us}</p>
             </div>
           )}
           {content.contact_us && (
@@ -48,7 +48,7 @@ const Footer = () => {
           )}
         </div>
         <div className="mt-8 pt-4 border-t border-border/20 text-center">
-          <p className="text-[10px] text-muted-foreground">© {new Date().getFullYear()} Reallo. All rights reserved.</p>
+          <p className="text-[10px] text-muted-foreground">© {new Date().getFullYear()} Karbali. All rights reserved.</p>
         </div>
       </div>
     </footer>

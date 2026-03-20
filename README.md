@@ -1,10 +1,10 @@
-# Reallo
+# Karbali
 
 Reclaim What's Yours.
 
 ## Overview
 
-Reallo helps you calculate your annual utility spend and claim it back toward your life goals.
+Karbali helps you calculate your annual utility spend and claim it back toward your life goals.
 
 ## Features
 

@@ -157,7 +157,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
 
   const handleShare = async () => {
     if (navigator.share) {
-      await navigator.share({ title: "Join Reallo", text: "Reclaim your utility spend!", url: referralLink });
+      await navigator.share({ title: "Join Karbali", text: "Reclaim your utility spend!", url: referralLink });
     } else {
       handleCopy();
     }
