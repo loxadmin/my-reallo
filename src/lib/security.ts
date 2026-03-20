@@ -86,7 +86,7 @@ export function getPasswordStrength(password: string): {
 }
 
 // ─── 48-hour inactivity management ───
-const INACTIVITY_KEY = "reallo-last-activity";
+const INACTIVITY_KEY = "karbali-last-activity";
 const MAX_INACTIVITY_MS = 48 * 60 * 60 * 1000; // 48 hours
 
 export function updateLastActivity(): void {

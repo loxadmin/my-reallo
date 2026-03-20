@@ -55,10 +55,10 @@ $function$;
 
 -- Add footer settings
 INSERT INTO public.admin_settings (key, value) VALUES 
-  ('footer_contact_us', 'Contact us at support@reallo.com'),
-  ('footer_about_us', 'Reallo helps you reclaim your utility spend toward life goals.'),
-  ('footer_invest_with_us', 'Interested in investing? Reach out to invest@reallo.com')
-ON CONFLICT (key) DO NOTHING;
+  ('footer_contact_us', 'Contact us at support@karbali.com'),
+  ('footer_about_us', 'Karbali helps you reclaim your utility spend toward life goals.'),
+  ('footer_invest_with_us', 'Interested in investing? Reach out to invest@karbali.com')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- Add off_queue_at column to profiles to track when user got off queue
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS off_queue_at timestamp with time zone DEFAULT NULL;

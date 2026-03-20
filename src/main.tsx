@@ -3,7 +3,7 @@ import App from "./App.tsx";
 import "./index.css";
 
 // Initialize theme - light is default
-const savedTheme = localStorage.getItem("reallo-theme");
+const savedTheme = localStorage.getItem("karbali-theme");
 if (savedTheme === "dark") {
   document.documentElement.classList.add("dark");
 }

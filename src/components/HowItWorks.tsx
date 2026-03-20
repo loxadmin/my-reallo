@@ -167,7 +167,7 @@ const influencerSteps = [
   {
     icon: Megaphone,
     title: "Apply as an Influencer",
-    desc: "Submit your social media link and get approved. Influencers earn real money by promoting Reallo to their audience.",
+    desc: "Submit your social media link and get approved. Influencers earn real money by promoting Karbali to their audience.",
     detail: "We verify your reach and approve genuine creators who can drive real signups.",
     color: "from-primary/20 to-primary/5",
   },
@@ -181,7 +181,7 @@ const influencerSteps = [
   {
     icon: Video,
     title: "Complete Video Challenges",
-    desc: "Record and post short videos about Reallo using the required hashtag. Each approved video pays a fixed reward.",
+    desc: "Record and post short videos about Karbali using the required hashtag. Each approved video pays a fixed reward.",
     detail: "Post on TikTok, Instagram, or YouTube. We review submissions and pay per approved clip.",
     color: "from-primary/20 to-primary/5",
   },
@@ -504,7 +504,7 @@ const HowItWorks = () => {
           className="text-center mb-6"
         >
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground">
-            How <span className="gradient-text">Reallo</span> Works
+            How <span className="gradient-text">Karbali</span> Works
           </h2>
           <p className="text-[13px] text-muted-foreground mt-3 max-w-md mx-auto">
             Two paths. One ecosystem. Whether you're saving or earning, here's your journey.
@@ -555,7 +555,7 @@ const HowItWorks = () => {
           <FloatingIllustration type="influencer" />
           <SectionHeader
             badge="For Influencers"
-            title="Earn Real Money Promoting Reallo"
+            title="Earn Real Money Promoting Karbali"
             subtitle="Join our influencer program. Share your link, complete video challenges, and withdraw cash directly to your bank account."
           />
           <div className="space-y-4 md:space-y-6">

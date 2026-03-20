@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 
-interface RealloLogoProps {
+interface KarbaliLogoProps {
   size?: number;
   className?: string;
 }
 
-const RealloLogo = ({ size = 32, className = "" }: RealloLogoProps) => {
+const KarbaliLogo = ({ size = 32, className = "" }: KarbaliLogoProps) => {
   return (
     <motion.svg
       width={size}
@@ -54,4 +54,4 @@ const RealloLogo = ({ size = 32, className = "" }: RealloLogoProps) => {
   );
 };
 
-export default RealloLogo;
+export default KarbaliLogo;
