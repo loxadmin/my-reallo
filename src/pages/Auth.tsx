@@ -19,7 +19,7 @@ import {
 import { getDeviceFingerprint } from "@/lib/fingerprint";
 import { supabase } from "@/integrations/supabase/client";
 
-const REFERRAL_STORAGE_KEY = "reallo_pending_referral";
+const REFERRAL_STORAGE_KEY = "karbali_pending_referral";
 
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");

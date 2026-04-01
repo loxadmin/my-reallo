@@ -181,7 +181,7 @@ const influencerSteps = [
   {
     icon: Video,
     title: "Complete Video Challenges",
-    desc: "Record and post short videos about Reallo using the required hashtag. Each approved video pays a fixed reward.",
+    desc: "Record and post short videos about Karbali using the required hashtag. Each approved video pays a fixed reward.",
     detail: "Post on TikTok, Instagram, or YouTube. We review submissions and pay per approved clip.",
     color: "from-primary/20 to-primary/5",
   },
