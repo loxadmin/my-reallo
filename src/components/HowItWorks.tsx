@@ -167,7 +167,7 @@ const influencerSteps = [
   {
     icon: Megaphone,
     title: "Apply as an Influencer",
-    desc: "Submit your social media link and get approved. Influencers earn real money by promoting Reallo to their audience.",
+    desc: "Submit your social media link and get approved. Influencers earn real money by promoting Karbali to their audience.",
     detail: "We verify your reach and approve genuine creators who can drive real signups.",
     color: "from-primary/20 to-primary/5",
   },
