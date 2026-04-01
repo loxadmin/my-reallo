@@ -167,7 +167,7 @@ const influencerSteps = [
   {
     icon: Megaphone,
     title: "Apply as an Influencer",
-    desc: "Submit your social media link and get approved. Influencers earn real money by promoting Reallo to their audience.",
+    desc: "Submit your social media link and get approved. Influencers earn real money by promoting Karbali to their audience.",
     detail: "We verify your reach and approve genuine creators who can drive real signups.",
     color: "from-primary/20 to-primary/5",
   },
@@ -181,7 +181,7 @@ const influencerSteps = [
   {
     icon: Video,
     title: "Complete Video Challenges",
-    desc: "Record and post short videos about Reallo using the required hashtag. Each approved video pays a fixed reward.",
+    desc: "Record and post short videos about Karbali using the required hashtag. Each approved video pays a fixed reward.",
     detail: "Post on TikTok, Instagram, or YouTube. We review submissions and pay per approved clip.",
     color: "from-primary/20 to-primary/5",
   },

@@ -227,7 +227,7 @@ const Vouchers = () => {
                     <div className="relative overflow-hidden rounded-xl p-4 mb-2" style={{ background: "linear-gradient(135deg, hsl(160 60% 18% / 0.15), hsl(160 50% 25% / 0.1))", border: "1px solid hsl(160 60% 18% / 0.15)" }}>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Reallo Voucher</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Karbali Voucher</p>
                           <p className="font-display text-xl font-bold gradient-text">{formatNaira(v.amount_naira)}</p>
                         </div>
                         <Gift className="w-7 h-7 text-primary/20" />

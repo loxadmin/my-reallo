@@ -67,8 +67,8 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
       toast({ title: "Error", description: responsesRes.error.message, variant: "destructive" });
     }
 
-    setSurveys((surveysRes.data || []) as InfluencerSurvey[]);
-    setResponses((responsesRes.data || []) as InfluencerSurveyResponse[]);
+    setSurveys((surveysRes.data || []) as unknown as InfluencerSurvey[]);
+    setResponses((responsesRes.data || []) as unknown as InfluencerSurveyResponse[]);
   };
 
   useEffect(() => {

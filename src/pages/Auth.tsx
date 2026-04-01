@@ -7,7 +7,7 @@ import GlassInput from "@/components/GlassInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { Mail, Lock, UserPlus, LogIn, Gift, Eye, EyeOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import RealloLogo from "@/components/RealloLogo";
+import KarbaliLogo from "@/components/KarbaliLogo";
 import WaterBackground from "@/components/WaterBackground";
 import {
   loginSchema,
@@ -19,7 +19,7 @@ import {
 import { getDeviceFingerprint } from "@/lib/fingerprint";
 import { supabase } from "@/integrations/supabase/client";
 
-const REFERRAL_STORAGE_KEY = "reallo_pending_referral";
+const REFERRAL_STORAGE_KEY = "karbali_pending_referral";
 
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -183,10 +183,10 @@ const Auth = () => {
       >
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <RealloLogo size={28} />
-            <h1 className="font-display text-xl font-bold gradient-text">Reallo</h1>
+            <KarbaliLogo size={28} />
+            <h1 className="font-display text-xl font-bold gradient-text">Karbali</h1>
           </div>
-          <p className="text-[12px] text-muted-foreground">Reclaim what's yours</p>
+          <p className="text-[13px] text-muted-foreground">Your Financial Assistant</p>
         </div>
 
         {signupSuccess ? (
