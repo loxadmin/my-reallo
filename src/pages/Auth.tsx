@@ -7,7 +7,7 @@ import GlassInput from "@/components/GlassInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { Mail, Lock, UserPlus, LogIn, Gift, Eye, EyeOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import RealloLogo from "@/components/RealloLogo";
+import KarbaliLogo from "@/components/KarbaliLogo";
 import WaterBackground from "@/components/WaterBackground";
 import {
   loginSchema,
