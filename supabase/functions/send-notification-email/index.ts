@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "REALLO <noreply@loxservices.pro>",
+        from: "KARBALI <noreply@loxservices.pro>",
         to,
         subject,
         html,

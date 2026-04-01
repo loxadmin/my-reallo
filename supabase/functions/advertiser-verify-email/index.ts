@@ -70,9 +70,9 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "REALLO <noreply@loxservices.pro>",
+        from: "KARBALI <noreply@loxservices.pro>",
         to: email,
-        subject: "REALLO — Advertiser Email Verification",
+        subject: "KARBALI — Advertiser Email Verification",
         html,
       }),
     });
