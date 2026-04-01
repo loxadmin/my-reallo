@@ -82,7 +82,7 @@ export default function AdminInfluencerSurveys() {
 
       const { data: createdQuestion, error: qErr } = await supabase
         .from("influencer_survey_questions" as any)
-        .insert({ survey_id: created.id, question_text: question.question_text.trim(), order_index: qIndex })
+        .insert({ survey_id: (created as any).id, question_text: question.question_text.trim(), order_index: qIndex })
         .select("id")
         .single();
 
@@ -94,7 +94,7 @@ export default function AdminInfluencerSurveys() {
       const cleanedOptions = question.options.filter((o) => o.option_text.trim());
       if (cleanedOptions.length) {
         const { error: oErr } = await supabase.from("influencer_survey_options" as any).insert(
-          cleanedOptions.map((opt) => ({ question_id: createdQuestion.id, option_text: opt.option_text.trim(), is_correct: !!opt.is_correct }))
+          cleanedOptions.map((opt) => ({ question_id: (createdQuestion as any).id, option_text: opt.option_text.trim(), is_correct: !!opt.is_correct }))
         );
         if (oErr) console.error("create influencer options error", oErr);
       }
