@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     if (referral_code) {
       const { data: referrer } = await supabase
         .from("profiles")
-        .select("id, queue_position")
+        .select("id, queue_position, off_queue_at")
         .eq("referral_code", referral_code.toUpperCase())
         .single();
 
