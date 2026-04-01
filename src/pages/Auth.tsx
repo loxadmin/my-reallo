@@ -183,10 +183,10 @@ const Auth = () => {
       >
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <RealloLogo size={28} />
-            <h1 className="font-display text-xl font-bold gradient-text">Reallo</h1>
+            <KarbaliLogo size={28} />
+            <h1 className="font-display text-xl font-bold gradient-text">Karbali</h1>
           </div>
-          <p className="text-[12px] text-muted-foreground">Reclaim what's yours</p>
+          <p className="text-[13px] text-muted-foreground">Your Financial Assistant</p>
         </div>
 
         {signupSuccess ? (
