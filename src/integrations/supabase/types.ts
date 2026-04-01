@@ -574,6 +574,214 @@ export type Database = {
           },
         ]
       }
+      influencer_survey_options: {
+        Row: {
+          created_at: string
+          id: string
+          is_correct: boolean
+          option_text: string
+          question_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          option_text: string
+          question_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          option_text?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_survey_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_survey_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      influencer_survey_questions: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number
+          question_text: string
+          survey_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          question_text: string
+          survey_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          question_text?: string
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_survey_questions_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      influencer_survey_responses: {
+        Row: {
+          completion_expires_at: string | null
+          created_at: string
+          id: string
+          quiz_completed_at: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reward_amount: number
+          screenshot_url: string | null
+          status: string
+          survey_id: string
+          user_id: string
+        }
+        Insert: {
+          completion_expires_at?: string | null
+          created_at?: string
+          id?: string
+          quiz_completed_at?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reward_amount?: number
+          screenshot_url?: string | null
+          status?: string
+          survey_id: string
+          user_id: string
+        }
+        Update: {
+          completion_expires_at?: string | null
+          created_at?: string
+          id?: string
+          quiz_completed_at?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reward_amount?: number
+          screenshot_url?: string | null
+          status?: string
+          survey_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_survey_responses_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "influencer_survey_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_surveys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "influencer_survey_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      influencer_surveys: {
+        Row: {
+          completion_instructions: string | null
+          completion_link: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          reward_amount: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completion_instructions?: string | null
+          completion_link?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          reward_amount?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completion_instructions?: string | null
+          completion_link?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          reward_amount?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      influencer_wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          source: string
+          source_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          source: string
+          source_id?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          source?: string
+          source_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_wallet_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       influencer_wallets: {
         Row: {
           balance: number
@@ -938,6 +1146,56 @@ export type Database = {
         }
         Relationships: []
       }
+      spend_verifications: {
+        Row: {
+          created_at: string
+          ends_at: string
+          frequency: string
+          id: string
+          recalculated_amount: number | null
+          spend_type: string
+          started_at: string
+          status: string
+          user_id: string
+          verification_description: string | null
+          verification_link: string | null
+        }
+        Insert: {
+          created_at?: string
+          ends_at?: string
+          frequency?: string
+          id?: string
+          recalculated_amount?: number | null
+          spend_type?: string
+          started_at?: string
+          status?: string
+          user_id: string
+          verification_description?: string | null
+          verification_link?: string | null
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          frequency?: string
+          id?: string
+          recalculated_amount?: number | null
+          spend_type?: string
+          started_at?: string
+          status?: string
+          user_id?: string
+          verification_description?: string | null
+          verification_link?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spend_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       survey_options: {
         Row: {
           created_at: string
@@ -1004,9 +1262,11 @@ export type Database = {
       }
       survey_responses: {
         Row: {
+          completion_expires_at: string | null
           created_at: string
           id: string
           points_awarded: number
+          quiz_completed_at: string | null
           reviewed_at: string | null
           screenshot_url: string | null
           status: string
@@ -1014,9 +1274,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          completion_expires_at?: string | null
           created_at?: string
           id?: string
           points_awarded?: number
+          quiz_completed_at?: string | null
           reviewed_at?: string | null
           screenshot_url?: string | null
           status?: string
@@ -1024,9 +1286,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          completion_expires_at?: string | null
           created_at?: string
           id?: string
           points_awarded?: number
+          quiz_completed_at?: string | null
           reviewed_at?: string | null
           screenshot_url?: string | null
           status?: string
@@ -1085,56 +1349,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      spend_verifications: {
-        Row: {
-          created_at: string
-          ends_at: string
-          frequency: string
-          id: string
-          recalculated_amount: number | null
-          spend_type: string
-          started_at: string
-          status: string
-          user_id: string
-          verification_description: string | null
-          verification_link: string | null
-        }
-        Insert: {
-          created_at?: string
-          ends_at?: string
-          frequency?: string
-          id?: string
-          recalculated_amount?: number | null
-          spend_type?: string
-          started_at?: string
-          status?: string
-          user_id: string
-          verification_description?: string | null
-          verification_link?: string | null
-        }
-        Update: {
-          created_at?: string
-          ends_at?: string
-          frequency?: string
-          id?: string
-          recalculated_amount?: number | null
-          spend_type?: string
-          started_at?: string
-          status?: string
-          user_id?: string
-          verification_description?: string | null
-          verification_link?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "spend_verifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_roles: {
         Row: {
