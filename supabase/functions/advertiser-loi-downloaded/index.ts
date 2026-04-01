@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 30px;">
         <div style="background: #f8f9fa; border-radius: 12px; padding: 32px;">
-          <h2 style="color: #1a1a1a; font-size: 20px; margin-top: 0; text-align: center;">REALLO — LOI Downloaded</h2>
+          <h2 style="color: #1a1a1a; font-size: 20px; margin-top: 0; text-align: center;">KARBALI — LOI Downloaded</h2>
           
           <p style="color: #333; font-size: 14px; line-height: 1.6;">
             Hi <strong>${brand_name}</strong>,
