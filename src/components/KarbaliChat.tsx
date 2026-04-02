@@ -285,9 +285,9 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
     if (saved.length > 0) {
       setMessages(saved);
       setIsInitializing(false);
-    } else {
+    } else if (profile?.email) {
       // Generate first message via AI
-      const name = profile.email.split("@")[0];
+      const name = (profile.email || "").split("@")[0];
       const needsOnboarding = !profile.selected_goal || !profile.total_annual_spend || profile.total_annual_spend === 0;
       
       const systemGreeting = needsOnboarding

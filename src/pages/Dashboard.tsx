@@ -84,6 +84,32 @@ const Dashboard = () => {
     setStep("dashboard");
   };
 
+  // Proactive assistant tip based on user state
+  const proactiveTip = useMemo(() => {
+    if (!profile) return undefined;
+    const pos = profile.queue_position ?? 0;
+    // Use a stable index based on date to avoid daily message flooding on every render
+    const dayOfYear = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+
+    if (pos > 0) {
+      const tips = [
+        `💡 Did you know? You can skip 20 queue positions by referring just one friend! Your code: **${profile.referral_code}**`,
+        `🚀 You're at position #${pos}. Want to get off the queue faster? Share your referral link with friends!`,
+        `📊 At the current rate, you could be off the queue in about ${Math.ceil(pos / 50)} days. Referrals can cut that dramatically!`,
+      ];
+      return tips[dayOfYear % tips.length];
+    }
+    if (pos <= 0) {
+      const tips = [
+        "🎉 You're off the queue! Head to **Verify** to submit your transaction IDs and start claiming your spend back.",
+        `💰 Did you know you can earn points by referring friends? Each referral earns you **1,000 points** (₦500). Your code: **${profile.referral_code}**`,
+        "📝 Complete surveys and tasks in the **Earn** tab to build up your points balance faster!",
+      ];
+      return tips[dayOfYear % tips.length];
+    }
+    return undefined;
+  }, [profile?.id, profile?.queue_position, profile?.referral_code]);
+
   const isOffQueue = (profile?.queue_position ?? 999) <= 0;
 
   if (loading || (!profileReady && user)) {
@@ -123,32 +149,6 @@ const Dashboard = () => {
   ];
 
   const isEarnActive = activeView === "earn" || activeView === "tasks" || activeView === "surveys";
-
-  // Proactive assistant tip based on user state
-  const proactiveTip = useMemo(() => {
-    if (!profile) return undefined;
-    const pos = profile.queue_position ?? 0;
-    // Use a stable index based on date to avoid daily message flooding on every render
-    const dayOfYear = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-
-    if (pos > 0) {
-      const tips = [
-        `💡 Did you know? You can skip 20 queue positions by referring just one friend! Your code: **${profile.referral_code}**`,
-        `🚀 You're at position #${pos}. Want to get off the queue faster? Share your referral link with friends!`,
-        `📊 At the current rate, you could be off the queue in about ${Math.ceil(pos / 50)} days. Referrals can cut that dramatically!`,
-      ];
-      return tips[dayOfYear % tips.length];
-    }
-    if (pos <= 0) {
-      const tips = [
-        "🎉 You're off the queue! Head to **Verify** to submit your transaction IDs and start claiming your spend back.",
-        `💰 Did you know you can earn points by referring friends? Each referral earns you **1,000 points** (₦500). Your code: **${profile.referral_code}**`,
-        "📝 Complete surveys and tasks in the **Earn** tab to build up your points balance faster!",
-      ];
-      return tips[dayOfYear % tips.length];
-    }
-    return undefined;
-  }, [profile?.id, profile?.queue_position, profile?.referral_code]);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
