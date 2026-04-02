@@ -192,7 +192,60 @@ const Auth = () => {
           <p className="text-[13px] text-muted-foreground">Your Financial Assistant</p>
         </div>
 
-        {signupSuccess ? (
+        {forgotMode ? (
+          <GlassCard variant="glow">
+            {forgotSent ? (
+              <div className="text-center">
+                <Mail className="w-10 h-10 text-primary mx-auto mb-4" />
+                <h2 className="font-display text-lg font-bold text-foreground mb-2">Check Your Email</h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  We've sent a password reset link to <strong className="text-foreground">{email}</strong>.
+                </p>
+                <GlassButton variant="outline" onClick={() => { setForgotMode(false); setForgotSent(false); }}>
+                  Back to Login
+                </GlassButton>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h2 className="font-display text-lg font-bold text-foreground text-center">Reset Password</h2>
+                <p className="text-sm text-muted-foreground text-center">Enter your email and we'll send you a reset link.</p>
+                <GlassInput
+                  label="Email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                />
+                {error && <p className="text-sm text-destructive font-medium">{error}</p>}
+                <GlassButton
+                  variant="primary"
+                  className="w-full py-3.5"
+                  disabled={forgotLoading || !email}
+                  onClick={async () => {
+                    setError("");
+                    setForgotLoading(true);
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                      redirectTo: `${window.location.origin}/reset-password`,
+                    });
+                    if (error) setError(error.message);
+                    else setForgotSent(true);
+                    setForgotLoading(false);
+                  }}
+                >
+                  {forgotLoading ? "Sending…" : "Send Reset Link"}
+                </GlassButton>
+                <button
+                  type="button"
+                  onClick={() => { setForgotMode(false); setError(""); }}
+                  className="text-xs text-muted-foreground hover:text-foreground w-full text-center mt-2"
+                >
+                  ← Back to Login
+                </button>
+              </div>
+            )}
+          </GlassCard>
+        ) : signupSuccess ? (
           <GlassCard variant="glow" className="text-center">
             <Mail className="w-10 h-10 text-primary mx-auto mb-4" />
             <h2 className="font-display text-lg font-bold text-foreground mb-2">Check Your Email</h2>
