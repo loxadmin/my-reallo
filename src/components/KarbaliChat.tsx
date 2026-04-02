@@ -264,10 +264,10 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
-  const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const initialized = useRef(false);
@@ -277,64 +277,50 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // Initialize: Load history from localStorage
+  // Initialize
   useEffect(() => {
-    if (!user || !profile || isHistoryLoaded) return;
+    if (!user || !profile || initialized.current) return;
 
     const saved = loadMessages(user.id);
-    if (saved.length > 0) {
-      setMessages(saved);
-    }
+    setMessages(saved);
     setIsHistoryLoaded(true);
-  }, [user, profile, isHistoryLoaded]);
-
-  // After history is loaded, check if we need an initial AI greeting
-  useEffect(() => {
-    if (!isHistoryLoaded || !user || !profile || initialized.current) return;
+    setIsInitializing(false);
     initialized.current = true;
+  }, [user, profile]);
 
-    if (messages.length === 0 && profile?.email) {
-      // Generate first message via AI
-      const name = (profile.email || "").split("@")[0];
-      const needsOnboarding = !profile.selected_goal || !profile.total_annual_spend || profile.total_annual_spend === 0;
-      
-      const systemGreeting = needsOnboarding
-        ? `The user "${name}" just signed up. Greet them warmly and start the onboarding conversation. Ask about their weekly data spend first.`
-        : `The user "${name}" is returning. Greet them and offer helpful suggestions based on their profile.`;
-
-      setIsInitializing(false);
-      // Send an initial prompt to get the AI's greeting
-      sendToAI([{ role: "user", content: systemGreeting }], true);
-    } else {
-      setIsInitializing(false);
-    }
-  }, [isHistoryLoaded, user, profile, messages.length]);
-
-  // Persistence: Save to localStorage whenever messages change
+  // Handle auto-greeting after history is loaded
   useEffect(() => {
-    if (isHistoryLoaded && user?.id) {
-      saveMessages(user.id, messages);
-    }
-  }, [messages, isHistoryLoaded, user?.id]);
+    if (!isHistoryLoaded || messages.length > 0 || !profile?.email) return;
+
+    const name = (profile.email || "").split("@")[0];
+    const needsOnboarding = !profile.selected_goal || !profile.total_annual_spend || profile.total_annual_spend === 0;
+
+    const systemGreeting = needsOnboarding
+      ? `The user "${name}" just signed up. Greet them warmly and start the onboarding conversation. Ask about their weekly data spend first.`
+      : `The user "${name}" is returning. Greet them and offer helpful suggestions based on their profile.`;
+
+    // Send an initial prompt to get the AI's greeting
+    sendToAI([{ role: "user", content: systemGreeting }], true);
+  }, [isHistoryLoaded, messages.length, profile]);
 
   // Handle proactive tips
   useEffect(() => {
-    if (proactiveTip && user && isHistoryLoaded && !isInitializing) {
+    if (proactiveTip && user && initialized.current && messages.length > 0) {
+      const tipMsg: ChatMessage = {
+        id: `tip-${Date.now()}`,
+        role: "assistant",
+        content: proactiveTip,
+        timestamp: Date.now(),
+      };
       setMessages(prev => {
         // Don't add duplicate tips
         if (prev.some(m => m.content === proactiveTip)) return prev;
-
-        const tipMsg: ChatMessage = {
-          id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-          role: "assistant",
-          content: proactiveTip,
-          timestamp: Date.now(),
-        };
-
-        return [...prev, tipMsg];
+        const updated = [...prev, tipMsg];
+        saveMessages(user.id, updated);
+        return updated;
       });
     }
-  }, [proactiveTip, user, isHistoryLoaded, isInitializing]);
+  }, [proactiveTip]);
 
   useEffect(scrollToBottom, [messages, isStreaming, scrollToBottom]);
 
@@ -346,6 +332,7 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
     abortRef.current = abortController;
 
     let assistantSoFar = "";
+    // Add random suffix to ensure ID uniqueness and prevent React key collisions
     const msgId = `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
 
     const upsertAssistant = (chunk: string) => {
@@ -355,7 +342,10 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
         if (last?.id === msgId) {
           return prev.map(m => m.id === msgId ? { ...m, content: assistantSoFar } : m);
         }
-        return [...prev, { id: msgId, role: "assistant" as const, content: assistantSoFar, timestamp: Date.now() }];
+        const updated = [...prev, { id: msgId, role: "assistant" as const, content: assistantSoFar, timestamp: Date.now() }];
+        // Partial save for streaming robustness (optional but helpful)
+        saveMessages(user.id, updated);
+        return updated;
       });
     };
 
@@ -441,6 +431,7 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
 
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
+    saveMessages(user.id, updatedMessages);
     setInput("");
 
     // Build chat history for AI (last 20 messages for context)

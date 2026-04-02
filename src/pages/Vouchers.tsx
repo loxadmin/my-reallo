@@ -164,8 +164,8 @@ const Vouchers = () => {
       <div className="relative min-h-screen overflow-x-hidden">
         <WaterBackground />
         <Navbar />
-        <div className="pt-20">
-          <PageSkeleton />
+        <div className="flex pt-20">
+          <main className="flex-1 w-full"><PageSkeleton /></main>
         </div>
       </div>
     );

@@ -845,12 +845,18 @@ const Admin = () => {
     return (
       <div className="relative min-h-screen overflow-x-hidden">
         <WaterBackground />
-        <div className="flex pt-14 px-6">
-          <PageSkeleton />
+        <div className="flex-1 flex flex-col min-w-0 relative z-10">
+          <header className="sticky top-0 z-40 h-14 flex items-center justify-between border-b border-border/40 bg-background/70 backdrop-blur-xl px-6">
+            <div className="w-9 h-9 rounded-xl bg-primary animate-pulse" />
+          </header>
+          <main className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
+            <PageSkeleton />
+          </main>
         </div>
       </div>
     );
   }
+
   if (!isAdmin) return null;
 
   const referralApps = decisionApps.filter(a => a.category === "referral");
