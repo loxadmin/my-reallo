@@ -37,14 +37,29 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { view: urlView } = useParams<{ view?: string }>();
 
-  const getInitialStep = (): DashStep => {
-    if (profile?.selected_goal && profile?.total_annual_spend > 0) return "dashboard";
+  const getInitialStep = (p: typeof profile): DashStep => {
+    if (p?.selected_goal && p?.total_annual_spend > 0) return "dashboard";
     return "onboarding";
   };
 
-  const [step, setStep] = useState<DashStep>(getInitialStep);
-  const [spendResult, setSpendResult] = useState<SpendResult | null>(null);
-  const [profileReady, setProfileReady] = useState(false);
+  const getInitialSpendResult = (p: typeof profile): SpendResult | null => {
+    if (p?.selected_goal && p?.total_annual_spend > 0) {
+      return {
+        weeklyData: 0,
+        monthlyElectricity: 0,
+        annualData: p.annual_data_spend,
+        annualElectricity: p.annual_electricity_spend,
+        annualFood: p.annual_food_spend ?? 0,
+        annualTransport: p.annual_transport_spend ?? 0,
+        totalAnnual: p.total_annual_spend,
+      };
+    }
+    return null;
+  };
+
+  const [step, setStep] = useState<DashStep>(() => getInitialStep(profile));
+  const [spendResult, setSpendResult] = useState<SpendResult | null>(() => getInitialSpendResult(profile));
+  const [profileReady, setProfileReady] = useState(!!profile);
 
   const activeView: DashView = urlView && validViews.includes(urlView as DashView)
     ? (urlView as DashView)

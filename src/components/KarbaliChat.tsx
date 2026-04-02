@@ -263,11 +263,22 @@ function parseActions(text: string): {
 const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }: KarbaliChatProps) => {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  // Initialize state directly from localStorage to prevent flash of empty messages
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    // Try to get userId from various sources to ensure we load history if available
+    const userId = user?.id || profile?.id;
+    if (userId) {
+      return loadMessages(userId);
+    }
+    return [];
+  });
+
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
+  // If we have messages, we aren't "initializing" in the sense of needing a greeting
+  const [isInitializing, setIsInitializing] = useState(() => !messages.length);
+  const [isHistoryLoaded, setIsHistoryLoaded] = useState(!!user?.id);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const initialized = useRef(false);
@@ -277,20 +288,22 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // Initialize: Load history from localStorage
+  // Initialize: Load history from localStorage if not already done via state initializer
   useEffect(() => {
-    if (!user || !profile || isHistoryLoaded) return;
+    if (!user?.id || isHistoryLoaded) return;
 
     const saved = loadMessages(user.id);
     if (saved.length > 0) {
       setMessages(saved);
     }
     setIsHistoryLoaded(true);
-  }, [user, profile, isHistoryLoaded]);
+  }, [user?.id, isHistoryLoaded]);
 
   // After history is loaded, check if we need an initial AI greeting
   useEffect(() => {
     if (!isHistoryLoaded || !user || !profile || initialized.current) return;
+
+    // Only proceed if we haven't already handled initialization
     initialized.current = true;
 
     if (messages.length === 0 && profile?.email) {
@@ -312,10 +325,14 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
 
   // Persistence: Save to localStorage whenever messages change
   useEffect(() => {
-    if (isHistoryLoaded && user?.id) {
-      saveMessages(user.id, messages);
+    // Determine the userId to save under
+    const userId = user?.id || profile?.id;
+    // Only save if history was actually loaded and we have a user and we actually have messages to save
+    // We also check for messages.length > 0 to avoid wiping history with an empty array during transient states
+    if (isHistoryLoaded && userId && messages.length > 0) {
+      saveMessages(userId, messages);
     }
-  }, [messages, isHistoryLoaded, user?.id]);
+  }, [messages, isHistoryLoaded, user?.id, profile?.id]);
 
   // Handle proactive tips
   useEffect(() => {
@@ -378,17 +395,18 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
         onDelta: upsertAssistant,
         onDone: async (fullText) => {
           const { cleanText, profileUpdate, navigate: navRoute } = parseActions(fullText);
+          const userId = user.id;
 
           // Update message with cleaned text (remove action blocks)
           if (cleanText !== fullText) {
             setMessages(prev => {
               const updated = prev.map(m => m.id === msgId ? { ...m, content: cleanText } : m);
-              saveMessages(user.id, updated);
+              saveMessages(userId, updated);
               return updated;
             });
           } else {
             setMessages(prev => {
-              saveMessages(user.id, prev);
+              saveMessages(userId, prev);
               return prev;
             });
           }

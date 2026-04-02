@@ -71,6 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshProfile = async () => {
     if (user) {
+      // Don't set global loading to true during a refresh to avoid UI flashing
       await fetchProfile(user.id);
     }
   };
