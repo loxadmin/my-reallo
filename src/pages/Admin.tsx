@@ -841,7 +841,16 @@ const Admin = () => {
     return Object.values(days);
   }, [profiles, activities, verificationTxs]);
 
-  if (loading) return <PageSkeleton />;
+  if (loading) {
+    return (
+      <div className="relative min-h-screen overflow-x-hidden">
+        <WaterBackground />
+        <div className="flex pt-14 px-6">
+          <PageSkeleton />
+        </div>
+      </div>
+    );
+  }
   if (!isAdmin) return null;
 
   const referralApps = decisionApps.filter(a => a.category === "referral");

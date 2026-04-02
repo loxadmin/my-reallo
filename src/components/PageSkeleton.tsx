@@ -1,11 +1,5 @@
 const PageSkeleton = () => (
-  <div className="min-h-screen bg-background">
-    {/* Navbar skeleton */}
-    <div className="h-14 border-b border-border/40 flex items-center px-4 gap-3">
-      <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
-      <div className="h-4 w-20 rounded-lg bg-muted animate-pulse" />
-    </div>
-
+  <div className="w-full">
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
       {/* Header skeleton */}
       <div className="flex items-center gap-3">

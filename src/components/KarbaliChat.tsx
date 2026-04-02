@@ -267,6 +267,7 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const initialized = useRef(false);
@@ -276,16 +277,23 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // Initialize
+  // Initialize: Load history from localStorage
   useEffect(() => {
-    if (!user || !profile || initialized.current) return;
-    initialized.current = true;
+    if (!user || !profile || isHistoryLoaded) return;
 
     const saved = loadMessages(user.id);
     if (saved.length > 0) {
       setMessages(saved);
-      setIsInitializing(false);
-    } else if (profile?.email) {
+    }
+    setIsHistoryLoaded(true);
+  }, [user, profile, isHistoryLoaded]);
+
+  // After history is loaded, check if we need an initial AI greeting
+  useEffect(() => {
+    if (!isHistoryLoaded || !user || !profile || initialized.current) return;
+    initialized.current = true;
+
+    if (messages.length === 0 && profile?.email) {
       // Generate first message via AI
       const name = (profile.email || "").split("@")[0];
       const needsOnboarding = !profile.selected_goal || !profile.total_annual_spend || profile.total_annual_spend === 0;
@@ -297,27 +305,36 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
       setIsInitializing(false);
       // Send an initial prompt to get the AI's greeting
       sendToAI([{ role: "user", content: systemGreeting }], true);
+    } else {
+      setIsInitializing(false);
     }
-  }, [user, profile]);
+  }, [isHistoryLoaded, user, profile, messages.length]);
+
+  // Persistence: Save to localStorage whenever messages change
+  useEffect(() => {
+    if (isHistoryLoaded && user?.id) {
+      saveMessages(user.id, messages);
+    }
+  }, [messages, isHistoryLoaded, user?.id]);
 
   // Handle proactive tips
   useEffect(() => {
-    if (proactiveTip && user && initialized.current && messages.length > 0) {
-      const tipMsg: ChatMessage = {
-        id: `tip-${Date.now()}`,
-        role: "assistant",
-        content: proactiveTip,
-        timestamp: Date.now(),
-      };
+    if (proactiveTip && user && isHistoryLoaded && !isInitializing) {
       setMessages(prev => {
         // Don't add duplicate tips
         if (prev.some(m => m.content === proactiveTip)) return prev;
-        const updated = [...prev, tipMsg];
-        saveMessages(user.id, updated);
-        return updated;
+
+        const tipMsg: ChatMessage = {
+          id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          role: "assistant",
+          content: proactiveTip,
+          timestamp: Date.now(),
+        };
+
+        return [...prev, tipMsg];
       });
     }
-  }, [proactiveTip]);
+  }, [proactiveTip, user, isHistoryLoaded, isInitializing]);
 
   useEffect(scrollToBottom, [messages, isStreaming, scrollToBottom]);
 
@@ -329,7 +346,7 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
     abortRef.current = abortController;
 
     let assistantSoFar = "";
-    const msgId = `assistant-${Date.now()}`;
+    const msgId = `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
 
     const upsertAssistant = (chunk: string) => {
       assistantSoFar += chunk;
@@ -416,7 +433,7 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
     if (!messageText || !user || !profile || isStreaming) return;
 
     const userMsg: ChatMessage = {
-      id: `user-${Date.now()}`,
+      id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       role: "user",
       content: messageText,
       timestamp: Date.now(),
@@ -424,7 +441,6 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
 
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
-    saveMessages(user.id, updatedMessages);
     setInput("");
 
     // Build chat history for AI (last 20 messages for context)
