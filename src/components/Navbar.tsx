@@ -21,19 +21,23 @@ const Navbar = ({ children }: NavbarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isDashboard = location.pathname === "/dashboard";
+  const isDashboard = location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/");
+  const isAuthPage = location.pathname === "/auth" || location.pathname === "/reset-password";
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 group"
-        >
-          <KarbaliLogo size={24} className="group-hover:scale-110 transition-transform duration-300" />
-          <span className="font-display text-[15px] font-bold text-foreground tracking-tight gradient-text">Karbali</span>
-          <span className="font-display text-[13px] font-bold text-foreground tracking-tight gradient-text">Karbali</span>
-        </button>
+        <div className="flex items-center">
+          {!isAuthPage && (
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 group"
+            >
+              <KarbaliLogo size={24} className="group-hover:scale-110 transition-transform duration-300" />
+              <span className="font-display text-[15px] font-bold text-foreground tracking-tight gradient-text">Karbali</span>
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-1">
           <ThemeToggle />
           {user ? (
