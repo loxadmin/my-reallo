@@ -37,12 +37,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { view: urlView } = useParams<{ view?: string }>();
 
-  const getInitialStep = (): DashStep => {
-    if (profile?.selected_goal && profile?.total_annual_spend > 0) return "dashboard";
-    return "onboarding";
-  };
-
-  const [step, setStep] = useState<DashStep>(getInitialStep);
+  const [step, setStep] = useState<DashStep>("onboarding");
   const [spendResult, setSpendResult] = useState<SpendResult | null>(null);
   const [profileReady, setProfileReady] = useState(false);
 
@@ -63,21 +58,25 @@ const Dashboard = () => {
   }, [loading, user, navigate]);
 
   useEffect(() => {
-    if (profile) {
-      if (profile.selected_goal && profile.total_annual_spend > 0) {
-        setSpendResult({
-          weeklyData: 0, monthlyElectricity: 0,
-          annualData: profile.annual_data_spend,
-          annualElectricity: profile.annual_electricity_spend,
-          annualFood: profile.annual_food_spend ?? 0,
-          annualTransport: profile.annual_transport_spend ?? 0,
-          totalAnnual: profile.total_annual_spend,
-        });
-        setStep("dashboard");
+    if (!loading) {
+      if (profile) {
+        if (profile.selected_goal && profile.total_annual_spend > 0) {
+          setSpendResult({
+            weeklyData: 0, monthlyElectricity: 0,
+            annualData: profile.annual_data_spend,
+            annualElectricity: profile.annual_electricity_spend,
+            annualFood: profile.annual_food_spend ?? 0,
+            annualTransport: profile.annual_transport_spend ?? 0,
+            totalAnnual: profile.total_annual_spend,
+          });
+          setStep("dashboard");
+        } else {
+          setStep("onboarding");
+        }
       }
       setProfileReady(true);
     }
-  }, [profile]);
+  }, [loading, profile]);
 
   const handleOnboardingComplete = async () => {
     await refreshProfile();
@@ -112,7 +111,7 @@ const Dashboard = () => {
 
   const isOffQueue = (profile?.queue_position ?? 999) <= 0;
 
-  if (loading || (!profileReady && user)) {
+  if (loading || !profileReady) {
     return (
       <div className="relative min-h-screen overflow-x-hidden">
         <WaterBackground />

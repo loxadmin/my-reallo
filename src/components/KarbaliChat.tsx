@@ -276,52 +276,7 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // Initialize
-  useEffect(() => {
-    if (!user || !profile || initialized.current) return;
-    initialized.current = true;
-
-    const saved = loadMessages(user.id);
-    if (saved.length > 0) {
-      setMessages(saved);
-      setIsInitializing(false);
-    } else if (profile?.email) {
-      // Generate first message via AI
-      const name = (profile.email || "").split("@")[0];
-      const needsOnboarding = !profile.selected_goal || !profile.total_annual_spend || profile.total_annual_spend === 0;
-      
-      const systemGreeting = needsOnboarding
-        ? `The user "${name}" just signed up. Greet them warmly and start the onboarding conversation. Ask about their weekly data spend first.`
-        : `The user "${name}" is returning. Greet them and offer helpful suggestions based on their profile.`;
-
-      setIsInitializing(false);
-      // Send an initial prompt to get the AI's greeting
-      sendToAI([{ role: "user", content: systemGreeting }], true);
-    }
-  }, [user, profile]);
-
-  // Handle proactive tips
-  useEffect(() => {
-    if (proactiveTip && user && initialized.current && messages.length > 0) {
-      const tipMsg: ChatMessage = {
-        id: `tip-${Date.now()}`,
-        role: "assistant",
-        content: proactiveTip,
-        timestamp: Date.now(),
-      };
-      setMessages(prev => {
-        // Don't add duplicate tips
-        if (prev.some(m => m.content === proactiveTip)) return prev;
-        const updated = [...prev, tipMsg];
-        saveMessages(user.id, updated);
-        return updated;
-      });
-    }
-  }, [proactiveTip]);
-
-  useEffect(scrollToBottom, [messages, isStreaming, scrollToBottom]);
-
-  const sendToAI = async (chatHistory: { role: string; content: string }[], isSystemGreeting = false) => {
+  const sendToAI = useCallback(async (chatHistory: { role: string; content: string }[], isSystemGreeting = false) => {
     if (!user || !profile) return;
 
     setIsStreaming(true);
@@ -409,7 +364,56 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
       });
       setIsStreaming(false);
     }
-  };
+  }, [user, profile, navigate, refreshProfile, onOnboardingComplete]);
+
+  // Initialize
+  useEffect(() => {
+    if (!user || !profile || initialized.current) return;
+
+    const saved = loadMessages(user.id);
+    if (saved.length > 0) {
+      initialized.current = true;
+      setMessages(saved);
+      setIsInitializing(false);
+    } else if (profile?.email) {
+      initialized.current = true;
+      // Generate first message via AI
+      const name = (profile.email || "").split("@")[0];
+      const needsOnboarding = !profile.selected_goal || !profile.total_annual_spend || profile.total_annual_spend === 0;
+
+      const systemGreeting = needsOnboarding
+        ? `The user "${name}" just signed up. Greet them warmly and start the onboarding conversation. Ask about their weekly data spend first.`
+        : `The user "${name}" is returning. Greet them and offer helpful suggestions based on their profile.`;
+
+      setIsInitializing(false);
+      // Send an initial prompt to get the AI's greeting
+      sendToAI([{ role: "user", content: systemGreeting }], true);
+    } else if (profile) {
+      // Profile exists but no email yet? Should not happen but let's not stick
+      setIsInitializing(false);
+    }
+  }, [user, profile, sendToAI]);
+
+  // Handle proactive tips
+  useEffect(() => {
+    if (proactiveTip && user && initialized.current && messages.length > 0) {
+      const tipMsg: ChatMessage = {
+        id: `tip-${Date.now()}`,
+        role: "assistant",
+        content: proactiveTip,
+        timestamp: Date.now(),
+      };
+      setMessages(prev => {
+        // Don't add duplicate tips
+        if (prev.some(m => m.content === proactiveTip)) return prev;
+        const updated = [...prev, tipMsg];
+        saveMessages(user.id, updated);
+        return updated;
+      });
+    }
+  }, [proactiveTip]);
+
+  useEffect(scrollToBottom, [messages, isStreaming, scrollToBottom]);
 
   const handleSend = async (text?: string) => {
     const messageText = (text || input).trim();
