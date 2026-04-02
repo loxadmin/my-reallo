@@ -131,6 +131,18 @@ export default function AdminInfluencerSurveys() {
           <input type="checkbox" checked={draft.is_active} onChange={(e) => setDraft((p) => ({ ...p, is_active: e.target.checked }))} /> Active
         </label>
 
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground">User upload type:</span>
+          <label className="text-xs flex items-center gap-1.5 cursor-pointer">
+            <input type="radio" name="upload_type" checked={draft.upload_type === "screenshot"} onChange={() => setDraft((p) => ({ ...p, upload_type: "screenshot" }))} />
+            Screenshot
+          </label>
+          <label className="text-xs flex items-center gap-1.5 cursor-pointer">
+            <input type="radio" name="upload_type" checked={draft.upload_type === "link"} onChange={() => setDraft((p) => ({ ...p, upload_type: "link" }))} />
+            Link
+          </label>
+        </div>
+
         <div className="space-y-3">
           {draft.questions.map((question, qi) => (
             <div key={qi} className="border rounded-xl p-3 space-y-2">
