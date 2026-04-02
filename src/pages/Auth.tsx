@@ -302,6 +302,16 @@ const Auth = () => {
                   </p>
                 )}
 
+                {mode === "login" && !forgotMode && (
+                  <button
+                    type="button"
+                    onClick={() => { setForgotMode(true); setError(""); }}
+                    className="text-xs text-primary hover:underline mt-1"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+
                 <GlassButton variant="primary" className="w-full mt-4 text-[13px] py-3.5" onClick={handleSubmit} disabled={loading || !email || !password}>
                   {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
                 </GlassButton>
