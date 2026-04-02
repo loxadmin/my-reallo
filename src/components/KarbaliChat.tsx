@@ -20,22 +20,43 @@ interface KarbaliChatProps {
   proactiveTip?: string;
 }
 
-const CHAT_KEY = "karbali_chat_v2";
+// Use the common chat key from karbaliEngine if possible, or define a stable one here
+const CHAT_KEY = "karbali_chat_v3";
 
 function loadMessages(userId: string): ChatMessage[] {
   try {
     const stored = localStorage.getItem(`${CHAT_KEY}_${userId}`);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error("Failed to load messages:", e);
     return [];
   }
 }
 
 function saveMessages(userId: string, messages: ChatMessage[]): void {
+  if (!userId) return;
   try {
-    localStorage.setItem(`${CHAT_KEY}_${userId}`, JSON.stringify(messages.slice(-100)));
-  } catch {
-    localStorage.removeItem(`${CHAT_KEY}_${userId}`);
+    // Keep last 100 messages for context and storage efficiency
+    const trimmed = messages.slice(-100);
+    localStorage.setItem(`${CHAT_KEY}_${userId}`, JSON.stringify(trimmed));
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "QuotaExceededError") {
+      console.warn("Storage quota exceeded, trimming chat history further...");
+      try {
+        localStorage.setItem(`${CHAT_KEY}_${userId}`, JSON.stringify(messages.slice(-50)));
+      } catch {
+        try {
+          localStorage.setItem(`${CHAT_KEY}_${userId}`, JSON.stringify(messages.slice(-20)));
+        } catch {
+          // If still failing, just don't update storage for this message
+          console.error("Critical storage failure: could not save even minimal chat history.");
+        }
+      }
+    } else {
+      console.error("Chat storage error:", e);
+    }
   }
 }
 
@@ -103,8 +124,6 @@ const MessageBubble = ({ message }: { message: ChatMessage }) => {
   );
 };
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/karbali-chat`;
-
 async function streamChat({
   messages,
   profile,
@@ -118,11 +137,22 @@ async function streamChat({
   onDone: (fullText: string) => void;
   signal?: AbortSignal;
 }) {
-  const resp = await fetch(CHAT_URL, {
+  // Use import.meta.env for reliable access to Supabase environment variables in Vite
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || (supabase as any).supabaseUrl;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || (supabase as any).supabaseKey;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase configuration missing");
+  }
+
+  const chatUrl = `${supabaseUrl}/functions/v1/karbali-chat`;
+
+  const resp = await fetch(chatUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      "Authorization": `Bearer ${supabaseKey}`,
+      "apikey": supabaseKey,
     },
     body: JSON.stringify({ messages, profile }),
     signal,

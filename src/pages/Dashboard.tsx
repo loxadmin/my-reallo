@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -125,16 +125,19 @@ const Dashboard = () => {
   const isEarnActive = activeView === "earn" || activeView === "tasks" || activeView === "surveys";
 
   // Proactive assistant tip based on user state
-  const getProactiveTip = (): string | undefined => {
+  const proactiveTip = useMemo(() => {
     if (!profile) return undefined;
     const pos = profile.queue_position ?? 0;
+    // Use a stable index based on date to avoid daily message flooding on every render
+    const dayOfYear = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+
     if (pos > 0) {
       const tips = [
         `💡 Did you know? You can skip 20 queue positions by referring just one friend! Your code: **${profile.referral_code}**`,
         `🚀 You're at position #${pos}. Want to get off the queue faster? Share your referral link with friends!`,
         `📊 At the current rate, you could be off the queue in about ${Math.ceil(pos / 50)} days. Referrals can cut that dramatically!`,
       ];
-      return tips[Math.floor(Math.random() * tips.length)];
+      return tips[dayOfYear % tips.length];
     }
     if (pos <= 0) {
       const tips = [
@@ -142,10 +145,10 @@ const Dashboard = () => {
         `💰 Did you know you can earn points by referring friends? Each referral earns you **1,000 points** (₦500). Your code: **${profile.referral_code}**`,
         "📝 Complete surveys and tasks in the **Earn** tab to build up your points balance faster!",
       ];
-      return tips[Math.floor(Math.random() * tips.length)];
+      return tips[dayOfYear % tips.length];
     }
     return undefined;
-  };
+  }, [profile?.id, profile?.queue_position, profile?.referral_code]);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
@@ -202,7 +205,7 @@ const Dashboard = () => {
           <AnimatePresence mode="wait">
             {activeView === "chat" ? (
               <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <KarbaliChat mode="fullscreen" proactiveTip={getProactiveTip()} />
+                <KarbaliChat mode="fullscreen" proactiveTip={proactiveTip} />
               </motion.div>
             ) : (
               <motion.div key="queue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
