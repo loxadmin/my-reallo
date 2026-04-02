@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -125,9 +125,9 @@ const Dashboard = () => {
   const isEarnActive = activeView === "earn" || activeView === "tasks" || activeView === "surveys";
 
   // Proactive assistant tip based on user state
-  const getProactiveTip = (): string | undefined => {
+  const proactiveTip = useMemo(() => {
     if (!profile) return undefined;
-    const pos = profile.queue_position ?? 0;
+    const pos = profile.queue_position ?? 999;
     if (pos > 0) {
       const tips = [
         `💡 Did you know? You can skip 20 queue positions by referring just one friend! Your code: **${profile.referral_code}**`,
@@ -145,7 +145,7 @@ const Dashboard = () => {
       return tips[Math.floor(Math.random() * tips.length)];
     }
     return undefined;
-  };
+  }, [profile?.id, profile?.queue_position, profile?.referral_code]);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
@@ -202,7 +202,7 @@ const Dashboard = () => {
           <AnimatePresence mode="wait">
             {activeView === "chat" ? (
               <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <KarbaliChat mode="fullscreen" proactiveTip={getProactiveTip()} />
+                <KarbaliChat mode="fullscreen" proactiveTip={proactiveTip} />
               </motion.div>
             ) : (
               <motion.div key="queue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
