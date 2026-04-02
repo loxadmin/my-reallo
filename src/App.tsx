@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Vouchers from "./pages/Vouchers";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 import AdvertiserOnboard from "./pages/AdvertiserOnboard";
 import AdvertiserDashboard from "./pages/AdvertiserDashboard";
 
