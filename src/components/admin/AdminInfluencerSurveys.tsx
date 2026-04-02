@@ -30,6 +30,7 @@ export default function AdminInfluencerSurveys() {
     reward_amount: 5000,
     completion_link: "",
     completion_instructions: "",
+    upload_type: "screenshot" as "screenshot" | "link",
     is_active: true,
     questions: [blankQuestion()],
   });
