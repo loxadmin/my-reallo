@@ -69,6 +69,8 @@ const Auth = () => {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      // Skip redirect for password recovery — let /reset-password handle it
+      if (event === "PASSWORD_RECOVERY") return;
       if (event === "SIGNED_IN") {
         processOAuthReferral();
       }

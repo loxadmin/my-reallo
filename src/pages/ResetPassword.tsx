@@ -31,11 +31,19 @@ const ResetPassword = () => {
       }
     });
 
-    // Also check hash params for type=recovery
+    // Check hash params for type=recovery
     const hash = window.location.hash;
     if (hash.includes("type=recovery")) {
       setIsRecovery(true);
     }
+
+    // Also check if there's already an active session (recovery token was already processed)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        // If we have a session and arrived at /reset-password, treat it as recovery
+        setIsRecovery(true);
+      }
+    });
 
     return () => subscription.unsubscribe();
   }, []);
