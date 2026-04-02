@@ -66,6 +66,7 @@ export default function AdminInfluencerSurveys() {
         reward_amount: Number(draft.reward_amount),
         completion_link: draft.completion_link.trim() || null,
         completion_instructions: draft.completion_instructions.trim() || null,
+        upload_type: draft.upload_type,
         is_active: draft.is_active,
       })
       .select("id")
