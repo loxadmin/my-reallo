@@ -32,24 +32,10 @@ function loadMessages(userId: string): ChatMessage[] {
 }
 
 function saveMessages(userId: string, messages: ChatMessage[]): void {
-  const key = `${CHAT_KEY}_${userId}`;
-  let toSave = messages;
-  while (toSave.length > 0) {
-    try {
-      localStorage.setItem(key, JSON.stringify(toSave.slice(-100)));
-      return;
-    } catch (e) {
-      if (e instanceof DOMException && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
-        toSave = toSave.slice(1);
-        if (toSave.length === 0) {
-          localStorage.removeItem(key);
-          return;
-        }
-      } else {
-        localStorage.removeItem(key);
-        return;
-      }
-    }
+  try {
+    localStorage.setItem(`${CHAT_KEY}_${userId}`, JSON.stringify(messages.slice(-100)));
+  } catch {
+    localStorage.removeItem(`${CHAT_KEY}_${userId}`);
   }
 }
 
@@ -117,15 +103,7 @@ const MessageBubble = ({ message }: { message: ChatMessage }) => {
   );
 };
 
-// Derive Supabase details from the client instance instead of direct imports
-const getSupabaseConfig = () => {
-  const supabaseUrl = (supabase as any).supabaseUrl || import.meta.env.VITE_SUPABASE_URL;
-  const supabaseKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  return { supabaseUrl, supabaseKey };
-};
-
-const { supabaseUrl, supabaseKey } = getSupabaseConfig();
-const CHAT_URL = `${supabaseUrl}/functions/v1/karbali-chat`;
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/karbali-chat`;
 
 async function streamChat({
   messages,
@@ -144,8 +122,7 @@ async function streamChat({
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${supabaseKey}`,
-      apikey: supabaseKey,
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
     body: JSON.stringify({ messages, profile }),
     signal,
