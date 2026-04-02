@@ -53,6 +53,7 @@ Deno.serve(async (req) => {
       const { data: referrer } = await supabase
         .from("profiles")
         .select("id, queue_position, off_queue_at")
+        .select("id, queue_position, points_balance, off_queue_at")
         .eq("referral_code", referral_code.toUpperCase())
         .single();
 
@@ -80,6 +81,63 @@ Deno.serve(async (req) => {
             .update({ queue_position: Math.max(1, (referrer.queue_position ?? 100) - 20) })
             .eq("id", referrer.id);
 
+        const isOffQueue = referrer.queue_position === 0 || referrer.off_queue_at !== null;
+
+        if (isOffQueue) {
+          // Check if influencer
+          const { data: influencerApp } = await supabase
+            .from("influencer_applications")
+            .select("id")
+            .eq("user_id", referrer.id)
+            .eq("status", "approved")
+            .maybeSingle();
+
+          if (!influencerApp) {
+            // Award 1000 points to off-queue non-influencers
+            await supabase
+              .from("profiles")
+              .update({ points_balance: (referrer.points_balance || 0) + 1000 })
+              .eq("id", referrer.id);
+
+            await supabase.from("referrals").insert({
+              referrer_id: referrer.id,
+              referred_user_id: user.id,
+            });
+
+            await supabase.from("waitlist_activity").insert({
+              user_id: referrer.id,
+              action_type: "referral",
+              positions_moved: 0,
+            });
+
+            // Continue to device registration if needed, but referral is handled
+          } else {
+            // Influencer off-queue - no points, just record referral
+            await supabase.from("referrals").insert({
+              referrer_id: referrer.id,
+              referred_user_id: user.id,
+            });
+
+            await supabase.from("waitlist_activity").insert({
+              user_id: referrer.id,
+              action_type: "referral",
+              positions_moved: 0,
+            });
+          }
+        } else {
+          // Normal user on queue - bump queue position
+          const newPos = Math.max(1, (referrer.queue_position ?? 100) - 20);
+          await supabase
+            .from("profiles")
+            .update({ queue_position: newPos })
+            .eq("id", referrer.id);
+
+          // Record the referral
+          await supabase
+            .from("referrals")
+            .insert({ referrer_id: referrer.id, referred_user_id: user.id });
+
+          // Record waitlist activity
           await supabase
             .from("waitlist_activity")
             .insert({ user_id: referrer.id, action_type: "referral", positions_moved: 20 });

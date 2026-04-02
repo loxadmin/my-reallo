@@ -189,7 +189,7 @@ Deno.serve(async (req) => {
     let y = height - 60;
 
     // Header
-    page.drawText("REALLO", { x: 50, y, size: 28, font: helveticaBold, color: brandGreen });
+    page.drawText("KARBALI", { x: 50, y, size: 28, font: helveticaBold, color: brandGreen });
     y -= 20;
     page.drawText("Letter of Intent", { x: 50, y, size: 12, font: helvetica, color: gray });
     y -= 8;
@@ -209,9 +209,9 @@ Deno.serve(async (req) => {
 
     // Body text
     const bodyLines = [
-      `This Letter of Intent ("LOI") is entered into between REALLO ("Platform") and ${submission.brand_name} ("Advertiser"), represented by ${submission.ceo_name}.`,
+      `This Letter of Intent ("LOI") is entered into between KARBALI ("Platform") and ${submission.brand_name} ("Advertiser"), represented by ${submission.ceo_name}.`,
       "",
-      `The Advertiser hereby expresses its intent to enter into an advertising partnership with REALLO upon the Platform reaching a verified user base of 100,000 (one hundred thousand) active users.`,
+      `The Advertiser hereby expresses its intent to enter into an advertising partnership with KARBALI upon the Platform reaching a verified user base of 100,000 (one hundred thousand) active users.`,
       "",
       `The Advertiser commits to a minimum advertising spend of $50,000 (fifty thousand US dollars) upon activation of this partnership.`,
       "",
@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
       "",
       "1. This LOI is non-binding and serves as a declaration of mutual interest in a future advertising partnership.",
       "",
-      "2. The partnership shall become active once REALLO formally notifies the Advertiser that the 100,000 user milestone has been achieved and verified.",
+      "2. The partnership shall become active once KARBALI formally notifies the Advertiser that the 100,000 user milestone has been achieved and verified.",
       "",
       "3. Upon activation, both parties agree to negotiate and execute a formal Advertising Agreement within 30 days.",
       "",
@@ -275,7 +275,7 @@ Deno.serve(async (req) => {
     page.drawText(submission.brand_name, { x: 50, y: sigY - 80, size: 9, font: helvetica, color: gray });
 
     // Founder signature (right)
-    page.drawText("REALLO:", { x: 350, y: sigY, size: 10, font: helveticaBold, color: black });
+    page.drawText("KARBALI:", { x: 350, y: sigY, size: 10, font: helveticaBold, color: black });
 
     if (founderSigUrl) {
       try {
@@ -306,7 +306,7 @@ Deno.serve(async (req) => {
     }
     page.drawLine({ start: { x: 350, y: sigY - 55 }, end: { x: 500, y: sigY - 55 }, thickness: 0.5, color: black });
     page.drawText(founderName, { x: 350, y: sigY - 68, size: 10, font: helvetica, color: black });
-    page.drawText("Founder, REALLO", { x: 350, y: sigY - 80, size: 9, font: helvetica, color: gray });
+    page.drawText("Founder, KARBALI", { x: 350, y: sigY - 80, size: 9, font: helvetica, color: gray });
 
     const pdfBytes = await pdfDoc.save();
 
@@ -354,24 +354,24 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "REALLO <noreply@loxservices.pro>",
+          from: "KARBALI <noreply@loxservices.pro>",
           to: submission.email,
-          subject: "REALLO — Your Letter of Intent Has Been Approved",
+          subject: "KARBALI — Your Letter of Intent Has Been Approved",
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background: #f8f9fa; border-radius: 12px; padding: 24px;">
-                <h2 style="color: #0d4d3a; font-size: 20px; margin-top: 0;">REALLO — Letter of Intent Approved</h2>
+                <h2 style="color: #0d4d3a; font-size: 20px; margin-top: 0;">KARBALI — Letter of Intent Approved</h2>
                 <p style="color: #555; font-size: 14px; line-height: 1.6;">
                   Dear ${submission.ceo_name},<br><br>
-                  We are pleased to inform you that your Letter of Intent for an advertising partnership between <strong>${submission.brand_name}</strong> and <strong>REALLO</strong> has been approved.
+                  We are pleased to inform you that your Letter of Intent for an advertising partnership between <strong>${submission.brand_name}</strong> and <strong>KARBALI</strong> has been approved.
                 </p>
                 <p style="color: #555; font-size: 14px; line-height: 1.6;">
                   Please find your signed LOI document attached to this email. You can also download it from your advertiser dashboard.
                 </p>
                 <p style="color: #555; font-size: 14px; line-height: 1.6;">
-                  We will notify you once REALLO reaches the 100,000 user milestone to activate the partnership.
+                  We will notify you once KARBALI reaches the 100,000 user milestone to activate the partnership.
                 </p>
-                <p style="color: #888; font-size: 12px; margin-top: 20px;">— The REALLO Team</p>
+                <p style="color: #888; font-size: 12px; margin-top: 20px;">— The KARBALI Team</p>
               </div>
             </div>
           `,

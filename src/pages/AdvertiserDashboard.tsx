@@ -201,7 +201,7 @@ const AdvertiserDashboard = () => {
         <WaterBackground />
         <div className="glass-card rounded-2xl p-8 max-w-sm w-full relative z-10">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold gradient-text mb-1">REALLO</h1>
+            <h1 className="text-2xl font-bold gradient-text mb-1">KARBALI</h1>
             <h2 className="text-sm font-semibold text-foreground mb-1">Advertiser Dashboard</h2>
             <p className="text-muted-foreground text-xs">Sign in with your verified email to access your dashboard.</p>
           </div>
@@ -271,7 +271,7 @@ const AdvertiserDashboard = () => {
       <WaterBackground />
       <div className="relative z-10 max-w-xl mx-auto px-4 pt-12">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold gradient-text mb-1" style={{ fontSize: "28px" }}>REALLO</h1>
+          <h1 className="text-3xl font-bold gradient-text mb-1" style={{ fontSize: "28px" }}>KARBALI</h1>
           <h2 className="text-base font-semibold text-foreground" style={{ fontSize: "14px" }}>Advertiser Dashboard</h2>
         </div>
 

@@ -32,6 +32,7 @@ const Navbar = ({ children }: NavbarProps) => {
         >
           <KarbaliLogo size={24} className="group-hover:scale-110 transition-transform duration-300" />
           <span className="font-display text-[15px] font-bold text-foreground tracking-tight gradient-text">Karbali</span>
+          <span className="font-display text-[13px] font-bold text-foreground tracking-tight gradient-text">Karbali</span>
         </button>
         <div className="flex items-center gap-1">
           <ThemeToggle />

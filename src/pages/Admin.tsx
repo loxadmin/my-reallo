@@ -135,7 +135,7 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
           <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm shrink-0">
             <Shield className="w-4.5 h-4.5 text-primary-foreground" />
           </div>
-          {!collapsed && <span className="text-[14px] font-bold text-sidebar-foreground tracking-tight">Reallo Admin</span>}
+          {!collapsed && <span className="text-[14px] font-bold text-sidebar-foreground tracking-tight">Karbali Admin</span>}
         </div>
       </SidebarHeader>
       <SidebarContent className={`${collapsed ? "px-1" : "px-4"} py-4 overflow-y-auto scrollbar-hide transition-all`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -923,7 +923,7 @@ const Admin = () => {
     profiles.forEach(p => { if (p.selected_goal) goalBreakdown[p.selected_goal] = (goalBreakdown[p.selected_goal] || 0) + 1; });
 
     const lines = [
-      ["REALLO PLATFORM — FINANCIAL STATEMENT"],
+      ["KARBALI PLATFORM — FINANCIAL STATEMENT"],
       [`Report Date: ${today}`, `Currency: ${adminCurrency}`, `Exchange Rate: 1 ${adminCurrency} = ${sym}${rate === 1 ? "1" : rate.toLocaleString()} NGN`],
       [],
       ["═══ 1. PLATFORM OVERVIEW ═══"],
@@ -1009,7 +1009,7 @@ const Admin = () => {
       const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = `reallo-financial-statement-${today}.csv`; a.click();
+      a.href = url; a.download = `karbali-financial-statement-${today}.csv`; a.click();
       URL.revokeObjectURL(url);
       toast({ title: "CSV Downloaded", description: "Financial statement exported successfully." });
     } else {
@@ -1022,7 +1022,7 @@ const Admin = () => {
         return `<tr>${row.map(c => `<${tag} style="padding:4px 12px 4px 0;text-align:left;${isHeader ? "font-weight:600;border-bottom:1px solid #ccc;" : ""}">${c}</${tag}>`)
           .join("")}</tr>`;
       }).join("\n");
-      const html = `<!DOCTYPE html><html><head><title>Reallo Financial Statement</title><style>body{font-family:system-ui,sans-serif;padding:40px;color:#1a1a1a}table{border-collapse:collapse;width:100%}th,td{font-size:12px}</style></head><body><table>${htmlRows}</table></body></html>`;
+      const html = `<!DOCTYPE html><html><head><title>Karbali Financial Statement</title><style>body{font-family:system-ui,sans-serif;padding:40px;color:#1a1a1a}table{border-collapse:collapse;width:100%}th,td{font-size:12px}</style></head><body><table>${htmlRows}</table></body></html>`;
       const w = window.open("", "_blank");
       if (w) { w.document.write(html); w.document.close(); w.print(); }
       toast({ title: "PDF Ready", description: "Print dialog opened. Save as PDF." });

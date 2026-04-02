@@ -504,7 +504,7 @@ const HowItWorks = () => {
           className="text-center mb-6"
         >
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground">
-            How <span className="gradient-text">Reallo</span> Works
+            How <span className="gradient-text">Karbali</span> Works
           </h2>
           <p className="text-[13px] text-muted-foreground mt-3 max-w-md mx-auto">
             Two paths. One ecosystem. Whether you're saving or earning, here's your journey.
@@ -555,7 +555,7 @@ const HowItWorks = () => {
           <FloatingIllustration type="influencer" />
           <SectionHeader
             badge="For Influencers"
-            title="Earn Real Money Promoting Reallo"
+            title="Earn Real Money Promoting Karbali"
             subtitle="Join our influencer program. Share your link, complete video challenges, and withdraw cash directly to your bank account."
           />
           <div className="space-y-4 md:space-y-6">
