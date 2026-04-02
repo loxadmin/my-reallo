@@ -30,6 +30,7 @@ export default function AdminInfluencerSurveys() {
     reward_amount: 5000,
     completion_link: "",
     completion_instructions: "",
+    upload_type: "screenshot" as "screenshot" | "link",
     is_active: true,
     questions: [blankQuestion()],
   });
@@ -65,6 +66,7 @@ export default function AdminInfluencerSurveys() {
         reward_amount: Number(draft.reward_amount),
         completion_link: draft.completion_link.trim() || null,
         completion_instructions: draft.completion_instructions.trim() || null,
+        upload_type: draft.upload_type,
         is_active: draft.is_active,
       })
       .select("id")
@@ -82,7 +84,7 @@ export default function AdminInfluencerSurveys() {
 
       const { data: createdQuestion, error: qErr } = await supabase
         .from("influencer_survey_questions" as any)
-        .insert({ survey_id: created.id, question_text: question.question_text.trim(), order_index: qIndex })
+        .insert({ survey_id: (created as any).id, question_text: question.question_text.trim(), order_index: qIndex })
         .select("id")
         .single();
 
@@ -94,7 +96,7 @@ export default function AdminInfluencerSurveys() {
       const cleanedOptions = question.options.filter((o) => o.option_text.trim());
       if (cleanedOptions.length) {
         const { error: oErr } = await supabase.from("influencer_survey_options" as any).insert(
-          cleanedOptions.map((opt) => ({ question_id: createdQuestion.id, option_text: opt.option_text.trim(), is_correct: !!opt.is_correct }))
+          cleanedOptions.map((opt) => ({ question_id: (createdQuestion as any).id, option_text: opt.option_text.trim(), is_correct: !!opt.is_correct }))
         );
         if (oErr) console.error("create influencer options error", oErr);
       }
@@ -107,6 +109,7 @@ export default function AdminInfluencerSurveys() {
       reward_amount: 5000,
       completion_link: "",
       completion_instructions: "",
+      upload_type: "screenshot",
       is_active: true,
       questions: [blankQuestion()],
     });
@@ -128,6 +131,18 @@ export default function AdminInfluencerSurveys() {
         <label className="text-xs flex items-center gap-2">
           <input type="checkbox" checked={draft.is_active} onChange={(e) => setDraft((p) => ({ ...p, is_active: e.target.checked }))} /> Active
         </label>
+
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground">User upload type:</span>
+          <label className="text-xs flex items-center gap-1.5 cursor-pointer">
+            <input type="radio" name="upload_type" checked={draft.upload_type === "screenshot"} onChange={() => setDraft((p) => ({ ...p, upload_type: "screenshot" }))} />
+            Screenshot
+          </label>
+          <label className="text-xs flex items-center gap-1.5 cursor-pointer">
+            <input type="radio" name="upload_type" checked={draft.upload_type === "link"} onChange={() => setDraft((p) => ({ ...p, upload_type: "link" }))} />
+            Link
+          </label>
+        </div>
 
         <div className="space-y-3">
           {draft.questions.map((question, qi) => (

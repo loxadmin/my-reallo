@@ -31,6 +31,9 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -66,6 +69,8 @@ const Auth = () => {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      // Skip redirect for password recovery — let /reset-password handle it
+      if (event === "PASSWORD_RECOVERY") return;
       if (event === "SIGNED_IN") {
         processOAuthReferral();
       }
@@ -186,10 +191,63 @@ const Auth = () => {
             <KarbaliLogo size={28} />
             <h1 className="font-display text-xl font-bold gradient-text">Karbali</h1>
           </div>
-          <p className="text-[12px] text-muted-foreground">Reclaim what's yours</p>
+          <p className="text-[13px] text-muted-foreground">Your Financial Assistant</p>
         </div>
 
-        {signupSuccess ? (
+        {forgotMode ? (
+          <GlassCard variant="glow">
+            {forgotSent ? (
+              <div className="text-center">
+                <Mail className="w-10 h-10 text-primary mx-auto mb-4" />
+                <h2 className="font-display text-lg font-bold text-foreground mb-2">Check Your Email</h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  We've sent a password reset link to <strong className="text-foreground">{email}</strong>.
+                </p>
+                <GlassButton variant="outline" onClick={() => { setForgotMode(false); setForgotSent(false); }}>
+                  Back to Login
+                </GlassButton>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h2 className="font-display text-lg font-bold text-foreground text-center">Reset Password</h2>
+                <p className="text-sm text-muted-foreground text-center">Enter your email and we'll send you a reset link.</p>
+                <GlassInput
+                  label="Email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                />
+                {error && <p className="text-sm text-destructive font-medium">{error}</p>}
+                <GlassButton
+                  variant="primary"
+                  className="w-full py-3.5"
+                  disabled={forgotLoading || !email}
+                  onClick={async () => {
+                    setError("");
+                    setForgotLoading(true);
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                      redirectTo: `${window.location.origin}/reset-password`,
+                    });
+                    if (error) setError(error.message);
+                    else setForgotSent(true);
+                    setForgotLoading(false);
+                  }}
+                >
+                  {forgotLoading ? "Sending…" : "Send Reset Link"}
+                </GlassButton>
+                <button
+                  type="button"
+                  onClick={() => { setForgotMode(false); setError(""); }}
+                  className="text-xs text-muted-foreground hover:text-foreground w-full text-center mt-2"
+                >
+                  ← Back to Login
+                </button>
+              </div>
+            )}
+          </GlassCard>
+        ) : signupSuccess ? (
           <GlassCard variant="glow" className="text-center">
             <Mail className="w-10 h-10 text-primary mx-auto mb-4" />
             <h2 className="font-display text-lg font-bold text-foreground mb-2">Check Your Email</h2>
@@ -297,6 +355,16 @@ const Auth = () => {
                   <p className="text-[13px] text-destructive font-medium">
                     {error}
                   </p>
+                )}
+
+                {mode === "login" && !forgotMode && (
+                  <button
+                    type="button"
+                    onClick={() => { setForgotMode(true); setError(""); }}
+                    className="text-xs text-primary hover:underline mt-1"
+                  >
+                    Forgot password?
+                  </button>
                 )}
 
                 <GlassButton variant="primary" className="w-full mt-4 text-[13px] py-3.5" onClick={handleSubmit} disabled={loading || !email || !password}>

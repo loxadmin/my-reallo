@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
 
     const { data: referrer } = await supabase
       .from("profiles")
+      .select("id, queue_position, off_queue_at")
       .select("id, queue_position, points_balance, off_queue_at")
       .eq("referral_code", referral_code.toUpperCase())
       .single();
@@ -62,6 +63,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Check if referrer is off-queue: award 1000 points instead of queue skip
+    if (referrer.queue_position <= 0 && referrer.off_queue_at) {
+      await supabase
+        .from("profiles")
+        .update({ points_balance: (await supabase.from("profiles").select("points_balance").eq("id", referrer.id).single()).data?.points_balance + 1000 })
+        .eq("id", referrer.id);
+
+      await supabase.from("waitlist_activity").insert({
+        user_id: referrer.id,
+        action_type: "referral_points",
+        positions_moved: 0,
+      });
+    } else {
+      const newPos = Math.max(1, referrer.queue_position - 20);
     const isOffQueue = referrer.queue_position === 0 || referrer.off_queue_at !== null;
 
     if (isOffQueue) {
@@ -105,6 +120,12 @@ Deno.serve(async (req) => {
         .from("profiles")
         .update({ queue_position: newPos })
         .eq("id", referrer.id);
+
+      await supabase.from("waitlist_activity").insert({
+        user_id: referrer.id,
+        action_type: "referral",
+        positions_moved: 20,
+      });
     }
 
     await supabase.from("referrals").insert({

@@ -59,13 +59,14 @@ export const approveInfluencerSurveyResponse = async (
 
     if (txnInsertError) throw txnInsertError;
 
+    const walletData = wallet as any;
     const { error: walletUpdateError } = await supabase
       .from("influencer_wallets" as any)
       .update({
         balance:
-          (Number(wallet.balance) || 0) + Number(response.reward_amount || 0),
+          (Number(walletData.balance) || 0) + Number(response.reward_amount || 0),
       })
-      .eq("id", wallet.id);
+      .eq("id", walletData.id);
 
     if (walletUpdateError) throw walletUpdateError;
   }

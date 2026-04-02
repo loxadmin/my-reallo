@@ -31,6 +31,7 @@ const Navbar = ({ children }: NavbarProps) => {
           className="flex items-center gap-2 group"
         >
           <KarbaliLogo size={24} className="group-hover:scale-110 transition-transform duration-300" />
+          <span className="font-display text-[15px] font-bold text-foreground tracking-tight gradient-text">Karbali</span>
           <span className="font-display text-[13px] font-bold text-foreground tracking-tight gradient-text">Karbali</span>
         </button>
         <div className="flex items-center gap-1">
@@ -84,7 +85,7 @@ const Navbar = ({ children }: NavbarProps) => {
                     {isAdmin && (
                       <DropdownMenuItem
                         onClick={() => navigate("/admin")}
-                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] text-primary"
+                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[14px] text-primary"
                       >
                         <Shield className="w-4 h-4" />
                         Admin Panel
@@ -94,7 +95,7 @@ const Navbar = ({ children }: NavbarProps) => {
                     {!isDashboard && (
                       <DropdownMenuItem
                         onClick={() => navigate("/dashboard")}
-                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] text-muted-foreground"
+                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[14px] text-muted-foreground"
                       >
                         <LayoutDashboard className="w-4 h-4" />
                         Dashboard
@@ -106,7 +107,7 @@ const Navbar = ({ children }: NavbarProps) => {
                         await signOut();
                         navigate("/");
                       }}
-                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] text-muted-foreground"
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[14px] text-muted-foreground"
                     >
                       <LogOut className="w-4 h-4" />
                       Sign Out
@@ -118,7 +119,7 @@ const Navbar = ({ children }: NavbarProps) => {
           ) : (
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
-              <span className="text-[11px] text-muted-foreground font-medium">Live</span>
+              <span className="text-[12px] text-muted-foreground font-medium">Live</span>
             </div>
           )}
         </div>

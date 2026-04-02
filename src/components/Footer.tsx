@@ -36,14 +36,14 @@ const Footer = () => {
           )}
           {content.contact_us && (
             <div>
-              <h4 className="text-[13px] font-semibold text-foreground mb-2">Contact Us</h4>
-              <p className="text-[12px] text-muted-foreground leading-relaxed whitespace-pre-line">{content.contact_us}</p>
+              <h4 className="text-[14px] font-semibold text-foreground mb-2">Contact Us</h4>
+              <p className="text-[13px] text-muted-foreground leading-relaxed whitespace-pre-line">{content.contact_us}</p>
             </div>
           )}
           {content.invest_with_us && (
             <div>
-              <h4 className="text-[13px] font-semibold text-foreground mb-2">Invest With Us</h4>
-              <p className="text-[12px] text-muted-foreground leading-relaxed whitespace-pre-line">{content.invest_with_us}</p>
+              <h4 className="text-[14px] font-semibold text-foreground mb-2">Invest With Us</h4>
+              <p className="text-[13px] text-muted-foreground leading-relaxed whitespace-pre-line">{content.invest_with_us}</p>
             </div>
           )}
         </div>

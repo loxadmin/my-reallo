@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.advertiser-loi-downloaded]
 verify_jwt = false
+
+[functions.karbali-chat]
+verify_jwt = false
