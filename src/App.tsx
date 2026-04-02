@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Vouchers from "./pages/Vouchers";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 import AdvertiserOnboard from "./pages/AdvertiserOnboard";
 import AdvertiserDashboard from "./pages/AdvertiserDashboard";
 
@@ -29,6 +30,7 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/dashboard/:view" element={<Dashboard />} />
                   <Route path="/admin" element={<Admin />} />
