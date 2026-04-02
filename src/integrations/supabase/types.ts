@@ -716,6 +716,7 @@ export type Database = {
           reward_amount: number
           title: string
           updated_at: string
+          upload_type: string
         }
         Insert: {
           completion_instructions?: string | null
@@ -727,6 +728,7 @@ export type Database = {
           reward_amount?: number
           title: string
           updated_at?: string
+          upload_type?: string
         }
         Update: {
           completion_instructions?: string | null
@@ -738,6 +740,7 @@ export type Database = {
           reward_amount?: number
           title?: string
           updated_at?: string
+          upload_type?: string
         }
         Relationships: []
       }

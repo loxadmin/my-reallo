@@ -37,7 +37,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { view: urlView } = useParams<{ view?: string }>();
 
-  // Derive step from profile
   const getInitialStep = (): DashStep => {
     if (profile?.selected_goal && profile?.total_annual_spend > 0) return "dashboard";
     return "onboarding";
@@ -47,7 +46,6 @@ const Dashboard = () => {
   const [spendResult, setSpendResult] = useState<SpendResult | null>(null);
   const [profileReady, setProfileReady] = useState(false);
 
-  // Derive activeView from URL param
   const activeView: DashView = urlView && validViews.includes(urlView as DashView)
     ? (urlView as DashView)
     : "home";
@@ -94,9 +92,7 @@ const Dashboard = () => {
         <WaterBackground />
         <Navbar />
         <div className="flex pt-14">
-          <main className="flex-1 w-full">
-            <PageSkeleton />
-          </main>
+          <main className="flex-1 w-full"><PageSkeleton /></main>
         </div>
       </div>
     );
@@ -110,10 +106,7 @@ const Dashboard = () => {
       <div className="relative min-h-screen overflow-x-hidden">
         <Navbar />
         <div className="pt-14">
-          <KarbaliChat
-            mode="fullscreen"
-            onOnboardingComplete={handleOnboardingComplete}
-          />
+          <KarbaliChat mode="fullscreen" onOnboardingComplete={handleOnboardingComplete} />
         </div>
       </div>
     );
@@ -130,6 +123,29 @@ const Dashboard = () => {
   ];
 
   const isEarnActive = activeView === "earn" || activeView === "tasks" || activeView === "surveys";
+
+  // Proactive assistant tip based on user state
+  const getProactiveTip = (): string | undefined => {
+    if (!profile) return undefined;
+    const pos = profile.queue_position ?? 0;
+    if (pos > 0) {
+      const tips = [
+        `💡 Did you know? You can skip 20 queue positions by referring just one friend! Your code: **${profile.referral_code}**`,
+        `🚀 You're at position #${pos}. Want to get off the queue faster? Share your referral link with friends!`,
+        `📊 At the current rate, you could be off the queue in about ${Math.ceil(pos / 50)} days. Referrals can cut that dramatically!`,
+      ];
+      return tips[Math.floor(Math.random() * tips.length)];
+    }
+    if (pos <= 0) {
+      const tips = [
+        "🎉 You're off the queue! Head to **Verify** to submit your transaction IDs and start claiming your spend back.",
+        `💰 Did you know you can earn points by referring friends? Each referral earns you **1,000 points** (₦500). Your code: **${profile.referral_code}**`,
+        "📝 Complete surveys and tasks in the **Earn** tab to build up your points balance faster!",
+      ];
+      return tips[Math.floor(Math.random() * tips.length)];
+    }
+    return undefined;
+  };
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
@@ -186,7 +202,7 @@ const Dashboard = () => {
           <AnimatePresence mode="wait">
             {activeView === "chat" ? (
               <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <KarbaliChat mode="fullscreen" />
+                <KarbaliChat mode="fullscreen" proactiveTip={getProactiveTip()} />
               </motion.div>
             ) : (
               <motion.div key="queue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>

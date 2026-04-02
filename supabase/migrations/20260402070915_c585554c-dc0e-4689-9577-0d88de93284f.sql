@@ -1,0 +1,1 @@
+ALTER TABLE public.influencer_surveys ADD COLUMN IF NOT EXISTS upload_type text NOT NULL DEFAULT 'screenshot' CHECK (upload_type IN ('screenshot', 'link'));
