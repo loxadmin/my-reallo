@@ -59,7 +59,6 @@ const Dashboard = () => {
 
   const [step, setStep] = useState<DashStep>(() => getInitialStep(profile));
   const [spendResult, setSpendResult] = useState<SpendResult | null>(() => getInitialSpendResult(profile));
-  const [profileReady, setProfileReady] = useState(!!profile);
 
   const activeView: DashView = urlView && validViews.includes(urlView as DashView)
     ? (urlView as DashView)
@@ -89,8 +88,10 @@ const Dashboard = () => {
           totalAnnual: profile.total_annual_spend,
         });
         setStep("dashboard");
+      } else {
+        setSpendResult(null);
+        setStep("onboarding");
       }
-      setProfileReady(true);
     }
   }, [profile]);
 
@@ -127,12 +128,12 @@ const Dashboard = () => {
 
   const isOffQueue = (profile?.queue_position ?? 999) <= 0;
 
-  if (loading || (!profileReady && user)) {
+  if (loading) {
     return (
       <div className="relative min-h-screen overflow-x-hidden">
         <WaterBackground />
         <Navbar />
-        <div className="flex pt-14">
+        <div className="relative z-10 flex pt-14">
           <main className="flex-1 w-full"><PageSkeleton /></main>
         </div>
       </div>
@@ -141,12 +142,33 @@ const Dashboard = () => {
 
   if (!user) return null;
 
+  if (!profile) {
+    return (
+      <div className="relative min-h-screen overflow-x-hidden">
+        <WaterBackground />
+        <Navbar />
+        <div className="relative z-10 px-4 pt-24">
+          <div className="mx-auto max-w-md glass-card rounded-2xl p-6 text-center">
+            <h2 className="text-[15px] font-semibold text-foreground">We couldn’t load your account yet</h2>
+            <p className="mt-2 text-[12px] text-muted-foreground">Please retry loading your dashboard.</p>
+            <button
+              onClick={() => void refreshProfile()}
+              className="mt-4 clay-primary rounded-xl px-4 py-2 text-[12px] font-medium text-primary-foreground"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Onboarding: Full-screen chat ───
   if (step === "onboarding") {
     return (
       <div className="relative min-h-screen overflow-x-hidden">
         <Navbar />
-        <div className="pt-14">
+        <div className="relative z-10 pt-14">
           <KarbaliChat mode="fullscreen" onOnboardingComplete={handleOnboardingComplete} />
         </div>
       </div>
@@ -187,7 +209,7 @@ const Dashboard = () => {
         ))}
       </Navbar>
 
-      <div className="flex pt-14">
+      <div className="relative z-10 flex pt-14">
         {/* Desktop sidebar */}
         <aside className="hidden lg:flex flex-col w-56 fixed top-14 left-0 bottom-0 z-30 p-4">
           <div className="glass-strong rounded-2xl p-3 space-y-1 mt-2">
@@ -216,7 +238,7 @@ const Dashboard = () => {
         </aside>
 
         {/* Main content */}
-        <main className={cn("flex-1 w-full lg:ml-56")}>
+        <main className={cn("relative z-10 flex-1 w-full lg:ml-56")}>
           <AnimatePresence mode="wait">
             {activeView === "chat" ? (
               <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>

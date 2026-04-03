@@ -33,30 +33,49 @@ const NotificationContext = createContext<NotificationContextType>({
 export const useNotifications = () => useContext(NotificationContext);
 
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchNotifications = useCallback(async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setNotifications((data || []) as unknown as Notification[]);
-    setLoading(false);
-  }, [user]);
+    if (!user?.id) {
+      setNotifications([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error("Notification fetch error:", error);
+        setNotifications([]);
+        return;
+      }
+
+      setNotifications((data || []) as unknown as Notification[]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user) {
       setNotifications([]);
       setLoading(false);
       return;
     }
 
-    fetchNotifications();
+    void fetchNotifications();
 
     // Realtime subscription for new notifications
     const channel = supabase
@@ -79,7 +98,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchNotifications]);
+  }, [authLoading, user, fetchNotifications]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 

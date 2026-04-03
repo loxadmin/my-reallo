@@ -47,11 +47,13 @@ const Auth = () => {
     }
   }, [searchParams]);
 
-  // Handle post-OAuth referral processing
+  // Handle post-OAuth referral processing without introducing another auth state source
   useEffect(() => {
-    const processOAuthReferral = async () => {
+    let cancelled = false;
+
+    const processOAuthRedirect = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (cancelled || !session) return;
 
       const pendingRef = localStorage.getItem(REFERRAL_STORAGE_KEY);
       if (pendingRef) {
@@ -65,18 +67,14 @@ const Auth = () => {
           // Non-critical
         }
       }
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      // Skip redirect for password recovery — let /reset-password handle it
-      if (event === "PASSWORD_RECOVERY") return;
-      if (event === "SIGNED_IN") {
-        processOAuthReferral();
-      }
-    });
+    void processOAuthRedirect();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   const passwordStrength = mode === "signup" ? getPasswordStrength(password) : null;

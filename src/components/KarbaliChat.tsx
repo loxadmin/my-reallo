@@ -137,13 +137,18 @@ async function streamChat({
   onDone: (fullText: string) => void;
   signal?: AbortSignal;
 }) {
-  // Use import.meta.env for reliable access to Supabase environment variables in Vite
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || (supabase as any).supabaseUrl;
-  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || (supabase as any).supabaseKey;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseKey) {
+  if (!supabaseUrl || !publishableKey) {
     throw new Error("Supabase configuration missing");
   }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const authToken = session?.access_token || publishableKey;
 
   const chatUrl = `${supabaseUrl}/functions/v1/karbali-chat`;
 
@@ -151,8 +156,8 @@ async function streamChat({
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${supabaseKey}`,
-      "apikey": supabaseKey,
+      "Authorization": `Bearer ${authToken}`,
+      "apikey": publishableKey,
     },
     body: JSON.stringify({ messages, profile }),
     signal,
@@ -264,79 +269,67 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
-  // Initialize state directly from localStorage to prevent flash of empty messages
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    // Try to get userId from various sources to ensure we load history if available
-    const userId = user?.id || profile?.id;
-    if (userId) {
-      return loadMessages(userId);
-    }
-    return [];
-  });
-
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  // If we have messages, we aren't "initializing" in the sense of needing a greeting
-  const [isInitializing, setIsInitializing] = useState(() => !messages.length);
-  const [isHistoryLoaded, setIsHistoryLoaded] = useState(!!user?.id);
+  const [isChatReady, setIsChatReady] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const initialized = useRef(false);
+  const initializedUserIdRef = useRef<string | null>(null);
+  const bootstrapStartedRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // Initialize: Load history from localStorage if not already done via state initializer
   useEffect(() => {
-    if (!user?.id || isHistoryLoaded) return;
-
-    const saved = loadMessages(user.id);
-    if (saved.length > 0) {
-      setMessages(saved);
+    if (!user?.id) {
+      setMessages([]);
+      setIsChatReady(false);
+      initializedUserIdRef.current = null;
+      bootstrapStartedRef.current = false;
+      return;
     }
-    setIsHistoryLoaded(true);
-  }, [user?.id, isHistoryLoaded]);
 
-  // After history is loaded, check if we need an initial AI greeting
+    if (initializedUserIdRef.current === user.id) return;
+
+    const savedMessages = loadMessages(user.id);
+    setMessages(savedMessages);
+    setIsChatReady(true);
+    initializedUserIdRef.current = user.id;
+    bootstrapStartedRef.current = savedMessages.length > 0;
+  }, [user?.id]);
+
   useEffect(() => {
-    if (!isHistoryLoaded || !user || !profile || initialized.current) return;
+    if (!isChatReady || !user || !profile || bootstrapStartedRef.current) return;
 
-    // Only proceed if we haven't already handled initialization
-    initialized.current = true;
-
-    if (messages.length === 0 && profile?.email) {
-      // Generate first message via AI
-      const name = (profile.email || "").split("@")[0];
-      const needsOnboarding = !profile.selected_goal || !profile.total_annual_spend || profile.total_annual_spend === 0;
-      
-      const systemGreeting = needsOnboarding
-        ? `The user "${name}" just signed up. Greet them warmly and start the onboarding conversation. Ask about their weekly data spend first.`
-        : `The user "${name}" is returning. Greet them and offer helpful suggestions based on their profile.`;
-
-      setIsInitializing(false);
-      // Send an initial prompt to get the AI's greeting
-      sendToAI([{ role: "user", content: systemGreeting }], true);
-    } else {
-      setIsInitializing(false);
+    if (messages.length > 0) {
+      bootstrapStartedRef.current = true;
+      return;
     }
-  }, [isHistoryLoaded, user, profile, messages.length]);
+
+    bootstrapStartedRef.current = true;
+
+    const name = (profile.email || "").split("@")[0];
+    const needsOnboarding = !profile.selected_goal || !profile.total_annual_spend || profile.total_annual_spend === 0;
+    const openingInstruction = needsOnboarding
+      ? `Start a warm, natural onboarding conversation with ${name}. Greet them briefly, then ask about their weekly data spend first.`
+      : `Greet ${name} warmly as a returning user, mention one relevant helpful insight from their profile, and ask what they want to do next.`;
+
+    void sendToAI([{ role: "user", content: openingInstruction }], true);
+  }, [isChatReady, user, profile, messages.length]);
 
   // Persistence: Save to localStorage whenever messages change
   useEffect(() => {
-    // Determine the userId to save under
-    const userId = user?.id || profile?.id;
-    // Only save if history was actually loaded and we have a user and we actually have messages to save
-    // We also check for messages.length > 0 to avoid wiping history with an empty array during transient states
-    if (isHistoryLoaded && userId && messages.length > 0) {
-      saveMessages(userId, messages);
+    if (isChatReady && user?.id) {
+      saveMessages(user.id, messages);
     }
-  }, [messages, isHistoryLoaded, user?.id, profile?.id]);
+  }, [messages, isChatReady, user?.id]);
 
   // Handle proactive tips
   useEffect(() => {
-    if (proactiveTip && user && isHistoryLoaded && !isInitializing) {
+    if (proactiveTip && user && isChatReady) {
       setMessages(prev => {
         // Don't add duplicate tips
         if (prev.some(m => m.content === proactiveTip)) return prev;
@@ -351,7 +344,13 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
         return [...prev, tipMsg];
       });
     }
-  }, [proactiveTip, user, isHistoryLoaded, isInitializing]);
+  }, [proactiveTip, user, isChatReady]);
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   useEffect(scrollToBottom, [messages, isStreaming, scrollToBottom]);
 
@@ -395,12 +394,13 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
         onDelta: upsertAssistant,
         onDone: async (fullText) => {
           const { cleanText, profileUpdate, navigate: navRoute } = parseActions(fullText);
+          const finalText = cleanText.trim() || (navRoute ? "Taking you there now…" : "Got it — I’ve saved that.");
           const userId = user.id;
 
           // Update message with cleaned text (remove action blocks)
-          if (cleanText !== fullText) {
+          if (finalText !== fullText) {
             setMessages(prev => {
-              const updated = prev.map(m => m.id === msgId ? { ...m, content: cleanText } : m);
+              const updated = prev.map(m => m.id === msgId ? { ...m, content: finalText } : m);
               saveMessages(userId, updated);
               return updated;
             });
@@ -413,23 +413,39 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
 
           // Apply profile updates
           if (profileUpdate) {
-            await supabase
+            const { error: profileError } = await supabase
               .from("profiles")
               .update(profileUpdate)
               .eq("id", user.id);
-            await refreshProfile();
+            if (profileError) {
+              console.error("Profile update error:", profileError);
+              toast({
+                title: "Update issue",
+                description: "I couldn’t save that change yet. Please try again.",
+                variant: "destructive",
+              });
+            } else {
+              await refreshProfile();
+            }
             
             // Check if onboarding completed
-            if (profileUpdate.selected_goal && profileUpdate.total_annual_spend) {
-              setTimeout(() => onOnboardingComplete?.(), 2000);
+            const completedOnboarding = Boolean(
+              (profileUpdate.selected_goal ?? profile.selected_goal) &&
+              (profileUpdate.total_annual_spend ?? profile.total_annual_spend)
+            );
+
+            if (completedOnboarding) {
+              setTimeout(() => onOnboardingComplete?.(), 1200);
             }
           }
 
           // Handle navigation
           if (navRoute) {
-            setTimeout(() => navigate(`/dashboard/${navRoute === "home" ? "" : navRoute}`), 1500);
+            const targetPath = navRoute === "home" ? "/dashboard" : `/dashboard/${navRoute}`;
+            setTimeout(() => navigate(targetPath), 1200);
           }
 
+          abortRef.current = null;
           setIsStreaming(false);
         },
         signal: abortController.signal,
@@ -442,6 +458,7 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
         description: err.message || "Could not reach the assistant. Please try again.",
         variant: "destructive",
       });
+      abortRef.current = null;
       setIsStreaming(false);
     }
   };
@@ -459,15 +476,16 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
 
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
+    saveMessages(user.id, updatedMessages);
     setInput("");
 
-    // Build chat history for AI (last 20 messages for context)
-    const history = updatedMessages.slice(-20).map(m => ({
+    // Build chat history for AI with enough context for real conversation continuity
+    const history = updatedMessages.slice(-100).map(m => ({
       role: m.role,
       content: m.content,
     }));
 
-    await sendToAI(history);
+    void sendToAI(history);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -477,11 +495,9 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
     }
   };
 
-  if (isInitializing) return null;
-
   return (
     <div
-      className={`flex flex-col ${
+      className={`relative z-10 flex flex-col ${
         mode === "fullscreen" ? "h-[calc(100vh-3.5rem)]" : "h-full"
       } bg-background`}
     >
@@ -500,14 +516,22 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        <AnimatePresence initial={false}>
-          {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
-          ))}
-        </AnimatePresence>
-        <AnimatePresence>
-          {isStreaming && messages[messages.length - 1]?.role !== "assistant" && <TypingIndicator />}
-        </AnimatePresence>
+        {!isChatReady ? (
+          <div className="flex h-full items-center justify-center text-[12px] text-muted-foreground">
+            Loading your conversation…
+          </div>
+        ) : (
+          <>
+            <AnimatePresence initial={false}>
+              {messages.map((msg) => (
+                <MessageBubble key={msg.id} message={msg} />
+              ))}
+            </AnimatePresence>
+            <AnimatePresence>
+              {isStreaming && messages[messages.length - 1]?.role !== "assistant" && <TypingIndicator />}
+            </AnimatePresence>
+          </>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -522,11 +546,11 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip }
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             className="flex-1 bg-muted rounded-full px-4 py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-            disabled={isStreaming}
+            disabled={!isChatReady || isStreaming}
           />
           <button
             onClick={() => handleSend()}
-            disabled={!input.trim() || isStreaming}
+            disabled={!isChatReady || !input.trim() || isStreaming}
             className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shrink-0"
           >
             <Send className="w-4 h-4" />

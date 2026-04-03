@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode, useMemo, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -10,18 +10,18 @@ import {
 interface Profile {
   id: string;
   email: string;
-  annual_data_spend: number;
-  annual_electricity_spend: number;
-  annual_food_spend: number;
-  annual_transport_spend: number;
-  total_annual_spend: number;
+  annual_data_spend: number | null;
+  annual_electricity_spend: number | null;
+  annual_food_spend: number | null;
+  annual_transport_spend: number | null;
+  total_annual_spend: number | null;
   selected_goal: string | null;
-  target_amount: number;
-  queue_position: number;
+  target_amount: number | null;
+  queue_position: number | null;
   referral_code: string | null;
   referred_by: string | null;
-  last_active: string;
-  created_at: string;
+  last_active: string | null;
+  created_at: string | null;
   points_balance: number;
   is_banned: boolean;
   ban_reason: string | null;
@@ -43,55 +43,117 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const AUTH_TIMEOUT_MS = 10000;
+
+function withTimeout<T>(promise: Promise<T>, label: string, timeoutMs = AUTH_TIMEOUT_MS): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error(`${label} timed out`)), timeoutMs);
+
+    promise
+      .then((result) => {
+        window.clearTimeout(timeout);
+        resolve(result);
+      })
+      .catch((error) => {
+        window.clearTimeout(timeout);
+        reject(error);
+      });
+  });
+}
+
+interface ResolvedUserState {
+  profile: Profile | null;
+  isAdmin: boolean;
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const signOutInFlightRef = useRef(false);
 
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-    setProfile(data as Profile | null);
-  };
+  const applyResolvedUserState = useCallback((resolved: ResolvedUserState) => {
+    setProfile(resolved.profile);
+    setIsAdmin(resolved.isAdmin);
+  }, []);
 
-  const checkAdmin = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    setIsAdmin(!!data);
-  };
+  const resolveUserState = useCallback(async (userId: string): Promise<ResolvedUserState> => {
+    const [profileResult, adminResult] = await Promise.all([
+      withTimeout(
+        supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .maybeSingle(),
+        "profile lookup"
+      ),
+      withTimeout(
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "admin")
+          .maybeSingle(),
+        "admin role lookup"
+      ),
+    ]);
 
-  const refreshProfile = async () => {
-    if (user) {
-      // Don't set global loading to true during a refresh to avoid UI flashing
-      await fetchProfile(user.id);
+    if (profileResult.error) {
+      console.error("Profile lookup error:", profileResult.error);
     }
-  };
+
+    if (adminResult.error) {
+      console.error("Admin lookup error:", adminResult.error);
+    }
+
+    return {
+      profile: (profileResult.data as Profile | null) ?? null,
+      isAdmin: !!adminResult.data,
+    };
+  }, []);
 
   const performSignOut = useCallback(async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-    setIsAdmin(false);
-    clearActivityTimestamp();
+    if (signOutInFlightRef.current) return;
+
+    signOutInFlightRef.current = true;
+
+    try {
+      await withTimeout(supabase.auth.signOut(), "sign out");
+    } catch (error) {
+      console.error("Sign out error:", error);
+    } finally {
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setIsAdmin(false);
+      setProfileLoading(false);
+      clearActivityTimestamp();
+      setAuthReady(true);
+      signOutInFlightRef.current = false;
+    }
   }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const resolved = await resolveUserState(user.id);
+      applyResolvedUserState(resolved);
+    } catch (error) {
+      console.error("Profile refresh error:", error);
+    }
+  }, [applyResolvedUserState, resolveUserState, user?.id]);
 
   // ─── 48-hour inactivity auto-logout ───
   useEffect(() => {
-    if (!user) return;
+    if (!authReady || !user) return;
 
     const checkInactivity = () => {
       if (isSessionExpiredByInactivity()) {
-        performSignOut();
+        void performSignOut();
       }
     };
 
@@ -124,94 +186,165 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       clearInterval(interval);
       if (throttleTimer) clearTimeout(throttleTimer);
     };
-  }, [user, performSignOut]);
+  }, [authReady, user, performSignOut]);
 
   useEffect(() => {
-    let initialSessionHandled = false;
+    let isMounted = true;
 
-    // Set up auth listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const applySession = (nextSession: Session | null) => {
+      if (!isMounted) return;
 
-        if (session?.user) {
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      applySession(nextSession);
+
+      if (nextSession?.user) {
+        updateLastActivity();
+      } else {
+        clearActivityTimestamp();
+        setProfile(null);
+        setIsAdmin(false);
+        setProfileLoading(false);
+      }
+    });
+
+    const initializeAuth = async () => {
+      try {
+        const {
+          data: { session: restoredSession },
+          error,
+        } = await withTimeout(supabase.auth.getSession(), "session restore");
+
+        if (error) {
+          console.error("Auth session restore error:", error);
+        }
+
+        if (restoredSession?.user && isSessionExpiredByInactivity()) {
+          await performSignOut();
+          return;
+        }
+
+        applySession(restoredSession);
+
+        if (restoredSession?.user) {
           updateLastActivity();
-          // Use setTimeout to avoid Supabase deadlock
-          setTimeout(async () => {
-            await fetchProfile(session.user.id);
-            await checkAdmin(session.user.id);
-            if (initialSessionHandled) {
-              // Only set loading false here for subsequent auth changes (sign in/out)
-              setLoading(false);
-            }
-          }, 0);
-        } else {
-          setProfile(null);
-          setIsAdmin(false);
-          if (initialSessionHandled) {
-            setLoading(false);
-          }
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        applySession(null);
+        setProfile(null);
+        setIsAdmin(false);
+      } finally {
+        if (isMounted) {
+          setAuthReady(true);
         }
       }
-    );
+    };
 
-    // Then get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      // Check inactivity before restoring session
-      if (session?.user && isSessionExpiredByInactivity()) {
-        supabase.auth.signOut();
-        clearActivityTimestamp();
-        initialSessionHandled = true;
-        setLoading(false);
+    void initializeAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [performSignOut]);
+
+  useEffect(() => {
+    if (!authReady) return;
+
+    let cancelled = false;
+
+    const hydrateUserState = async () => {
+      if (!user?.id) {
+        if (!cancelled) {
+          setProfile(null);
+          setIsAdmin(false);
+          setProfileLoading(false);
+        }
         return;
       }
 
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        updateLastActivity();
-        await fetchProfile(session.user.id);
-        await checkAdmin(session.user.id);
-      }
-      initialSessionHandled = true;
-      setLoading(false);
-    });
+      setProfileLoading(true);
 
-    return () => subscription.unsubscribe();
-  }, []);
+      try {
+        const resolved = await resolveUserState(user.id);
+        if (cancelled) return;
+        applyResolvedUserState(resolved);
+      } catch (error) {
+        console.error("User state hydration error:", error);
+        if (!cancelled) {
+          setProfile(null);
+          setIsAdmin(false);
+        }
+      } finally {
+        if (!cancelled) {
+          setProfileLoading(false);
+        }
+      }
+    };
+
+    void hydrateUserState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, user?.id, resolveUserState, applyResolvedUserState]);
 
   const signUp = async (email: string, password: string, referralCode?: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: referralCode ? { referral_code: referralCode.toUpperCase() } : {},
-      },
-    });
+    try {
+      const { error } = await withTimeout(
+        supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: referralCode ? { referral_code: referralCode.toUpperCase() } : {},
+          },
+        }),
+        "sign up"
+      );
 
-    return { error };
+      return { error };
+    } catch (error) {
+      return { error };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error) {
-      updateLastActivity();
+    try {
+      const { error } = await withTimeout(
+        supabase.auth.signInWithPassword({ email, password }),
+        "sign in"
+      );
+
+      if (!error) {
+        updateLastActivity();
+      }
+
+      return { error };
+    } catch (error) {
+      return { error };
     }
-    return { error };
   };
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await performSignOut();
-  };
+  }, [performSignOut]);
+
+  const loading = !authReady || profileLoading;
+
+  const value = useMemo(
+    () => ({ user, session, profile, isAdmin, loading, signUp, signIn, signOut, refreshProfile }),
+    [user, session, profile, isAdmin, loading, signOut, refreshProfile]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{ user, session, profile, isAdmin, loading, signUp, signIn, signOut, refreshProfile }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
 };
 
