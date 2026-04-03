@@ -5,8 +5,6 @@ import { toast } from "@/hooks/use-toast";
 import WaterBackground from "@/components/WaterBackground";
 import { Upload, CheckCircle2, Send, Shield, Globe, Mail, Phone, User, Building } from "lucide-react";
 
-const SUPABASE_URL = "https://mrcypdyivfprvvirnwtq.supabase.co";
-
 const AdvertiserOnboard = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
