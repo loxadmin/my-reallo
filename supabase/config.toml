@@ -1,4 +1,4 @@
-project_id = "mrcypdyivfprvvirnwtq"
+project_id = "dvkoafztquswcqniwcyf"
 
 [functions.paystack-bank]
 verify_jwt = false
@@ -19,4 +19,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.karbali-chat]
+verify_jwt = false
+
+[functions.verify-integration]
 verify_jwt = false
