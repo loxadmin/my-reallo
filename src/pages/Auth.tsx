@@ -160,14 +160,17 @@ const Auth = () => {
         if (signUpError) {
           setError(sanitizeAuthError(signUpError));
         } else {
-          // Register this device/IP after successful signup
+          // Register this device/IP and save user_type after successful signup
           try {
             const { data: sessionData } = await supabase.auth.getSession();
             const userId = sessionData?.session?.user?.id;
             if (userId) {
-              await supabase.functions.invoke("check-signup-limit", {
-                body: { action: "register", device_fingerprint: deviceFp, user_id: userId },
-              });
+              await Promise.all([
+                supabase.functions.invoke("check-signup-limit", {
+                  body: { action: "register", device_fingerprint: deviceFp, user_id: userId },
+                }),
+                supabase.from("profiles").update({ user_type: userType }).eq("id", userId),
+              ]);
             }
           } catch {
             // Non-critical, don't block signup success
