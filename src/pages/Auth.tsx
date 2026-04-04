@@ -341,7 +341,28 @@ const Auth = () => {
 
                 <div className={`grid transition-all duration-300 ease-in-out ${mode === "signup" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
                   <div className="overflow-hidden">
-                    <div className="pt-1">
+                    <div className="pt-1 space-y-3">
+                      {/* Parent / Student selector */}
+                      <div>
+                        <label className="text-[12px] font-medium text-foreground mb-1.5 block">I am a</label>
+                        <div className="flex gap-2">
+                          {(["student", "parent"] as const).map(type => (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => setUserType(type)}
+                              className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 border ${
+                                userType === type
+                                  ? "clay-primary text-primary-foreground border-primary/30"
+                                  : "glass-button text-muted-foreground border-border/40"
+                              }`}
+                            >
+                              {type === "student" ? "🎓 Student" : "👨‍👩‍👧 Parent"}
+                            </button>
+                          ))}
+                        </div>
+                        {fieldErrors.userType && <p className="text-[11px] text-destructive mt-1">{fieldErrors.userType}</p>}
+                      </div>
                       <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
                       <p className="text-[11px] text-primary/60 mt-1 flex items-center gap-1">
                         <Gift className="w-3 h-3" /> You and your referrer both benefit
