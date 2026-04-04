@@ -75,20 +75,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resolveUserState = useCallback(async (userId: string): Promise<ResolvedUserState> => {
     // Convert PostgrestBuilder to proper Promise via .then()
-    const profilePromise = supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle()
-      .then(res => res);
+    const profilePromise = new Promise<any>((resolve, reject) => {
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle()
+        .then(resolve, reject);
+    });
 
-    const adminPromise = supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(res => res);
+    const adminPromise = new Promise<any>((resolve, reject) => {
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle()
+        .then(resolve, reject);
+    });
 
     const [profileResult, adminResult] = await Promise.all([
       withTimeout(profilePromise, "profile lookup"),
