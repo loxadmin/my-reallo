@@ -128,8 +128,8 @@ const CyclingPointValue = () => {
 const userSteps = [
   {
     icon: Calculator,
-    title: "Calculate Your Spend",
-    desc: "Enter your weekly data, electricity, transport and food costs. We compute your total annual utility spend — the money that silently leaves your account every year.",
+    title: "Tell Us Your Monthly Spend",
+    desc: "Enter your monthly data, electricity, transport and food costs. We compute your total annual spend.",
     detail: "Our smart calculator breaks down each category so you see exactly where your money goes.",
     color: "from-primary/20 to-primary/5",
   },
@@ -156,8 +156,8 @@ const userSteps = [
   },
   {
     icon: CheckCircle,
-    title: "Verify & Claim Your Voucher",
-    desc: "Once off the queue, verify your spend with transaction IDs. After 6 months maturity, redeem your voucher toward your goal.",
+    title: "Show Proof & Get Paid",
+    desc: "Verify your spend with transaction IDs. Once off the queue and verified, you get paid toward your goals.",
     detail: "Verification keeps the ecosystem honest. Patience pays — literally.",
     color: "from-primary/20 to-primary/5",
   },
