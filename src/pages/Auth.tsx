@@ -117,6 +117,13 @@ const Auth = () => {
         if (error) setError(sanitizeAuthError(error));
         else navigate("/dashboard");
       } else {
+        // Validate user type selection
+        if (!userType) {
+          setFieldErrors({ userType: "Please select if you are a student or parent" });
+          setLoading(false);
+          return;
+        }
+
         const result = signupSchema.safeParse({
           email,
           password,
