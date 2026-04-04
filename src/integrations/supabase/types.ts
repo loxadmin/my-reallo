@@ -913,6 +913,7 @@ export type Database = {
           spend_verified: boolean | null
           target_amount: number | null
           total_annual_spend: number | null
+          user_type: string | null
         }
         Insert: {
           annual_data_spend?: number | null
@@ -934,6 +935,7 @@ export type Database = {
           spend_verified?: boolean | null
           target_amount?: number | null
           total_annual_spend?: number | null
+          user_type?: string | null
         }
         Update: {
           annual_data_spend?: number | null
@@ -955,6 +957,7 @@ export type Database = {
           spend_verified?: boolean | null
           target_amount?: number | null
           total_annual_spend?: number | null
+          user_type?: string | null
         }
         Relationships: [
           {

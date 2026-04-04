@@ -27,6 +27,7 @@ interface Profile {
   ban_reason: string | null;
   off_queue_at: string | null;
   spend_verified: boolean | null;
+  user_type: string | null;
 }
 
 interface AuthContextType {

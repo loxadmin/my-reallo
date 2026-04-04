@@ -2,11 +2,14 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAppDesign } from "@/contexts/AppDesignContext";
 import Navbar from "@/components/Navbar";
 import QueueDisplay from "@/components/QueueDisplay";
 import WaterBackground from "@/components/WaterBackground";
 import PageSkeleton from "@/components/PageSkeleton";
 import KarbaliChat from "@/components/KarbaliChat";
+import DashboardBold from "@/components/dashboard/DashboardBold";
+import DashboardMinimal from "@/components/dashboard/DashboardMinimal";
 import { LayoutDashboard, Award, ShieldCheck, Star, Bell, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -32,6 +35,7 @@ interface SpendResult {
 
 const Dashboard = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
+  const { activeDesign } = useAppDesign();
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const { view: urlView } = useParams<{ view?: string }>();
@@ -240,6 +244,10 @@ const Dashboard = () => {
             <div key="chat">
               <KarbaliChat mode="fullscreen" proactiveTip={proactiveTip} />
             </div>
+          ) : activeView === "home" && activeDesign === "bold" ? (
+            <DashboardBold />
+          ) : activeView === "home" && activeDesign === "minimal" ? (
+            <DashboardMinimal />
           ) : (
             <motion.div key="queue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
               {spendResult && profile && (

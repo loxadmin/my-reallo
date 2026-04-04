@@ -7,7 +7,7 @@ import {
   BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet,
   Smartphone, Check, ExternalLink, CreditCard as Edit2, Download, Star,
   Wallet, ArrowDownToLine, Ban, AlertTriangle, Eye, X, Bell, LayoutDashboard,
-  ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown, DollarSign, Building
+  ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown, DollarSign, Building, Paintbrush
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -78,7 +78,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design";
 
 const navGroups = [
   {
@@ -115,6 +115,7 @@ const navGroups = [
   {
     label: "ACCOUNT",
     items: [
+      { id: "app_design" as AdminTab, label: "App Design", icon: Paintbrush },
       { id: "settings" as AdminTab, label: "Settings", icon: Link },
       { id: "analytics" as AdminTab, label: "Analytics", icon: BarChart3 },
       { id: "ghosts" as AdminTab, label: "Ghost Users", icon: Ghost },
@@ -327,6 +328,7 @@ const Admin = () => {
   const [footerContactUs, setFooterContactUs] = useState("");
   const [footerAboutUs, setFooterAboutUs] = useState("");
   const [footerInvestWithUs, setFooterInvestWithUs] = useState("");
+  const [activeAppDesign, setActiveAppDesign] = useState("default");
   const [currencyRateUsd, setCurrencyRateUsd] = useState("1600");
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
@@ -433,6 +435,7 @@ const Admin = () => {
     setCurrencyRateUsd(settings.find(s => s.key === "currency_rate_usd")?.value || "1600");
     setCurrencyRateEur(settings.find(s => s.key === "currency_rate_eur")?.value || "1700");
     setCurrencyRateGbp(settings.find(s => s.key === "currency_rate_gbp")?.value || "2000");
+    setActiveAppDesign(settings.find(s => s.key === "active_app_design")?.value || "default");
 
     const counts: Record<string, number> = {};
     for (const p of profs) {
@@ -900,6 +903,7 @@ const Admin = () => {
     advertisers: "Advertisers",
     surveys: "Surveys",
     inf_surveys: "Influencer Survey Rewards",
+    app_design: "App Design",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
@@ -2342,6 +2346,51 @@ const Admin = () => {
                     })}
                   </div>
                 </TableCard>
+              </div>
+            )}
+            {/* ═══ APP DESIGN ═══ */}
+            {activeTab === "app_design" && (
+              <div className={cardCls}>
+                <SectionHeader title="App Design" subtitle="Select which dashboard design users see" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {([
+                    { id: "default", name: "Default", desc: "Current fintech-style design with wallet cards, queue bar, and referral section." },
+                    { id: "bold", name: "Bold", desc: "Large gradient wallet hero, prominent queue progress bar, and high-contrast referral card." },
+                    { id: "minimal", name: "Minimal", desc: "Ultra-clean typography-focused layout with centered balance, stats row, and clean referral section." },
+                  ] as const).map(design => (
+                    <div
+                      key={design.id}
+                      onClick={async () => {
+                        setActiveAppDesign(design.id);
+                        await supabase.from("admin_settings").upsert({
+                          key: "active_app_design",
+                          value: design.id,
+                          updated_at: new Date().toISOString(),
+                        });
+                        toast({ title: `Design changed to "${design.name}"` });
+                      }}
+                      className={`rounded-xl border-2 p-5 cursor-pointer transition-all ${
+                        activeAppDesign === design.id
+                          ? "border-primary bg-primary/5 shadow-md"
+                          : "border-border/40 hover:border-border"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                          activeAppDesign === design.id ? "border-primary" : "border-muted-foreground/40"
+                        }`}>
+                          {activeAppDesign === design.id && <div className="w-2 h-2 rounded-full bg-primary" />}
+                        </div>
+                        <h4 className="text-[13px] font-bold text-foreground">{design.name}</h4>
+                        {activeAppDesign === design.id && (
+                          <span className="ml-auto text-[10px] bg-primary/15 text-primary px-2 py-0.5 rounded-full font-medium">Active</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">{design.desc}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-4">Changes take effect immediately for all users on their next page load.</p>
               </div>
             )}
             {/* ═══ SETTINGS ═══ */}
