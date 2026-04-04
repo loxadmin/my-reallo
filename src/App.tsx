@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { AppDesignProvider } from "@/contexts/AppDesignContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -25,6 +26,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <AppDesignProvider>
             <CurrencyProvider>
               <NotificationProvider>
                 <Routes>
@@ -42,6 +44,7 @@ const App = () => (
                 </Routes>
               </NotificationProvider>
             </CurrencyProvider>
+          </AppDesignProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
