@@ -10,14 +10,14 @@ import PageSkeleton from "@/components/PageSkeleton";
 import KarbaliChat from "@/components/KarbaliChat";
 import DashboardBold from "@/components/dashboard/DashboardBold";
 import DashboardMinimal from "@/components/dashboard/DashboardMinimal";
-import { LayoutDashboard, Award, ShieldCheck, Star, Bell, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Award, ShieldCheck, Star, Bell, MessageSquare, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useNotifications } from "@/contexts/NotificationContext";
 
-export type DashView = "home" | "earn" | "tasks" | "surveys" | "goal" | "verify" | "influencer" | "notifications" | "chat";
+export type DashView = "home" | "earn" | "tasks" | "surveys" | "goal" | "verify" | "influencer" | "notifications" | "chat" | "profile";
 
-const validViews: DashView[] = ["home", "earn", "tasks", "surveys", "goal", "verify", "influencer", "notifications", "chat"];
+const validViews: DashView[] = ["home", "earn", "tasks", "surveys", "goal", "verify", "influencer", "notifications", "chat", "profile"];
 
 type DashStep = "onboarding" | "dashboard";
 
@@ -184,6 +184,7 @@ const Dashboard = () => {
     { id: "influencer" as DashView, label: "Influencer", icon: Star },
     { id: "chat" as DashView, label: "Karbali", icon: MessageSquare },
     { id: "notifications" as DashView, label: "Alerts", icon: Bell },
+    { id: "profile" as DashView, label: "Profile", icon: User },
   ];
 
   const isEarnActive = activeView === "earn" || activeView === "tasks" || activeView === "surveys";

@@ -14,6 +14,7 @@ import NotificationsPanel from "./NotificationsPanel";
 import LeaderboardTicker from "./LeaderboardTicker";
 import WalletCarousel from "./WalletCarousel";
 import ActivateWalletModal from "./ActivateWalletModal";
+import ProfilePanel from "./ProfilePanel";
 import type { WalletType } from "./WalletCarousel";
 import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2, Star, MessageSquare, ChevronLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -524,6 +525,13 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {view === "notifications" && (
           <motion.div key="notifications" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <NotificationsPanel />
+          </motion.div>
+        )}
+
+        {/* ═══ PROFILE VIEW ═══ */}
+        {view === "profile" && (
+          <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <ProfilePanel />
           </motion.div>
         )}
       </div>
