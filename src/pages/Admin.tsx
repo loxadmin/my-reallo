@@ -115,6 +115,7 @@ const navGroups = [
   {
     label: "ACCOUNT",
     items: [
+      { id: "app_design" as AdminTab, label: "App Design", icon: Paintbrush },
       { id: "settings" as AdminTab, label: "Settings", icon: Link },
       { id: "analytics" as AdminTab, label: "Analytics", icon: BarChart3 },
       { id: "ghosts" as AdminTab, label: "Ghost Users", icon: Ghost },
