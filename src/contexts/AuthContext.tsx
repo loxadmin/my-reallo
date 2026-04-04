@@ -48,16 +48,9 @@ const AUTH_TIMEOUT_MS = 10000;
 function withTimeout<T>(promise: Promise<T>, label: string, timeoutMs = AUTH_TIMEOUT_MS): Promise<T> {
   return new Promise((resolve, reject) => {
     const timeout = window.setTimeout(() => reject(new Error(`${label} timed out`)), timeoutMs);
-
     promise
-      .then((result) => {
-        window.clearTimeout(timeout);
-        resolve(result);
-      })
-      .catch((error) => {
-        window.clearTimeout(timeout);
-        reject(error);
-      });
+      .then((result) => { window.clearTimeout(timeout); resolve(result); })
+      .catch((error) => { window.clearTimeout(timeout); reject(error); });
   });
 }
 
@@ -81,30 +74,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const resolveUserState = useCallback(async (userId: string): Promise<ResolvedUserState> => {
+    // Convert PostgrestBuilder to proper Promise via .then()
+    const profilePromise = new Promise<any>((resolve, reject) => {
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle()
+        .then(resolve, reject);
+    });
+
+    const adminPromise = new Promise<any>((resolve, reject) => {
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle()
+        .then(resolve, reject);
+    });
+
     const [profileResult, adminResult] = await Promise.all([
-      withTimeout(
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", userId)
-          .maybeSingle(),
-        "profile lookup"
-      ),
-      withTimeout(
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId)
-          .eq("role", "admin")
-          .maybeSingle(),
-        "admin role lookup"
-      ),
+      withTimeout(profilePromise, "profile lookup"),
+      withTimeout(adminPromise, "admin role lookup"),
     ]);
 
     if (profileResult.error) {
       console.error("Profile lookup error:", profileResult.error);
     }
-
     if (adminResult.error) {
       console.error("Admin lookup error:", adminResult.error);
     }
@@ -117,9 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const performSignOut = useCallback(async () => {
     if (signOutInFlightRef.current) return;
-
     signOutInFlightRef.current = true;
-
     try {
       await withTimeout(supabase.auth.signOut(), "sign out");
     } catch (error) {
@@ -138,7 +133,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshProfile = useCallback(async () => {
     if (!user?.id) return;
-
     try {
       const resolved = await resolveUserState(user.id);
       applyResolvedUserState(resolved);
@@ -147,42 +141,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [applyResolvedUserState, resolveUserState, user?.id]);
 
-  // ─── 48-hour inactivity auto-logout ───
+  // 48-hour inactivity auto-logout
   useEffect(() => {
     if (!authReady || !user) return;
-
     const checkInactivity = () => {
       if (isSessionExpiredByInactivity()) {
         void performSignOut();
       }
     };
-
-    // Check on mount
     checkInactivity();
-
-    // Update activity on user interactions
     const activityEvents = ["mousedown", "keydown", "scroll", "touchstart"];
     let throttleTimer: ReturnType<typeof setTimeout> | null = null;
-
     const handleActivity = () => {
       if (throttleTimer) return;
       throttleTimer = setTimeout(() => {
         updateLastActivity();
         throttleTimer = null;
-      }, 60_000); // Throttle to once per minute
+      }, 60_000);
     };
-
     activityEvents.forEach((event) =>
       window.addEventListener(event, handleActivity, { passive: true })
     );
-
-    // Periodic inactivity check every 5 minutes
     const interval = setInterval(checkInactivity, 5 * 60_000);
-
     return () => {
-      activityEvents.forEach((event) =>
-        window.removeEventListener(event, handleActivity)
-      );
+      activityEvents.forEach((event) => window.removeEventListener(event, handleActivity));
       clearInterval(interval);
       if (throttleTimer) clearTimeout(throttleTimer);
     };
@@ -190,19 +172,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let isMounted = true;
-
     const applySession = (nextSession: Session | null) => {
       if (!isMounted) return;
-
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
     };
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       applySession(nextSession);
-
       if (nextSession?.user) {
         updateLastActivity();
       } else {
@@ -215,39 +192,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const initializeAuth = async () => {
       try {
-        const {
-          data: { session: restoredSession },
-          error,
-        } = await withTimeout(supabase.auth.getSession(), "session restore");
-
-        if (error) {
-          console.error("Auth session restore error:", error);
-        }
-
+        const { data: { session: restoredSession }, error } = await withTimeout(
+          supabase.auth.getSession(), "session restore"
+        );
+        if (error) console.error("Auth session restore error:", error);
         if (restoredSession?.user && isSessionExpiredByInactivity()) {
           await performSignOut();
           return;
         }
-
         applySession(restoredSession);
-
-        if (restoredSession?.user) {
-          updateLastActivity();
-        }
+        if (restoredSession?.user) updateLastActivity();
       } catch (error) {
         console.error("Auth initialization error:", error);
         applySession(null);
         setProfile(null);
         setIsAdmin(false);
       } finally {
-        if (isMounted) {
-          setAuthReady(true);
-        }
+        if (isMounted) setAuthReady(true);
       }
     };
 
     void initializeAuth();
-
     return () => {
       isMounted = false;
       subscription.unsubscribe();
@@ -256,9 +221,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!authReady) return;
-
     let cancelled = false;
-
     const hydrateUserState = async () => {
       if (!user?.id) {
         if (!cancelled) {
@@ -268,39 +231,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         return;
       }
-
       setProfileLoading(true);
-
       try {
         const resolved = await resolveUserState(user.id);
         if (cancelled) return;
         applyResolvedUserState(resolved);
       } catch (error) {
         console.error("User state hydration error:", error);
-        if (!cancelled) {
-          setProfile(null);
-          setIsAdmin(false);
-        }
+        if (!cancelled) { setProfile(null); setIsAdmin(false); }
       } finally {
-        if (!cancelled) {
-          setProfileLoading(false);
-        }
+        if (!cancelled) setProfileLoading(false);
       }
     };
-
     void hydrateUserState();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [authReady, user?.id, resolveUserState, applyResolvedUserState]);
 
   const signUp = async (email: string, password: string, referralCode?: string) => {
     try {
       const { error } = await withTimeout(
         supabase.auth.signUp({
-          email,
-          password,
+          email, password,
           options: {
             emailRedirectTo: window.location.origin,
             data: referralCode ? { referral_code: referralCode.toUpperCase() } : {},
@@ -308,11 +259,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }),
         "sign up"
       );
-
       return { error };
-    } catch (error) {
-      return { error };
-    }
+    } catch (error) { return { error }; }
   };
 
   const signIn = async (email: string, password: string) => {
@@ -321,15 +269,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         supabase.auth.signInWithPassword({ email, password }),
         "sign in"
       );
-
-      if (!error) {
-        updateLastActivity();
-      }
-
+      if (!error) updateLastActivity();
       return { error };
-    } catch (error) {
-      return { error };
-    }
+    } catch (error) { return { error }; }
   };
 
   const signOut = useCallback(async () => {
@@ -343,9 +285,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [user, session, profile, isAdmin, loading, signOut, refreshProfile]
   );
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

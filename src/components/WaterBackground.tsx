@@ -33,11 +33,9 @@ const WaterBackground = () => {
 
       ctx.clearRect(0, 0, w, h);
 
-      // Mint green water color
       const baseHue = 160;
       const scrollOffset = scrollY * 0.15;
 
-      // Draw multiple fluid layers
       for (let layer = 0; layer < 4; layer++) {
         const layerOffset = layer * 0.7;
         const alpha = 0.04 - layer * 0.008;
@@ -67,7 +65,6 @@ const WaterBackground = () => {
         ctx.fill();
       }
 
-      // Draw flowing highlights (3D effect)
       for (let i = 0; i < 6; i++) {
         const cx = w * (0.15 + i * 0.15) + Math.sin(time * 0.6 + i) * 80 + scrollOffset * 0.1;
         const cy = h * 0.4 + Math.cos(time * 0.4 + i * 1.5) * 100 + i * 40;
@@ -81,7 +78,6 @@ const WaterBackground = () => {
         ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
       }
 
-      // Caustic light patterns
       for (let i = 0; i < 3; i++) {
         ctx.beginPath();
         const startX = Math.sin(time * 0.3 + i * 2) * w * 0.3 + w * 0.5;
@@ -120,14 +116,7 @@ const WaterBackground = () => {
         className="absolute inset-0 w-full h-full"
         style={{ opacity: 0.8 }}
       />
-      {/* Glass overlay for the "trapped in glass" effect */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%)",
-          backdropFilter: "blur(1px)",
-        }}
-      />
+      {/* Removed glass overlay - it caused backdropFilter compositing issues that made text in non-contained elements flash/disappear */}
     </div>
   );
 };
