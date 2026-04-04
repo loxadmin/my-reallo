@@ -328,6 +328,7 @@ const Admin = () => {
   const [footerContactUs, setFooterContactUs] = useState("");
   const [footerAboutUs, setFooterAboutUs] = useState("");
   const [footerInvestWithUs, setFooterInvestWithUs] = useState("");
+  const [activeAppDesign, setActiveAppDesign] = useState("default");
   const [currencyRateUsd, setCurrencyRateUsd] = useState("1600");
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
