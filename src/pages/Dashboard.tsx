@@ -244,6 +244,10 @@ const Dashboard = () => {
             <div key="chat">
               <KarbaliChat mode="fullscreen" proactiveTip={proactiveTip} />
             </div>
+          ) : activeView === "home" && activeDesign === "bold" ? (
+            <DashboardBold />
+          ) : activeView === "home" && activeDesign === "minimal" ? (
+            <DashboardMinimal />
           ) : (
             <motion.div key="queue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
               {spendResult && profile && (
