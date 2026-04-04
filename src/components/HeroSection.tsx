@@ -117,7 +117,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           transition={{ delay: 0.5, duration: 0.7 }}
           className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto mb-8 leading-relaxed"
         >
-          Calculate your annual utility spend and claim it back toward your life goals.
+          Tell us how much you're spending monthly, show us proof, and get paid.
         </motion.p>
 
         {/* CTA */}
@@ -170,9 +170,9 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
         className="z-10 w-full max-w-3xl mx-auto mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 px-4"
       >
         {[
-          { title: "Calculate", desc: "Know exactly what you spend on data & electricity yearly." },
-          { title: "Join Queue", desc: "Get in line. Refer friends to skip ahead faster." },
-          { title: "Claim Back", desc: "Once off queue, claim your spend toward real goals." },
+          { title: "Tell Us", desc: "Tell us what you spend on data, power, and food monthly." },
+          { title: "Show Proof", desc: "Upload your receipts or transaction IDs as proof." },
+          { title: "Get Paid", desc: "Once verified, we pay you back toward your goals." },
         ].map((item, i) => (
           <div key={i} className="glass-card rounded-2xl p-5 text-center">
             <p className="text-[13px] font-semibold text-foreground mb-1">{item.title}</p>
