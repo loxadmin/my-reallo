@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Shield, LayoutDashboard, Menu } from "lucide-react";
+import { LogOut, Shield, LayoutDashboard, Menu, User } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import KarbaliLogo from "./KarbaliLogo";
 import {
@@ -62,6 +62,13 @@ const Navbar = ({ children }: NavbarProps) => {
                     <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
                   </button>
                 )}
+                <button
+                  onClick={() => navigate("/dashboard/profile")}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                  title="Profile"
+                >
+                  <User className="w-4 h-4 text-muted-foreground" />
+                </button>
                 <button
                   onClick={async () => {
                     await signOut();
