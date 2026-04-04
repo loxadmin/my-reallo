@@ -900,6 +900,7 @@ const Admin = () => {
     advertisers: "Advertisers",
     surveys: "Surveys",
     inf_surveys: "Influencer Survey Rewards",
+    app_design: "App Design",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
