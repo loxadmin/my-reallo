@@ -35,6 +35,7 @@ interface SpendResult {
 
 const Dashboard = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
+  const { activeDesign } = useAppDesign();
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const { view: urlView } = useParams<{ view?: string }>();
