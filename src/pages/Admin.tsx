@@ -2348,6 +2348,51 @@ const Admin = () => {
                 </TableCard>
               </div>
             )}
+            {/* ═══ APP DESIGN ═══ */}
+            {activeTab === "app_design" && (
+              <div className={cardCls}>
+                <SectionHeader title="App Design" subtitle="Select which dashboard design users see" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {([
+                    { id: "default", name: "Default", desc: "Current fintech-style design with wallet cards, queue bar, and referral section." },
+                    { id: "bold", name: "Bold", desc: "Large gradient wallet hero, prominent queue progress bar, and high-contrast referral card." },
+                    { id: "minimal", name: "Minimal", desc: "Ultra-clean typography-focused layout with centered balance, stats row, and clean referral section." },
+                  ] as const).map(design => (
+                    <div
+                      key={design.id}
+                      onClick={async () => {
+                        setActiveAppDesign(design.id);
+                        await supabase.from("admin_settings").upsert({
+                          key: "active_app_design",
+                          value: design.id,
+                          updated_at: new Date().toISOString(),
+                        });
+                        toast({ title: `Design changed to "${design.name}"` });
+                      }}
+                      className={`rounded-xl border-2 p-5 cursor-pointer transition-all ${
+                        activeAppDesign === design.id
+                          ? "border-primary bg-primary/5 shadow-md"
+                          : "border-border/40 hover:border-border"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                          activeAppDesign === design.id ? "border-primary" : "border-muted-foreground/40"
+                        }`}>
+                          {activeAppDesign === design.id && <div className="w-2 h-2 rounded-full bg-primary" />}
+                        </div>
+                        <h4 className="text-[13px] font-bold text-foreground">{design.name}</h4>
+                        {activeAppDesign === design.id && (
+                          <span className="ml-auto text-[10px] bg-primary/15 text-primary px-2 py-0.5 rounded-full font-medium">Active</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">{design.desc}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-4">Changes take effect immediately for all users on their next page load.</p>
+              </div>
+            )}
             {/* ═══ SETTINGS ═══ */}
             {activeTab === "settings" && (
               <div className={cardCls}>
