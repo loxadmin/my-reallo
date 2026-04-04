@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import QueueDisplay from "@/components/QueueDisplay";
 import WaterBackground from "@/components/WaterBackground";
@@ -38,17 +37,17 @@ const Dashboard = () => {
   const { view: urlView } = useParams<{ view?: string }>();
 
   const getInitialStep = (p: typeof profile): DashStep => {
-    if (p?.selected_goal && p?.total_annual_spend > 0) return "dashboard";
+    if (p?.selected_goal && p?.total_annual_spend && p.total_annual_spend > 0) return "dashboard";
     return "onboarding";
   };
 
   const getInitialSpendResult = (p: typeof profile): SpendResult | null => {
-    if (p?.selected_goal && p?.total_annual_spend > 0) {
+    if (p?.selected_goal && p?.total_annual_spend && p.total_annual_spend > 0) {
       return {
         weeklyData: 0,
         monthlyElectricity: 0,
-        annualData: p.annual_data_spend,
-        annualElectricity: p.annual_electricity_spend,
+        annualData: p.annual_data_spend ?? 0,
+        annualElectricity: p.annual_electricity_spend ?? 0,
         annualFood: p.annual_food_spend ?? 0,
         annualTransport: p.annual_transport_spend ?? 0,
         totalAnnual: p.total_annual_spend,
@@ -78,11 +77,11 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (profile) {
-      if (profile.selected_goal && profile.total_annual_spend > 0) {
+      if (profile.selected_goal && profile.total_annual_spend && profile.total_annual_spend > 0) {
         setSpendResult({
           weeklyData: 0, monthlyElectricity: 0,
-          annualData: profile.annual_data_spend,
-          annualElectricity: profile.annual_electricity_spend,
+          annualData: profile.annual_data_spend ?? 0,
+          annualElectricity: profile.annual_electricity_spend ?? 0,
           annualFood: profile.annual_food_spend ?? 0,
           annualTransport: profile.annual_transport_spend ?? 0,
           totalAnnual: profile.total_annual_spend,
@@ -100,11 +99,9 @@ const Dashboard = () => {
     setStep("dashboard");
   };
 
-  // Proactive assistant tip based on user state
   const proactiveTip = useMemo(() => {
     if (!profile) return undefined;
     const pos = profile.queue_position ?? 0;
-    // Use a stable index based on date to avoid daily message flooding on every render
     const dayOfYear = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
 
     if (pos > 0) {
@@ -148,12 +145,12 @@ const Dashboard = () => {
         <WaterBackground />
         <Navbar />
         <div className="relative z-10 px-4 pt-24">
-          <div className="mx-auto max-w-md glass-card rounded-2xl p-6 text-center">
-            <h2 className="text-[15px] font-semibold text-foreground">We couldn’t load your account yet</h2>
+          <div className="mx-auto max-w-md bg-card rounded-2xl p-6 text-center border border-border shadow-sm">
+            <h2 className="text-[15px] font-semibold text-foreground">We couldn't load your account yet</h2>
             <p className="mt-2 text-[12px] text-muted-foreground">Please retry loading your dashboard.</p>
             <button
               onClick={() => void refreshProfile()}
-              className="mt-4 clay-primary rounded-xl px-4 py-2 text-[12px] font-medium text-primary-foreground"
+              className="mt-4 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-[12px] font-medium"
             >
               Retry
             </button>
@@ -163,10 +160,10 @@ const Dashboard = () => {
     );
   }
 
-  // ─── Onboarding: Full-screen chat ───
+  // Onboarding: Full-screen chat
   if (step === "onboarding") {
     return (
-      <div className="relative min-h-screen overflow-x-hidden">
+      <div className="relative min-h-screen overflow-x-hidden bg-background">
         <Navbar />
         <div className="relative z-10 pt-14">
           <KarbaliChat mode="fullscreen" onOnboardingComplete={handleOnboardingComplete} />
@@ -175,7 +172,7 @@ const Dashboard = () => {
     );
   }
 
-  // ─── Dashboard nav items ───
+  // Dashboard nav items
   const navItems: { id: DashView; label: string; icon: typeof LayoutDashboard }[] = [
     { id: "home", label: "Home", icon: LayoutDashboard },
     { id: "earn", label: "Earn", icon: Award },
@@ -212,7 +209,7 @@ const Dashboard = () => {
       <div className="relative z-10 flex pt-14">
         {/* Desktop sidebar */}
         <aside className="hidden lg:flex flex-col w-56 fixed top-14 left-0 bottom-0 z-30 p-4">
-          <div className="glass-strong rounded-2xl p-3 space-y-1 mt-2">
+          <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-3 space-y-1 mt-2 border border-border/50">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -237,27 +234,25 @@ const Dashboard = () => {
           </div>
         </aside>
 
-        {/* Main content */}
+        {/* Main content - NO AnimatePresence to prevent unmount/remount of chat */}
         <main className={cn("relative z-10 flex-1 w-full lg:ml-56")}>
-          <AnimatePresence mode="wait">
-            {activeView === "chat" ? (
-              <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <KarbaliChat mode="fullscreen" proactiveTip={proactiveTip} />
-              </motion.div>
-            ) : (
-              <motion.div key="queue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                {spendResult && profile && (
-                  <QueueDisplay
-                    totalAnnualSpend={spendResult.totalAnnual}
-                    goal={profile.selected_goal || ""}
-                    targetAmount={profile.target_amount}
-                    view={activeView}
-                    onViewChange={setActiveView}
-                  />
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {activeView === "chat" ? (
+            <div key="chat">
+              <KarbaliChat mode="fullscreen" proactiveTip={proactiveTip} />
+            </div>
+          ) : (
+            <motion.div key="queue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+              {spendResult && profile && (
+                <QueueDisplay
+                  totalAnnualSpend={spendResult.totalAnnual}
+                  goal={profile.selected_goal || ""}
+                  targetAmount={profile.target_amount ?? 0}
+                  view={activeView}
+                  onViewChange={setActiveView}
+                />
+              )}
+            </motion.div>
+          )}
         </main>
       </div>
     </div>
