@@ -137,12 +137,9 @@ async function streamChat({
   onDone: (fullText: string) => void;
   signal?: AbortSignal;
 }) {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !publishableKey) {
-    throw new Error("Supabase configuration missing");
-  }
+  // Use hardcoded values from client.ts for reliability
+  const supabaseUrl = "https://mrcypdyivfprvvirnwtq.supabase.co";
+  const publishableKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yY3lwZHlpdmZwcnZ2aXJud3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Mzk2NTUsImV4cCI6MjA4NzQxNTY1NX0.qnUvMhjs-zl4Cdd8DiIJ10Qe3Cl_uAiMGU3CksfXOkw";
 
   const {
     data: { session },
