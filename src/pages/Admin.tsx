@@ -7,7 +7,7 @@ import {
   BarChart3, Plus, Trash2, Link, Upload, CheckCircle2, FileSpreadsheet,
   Smartphone, Check, ExternalLink, CreditCard as Edit2, Download, Star,
   Wallet, ArrowDownToLine, Ban, AlertTriangle, Eye, X, Bell, LayoutDashboard,
-  ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown, DollarSign, Building
+  ChevronDown, ChevronRight, Menu, Search, Zap, TrendingUp, TrendingDown, DollarSign, Building, Paintbrush
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import ThemeToggle from "@/components/ThemeToggle";
