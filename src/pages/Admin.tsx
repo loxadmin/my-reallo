@@ -435,6 +435,7 @@ const Admin = () => {
     setCurrencyRateUsd(settings.find(s => s.key === "currency_rate_usd")?.value || "1600");
     setCurrencyRateEur(settings.find(s => s.key === "currency_rate_eur")?.value || "1700");
     setCurrencyRateGbp(settings.find(s => s.key === "currency_rate_gbp")?.value || "2000");
+    setActiveAppDesign(settings.find(s => s.key === "active_app_design")?.value || "default");
 
     const counts: Record<string, number> = {};
     for (const p of profs) {
