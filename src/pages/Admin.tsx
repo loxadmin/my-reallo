@@ -78,7 +78,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design";
 
 const navGroups = [
   {
