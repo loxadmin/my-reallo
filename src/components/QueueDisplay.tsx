@@ -252,7 +252,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
   }, []);
 
   return (
-    <section className="min-h-screen flex items-start justify-center px-4 pt-4 pb-12 lg:pt-8 lg:pb-8">
+    <section className="min-h-screen flex items-start justify-center px-4 pt-4 pb-32 lg:pt-8 lg:pb-8">
       <div className="w-full max-w-md lg:max-w-2xl space-y-4">
         {/* ═══ HOME VIEW ═══ */}
         {view === "home" && (
