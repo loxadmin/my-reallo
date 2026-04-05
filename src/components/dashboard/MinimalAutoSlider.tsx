@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils";
 
 const slides = [
   {
-    text: "Become an influencer and earn up to 100k weekly",
+    text: "Earn up to 100k weekly as an influencer",
     buttonLabel: "Join",
     path: "/dashboard/influencer",
   },
   {
-    text: "Do tasks and use our partner brands to get up to 70% of all your expenses",
+    text: "Get up to 70% cashback on your expenses",
     buttonLabel: "Earn",
     path: "/dashboard/earn",
   },
@@ -23,7 +23,7 @@ const MinimalAutoSlider = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % slides.length);
-    }, 5000);
+    }, 8000);
     return () => clearInterval(timer);
   }, []);
 
@@ -34,25 +34,20 @@ const MinimalAutoSlider = () => {
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
-          initial={{ y: 8, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -8, opacity: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left py-2 w-full max-w-sm sm:max-w-none mx-auto"
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -20, opacity: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="flex items-center gap-2 sm:gap-4 text-left py-2 w-full max-w-sm sm:max-w-none mx-auto"
         >
-          <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium leading-relaxed sm:leading-tight flex-1">
+          <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-1">
             {current.text}
           </span>
           <button
             onClick={() => navigate(current.path)}
             className={cn(
-              "glass-button pulse-glow px-4 py-1 sm:py-0.5 rounded-full text-[10px] font-semibold text-primary relative overflow-hidden transition-all duration-300 active:scale-95 border border-primary/20 flex-shrink-0"
+              "glass-button pulse-glow px-4 py-1 sm:py-0.5 rounded-full text-[10px] font-semibold text-foreground relative overflow-hidden transition-all duration-300 active:scale-95 border border-primary/20 flex-shrink-0"
             )}
-            style={{
-               boxShadow: "0 0 12px hsl(160 60% 18% / 0.15)",
-               background: "rgba(255, 255, 255, 0.2)",
-               backdropFilter: "blur(8px)",
-            }}
           >
             {/* Real Liquid Simulation (Gooey Filtered Blobs) */}
             <div className="absolute inset-0 z-0 pointer-events-none opacity-50 overflow-hidden rounded-full" style={{ filter: "url(#goo)" }}>
