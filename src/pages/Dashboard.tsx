@@ -102,30 +102,47 @@ const Dashboard = () => {
     setStep("dashboard");
   };
 
-  const proactiveTip = useMemo(() => {
-    if (!profile) return undefined;
+  const [tipIndex, setTipIndex] = useState(0);
+  const [proactiveTip, setProactiveTip] = useState<string | undefined>(undefined);
+
+  // Rotating tips every 5 minutes
+  useEffect(() => {
+    if (!profile) return;
+
     const pos = profile.queue_position ?? 0;
     const dayOfYear = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
 
-    if (pos > 0) {
-      const tips = [
-        `💡 Did you know? You can skip 20 queue positions by referring just one friend! Your code: **${profile.referral_code}**`,
-        `🚀 You're at position #${pos}. Want to get off the queue faster? Share your referral link with friends!`,
-        `💰 Did you know you can earn money as a Karbali influencer? Check the Influencer tab to apply!`,
-      ];
-      return tips[dayOfYear % tips.length];
+    const getTips = () => {
+      if (pos > 0) {
+        return [
+          `💡 Did you know? You can skip 20 queue positions by referring just one friend! Your code: **${profile.referral_code}**`,
+          `🚀 You're at position #${pos}. Want to get off the queue faster? Share your referral link with friends!`,
+          `💰 Did you know you can earn money as a Karbali influencer? Check the Influencer tab to apply!`,
+        ];
+      }
+      if (pos <= 0) {
+        return [
+          "🎉 You're off the queue! Head to **Verify** to submit your transaction IDs and start claiming your spend back.",
+          `💰 Earn ₦500 per friend who joins! Your referral code: **${profile.referral_code}**`,
+          "📝 Complete surveys and tasks in the **Earn** tab to build up your points faster!",
+          "🌟 Want to earn more? Apply to become a Karbali influencer in the Influencer tab!",
+        ];
+      }
+      return [];
+    };
+
+    const tips = getTips();
+    if (tips.length > 0) {
+      // Set initial tip based on day and current index
+      setProactiveTip(tips[(dayOfYear + tipIndex) % tips.length]);
     }
-    if (pos <= 0) {
-      const tips = [
-        "🎉 You're off the queue! Head to **Verify** to submit your transaction IDs and start claiming your spend back.",
-        `💰 Earn ₦500 per friend who joins! Your referral code: **${profile.referral_code}**`,
-        "📝 Complete surveys and tasks in the **Earn** tab to build up your points faster!",
-        "🌟 Want to earn more? Apply to become a Karbali influencer in the Influencer tab!",
-      ];
-      return tips[dayOfYear % tips.length];
-    }
-    return undefined;
-  }, [profile?.id, profile?.queue_position, profile?.referral_code]);
+
+    const interval = setInterval(() => {
+      setTipIndex(prev => prev + 1);
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [profile?.id, profile?.queue_position, profile?.referral_code, tipIndex]);
 
   const isOffQueue = (profile?.queue_position ?? 999) <= 0;
 
