@@ -78,7 +78,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs";
 
 const navGroups = [
   {
@@ -120,6 +120,7 @@ const navGroups = [
       { id: "analytics" as AdminTab, label: "Analytics", icon: BarChart3 },
       { id: "ghosts" as AdminTab, label: "Ghost Users", icon: Ghost },
       { id: "activity" as AdminTab, label: "Activity Log", icon: Activity },
+      { id: "error_logs" as AdminTab, label: "Error Logs", icon: AlertTriangle },
     ],
   },
 ];
@@ -300,6 +301,7 @@ const Admin = () => {
   const [decisionApps, setDecisionApps] = useState<DecisionAppRow[]>([]);
   const [decisionResponses, setDecisionResponses] = useState<DecisionResponseRow[]>([]);
   const [userWarnings, setUserWarnings] = useState<UserWarning[]>([]);
+  const [errorLogs, setErrorLogs] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [warningText, setWarningText] = useState("");
   const [banReason, setBanReason] = useState("");
@@ -366,7 +368,7 @@ const Admin = () => {
 
   const fetchData = async () => {
     setRefreshing(true);
-    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, surveyRes, sQuestionRes, sOptionRes, sRespRes] = await Promise.all([
+    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, surveyRes, sQuestionRes, sOptionRes, sRespRes, errorsRes] = await Promise.all([
       supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
       supabase.from("ghost_users").select("id", { count: "exact", head: true }),
       supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
@@ -379,9 +381,11 @@ const Admin = () => {
       supabase.from("survey_questions").select("*").order("order_index", { ascending: true }),
       supabase.from("survey_options").select("*").order("created_at", { ascending: true }),
       supabase.from("survey_responses").select("*").order("created_at", { ascending: false }),
+      supabase.from("system_errors" as any).select("*").order("created_at", { ascending: false }).limit(100),
     ]);
     const profs = (profilesRes.data as ProfileRow[]) || [];
     setProfiles(profs);
+    setErrorLogs(errorsRes.data || []);
     setSurveys(surveyRes.data || []);
     setSurveyQuestions(sQuestionRes.data || []);
     setSurveyOptions(sOptionRes.data || []);
@@ -904,6 +908,7 @@ const Admin = () => {
     surveys: "Surveys",
     inf_surveys: "Influencer Survey Rewards",
     app_design: "App Design",
+    error_logs: "Error Logs",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
@@ -2683,6 +2688,90 @@ const Admin = () => {
             {/* ═══ ADVERTISERS ═══ */}
             {activeTab === "advertisers" && (
               <AdvertiserManagement onRefresh={fetchData} />
+            )}
+
+            {/* ═══ ERROR LOGS ═══ */}
+            {activeTab === "error_logs" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <MetricCard label="Total Errors" value={errorLogs.length} icon={AlertTriangle} trend="neutral" trendLabel="Last 100" />
+                  <MetricCard label="Most Recent" value={errorLogs[0] ? new Date(errorLogs[0].created_at).toLocaleTimeString() : "N/A"} icon={Activity} />
+                  <MetricCard label="Unique Errors" value={new Set(errorLogs.map(e => e.message)).size} icon={Ghost} />
+                </div>
+
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                    <h3 className="text-[13px] font-semibold text-foreground">System Error Logs</h3>
+                    <Btn variant="outline" onClick={async () => {
+                      if (confirm("Are you sure you want to clear all error logs?")) {
+                        await supabase.from("system_errors" as any).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                        toast({ title: "Logs cleared" });
+                        fetchData();
+                      }
+                    }}><Trash2 className="w-3 h-3" /> Clear Logs</Btn>
+                  </div>
+                  <TableHeader>
+                    <span className="w-40 shrink-0">Time</span>
+                    <span className="flex-1">Error Message / Context</span>
+                    <span className="w-32 shrink-0">User</span>
+                    <span className="w-10 shrink-0"></span>
+                  </TableHeader>
+                  <div className="max-h-[700px] overflow-y-auto">
+                    {errorLogs.map((log) => {
+                      const isSelected = selectedUserId === log.id;
+                      const userEmail = profiles.find(p => p.id === log.user_id)?.email || log.user_id?.slice(0, 8) || "Guest";
+                      return (
+                        <div key={log.id} className="border-b border-border/10 last:border-0">
+                          <TableRow onClick={() => setSelectedUserId(isSelected ? null : log.id)}>
+                            <span className="w-40 shrink-0 text-[11px] text-muted-foreground">{new Date(log.created_at).toLocaleString()}</span>
+                            <div className="flex-1 min-w-0 overflow-hidden pr-4">
+                              <p className="text-[12px] font-semibold text-destructive truncate">{log.message}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{log.url}</p>
+                            </div>
+                            <span className="w-32 shrink-0 text-[11px] text-foreground truncate">{userEmail}</span>
+                            <span className="w-10 shrink-0 flex justify-end">
+                              {isSelected ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                            </span>
+                          </TableRow>
+                          {isSelected && (
+                            <div className="px-5 py-4 bg-muted/15 space-y-4 overflow-hidden">
+                              <div>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Full Error Message</p>
+                                <p className="text-[12px] text-foreground font-mono break-words">{log.message}</p>
+                              </div>
+                              {log.stack && (
+                                <div>
+                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Stack Trace</p>
+                                  <pre className="text-[10px] text-muted-foreground bg-background/50 p-3 rounded-lg overflow-x-auto font-mono whitespace-pre-wrap leading-relaxed border border-border/20 max-h-[300px] overflow-y-auto">
+                                    {log.stack}
+                                  </pre>
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Metadata</p>
+                                <pre className="text-[10px] text-muted-foreground bg-background/50 p-3 rounded-lg overflow-x-auto font-mono whitespace-pre-wrap leading-relaxed border border-border/20">
+                                  {JSON.stringify(log.metadata, null, 2)}
+                                </pre>
+                              </div>
+                              <div className="flex gap-4">
+                                <div>
+                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">URL</p>
+                                  <p className="text-[11px] text-primary">{log.url}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">User ID</p>
+                                  <p className="text-[11px] text-foreground font-mono">{log.user_id || "Anonymous"}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {errorLogs.length === 0 && <div className="py-20 text-center text-muted-foreground text-[13px]">No error logs found</div>}
+                  </div>
+                </TableCard>
+              </div>
             )}
 
           </main>
