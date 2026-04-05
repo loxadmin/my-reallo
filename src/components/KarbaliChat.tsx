@@ -483,8 +483,10 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
 
 /** Floating chat popup button + panel */
 export const ChatPopup = ({ proactiveTip }: { proactiveTip?: string }) => {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
+  const [hasMessages, setHasMessages] = useState(false);
   const [lastSeenTip, setLastSeenTip] = useState<string | null>(() => localStorage.getItem("karbali_last_seen_tip"));
 
   useEffect(() => {
@@ -495,6 +497,33 @@ export const ChatPopup = ({ proactiveTip }: { proactiveTip?: string }) => {
       setShowBubble(false);
     }
   }, [proactiveTip, open, lastSeenTip]);
+
+  // Check for existing messages to show red dot
+  useEffect(() => {
+    if (!user?.id) {
+      setHasMessages(false);
+      return;
+    }
+    const checkMessages = () => {
+      const stored = localStorage.getItem(`${CHAT_KEY}_${user.id}`);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setHasMessages(Array.isArray(parsed) && parsed.length > 0);
+        } catch {
+          setHasMessages(false);
+        }
+      } else {
+        setHasMessages(false);
+      }
+    };
+    checkMessages();
+    // Re-check when chat is closed or storage changes
+    if (!open) {
+      const interval = setInterval(checkMessages, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [user?.id, open]);
 
   const handleOpenChat = () => {
     setOpen(true);
@@ -529,9 +558,10 @@ export const ChatPopup = ({ proactiveTip }: { proactiveTip?: string }) => {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {showBubble && !open && proactiveTip && (
           <motion.div
+            key={proactiveTip}
             initial={{ opacity: 0, scale: 0.8, y: 10, x: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 10, x: 20 }}
@@ -559,6 +589,9 @@ export const ChatPopup = ({ proactiveTip }: { proactiveTip?: string }) => {
         className="fixed bottom-5 right-4 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl flex items-center justify-center transition-all"
       >
         {open ? <X className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+        {hasMessages && !open && (
+          <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-destructive border-2 border-background rounded-full" />
+        )}
       </motion.button>
     </>
   );
