@@ -1,13 +1,31 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { useState } from "react";
-import { Copy, Check, Share2 } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { Copy, Check, Share2, Sparkles, TrendingUp } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import useEmblaCarousel from "embla-carousel-react";
+import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 const DashboardMinimal = () => {
   const { profile } = useAuth();
   const { formatCurrency } = useCurrency();
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: "center" });
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    return () => { emblaApi.off("select", onSelect); };
+  }, [emblaApi, onSelect]);
 
   if (!profile) return null;
 
@@ -38,6 +56,97 @@ const DashboardMinimal = () => {
         <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Balance</p>
         <p className="text-5xl font-extralight text-foreground mt-2 tracking-tight">{formatCurrency(pointsNaira)}</p>
         <p className="text-xs text-muted-foreground mt-1">{(profile.points_balance ?? 0).toLocaleString()} pts</p>
+      </div>
+
+      {/* Action Slider */}
+      <div className="relative">
+        <div ref={emblaRef} className="overflow-hidden">
+          <div className="flex">
+            {/* Slide 1: Influencer */}
+            <div className="min-w-0 shrink-0 grow-0 basis-full px-4">
+              <div className="glass-card rounded-3xl p-6 text-center space-y-4 relative overflow-hidden">
+                <div
+                  className="absolute inset-0 opacity-10 pointer-events-none"
+                  style={{
+                    background: "radial-gradient(circle at 50% 50%, hsl(var(--primary)) 0%, transparent 70%)",
+                    animation: "waterFlow 8s ease-in-out infinite",
+                  }}
+                />
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground leading-tight px-4">
+                    Become an influencer and earn up to 100k weekly
+                  </h3>
+                </div>
+                <button
+                  onClick={() => navigate("/dashboard/influencer")}
+                  className="relative group px-6 py-2.5 rounded-2xl font-semibold text-[13px] transition-all duration-500 overflow-hidden pulse-glow"
+                >
+                  <span className="absolute inset-0 bg-primary/20 backdrop-blur-md border border-primary/30" />
+                  <span
+                    className="absolute inset-0 opacity-40 transition-opacity duration-500 group-hover:opacity-60"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(var(--primary)/0.4), hsl(var(--primary)/0.1))",
+                      animation: "waterFlow 4s ease-in-out infinite",
+                    }}
+                  />
+                  <span className="relative text-primary">Become an Influencer</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Slide 2: Earn/Tasks */}
+            <div className="min-w-0 shrink-0 grow-0 basis-full px-4">
+              <div className="glass-card rounded-3xl p-6 text-center space-y-4 relative overflow-hidden">
+                <div
+                  className="absolute inset-0 opacity-10 pointer-events-none"
+                  style={{
+                    background: "radial-gradient(circle at 50% 50%, hsl(var(--primary)) 0%, transparent 70%)",
+                    animation: "waterFlow2 8s ease-in-out infinite",
+                  }}
+                />
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1">
+                    <TrendingUp className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground leading-tight px-2">
+                    Do tasks and use our partner brands to get up to 70% of all your expenses
+                  </h3>
+                </div>
+                <button
+                  onClick={() => navigate("/dashboard/earn")}
+                  className="relative group px-6 py-2.5 rounded-2xl font-semibold text-[13px] transition-all duration-500 overflow-hidden pulse-glow"
+                >
+                  <span className="absolute inset-0 bg-primary/20 backdrop-blur-md border border-primary/30" />
+                  <span
+                    className="absolute inset-0 opacity-40 transition-opacity duration-500 group-hover:opacity-60"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(var(--primary)/0.4), hsl(var(--primary)/0.1))",
+                      animation: "waterFlow 4s ease-in-out infinite",
+                    }}
+                  />
+                  <span className="relative text-primary">Start Earning</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Dots */}
+        <div className="flex justify-center gap-1.5 mt-4">
+          {[0, 1].map((idx) => (
+            <button
+              key={idx}
+              onClick={() => emblaApi?.scrollTo(idx)}
+              className={cn(
+                "w-1.5 h-1.5 rounded-full transition-all duration-300",
+                selectedIndex === idx ? "bg-primary w-4" : "bg-primary/20"
+              )}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Divider */}
