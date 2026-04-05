@@ -8,8 +8,11 @@ import QueueDisplay from "@/components/QueueDisplay";
 import WaterBackground from "@/components/WaterBackground";
 import PageSkeleton from "@/components/PageSkeleton";
 import KarbaliChat from "@/components/KarbaliChat";
+import { ChatPopup } from "@/components/KarbaliChat";
 import DashboardBold from "@/components/dashboard/DashboardBold";
 import DashboardMinimal from "@/components/dashboard/DashboardMinimal";
+import DashboardNeon from "@/components/dashboard/DashboardNeon";
+import DashboardCards from "@/components/dashboard/DashboardCards";
 import { LayoutDashboard, Award, ShieldCheck, Star, Bell, MessageSquare, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -48,8 +51,7 @@ const Dashboard = () => {
   const getInitialSpendResult = (p: typeof profile): SpendResult | null => {
     if (p?.selected_goal && p?.total_annual_spend && p.total_annual_spend > 0) {
       return {
-        weeklyData: 0,
-        monthlyElectricity: 0,
+        weeklyData: 0, monthlyElectricity: 0,
         annualData: p.annual_data_spend ?? 0,
         annualElectricity: p.annual_electricity_spend ?? 0,
         annualFood: p.annual_food_spend ?? 0,
@@ -68,11 +70,8 @@ const Dashboard = () => {
     : "home";
 
   const setActiveView = (view: DashView) => {
-    if (view === "home") {
-      navigate("/dashboard");
-    } else {
-      navigate(`/dashboard/${view}`);
-    }
+    if (view === "home") navigate("/dashboard");
+    else navigate(`/dashboard/${view}`);
   };
 
   useEffect(() => {
@@ -112,15 +111,16 @@ const Dashboard = () => {
       const tips = [
         `💡 Did you know? You can skip 20 queue positions by referring just one friend! Your code: **${profile.referral_code}**`,
         `🚀 You're at position #${pos}. Want to get off the queue faster? Share your referral link with friends!`,
-        `📊 At the current rate, you could be off the queue in about ${Math.ceil(pos / 50)} days. Referrals can cut that dramatically!`,
+        `💰 Did you know you can earn money as a Karbali influencer? Check the Influencer tab to apply!`,
       ];
       return tips[dayOfYear % tips.length];
     }
     if (pos <= 0) {
       const tips = [
         "🎉 You're off the queue! Head to **Verify** to submit your transaction IDs and start claiming your spend back.",
-        `💰 Did you know you can earn points by referring friends? Each referral earns you **1,000 points** (₦500). Your code: **${profile.referral_code}**`,
-        "📝 Complete surveys and tasks in the **Earn** tab to build up your points balance faster!",
+        `💰 Earn ₦500 per friend who joins! Your referral code: **${profile.referral_code}**`,
+        "📝 Complete surveys and tasks in the **Earn** tab to build up your points faster!",
+        "🌟 Want to earn more? Apply to become a Karbali influencer in the Influencer tab!",
       ];
       return tips[dayOfYear % tips.length];
     }
@@ -152,19 +152,13 @@ const Dashboard = () => {
           <div className="mx-auto max-w-md bg-card rounded-2xl p-6 text-center border border-border shadow-sm">
             <h2 className="text-[15px] font-semibold text-foreground">We couldn't load your account yet</h2>
             <p className="mt-2 text-[12px] text-muted-foreground">Please retry loading your dashboard.</p>
-            <button
-              onClick={() => void refreshProfile()}
-              className="mt-4 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-[12px] font-medium"
-            >
-              Retry
-            </button>
+            <button onClick={() => void refreshProfile()} className="mt-4 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-[12px] font-medium">Retry</button>
           </div>
         </div>
       </div>
     );
   }
 
-  // Onboarding: Full-screen chat
   if (step === "onboarding") {
     return (
       <div className="relative min-h-screen overflow-x-hidden bg-background">
@@ -176,7 +170,6 @@ const Dashboard = () => {
     );
   }
 
-  // Dashboard nav items
   const navItems: { id: DashView; label: string; icon: typeof LayoutDashboard }[] = [
     { id: "home", label: "Home", icon: LayoutDashboard },
     { id: "earn", label: "Earn", icon: Award },
@@ -188,6 +181,25 @@ const Dashboard = () => {
   ];
 
   const isEarnActive = activeView === "earn" || activeView === "tasks" || activeView === "surveys";
+
+  const renderHomeDashboard = () => {
+    switch (activeDesign) {
+      case "bold": return <DashboardBold />;
+      case "minimal": return <DashboardMinimal />;
+      case "neon": return <DashboardNeon />;
+      case "cards": return <DashboardCards />;
+      default:
+        return spendResult && profile ? (
+          <QueueDisplay
+            totalAnnualSpend={spendResult.totalAnnual}
+            goal={profile.selected_goal || ""}
+            targetAmount={profile.target_amount ?? 0}
+            view="home"
+            onViewChange={setActiveView}
+          />
+        ) : null;
+    }
+  };
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
@@ -239,16 +251,15 @@ const Dashboard = () => {
           </div>
         </aside>
 
-        {/* Main content - NO AnimatePresence to prevent unmount/remount of chat */}
         <main className={cn("relative z-10 flex-1 w-full lg:ml-56")}>
           {activeView === "chat" ? (
             <div key="chat">
               <KarbaliChat mode="fullscreen" proactiveTip={proactiveTip} />
             </div>
-          ) : activeView === "home" && activeDesign === "bold" ? (
-            <DashboardBold />
-          ) : activeView === "home" && activeDesign === "minimal" ? (
-            <DashboardMinimal />
+          ) : activeView === "home" ? (
+            <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+              {renderHomeDashboard()}
+            </motion.div>
           ) : (
             <motion.div key="queue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
               {spendResult && profile && (
@@ -264,6 +275,11 @@ const Dashboard = () => {
           )}
         </main>
       </div>
+
+      {/* Floating chat popup on home view */}
+      {activeView === "home" && (
+        <ChatPopup proactiveTip={proactiveTip} />
+      )}
     </div>
   );
 };

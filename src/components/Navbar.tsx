@@ -23,6 +23,7 @@ const Navbar = ({ children }: NavbarProps) => {
 
   const isDashboard = location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/");
   const isAuthPage = location.pathname === "/auth" || location.pathname === "/reset-password";
+  const isLanding = location.pathname === "/";
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -39,6 +40,30 @@ const Navbar = ({ children }: NavbarProps) => {
           )}
         </div>
         <div className="flex items-center gap-1">
+          {/* Landing page nav links */}
+          {isLanding && !user && (
+            <div className="hidden sm:flex items-center gap-1 mr-2">
+              <button
+                onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
+                className="px-3 py-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors rounded-lg"
+              >
+                How It Works
+              </button>
+              <button
+                onClick={() => navigate("/auth")}
+                className="px-3 py-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors rounded-lg"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => navigate("/auth")}
+                className="px-4 py-2 text-[13px] bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
+
           <ThemeToggle />
           {user ? (
             <>
@@ -127,10 +152,41 @@ const Navbar = ({ children }: NavbarProps) => {
                 </DropdownMenu>
               </div>
             </>
-          ) : (
+          ) : !isLanding ? (
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
               <span className="text-[12px] text-muted-foreground font-medium">Live</span>
+            </div>
+          ) : (
+            /* Mobile menu for landing page */
+            <div className="sm:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="p-2 rounded-lg hover:bg-muted transition-colors">
+                    <Menu className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="glass-strong min-w-[160px] rounded-2xl p-2 mt-2">
+                  <DropdownMenuItem
+                    onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
+                    className="px-3 py-2.5 rounded-xl text-[14px] text-muted-foreground"
+                  >
+                    How It Works
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/auth")}
+                    className="px-3 py-2.5 rounded-xl text-[14px] text-muted-foreground"
+                  >
+                    Login
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/auth")}
+                    className="px-3 py-2.5 rounded-xl text-[14px] text-primary font-medium"
+                  >
+                    Sign Up
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         </div>

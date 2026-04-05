@@ -2357,6 +2357,8 @@ const Admin = () => {
                     { id: "default", name: "Default", desc: "Current fintech-style design with wallet cards, queue bar, and referral section." },
                     { id: "bold", name: "Bold", desc: "Large gradient wallet hero, prominent queue progress bar, and high-contrast referral card." },
                     { id: "minimal", name: "Minimal", desc: "Ultra-clean typography-focused layout with centered balance, stats row, and clean referral section." },
+                    { id: "neon", name: "Neon", desc: "Modern glass-effect cards with subtle glow accents, gradient progress bars, and estimated queue days." },
+                    { id: "cards", name: "Cards", desc: "Grid-based card layout with dark balance hero, compact stat cards, and circular queue indicator." },
                   ] as const).map(design => (
                     <div
                       key={design.id}

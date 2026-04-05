@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppDesign = "default" | "bold" | "minimal";
+export type AppDesign = "default" | "bold" | "minimal" | "neon" | "cards";
 
 interface AppDesignContextType {
   activeDesign: AppDesign;
@@ -25,8 +25,8 @@ export const AppDesignProvider = ({ children }: { children: ReactNode }) => {
           .maybeSingle();
         if (!cancelled && data?.value) {
           const v = data.value as string;
-          if (v === "bold" || v === "minimal" || v === "default") {
-            setActiveDesign(v);
+          if (["default", "bold", "minimal", "neon", "cards"].includes(v)) {
+            setActiveDesign(v as AppDesign);
           }
         }
       } catch {
