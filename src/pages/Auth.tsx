@@ -17,6 +17,7 @@ import {
   GENERIC_AUTH_ERROR,
 } from "@/lib/security";
 import { getDeviceFingerprint } from "@/lib/fingerprint";
+import { trackSignup } from "@/lib/tracker";
 import { supabase } from "@/integrations/supabase/client";
 
 const REFERRAL_STORAGE_KEY = "karbali_pending_referral";
@@ -156,14 +157,13 @@ const Auth = () => {
           // If check fails, allow signup to proceed (fail-open for UX)
         }
 
-        const { error: signUpError } = await signUp(email, password, referralCode || undefined);
+        const { data: signUpData, error: signUpError } = await signUp(email, password, referralCode || undefined);
         if (signUpError) {
           setError(sanitizeAuthError(signUpError));
         } else {
+          const userId = signUpData?.user?.id;
           // Register this device/IP and save user_type after successful signup
           try {
-            const { data: sessionData } = await supabase.auth.getSession();
-            const userId = sessionData?.session?.user?.id;
             if (userId) {
               await Promise.all([
                 supabase.functions.invoke("check-signup-limit", {
@@ -174,6 +174,9 @@ const Auth = () => {
             }
           } catch {
             // Non-critical, don't block signup success
+          }
+          if (userId) {
+            trackSignup(userId);
           }
           setSignupSuccess(true);
         }

@@ -11,6 +11,7 @@ import WaterBackground from "@/components/WaterBackground";
 import PageSkeleton from "@/components/PageSkeleton";
 import { Gift, Wallet, Copy, Check, Lock, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { trackPurchase } from "@/lib/tracker";
 
 interface Voucher {
   id: string;
@@ -146,6 +147,7 @@ const Vouchers = () => {
     const claimNaira = Math.floor(pts * 0.5);
     await supabase.from("vouchers").insert({ user_id: user.id, voucher_code: code, amount_naira: claimNaira, points_used: pts });
     await supabase.from("profiles").update({ points_balance: pointsBalance - pts }).eq("id", user.id);
+    trackPurchase(user.id, claimNaira);
     toast({ title: "Voucher created!", description: `${code} — ${formatNaira(claimNaira)}` });
     setPointsToUse("");
     await fetchData();

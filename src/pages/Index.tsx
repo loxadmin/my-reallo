@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { trackDownload } from "@/lib/tracker";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import HowItWorks from "@/components/HowItWorks";
@@ -16,6 +17,7 @@ const Index = () => {
   }
 
   const handleGetStarted = () => {
+    trackDownload();
     navigate(user ? "/dashboard" : "/auth");
   };
 
