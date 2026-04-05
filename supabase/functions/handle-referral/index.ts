@@ -39,10 +39,9 @@ Deno.serve(async (req) => {
 
     const { data: referrer } = await supabase
       .from("profiles")
-      .select("id, queue_position, off_queue_at")
       .select("id, queue_position, points_balance, off_queue_at")
       .eq("referral_code", referral_code.toUpperCase())
-      .single();
+      .maybeSingle();
 
     if (!referrer) {
       return new Response(JSON.stringify({ error: "Invalid referral code" }), {
@@ -63,11 +62,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if referrer is off-queue: award 1000 points instead of queue skip
-    if (referrer.queue_position <= 0 && referrer.off_queue_at) {
+    const isOffQueue = referrer.queue_position <= 0 && referrer.off_queue_at !== null;
+
+    if (isOffQueue) {
+      // Award 1000 points to off-queue users
       await supabase
         .from("profiles")
-        .update({ points_balance: (await supabase.from("profiles").select("points_balance").eq("id", referrer.id).single()).data?.points_balance + 1000 })
+        .update({ points_balance: (referrer.points_balance || 0) + 1000 })
         .eq("id", referrer.id);
 
       await supabase.from("waitlist_activity").insert({
@@ -75,47 +76,9 @@ Deno.serve(async (req) => {
         action_type: "referral_points",
         positions_moved: 0,
       });
-    } else {
-      const newPos = Math.max(1, referrer.queue_position - 20);
-    const isOffQueue = referrer.queue_position === 0 || referrer.off_queue_at !== null;
-
-    if (isOffQueue) {
-      // Check if influencer
-      const { data: influencerApp } = await supabase
-        .from("influencer_applications")
-        .select("id")
-        .eq("user_id", referrer.id)
-        .eq("status", "approved")
-        .maybeSingle();
-
-      if (!influencerApp) {
-        // Award 1000 points to off-queue non-influencers
-        await supabase
-          .from("profiles")
-          .update({ points_balance: (referrer.points_balance || 0) + 1000 })
-          .eq("id", referrer.id);
-
-        await supabase.from("referrals").insert({
-          referrer_id: referrer.id,
-          referred_user_id: user.id,
-        });
-
-        await supabase.from("waitlist_activity").insert({
-          user_id: referrer.id,
-          action_type: "referral",
-          positions_moved: 0,
-        });
-
-        return new Response(
-          JSON.stringify({ success: true, points_awarded: 1000 }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    }
-
-    // Default skip logic (for users on queue or influencers)
-    const newPos = Math.max(1, (referrer.queue_position || 0) - 20);
-    if (referrer.queue_position > 0) {
+    } else if (referrer.queue_position > 0) {
+      // Skip 20 positions for on-queue users
+      const newPos = Math.max(1, (referrer.queue_position || 0) - 20);
       await supabase
         .from("profiles")
         .update({ queue_position: newPos })
@@ -133,14 +96,8 @@ Deno.serve(async (req) => {
       referred_user_id: user.id,
     });
 
-    await supabase.from("waitlist_activity").insert({
-      user_id: referrer.id,
-      action_type: "referral",
-      positions_moved: referrer.queue_position > 0 ? 20 : 0,
-    });
-
     return new Response(
-      JSON.stringify({ success: true, new_position: referrer.queue_position > 0 ? newPos : 0 }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
