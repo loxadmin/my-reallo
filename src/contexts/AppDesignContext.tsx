@@ -18,6 +18,13 @@ export const AppDesignProvider = ({ children }: { children: ReactNode }) => {
     let cancelled = false;
     const load = async () => {
       try {
+        const localDesign = localStorage.getItem("karbali-app-design");
+        if (localDesign && ["default", "bold", "minimal", "neon", "cards"].includes(localDesign)) {
+          setActiveDesign(localDesign as AppDesign);
+          setLoading(false);
+          return;
+        }
+
         const { data } = await supabase
           .from("admin_settings")
           .select("value")

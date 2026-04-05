@@ -38,9 +38,9 @@ const MinimalAutoSlider = () => {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -20, opacity: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="flex items-center gap-2 sm:gap-4 text-left py-2 w-full max-w-sm sm:max-w-none mx-auto"
+          className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 py-2 w-full mx-auto text-center sm:text-left"
         >
-          <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-1">
+          <span className="text-[11px] text-muted-foreground font-semibold whitespace-nowrap text-3d">
             {current.text}
           </span>
           <button
