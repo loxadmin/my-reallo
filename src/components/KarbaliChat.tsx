@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Bot, User as UserIcon, X, MessageSquare } from "lucide-react";
+import { Send, Bot, User as UserIcon, X, MessageSquare, RotateCcw, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -381,12 +381,22 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
     el.style.height = Math.min(el.scrollHeight, 120) + "px";
   };
 
+  const handleClearChat = async () => {
+    if (!user?.id) return;
+    if (window.confirm("Clear all chat messages? This cannot be undone.")) {
+      setMessages([]);
+      localStorage.removeItem(`${CHAT_KEY}_${user.id}`);
+      bootstrapStartedRef.current = false;
+      toast({ title: "Chat cleared", description: "Your conversation history has been reset." });
+    }
+  };
+
   const isPopup = mode === "popup";
   const isFullscreen = mode === "fullscreen";
 
   const containerClass = isPopup
-    ? "fixed bottom-20 right-4 z-50 w-[340px] sm:w-[380px] h-[480px] rounded-2xl shadow-2xl border border-border/50 bg-background flex flex-col overflow-hidden"
-    : `relative z-10 flex flex-col ${isFullscreen ? "h-[calc(100vh-3.5rem)]" : "h-full"} bg-background`;
+    ? "w-[calc(100vw-2rem)] sm:w-[380px] h-[500px] max-h-[75dvh] rounded-2xl shadow-2xl border border-border/50 bg-background flex flex-col overflow-hidden"
+    : `relative z-10 flex flex-col ${isFullscreen ? "h-[calc(100dvh-3.5rem)]" : "h-full"} bg-background`;
 
   return (
     <div className={containerClass}>
@@ -401,11 +411,25 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
             {isStreaming ? "typing..." : "Online"}
           </p>
         </div>
-        {isPopup && onClose && (
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-            <X className="w-4 h-4 text-muted-foreground" />
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={handleClearChat}
+            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            title="Clear Chat"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </motion.button>
+          {isPopup && onClose && (
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </motion.button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
@@ -443,13 +467,14 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
             style={{ fontSize: "16px", height: "40px" }}
             disabled={!isChatReady || isStreaming}
           />
-          <button
+          <motion.button
+            whileTap={{ scale: 0.9 }}
             onClick={() => handleSend()}
             disabled={!isChatReady || !input.trim() || isStreaming}
             className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shrink-0 mb-0.5"
           >
             <Send className="w-3.5 h-3.5" />
-          </button>
+          </motion.button>
         </div>
       </div>
     </div>
@@ -459,10 +484,15 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
 /** Floating chat popup button + panel */
 export const ChatPopup = ({ proactiveTip }: { proactiveTip?: string }) => {
   const [open, setOpen] = useState(false);
-  const [hasUnread, setHasUnread] = useState(false);
+  const [showBubble, setShowBubble] = useState(false);
 
   useEffect(() => {
-    if (proactiveTip && !open) setHasUnread(true);
+    if (proactiveTip && !open) {
+      const timer = setTimeout(() => setShowBubble(true), 1500);
+      return () => clearTimeout(timer);
+    } else {
+      setShowBubble(false);
+    }
   }, [proactiveTip, open]);
 
   return (
@@ -470,25 +500,48 @@ export const ChatPopup = ({ proactiveTip }: { proactiveTip?: string }) => {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 20, transformOrigin: "bottom right" }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ duration: 0.2 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="fixed bottom-20 right-4 z-50"
           >
             <KarbaliChat mode="popup" proactiveTip={proactiveTip} onClose={() => setOpen(false)} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      <button
-        onClick={() => { setOpen(!open); setHasUnread(false); }}
-        className="fixed bottom-5 right-4 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+      <AnimatePresence>
+        {showBubble && !open && proactiveTip && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 10, x: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 10, x: 20 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setOpen(true)}
+            className="fixed bottom-20 right-4 z-40 max-w-[240px] cursor-pointer"
+          >
+            <div className="bg-primary text-primary-foreground px-4 py-3 rounded-2xl rounded-br-none shadow-xl border border-primary/20 text-[13px] leading-relaxed relative">
+              <div className="flex gap-2 items-start">
+                <Bot className="w-4 h-4 shrink-0 mt-0.5" />
+                <p>{proactiveTip}</p>
+              </div>
+              {/* Triangle pointer */}
+              <div className="absolute -bottom-2 right-0 w-4 h-4 bg-primary" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%)' }} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => { setOpen(!open); setShowBubble(false); }}
+        className="fixed bottom-5 right-4 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl flex items-center justify-center transition-all"
       >
         {open ? <X className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
-        {hasUnread && !open && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full border-2 border-background" />
-        )}
-      </button>
+      </motion.button>
     </>
   );
 };
