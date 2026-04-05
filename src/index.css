@@ -323,6 +323,24 @@
   100% { transform: translate(0, 0) rotate(0deg); }
 }
 
+@keyframes liquid-blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(10%, -15%) scale(1.1); }
+  66% { transform: translate(-15%, 10%) scale(0.9); }
+}
+.animate-liquid-blob {
+  animation: liquid-blob 4s ease-in-out infinite;
+}
+
+@keyframes liquid-rise {
+  0% { transform: translateY(100%); }
+  50% { transform: translateY(20%); }
+  100% { transform: translateY(100%); }
+}
+.animate-liquid-rise {
+  animation: liquid-rise 6s ease-in-out infinite;
+}
+
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-20px); }
