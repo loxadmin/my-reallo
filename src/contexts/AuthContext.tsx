@@ -36,7 +36,7 @@ interface AuthContextType {
   profile: Profile | null;
   isAdmin: boolean;
   loading: boolean;
-  signUp: (email: string, password: string, referralCode?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, referralCode?: string) => Promise<{ data: any; error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -250,7 +250,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, referralCode?: string) => {
     try {
-      const { error } = await withTimeout(
+      const { data, error } = await withTimeout(
         supabase.auth.signUp({
           email, password,
           options: {
@@ -260,8 +260,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }),
         "sign up"
       );
-      return { error };
-    } catch (error) { return { error }; }
+      return { data, error };
+    } catch (error) { return { data: null, error }; }
   };
 
   const signIn = async (email: string, password: string) => {
