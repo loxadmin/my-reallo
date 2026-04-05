@@ -39,11 +39,11 @@ describe("MinimalAutoSlider", () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/Become an influencer/i)).toBeDefined();
+    expect(screen.getByText(/Earn up to 100k weekly/i)).toBeDefined();
     expect(screen.getByText("Join")).toBeDefined();
   });
 
-  it("cycles to the second slide after 5 seconds", () => {
+  it("cycles to the second slide after 8 seconds", () => {
     render(
       <BrowserRouter>
         <MinimalAutoSlider />
@@ -51,10 +51,10 @@ describe("MinimalAutoSlider", () => {
     );
 
     act(() => {
-      vi.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(8000);
     });
 
-    expect(screen.getByText(/Do tasks and use our partner brands/i)).toBeDefined();
+    expect(screen.getByText(/Get up to 70% cashback/i)).toBeDefined();
     expect(screen.getByText("Earn")).toBeDefined();
   });
 
@@ -79,7 +79,7 @@ describe("MinimalAutoSlider", () => {
     );
 
     act(() => {
-      vi.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(8000);
     });
 
     const button = screen.getByText("Earn");
