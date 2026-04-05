@@ -1,4 +1,5 @@
 import * as React from "react";
+import { logError } from "@/lib/errorLogger";
 
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
@@ -137,6 +138,34 @@ type Toast = Omit<ToasterToast, "id">;
 function toast({ ...props }: Toast) {
   const id = genId();
 
+  // Handle error logging and UI replacement
+  let finalProps = { ...props };
+  const isError = props.title === "Error" || props.variant === "destructive";
+
+  if (isError) {
+    // Determine a meaningful error message for admin logs
+    const errorMessage = typeof props.description === 'string'
+      ? props.description
+      : (typeof props.title === 'string' ? props.title : 'System Error');
+
+    // Log the error to Supabase
+    logError({
+      message: errorMessage,
+      metadata: {
+        title: typeof props.title === 'string' ? props.title : 'Error',
+        props: JSON.parse(JSON.stringify(props, (key, value) =>
+          typeof value === 'function' ? '[Function]' : value
+        ))
+      }
+    });
+
+    // On user end, show a generic message instead of the technical error
+    // but only if it's not the admin page
+    if (!window.location.pathname.startsWith('/admin')) {
+      finalProps.description = "oops! something went wrong";
+    }
+  }
+
   const update = (props: ToasterToast) =>
     dispatch({
       type: "UPDATE_TOAST",
@@ -147,7 +176,7 @@ function toast({ ...props }: Toast) {
   dispatch({
     type: "ADD_TOAST",
     toast: {
-      ...props,
+      ...finalProps,
       id,
       open: true,
       onOpenChange: (open) => {
