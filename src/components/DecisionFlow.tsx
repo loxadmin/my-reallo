@@ -145,7 +145,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
             user_id: user.id, app_id: app.id, has_app: true,
             would_switch: null, points_awarded: app.points_select,
           });
-          const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
+          const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).maybeSingle();
           await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.points_select }).eq("id", user.id);
           interactionsNeeded.push(app);
         } else {
@@ -183,7 +183,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
             user_id: user.id, app_id: app.id, has_app: true,
             would_switch: null, points_awarded: app.points_select,
           });
-          const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
+          const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).maybeSingle();
           await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.points_select }).eq("id", user.id);
           
           // Check if user selected the linked referral apps

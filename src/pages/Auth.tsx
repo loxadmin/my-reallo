@@ -19,6 +19,7 @@ import {
 import { getDeviceFingerprint } from "@/lib/fingerprint";
 import { trackSignup } from "@/lib/tracker";
 import { supabase } from "@/integrations/supabase/client";
+import { isAllowedEmailDomain, getBlockedDomainMessage } from "@/lib/emailValidation";
 
 const REFERRAL_STORAGE_KEY = "karbali_pending_referral";
 
@@ -102,6 +103,13 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Block non-recognized email domains
+      if (!isAllowedEmailDomain(email)) {
+        setError(getBlockedDomainMessage());
+        setLoading(false);
+        return;
+      }
+
       if (mode === "login") {
         const result = loginSchema.safeParse({ email, password });
         if (!result.success) {
