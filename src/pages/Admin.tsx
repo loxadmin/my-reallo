@@ -78,7 +78,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist";
 
 const navGroups = [
   {
@@ -122,7 +122,6 @@ const navGroups = [
       { id: "activity" as AdminTab, label: "Activity Log", icon: Activity },
       { id: "error_logs" as AdminTab, label: "Error Logs", icon: AlertTriangle },
       { id: "security_incidents" as AdminTab, label: "Security Incidents", icon: Shield },
-      { id: "security_config" as AdminTab, label: "Security Config", icon: Shield },
       { id: "blacklist" as AdminTab, label: "Blacklist", icon: Ban },
     ],
   },
@@ -329,7 +328,6 @@ const Admin = () => {
   const [verifyElectricityActive, setVerifyElectricityActive] = useState(true);
   const [verifyFoodActive, setVerifyFoodActive] = useState(true);
   const [verifyTransportActive, setVerifyTransportActive] = useState(true);
-  const [signupLimitEnabled, setSignupLimitEnabled] = useState(true);
   const [postQueueReferralPoints, setPostQueueReferralPoints] = useState("1000");
   const [verifySpendLink, setVerifySpendLink] = useState("");
   const [verifySpendDescription, setVerifySpendDescription] = useState("");
@@ -440,7 +438,6 @@ const Admin = () => {
     setVerifyElectricityActive(settings.find(s => s.key === "verify_electricity_active")?.value === "false" ? false : true);
     setVerifyFoodActive(settings.find(s => s.key === "verify_food_active")?.value === "false" ? false : true);
     setVerifyTransportActive(settings.find(s => s.key === "verify_transport_active")?.value === "false" ? false : true);
-    setSignupLimitEnabled(settings.find(s => s.key === "signup_limit_enabled")?.value === "false" ? false : true);
     setPostQueueReferralPoints(settings.find(s => s.key === "post_queue_referral_points")?.value || "1000");
     setVerifySpendLink(settings.find(s => s.key === "verify_spend_link")?.value || "");
     setVerifySpendDescription(settings.find(s => s.key === "verify_spend_description")?.value || "");
@@ -500,7 +497,6 @@ const Admin = () => {
       supabase.from("admin_settings").upsert({ key: "verify_electricity_active", value: String(verifyElectricityActive), updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_food_active", value: String(verifyFoodActive), updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_transport_active", value: String(verifyTransportActive), updated_at: new Date().toISOString() }),
-      supabase.from("admin_settings").upsert({ key: "signup_limit_enabled", value: String(signupLimitEnabled), updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "post_queue_referral_points", value: postQueueReferralPoints, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_spend_link", value: verifySpendLink, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_spend_description", value: verifySpendDescription, updated_at: new Date().toISOString() }),
@@ -938,7 +934,6 @@ const Admin = () => {
     app_design: "App Design",
     error_logs: "Error Logs",
     security_incidents: "Security Incidents",
-    security_config: "Security Config",
     blacklist: "Blacklist",
   };
 
@@ -2858,43 +2853,6 @@ const Admin = () => {
                     {blacklistedEntities.length === 0 && <div className="py-20 text-center text-muted-foreground text-[13px]">Blacklist is empty.</div>}
                   </div>
                 </TableCard>
-              </div>
-            )}
-
-            {/* ═══ SECURITY CONFIG ═══ */}
-            {activeTab === "security_config" && (
-              <div className={cardCls}>
-                <SectionHeader title="Security Configuration" subtitle="Manage global security features and restrictions" />
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
-                    <div>
-                      <label className="text-[12px] font-medium text-foreground">Signup Device/IP Limit</label>
-                      <p className="text-[11px] text-muted-foreground">When enabled, only 2 accounts can be created per device ID and IP address.</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`text-[10px] font-bold uppercase ${signupLimitEnabled ? "text-primary" : "text-muted-foreground"}`}>
-                        {signupLimitEnabled ? "Enabled" : "Disabled"}
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={signupLimitEnabled}
-                        onChange={e => setSignupLimitEnabled(e.target.checked)}
-                        className="w-5 h-5 accent-primary cursor-pointer rounded"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-primary/5 rounded-lg border border-primary/20 p-4">
-                    <p className="text-[11px] text-primary/80 leading-relaxed italic">
-                      Note: This restriction helps prevent multi-accounting and bot registrations.
-                      Disabling it should only be done temporarily for testing or special events.
-                    </p>
-                  </div>
-
-                  <Btn variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full">
-                    <Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save Security Configuration"}
-                  </Btn>
-                </div>
               </div>
             )}
 
