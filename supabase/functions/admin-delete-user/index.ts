@@ -52,32 +52,76 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Cannot delete yourself" }), { status: 400, headers: corsHeaders });
     }
 
-    // Delete profile and related data (cascades handle most)
-    // Delete from profiles first
-    await adminClient.from("profiles").delete().eq("id", user_id);
-    await adminClient.from("user_roles").delete().eq("user_id", user_id);
-    await adminClient.from("notifications").delete().eq("user_id", user_id);
-    await adminClient.from("waitlist_activity").delete().eq("user_id", user_id);
-    await adminClient.from("referrals").delete().or(`referrer_id.eq.${user_id},referred_user_id.eq.${user_id}`);
-    await adminClient.from("decision_responses").delete().eq("user_id", user_id);
-    await adminClient.from("questionnaire_responses").delete().eq("user_id", user_id);
-    await adminClient.from("spend_verifications").delete().eq("user_id", user_id);
-    await adminClient.from("verification_transactions").delete().eq("user_id", user_id);
-    await adminClient.from("vouchers").delete().eq("user_id", user_id);
-    await adminClient.from("survey_responses").delete().eq("user_id", user_id);
-    await adminClient.from("signup_devices").delete().eq("user_id", user_id);
-    await adminClient.from("user_warnings").delete().eq("user_id", user_id);
+    console.log(`Starting deletion for user: ${user_id}`);
 
-    // Delete from auth.users last
-    const { error: authError } = await adminClient.auth.admin.deleteUser(user_id);
-    if (authError) {
-      return new Response(JSON.stringify({ error: authError.message }), { status: 500, headers: corsHeaders });
+    // Define all table deletions in correct order (dependents first)
+    // 1. Tables referencing profiles but maybe missing ON DELETE CASCADE
+    const cleanupTasks = [
+      { table: "verification_transactions", column: "user_id" },
+      { table: "spend_verifications", column: "user_id" },
+      { table: "vouchers", column: "user_id" },
+      { table: "questionnaire_responses", column: "user_id" },
+      { table: "influencer_wallet_transactions", column: "user_id" },
+      { table: "influencer_survey_responses", column: "user_id" },
+      { table: "influencer_challenge_submissions", column: "user_id" },
+      { table: "influencer_challenge_enrollments", column: "user_id" },
+      { table: "influencer_withdrawals", column: "user_id" },
+      { table: "influencer_referrals", column: "influencer_id" },
+      { table: "influencer_referrals", column: "referred_user_id" },
+      { table: "influencer_bank_accounts", column: "user_id" },
+      { table: "influencer_wallets", column: "user_id" },
+      { table: "influencer_applications", column: "user_id" },
+      { table: "advertiser_tokens", column: "created_by" },
+      { table: "signup_devices", column: "user_id" },
+      { table: "user_warnings", column: "user_id" },
+      { table: "user_warnings", column: "issued_by" },
+      { table: "notifications", column: "user_id" },
+      { table: "waitlist_activity", column: "user_id" },
+      { table: "decision_responses", column: "user_id" },
+      { table: "survey_responses", column: "user_id" },
+      { table: "referrals", column: "referrer_id" },
+      { table: "referrals", column: "referred_user_id" },
+    ];
+
+    for (const task of cleanupTasks) {
+      console.log(`Cleaning up ${task.table} for ${task.column}=${user_id}`);
+      const { error } = await adminClient.from(task.table).delete().eq(task.column, user_id);
+      if (error) {
+        console.error(`Error deleting from ${task.table}:`, error);
+        // We continue even if some fail, but log it
+      }
     }
 
+    // 2. Clear self-references in profiles (referred_by)
+    console.log(`Clearing referred_by for users referred by ${user_id}`);
+    await adminClient.from("profiles").update({ referred_by: null }).eq("referred_by", user_id);
+
+    // 3. Delete from user_roles
+    console.log(`Deleting user_roles for ${user_id}`);
+    await adminClient.from("user_roles").delete().eq("user_id", user_id);
+
+    // 4. Delete from profiles (main profile)
+    console.log(`Deleting profile for ${user_id}`);
+    const { error: profileError } = await adminClient.from("profiles").delete().eq("id", user_id);
+    if (profileError) {
+        console.error("Error deleting profile:", profileError);
+        return new Response(JSON.stringify({ error: `Failed to delete profile: ${profileError.message}` }), { status: 500, headers: corsHeaders });
+    }
+
+    // 5. Delete from auth.users last
+    console.log(`Deleting auth user for ${user_id}`);
+    const { error: authError } = await adminClient.auth.admin.deleteUser(user_id);
+    if (authError) {
+      console.error("Error deleting auth user:", authError);
+      return new Response(JSON.stringify({ error: `Failed to delete auth user: ${authError.message}` }), { status: 500, headers: corsHeaders });
+    }
+
+    console.log(`Successfully deleted user ${user_id}`);
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    console.error("Unexpected error in admin-delete-user:", err);
     return new Response(JSON.stringify({ error: String(err) }), { status: 500, headers: corsHeaders });
   }
 });
