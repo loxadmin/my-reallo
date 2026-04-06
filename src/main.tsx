@@ -1,6 +1,10 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { initConsoleGuard } from "./lib/consoleGuard";
+
+// Protect frontend from inspection
+initConsoleGuard();
 
 // Initialize theme - light is default
 const savedTheme = localStorage.getItem("karbali-theme");
