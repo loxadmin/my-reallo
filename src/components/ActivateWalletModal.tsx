@@ -43,7 +43,7 @@ const ActivateWalletModal = ({ type, onClose, onComplete }: ActivateWalletModalP
       .from("profiles")
       .select("annual_data_spend, annual_electricity_spend, annual_food_spend, annual_transport_spend")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profile) {
       const total =

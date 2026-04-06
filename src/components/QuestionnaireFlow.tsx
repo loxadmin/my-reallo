@@ -110,7 +110,7 @@ const QuestionnaireFlow = () => {
 
     // Award points
     await supabase.rpc("generate_referral_code"); // just to use rpc pattern
-    const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
+    const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).maybeSingle();
     const newBalance = (profile?.points_balance || 0) + activeQ.points_reward;
     await supabase.from("profiles").update({ points_balance: newBalance }).eq("id", user.id);
 

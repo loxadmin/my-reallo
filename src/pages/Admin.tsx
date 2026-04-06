@@ -537,7 +537,7 @@ const Admin = () => {
     try {
       const { error: respError } = await fromDResponses().update({ referral_approved: true, points_awarded: app.referral_points }).eq("id", responseId);
       if (respError) { toast({ title: "Error updating response", description: respError.message }); return; }
-      const { data: profile, error: profileError } = await supabase.from("profiles").select("points_balance").eq("id", userId).single();
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("points_balance").eq("id", userId).maybeSingle();
       if (profileError || !profile) { toast({ title: "Error fetching profile", description: profileError?.message || "Profile not found" }); return; }
       const newBalance = (profile.points_balance || 0) + app.referral_points;
       const { error: updateError } = await supabase.from("profiles").update({ points_balance: newBalance }).eq("id", userId);
@@ -601,7 +601,7 @@ const Admin = () => {
               duplicateCount++;
             }
             const { data: allTxs } = await supabase.from("verification_transactions").select("is_verified, verified_amount").eq("verification_id", firstMatch.verification_id);
-            const { data: verif } = await supabase.from("spend_verifications").select("frequency, spend_type").eq("id", firstMatch.verification_id).single();
+            const { data: verif } = await supabase.from("spend_verifications").select("frequency, spend_type").eq("id", firstMatch.verification_id).maybeSingle();
             if (allTxs && verif) {
               const verifiedTxs = allTxs.filter(t => t.is_verified);
               const totalAmount = verifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
@@ -617,7 +617,7 @@ const Admin = () => {
                   ...(freq === "monthly" ? { status: "verified" } : {})
                 }).eq("id", verId);
                 if (freq !== "monthly") {
-                  const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", verId).single();
+                  const { data: vData } = await supabase.from("spend_verifications").select("ends_at").eq("id", verId).maybeSingle();
                   if (vData && new Date() >= new Date((vData as any).ends_at)) {
                     await supabase.from("spend_verifications").update({ status: "verified" }).eq("id", verId);
                   }
@@ -633,7 +633,7 @@ const Admin = () => {
                 const totalAnnual = dataAmt + elecAmt;
                 const bothVerified = dataV?.status === "verified" && elecV?.status === "verified";
 
-                const { data: userProfile } = await supabase.from("profiles").select("selected_goal").eq("id", userId).single();
+                const { data: userProfile } = await supabase.from("profiles").select("selected_goal").eq("id", userId).maybeSingle();
                 let newTarget: number | undefined;
                 if (userProfile?.selected_goal) {
                   const goalType = (userProfile.selected_goal as string).split(":")[0];
@@ -704,7 +704,7 @@ const Admin = () => {
       points_reward: newSurvey.points_reward,
       completion_link: newSurvey.completion_link,
       completion_instructions: newSurvey.completion_instructions
-    }).select().single();
+    }).select().maybeSingle();
 
     if (surveyError) {
       toast({ title: "Error", description: surveyError.message });
@@ -720,7 +720,7 @@ const Admin = () => {
         survey_id: surveyData.id,
         question_text: q.question_text,
         order_index: i
-      }).select().single();
+      }).select().maybeSingle();
 
       if (questionError) {
         console.error("Error creating question:", questionError);
@@ -762,7 +762,7 @@ const Admin = () => {
       survey_id: surveyId,
       question_text: newSurveyQuestion.question_text,
       order_index: surveyQuestions.filter(q => q.survey_id === surveyId).length
-    }).select().single();
+    }).select().maybeSingle();
 
     if (qError) { toast({ title: "Error", description: qError.message }); return; }
 
@@ -789,7 +789,7 @@ const Admin = () => {
 
   const handleApproveSurveySubmission = async (responseId: string, userId: string, points: number) => {
     await supabase.from("survey_responses").update({ status: "approved", reviewed_at: new Date().toISOString(), points_awarded: points }).eq("id", responseId);
-    const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", userId).single();
+    const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", userId).maybeSingle();
     await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + points }).eq("id", userId);
     toast({ title: "Submission approved" });
     await fetchData();

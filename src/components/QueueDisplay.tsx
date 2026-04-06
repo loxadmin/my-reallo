@@ -96,10 +96,10 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
       const [refRes, actRes, settingsRes, voucherRes, verifyRes, activeRes, refUsersRes] = await Promise.all([
         supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", profile.id),
         supabase.from("waitlist_activity").select("positions_moved").eq("user_id", profile.id).gte("created_at", new Date().toISOString().split("T")[0]),
-        supabase.from("admin_settings").select("value").eq("key", "verify_expense_link").single(),
+        supabase.from("admin_settings").select("value").eq("key", "verify_expense_link").maybeSingle(),
         supabase.from("vouchers").select("amount_naira").eq("user_id", user.id),
         supabase.from("spend_verifications").select("status, spend_type").eq("user_id", user.id),
-        supabase.from("admin_settings").select("value").eq("key", "verify_page_active").single(),
+        supabase.from("admin_settings").select("value").eq("key", "verify_page_active").maybeSingle(),
         supabase.from("referrals").select("referred_user_id, created_at, profiles!referrals_referred_user_id_fkey(email)").eq("referrer_id", profile.id).order("created_at", { ascending: false }),
       ]);
       setReferralCount(refRes.count || 0);
@@ -117,10 +117,10 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
 
       // Fetch per-category toggles
       const [dataToggle, elecToggle, foodToggle, transToggle] = await Promise.all([
-        supabase.from("admin_settings").select("value").eq("key", "verify_data_active").single(),
-        supabase.from("admin_settings").select("value").eq("key", "verify_electricity_active").single(),
-        supabase.from("admin_settings").select("value").eq("key", "verify_food_active").single(),
-        supabase.from("admin_settings").select("value").eq("key", "verify_transport_active").single(),
+        supabase.from("admin_settings").select("value").eq("key", "verify_data_active").maybeSingle(),
+        supabase.from("admin_settings").select("value").eq("key", "verify_electricity_active").maybeSingle(),
+        supabase.from("admin_settings").select("value").eq("key", "verify_food_active").maybeSingle(),
+        supabase.from("admin_settings").select("value").eq("key", "verify_transport_active").maybeSingle(),
       ]);
 
       const toggles: Record<string, boolean> = {

@@ -70,7 +70,7 @@ export default function AdminInfluencerSurveys() {
         is_active: draft.is_active,
       })
       .select("id")
-      .single();
+      .maybeSingle();
 
     if (error || !created) {
       console.error("create influencer survey error", error);
@@ -86,7 +86,7 @@ export default function AdminInfluencerSurveys() {
         .from("influencer_survey_questions" as any)
         .insert({ survey_id: (created as any).id, question_text: question.question_text.trim(), order_index: qIndex })
         .select("id")
-        .single();
+        .maybeSingle();
 
       if (qErr || !createdQuestion) {
         console.error("create influencer question error", qErr);

@@ -119,8 +119,8 @@ async function streamChat({
   onDone: (fullText: string) => void;
   signal?: AbortSignal;
 }) {
-  const supabaseUrl = "https://mrcypdyivfprvvirnwtq.supabase.co";
-  const publishableKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yY3lwZHlpdmZwcnZ2aXJud3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Mzk2NTUsImV4cCI6MjA4NzQxNTY1NX0.qnUvMhjs-zl4Cdd8DiIJ10Qe3Cl_uAiMGU3CksfXOkw";
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   const { data: { session } } = await supabase.auth.getSession();
   const authToken = session?.access_token || publishableKey;

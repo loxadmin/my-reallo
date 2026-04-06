@@ -6,7 +6,7 @@ import {
   Link, Users, Building, Clock, Trash2, ExternalLink, RefreshCw
 } from "lucide-react";
 
-const SUPABASE_URL = "https://mrcypdyivfprvvirnwtq.supabase.co";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 interface Props {
   onRefresh?: () => void;
