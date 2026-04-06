@@ -385,7 +385,7 @@ const Admin = () => {
       supabase.from("survey_questions").select("*").order("order_index", { ascending: true }),
       supabase.from("survey_options").select("*").order("created_at", { ascending: true }),
       supabase.from("survey_responses").select("*").order("created_at", { ascending: false }),
-      supabase.from("system_errors" as any).select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("system_errors").select("*").order("created_at", { ascending: false }).limit(100),
       supabase.from("security_incidents").select("*").order("created_at", { ascending: false }).limit(100),
       supabase.from("blacklisted_entities").select("*").order("created_at", { ascending: false }),
     ]);
@@ -2870,7 +2870,7 @@ const Admin = () => {
                     <h3 className="text-[13px] font-semibold text-foreground">System Error Logs</h3>
                     <Btn variant="outline" onClick={async () => {
                       if (confirm("Are you sure you want to clear all error logs?")) {
-                        await supabase.from("system_errors" as any).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                        await supabase.from("system_errors").delete().neq("id", "00000000-0000-0000-0000-000000000000");
                         toast({ title: "Logs cleared" });
                         fetchData();
                       }
