@@ -30,15 +30,17 @@ const originalLocation = window.location;
 delete (window as any).location;
 window.location = { ...originalLocation, href: "", history: { pushState: vi.fn() } } as any;
 
-describe("Security Traps Enhanced", () => {
+describe("Security Traps Relaxed", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.location.href = "";
   });
 
-  it("detectMaliciousPatterns identifies SQL injection", () => {
-    expect(detectMaliciousPatterns("' OR 1=1 --")).toBe(true);
-    expect(detectMaliciousPatterns("admin' #")).toBe(true);
+  it("detectMaliciousPatterns identifies aggressive SQL injection but allows lone quotes", () => {
+    // Definitive patterns should still be caught
+    expect(detectMaliciousPatterns("' OR '1'='1")).toBe(true);
+    // Lone quotes or names with quotes should be allowed
+    expect(detectMaliciousPatterns("O'Connor")).toBe(false);
     expect(detectMaliciousPatterns("normal_user@gmail.com")).toBe(false);
   });
 
@@ -48,19 +50,21 @@ describe("Security Traps Enhanced", () => {
     expect(detectMaliciousPatterns("Safe string with symbols!@#")).toBe(false);
   });
 
-  it("triggerTrap calls edge function and redirects for high severity", async () => {
+  it("triggerTrap calls edge function but DOES NOT redirect anymore", async () => {
     await triggerTrap("honeypot_triggered", { test: "data" }, "high", true);
 
     expect(supabase.functions.invoke).toHaveBeenCalledWith("report-incident", expect.any(Object));
-    expect(window.location.href).toBe(REDIRECT_URL);
+    // Redirect should NOT happen now
+    expect(window.location.href).not.toBe(REDIRECT_URL);
   });
 
-  it("checkBlacklist redirects if blacklisted via RPC", async () => {
+  it("checkBlacklist returns true but DOES NOT redirect if blacklisted", async () => {
     (supabase.rpc as any).mockResolvedValue({ data: true, error: null });
 
     const result = await checkBlacklist();
 
     expect(result).toBe(true);
-    expect(window.location.href).toBe(REDIRECT_URL);
+    // Redirect should NOT happen now
+    expect(window.location.href).not.toBe(REDIRECT_URL);
   });
 });

