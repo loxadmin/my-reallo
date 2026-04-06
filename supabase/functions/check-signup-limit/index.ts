@@ -19,6 +19,15 @@ Deno.serve(async (req) => {
 
     const { action, device_fingerprint, user_id } = await req.json();
 
+    // Fetch signup_limit_enabled from admin_settings
+    const { data: settingData } = await supabase
+      .from("admin_settings")
+      .select("value")
+      .eq("key", "signup_limit_enabled")
+      .maybeSingle();
+
+    const signupLimitEnabled = settingData?.value !== "false";
+
     // Get client IP from headers (Supabase Edge Functions provide this)
     const clientIp =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -27,6 +36,13 @@ Deno.serve(async (req) => {
       "unknown";
 
     if (action === "check") {
+      if (!signupLimitEnabled) {
+        return new Response(
+          JSON.stringify({ allowed: true, ip: clientIp }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       // Check how many accounts exist for this IP or device fingerprint
       const { count: ipCount } = await supabase
         .from("signup_devices")
@@ -56,25 +72,27 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Double-check limits before inserting
-      const { count: ipCount } = await supabase
-        .from("signup_devices")
-        .select("*", { count: "exact", head: true })
-        .eq("ip_address", clientIp);
+      if (signupLimitEnabled) {
+        // Double-check limits before inserting
+        const { count: ipCount } = await supabase
+          .from("signup_devices")
+          .select("*", { count: "exact", head: true })
+          .eq("ip_address", clientIp);
 
-      const { count: deviceCount } = await supabase
-        .from("signup_devices")
-        .select("*", { count: "exact", head: true })
-        .eq("device_fingerprint", device_fingerprint);
+        const { count: deviceCount } = await supabase
+          .from("signup_devices")
+          .select("*", { count: "exact", head: true })
+          .eq("device_fingerprint", device_fingerprint);
 
-      if (
-        (ipCount ?? 0) >= MAX_ACCOUNTS_PER_IDENTIFIER ||
-        (deviceCount ?? 0) >= MAX_ACCOUNTS_PER_IDENTIFIER
-      ) {
-        return new Response(
-          JSON.stringify({ error: "Account limit reached for this device or network" }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        if (
+          (ipCount ?? 0) >= MAX_ACCOUNTS_PER_IDENTIFIER ||
+          (deviceCount ?? 0) >= MAX_ACCOUNTS_PER_IDENTIFIER
+        ) {
+          return new Response(
+            JSON.stringify({ error: "Account limit reached for this device or network" }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
       }
 
       const { error } = await supabase.from("signup_devices").insert({
