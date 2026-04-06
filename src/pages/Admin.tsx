@@ -78,7 +78,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist";
 
 const navGroups = [
   {
@@ -117,7 +117,6 @@ const navGroups = [
     items: [
       { id: "app_design" as AdminTab, label: "App Design", icon: Paintbrush },
       { id: "settings" as AdminTab, label: "Settings", icon: Link },
-      { id: "security_config" as AdminTab, label: "Security Config", icon: Lock },
       { id: "analytics" as AdminTab, label: "Analytics", icon: BarChart3 },
       { id: "ghosts" as AdminTab, label: "Ghost Users", icon: Ghost },
       { id: "activity" as AdminTab, label: "Activity Log", icon: Activity },
@@ -339,7 +338,6 @@ const Admin = () => {
   const [currencyRateUsd, setCurrencyRateUsd] = useState("1600");
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
-  const [signupLimitEnabled, setSignupLimitEnabled] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerUserId, setDrawerUserId] = useState<string | null>(null);
   const [adminCurrency, setAdminCurrency] = useState<AdminCurrency>("NGN");
@@ -374,106 +372,90 @@ const Admin = () => {
 
   const fetchData = async () => {
     setRefreshing(true);
-    try {
-      const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, surveyRes, sQuestionRes, sOptionRes, sRespRes, errorsRes, incidentsRes, blacklistRes] = await Promise.all([
-        supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
-        supabase.from("ghost_users").select("id", { count: "exact", head: true }),
-        supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
-        supabase.from("goal_categories").select("*").order("goal_type"),
-        supabase.from("admin_settings").select("*"),
-        supabase.from("verification_transactions").select("*").order("submitted_at", { ascending: false }).limit(200),
-        fromApps().select("*").order("created_at", { ascending: false }),
-        fromDResponses().select("*").order("created_at", { ascending: false }),
-        supabase.from("surveys").select("*").order("created_at", { ascending: false }),
-        supabase.from("survey_questions").select("*").order("order_index", { ascending: true }),
-        supabase.from("survey_options").select("*").order("created_at", { ascending: true }),
-        supabase.from("survey_responses").select("*").order("created_at", { ascending: false }),
-        supabase.from("system_errors").select("*").order("created_at", { ascending: false }).limit(100),
-        supabase.from("security_incidents").select("*").order("created_at", { ascending: false }).limit(100),
-        supabase.from("blacklisted_entities").select("*").order("created_at", { ascending: false }),
-      ]);
+    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, surveyRes, sQuestionRes, sOptionRes, sRespRes, errorsRes, incidentsRes, blacklistRes] = await Promise.all([
+      supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
+      supabase.from("ghost_users").select("id", { count: "exact", head: true }),
+      supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("goal_categories").select("*").order("goal_type"),
+      supabase.from("admin_settings").select("*"),
+      supabase.from("verification_transactions").select("*").order("submitted_at", { ascending: false }).limit(200),
+      fromApps().select("*").order("created_at", { ascending: false }),
+      fromDResponses().select("*").order("created_at", { ascending: false }),
+      supabase.from("surveys").select("*").order("created_at", { ascending: false }),
+      supabase.from("survey_questions").select("*").order("order_index", { ascending: true }),
+      supabase.from("survey_options").select("*").order("created_at", { ascending: true }),
+      supabase.from("survey_responses").select("*").order("created_at", { ascending: false }),
+      supabase.from("system_errors" as any).select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("security_incidents").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("blacklisted_entities").select("*").order("created_at", { ascending: false }),
+    ]);
+    const profs = (profilesRes.data as ProfileRow[]) || [];
+    setProfiles(profs);
+    setErrorLogs(errorsRes.data || []);
+    setSecurityIncidents(incidentsRes.data || []);
+    setBlacklistedEntities(blacklistRes.data || []);
+    setSurveys(surveyRes.data || []);
+    setSurveyQuestions(sQuestionRes.data || []);
+    setSurveyOptions(sOptionRes.data || []);
+    setSurveyResponses(sRespRes.data || []);
+    setGhostCount(ghostsRes.count || 0);
+    setActivities((activityRes.data as ActivityRow[]) || []);
+    setGoalCategories((goalsRes.data as GoalCategoryRow[]) || []);
+    setVerificationTxs((vtRes.data as VerificationTx[]) || []);
+    setDecisionApps((daRes.data || []) as unknown as DecisionAppRow[]);
+    setDecisionResponses((drRes.data || []) as unknown as DecisionResponseRow[]);
+    setEditedGoals({});
 
-      if (errorsRes.error) console.error("Error fetching system_errors:", errorsRes.error);
+    const [iaRes, iwRes, ibRes, irRes, iwdRes] = await Promise.all([
+      supabase.from("influencer_applications" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_wallets" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_bank_accounts" as any).select("*"),
+      supabase.from("influencer_referrals" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_withdrawals" as any).select("*").order("created_at", { ascending: false }),
+    ]);
+    setInfApps((iaRes.data || []) as any[]);
+    setInfWallets((iwRes.data || []) as any[]);
+    setInfBankAccounts((ibRes.data || []) as any[]);
+    setInfReferrals((irRes.data || []) as any[]);
+    setInfWithdrawals((iwdRes.data || []) as any[]);
 
-      const profs = (profilesRes.data as ProfileRow[]) || [];
-      setProfiles(profs);
-      setErrorLogs(errorsRes.data || []);
-      setSecurityIncidents(incidentsRes.data || []);
-      setBlacklistedEntities(blacklistRes.data || []);
-      setSurveys(surveyRes.data || []);
-      setSurveyQuestions(sQuestionRes.data || []);
-      setSurveyOptions(sOptionRes.data || []);
-      setSurveyResponses(sRespRes.data || []);
-      setGhostCount(ghostsRes.count || 0);
-      setActivities((activityRes.data as ActivityRow[]) || []);
-      setGoalCategories((goalsRes.data as GoalCategoryRow[]) || []);
-      setVerificationTxs((vtRes.data as VerificationTx[]) || []);
-      setDecisionApps((daRes.data || []) as unknown as DecisionAppRow[]);
-      setDecisionResponses((drRes.data || []) as unknown as DecisionResponseRow[]);
-      setEditedGoals({});
+    const [icRes, icsRes, iceRes] = await Promise.all([
+      supabase.from("influencer_challenges" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("influencer_challenge_submissions" as any).select("*").order("submitted_at", { ascending: false }),
+      supabase.from("influencer_challenge_enrollments" as any).select("*"),
+    ]);
+    setInfChallenges((icRes.data || []) as any[]);
+    setInfChallengeSubmissions((icsRes.data || []) as any[]);
+    setInfChallengeEnrollments((iceRes.data || []) as any[]);
 
-      const [iaRes, iwRes, ibRes, irRes, iwdRes, refRes] = await Promise.all([
-        supabase.from("influencer_applications" as any).select("*").order("created_at", { ascending: false }),
-        supabase.from("influencer_wallets" as any).select("*").order("created_at", { ascending: false }),
-        supabase.from("influencer_bank_accounts" as any).select("*"),
-        supabase.from("influencer_referrals" as any).select("*").order("created_at", { ascending: false }),
-        supabase.from("influencer_withdrawals" as any).select("*").order("created_at", { ascending: false }),
-        supabase.from("referrals").select("referrer_id"),
-      ]);
-      setInfApps((iaRes.data || []) as any[]);
-      setInfWallets((iwRes.data || []) as any[]);
-      setInfBankAccounts((ibRes.data || []) as any[]);
-      setInfReferrals((irRes.data || []) as any[]);
-      setInfWithdrawals((iwdRes.data || []) as any[]);
+    const { data: warningsData } = await supabase.from("user_warnings" as any).select("*").order("created_at", { ascending: false });
+    setUserWarnings((warningsData || []) as unknown as UserWarning[]);
 
-      const [icRes, icsRes, iceRes] = await Promise.all([
-        supabase.from("influencer_challenges" as any).select("*").order("created_at", { ascending: false }),
-        supabase.from("influencer_challenge_submissions" as any).select("*").order("submitted_at", { ascending: false }),
-        supabase.from("influencer_challenge_enrollments" as any).select("*"),
-      ]);
-      setInfChallenges((icRes.data || []) as any[]);
-      setInfChallengeSubmissions((icsRes.data || []) as any[]);
-      setInfChallengeEnrollments((iceRes.data || []) as any[]);
+    const settings = (settingsRes.data || []) as { key: string; value: string }[];
+    setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
+    setVerifyPageActive(settings.find(s => s.key === "verify_page_active")?.value === "false" ? false : true);
+    setVerifyDataActive(settings.find(s => s.key === "verify_data_active")?.value === "false" ? false : true);
+    setVerifyElectricityActive(settings.find(s => s.key === "verify_electricity_active")?.value === "false" ? false : true);
+    setVerifyFoodActive(settings.find(s => s.key === "verify_food_active")?.value === "false" ? false : true);
+    setVerifyTransportActive(settings.find(s => s.key === "verify_transport_active")?.value === "false" ? false : true);
+    setPostQueueReferralPoints(settings.find(s => s.key === "post_queue_referral_points")?.value || "1000");
+    setVerifySpendLink(settings.find(s => s.key === "verify_spend_link")?.value || "");
+    setVerifySpendDescription(settings.find(s => s.key === "verify_spend_description")?.value || "");
+    setFooterContactUs(settings.find(s => s.key === "footer_contact_us")?.value || "");
+    setFooterAboutUs(settings.find(s => s.key === "footer_about_us")?.value || "");
+    setFooterInvestWithUs(settings.find(s => s.key === "footer_invest_with_us")?.value || "");
+    setCurrencyRateUsd(settings.find(s => s.key === "currency_rate_usd")?.value || "1600");
+    setCurrencyRateEur(settings.find(s => s.key === "currency_rate_eur")?.value || "1700");
+    setCurrencyRateGbp(settings.find(s => s.key === "currency_rate_gbp")?.value || "2000");
+    setActiveAppDesign(settings.find(s => s.key === "active_app_design")?.value || "default");
 
-      const { data: warningsData } = await supabase.from("user_warnings" as any).select("*").order("created_at", { ascending: false });
-      setUserWarnings((warningsData || []) as unknown as UserWarning[]);
-
-      const settings = (settingsRes.data || []) as { key: string; value: string }[];
-      setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
-      setVerifyPageActive(settings.find(s => s.key === "verify_page_active")?.value === "false" ? false : true);
-      setVerifyDataActive(settings.find(s => s.key === "verify_data_active")?.value === "false" ? false : true);
-      setVerifyElectricityActive(settings.find(s => s.key === "verify_electricity_active")?.value === "false" ? false : true);
-      setVerifyFoodActive(settings.find(s => s.key === "verify_food_active")?.value === "false" ? false : true);
-      setVerifyTransportActive(settings.find(s => s.key === "verify_transport_active")?.value === "false" ? false : true);
-      setPostQueueReferralPoints(settings.find(s => s.key === "post_queue_referral_points")?.value || "1000");
-      setVerifySpendLink(settings.find(s => s.key === "verify_spend_link")?.value || "");
-      setVerifySpendDescription(settings.find(s => s.key === "verify_spend_description")?.value || "");
-      setFooterContactUs(settings.find(s => s.key === "footer_contact_us")?.value || "");
-      setFooterAboutUs(settings.find(s => s.key === "footer_about_us")?.value || "");
-      setFooterInvestWithUs(settings.find(s => s.key === "footer_invest_with_us")?.value || "");
-      setCurrencyRateUsd(settings.find(s => s.key === "currency_rate_usd")?.value || "1600");
-      setCurrencyRateEur(settings.find(s => s.key === "currency_rate_eur")?.value || "1700");
-      setCurrencyRateGbp(settings.find(s => s.key === "currency_rate_gbp")?.value || "2000");
-      setActiveAppDesign(settings.find(s => s.key === "active_app_design")?.value || "default");
-    setSignupLimitEnabled(settings.find(s => s.key === "signup_limit_enabled")?.value === "false" ? false : true);
-
-      const counts: Record<string, number> = {};
-      if (refRes.data) {
-        refRes.data.forEach(r => {
-          counts[r.referrer_id] = (counts[r.referrer_id] || 0) + 1;
-        });
-      }
-      setReferralCounts(counts);
-    } catch (err) {
-      console.error("Critical error in Admin fetchData:", err);
-      toast({
-        title: "Error fetching data",
-        description: "Some sections may not load correctly. Please try refreshing.",
-        variant: "destructive"
-      });
-    } finally {
-      setRefreshing(false);
+    const counts: Record<string, number> = {};
+    for (const p of profs) {
+      const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", p.id);
+      counts[p.id] = count || 0;
     }
+    setReferralCounts(counts);
+    setRefreshing(false);
   };
 
   useEffect(() => { if (isAdmin) fetchData(); }, [isAdmin]);
@@ -524,7 +506,6 @@ const Admin = () => {
       supabase.from("admin_settings").upsert({ key: "currency_rate_usd", value: currencyRateUsd, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "currency_rate_eur", value: currencyRateEur, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "currency_rate_gbp", value: currencyRateGbp, updated_at: new Date().toISOString() }),
-      supabase.from("admin_settings").upsert({ key: "signup_limit_enabled", value: String(signupLimitEnabled), updated_at: new Date().toISOString() }),
     ]);
     toast({ title: "Settings saved" });
     setSaving(false);
@@ -954,7 +935,6 @@ const Admin = () => {
     error_logs: "Error Logs",
     security_incidents: "Security Incidents",
     blacklist: "Blacklist",
-    security_config: "Security Config",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
@@ -2876,64 +2856,6 @@ const Admin = () => {
               </div>
             )}
 
-            {/* ═══ SECURITY CONFIG ═══ */}
-            {activeTab === "security_config" && (
-              <div className={cardCls}>
-                <SectionHeader
-                  title="Security Configuration"
-                  subtitle="Manage platform-wide security and anti-fraud settings"
-                />
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between rounded-xl border border-border/40 p-5 bg-muted/5">
-                    <div className="space-y-1">
-                      <label className="text-[14px] font-bold text-foreground">Anti-Fraud: Signup Limit</label>
-                      <p className="text-[12px] text-muted-foreground max-w-md">
-                        When enabled, the system restricts users to a maximum of 2 accounts per unique device (fingerprint) and IP address. Disable this only if you want to allow unlimited signups from the same device/network.
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-3">
-                      <div
-                        onClick={() => setSignupLimitEnabled(!signupLimitEnabled)}
-                        className={`w-14 h-7 rounded-full p-1 cursor-pointer transition-all duration-300 ${
-                          signupLimitEnabled ? "bg-primary" : "bg-muted-foreground/30"
-                        }`}
-                      >
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 ${
-                          signupLimitEnabled ? "translate-x-7" : "translate-x-0"
-                        }`} />
-                      </div>
-                      <span className={`text-[11px] font-bold uppercase tracking-wider ${
-                        signupLimitEnabled ? "text-primary" : "text-muted-foreground"
-                      }`}>
-                        {signupLimitEnabled ? "Enabled" : "Disabled"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border/40 p-5 bg-destructive/5 space-y-3">
-                    <div className="flex items-center gap-2 text-destructive">
-                      <AlertTriangle className="w-4 h-4" />
-                      <p className="text-[13px] font-bold">Important Note</p>
-                    </div>
-                    <p className="text-[12px] text-muted-foreground leading-relaxed">
-                      Disabling this feature may increase the risk of referral fraud and bot accounts.
-                      Changes take effect immediately for all new signups.
-                    </p>
-                  </div>
-
-                  <Btn
-                    variant="primary"
-                    onClick={handleSaveSettings}
-                    disabled={saving}
-                    className="w-full py-4 text-[13px]"
-                  >
-                    <Save className="w-4 h-4" />
-                    {saving ? "Saving Configuration..." : "Save Security Configuration"}
-                  </Btn>
-                </div>
-              </div>
-            )}
-
             {/* ═══ ERROR LOGS ═══ */}
             {activeTab === "error_logs" && (
               <div className="space-y-6">
@@ -2948,7 +2870,7 @@ const Admin = () => {
                     <h3 className="text-[13px] font-semibold text-foreground">System Error Logs</h3>
                     <Btn variant="outline" onClick={async () => {
                       if (confirm("Are you sure you want to clear all error logs?")) {
-                        await supabase.from("system_errors").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                        await supabase.from("system_errors" as any).delete().neq("id", "00000000-0000-0000-0000-000000000000");
                         toast({ title: "Logs cleared" });
                         fetchData();
                       }
