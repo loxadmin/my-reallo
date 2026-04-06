@@ -235,7 +235,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
     switchDate.setDate(switchDate.getDate() + 30);
 
     const { data: resp } = await fromResponses()
-      .select("*").eq("user_id", user.id).eq("app_id", app.id).single();
+      .select("*").eq("user_id", user.id).eq("app_id", app.id).maybeSingle();
 
     if (resp) {
       const r = resp as any;
@@ -244,7 +244,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
         would_switch: true, switch_available_at: switchDate.toISOString(), points_awarded: newPoints,
       }).eq("id", r.id);
 
-      const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
+      const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).maybeSingle();
       await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.points_switch_intent }).eq("id", user.id);
     }
 
@@ -330,7 +330,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
     window.open(app.switch_link, "_blank");
 
     const { data: resp } = await fromResponses()
-      .select("*").eq("user_id", user.id).eq("app_id", app.id).single();
+      .select("*").eq("user_id", user.id).eq("app_id", app.id).maybeSingle();
 
     if (resp) {
       const r = resp as any;
@@ -339,7 +339,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
         switch_completed: true, points_awarded: newPoints,
       }).eq("id", r.id);
 
-      const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).single();
+      const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", user.id).maybeSingle();
       await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + app.points_switch_complete }).eq("id", user.id);
     }
 

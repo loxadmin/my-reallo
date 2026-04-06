@@ -537,7 +537,7 @@ const Admin = () => {
     try {
       const { error: respError } = await fromDResponses().update({ referral_approved: true, points_awarded: app.referral_points }).eq("id", responseId);
       if (respError) { toast({ title: "Error updating response", description: respError.message }); return; }
-      const { data: profile, error: profileError } = await supabase.from("profiles").select("points_balance").eq("id", userId).single();
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("points_balance").eq("id", userId).maybeSingle();
       if (profileError || !profile) { toast({ title: "Error fetching profile", description: profileError?.message || "Profile not found" }); return; }
       const newBalance = (profile.points_balance || 0) + app.referral_points;
       const { error: updateError } = await supabase.from("profiles").update({ points_balance: newBalance }).eq("id", userId);
