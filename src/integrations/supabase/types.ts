@@ -156,6 +156,33 @@ export type Database = {
         }
         Relationships: []
       }
+      blacklisted_entities: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          fingerprint: string | null
+          id: string
+          ip_address: string | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          reason?: string
+        }
+        Relationships: []
+      }
       decision_apps: {
         Row: {
           app_logo_url: string | null
@@ -1128,6 +1155,39 @@ export type Database = {
           },
         ]
       }
+      security_incidents: {
+        Row: {
+          created_at: string
+          details: Json | null
+          fingerprint: string | null
+          id: string
+          ip_address: string | null
+          severity: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          severity?: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          severity?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       signup_devices: {
         Row: {
           created_at: string
@@ -1313,6 +1373,44 @@ export type Database = {
           },
           {
             foreignKeyName: "survey_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_errors: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          stack: string | null
+          url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          stack?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          stack?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_errors_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
