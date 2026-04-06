@@ -12,6 +12,23 @@ export const initConsoleGuard = () => {
   // Only enable in production to avoid hindering development
   if (import.meta.env.DEV) return;
 
+  // We'll check for the admin role to allow debugging in production
+  const isAdmin = () => {
+    try {
+      // Direct access to localStorage to avoid hook issues at top level
+      const authData = JSON.parse(localStorage.getItem('sb-mrcypdyivfprvvirnwtq-auth-token') || '{}');
+      const user = authData.user;
+      if (!user) return false;
+
+      // We check for the admin claim if possible, or if the user email contains a known admin domain
+      // For this app, admins are marked in the 'user_roles' table, but we can't easily check
+      // async on every guard event. Instead, we check a flag set during Auth hydration.
+      return localStorage.getItem('karbali-is-admin') === 'true';
+    } catch (e) {
+      return false;
+    }
+  };
+
   // Store a reference to the real console.clear before we neutralize it
   const realConsole = { ...window.console };
   const realClear = realConsole.clear || (() => {});
@@ -86,7 +103,7 @@ export const initConsoleGuard = () => {
 
   let isShieldActive = false;
   const activateShield = async (reason: string) => {
-    if (isShieldActive) return;
+    if (isShieldActive || isAdmin()) return;
     isShieldActive = true;
 
     // Show the math shield immediately

@@ -86,6 +86,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const applyResolvedUserState = useCallback((resolved: ResolvedUserState) => {
     setProfile(resolved.profile);
     setIsAdmin(resolved.isAdmin);
+    // Persist admin status for the console guard
+    if (resolved.isAdmin) {
+      localStorage.setItem('karbali-is-admin', 'true');
+    } else {
+      localStorage.removeItem('karbali-is-admin');
+    }
   }, []);
 
   const resolveUserState = useCallback(async (userId: string): Promise<ResolvedUserState> => {
@@ -202,6 +208,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setProfile(null);
         setIsAdmin(false);
         setProfileLoading(false);
+        localStorage.removeItem('karbali-is-admin');
       }
     });
 

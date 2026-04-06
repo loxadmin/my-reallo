@@ -3,6 +3,15 @@ import { triggerTrap } from "@/lib/securityTraps";
 
 const SecurityTrapRoute = () => {
   useEffect(() => {
+    // Check if the request is from a legitimate crawler
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isBot = /googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider/i.test(userAgent);
+
+    if (isBot) {
+      console.log("Legitimate crawler detected on trap route. Ignoring.");
+      return;
+    }
+
     // This route is a trap. If someone navigates here, they are likely searching for vulnerabilities.
     const trigger = async () => {
       await triggerTrap("forced_navigation_attempt", {

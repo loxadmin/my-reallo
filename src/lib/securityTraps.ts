@@ -12,15 +12,17 @@ export type IncidentType =
 export const REDIRECT_URL = "https://www.google.com/search?q=how+to+be+a+better+person";
 
 /**
- * Common SQL injection and XSS patterns for detection
+ * Common SQL injection and XSS patterns for detection.
+ * Specifically refined to avoid false positives for legitimate users
+ * (e.g. apostrophes in emails/passwords).
  */
 const MALICIOUS_PATTERNS = [
-  /(\%27)|(\')|(\-\-)|(\%23)/i, // SQL: quotes, double dash (removed lone #)
-  /\w*((\%27)|(\'))((\%6F)|o|(\%4F))((\%72)|r|(\%52))/i, // SQL: 'or'
-  /((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/i, // SQL: = with sequences
+  /(\s--)|(--\s*$)|(DROP\s+TABLE)|(UNION\s+SELECT)/i, // SQL: double dash, keywords
+  /\w*((\%27)|(\'))\s+((\%6F)|o|(\%4F))((\%72)|r|(\%52))/i, // SQL: ' or' with space
+  /((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/i, // SQL: = with dangerous sequences
   /<script[^>]*>/i, // XSS: script tag
   /<\/script>/i, // XSS: script end tag
-  /\bon\w+\s*=/i, // XSS: any event handler pattern
+  /\bon\w+\s*=\s*['"]?[^'"]*alert\(/i, // XSS: event handler with alert
   /javascript\s*:/i, // XSS: javascript protocol
 ];
 

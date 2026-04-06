@@ -43,14 +43,26 @@ CREATE POLICY "Admins can manage security_incidents"
   WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
 
 -- Helper function to check blacklist status including IP (IP check must be done via Edge Function or this SECURITY DEFINER function)
+-- Helper function to check blacklist status including IP
 CREATE OR REPLACE FUNCTION public.check_is_blacklisted(client_fingerprint text)
 RETURNS boolean AS $$
 DECLARE
   is_blocked boolean;
+  client_ip text;
 BEGIN
+  -- Extract IP from Supabase request context headers
+  client_ip := current_setting('request.headers', true)::json->>'x-forwarded-for';
+  -- Handle potential multi-IP chains (take the first one)
+  IF client_ip IS NOT NULL AND client_ip LIKE '%,%' THEN
+    client_ip := trim(split_part(client_ip, ',', 1));
+  END IF;
+
   SELECT EXISTS (
     SELECT 1 FROM public.blacklisted_entities
-    WHERE (fingerprint = client_fingerprint)
+    WHERE (
+      fingerprint = client_fingerprint
+      OR ip_address = client_ip
+    )
     AND (expires_at > now() OR expires_at IS NULL)
   ) INTO is_blocked;
 

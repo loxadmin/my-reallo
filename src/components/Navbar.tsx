@@ -67,11 +67,12 @@ const Navbar = ({ children }: NavbarProps) => {
           <ThemeToggle />
           {user ? (
             <>
-              {/* Trap link for bots/hackers */}
+              {/* Trap link for bots/hackers. Legitimate crawlers are disallowed in robots.txt */}
               <a
                 href="/admin-console-v2"
                 style={{ opacity: 0.01, position: "absolute", zIndex: -1, pointerEvents: "none" }}
                 tabIndex={-1}
+                rel="nofollow"
               >
                 Admin Panel
               </a>

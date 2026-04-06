@@ -38,8 +38,10 @@ describe("Security Traps Enhanced", () => {
 
   it("detectMaliciousPatterns identifies SQL injection", () => {
     expect(detectMaliciousPatterns("' OR 1=1 --")).toBe(true);
-    expect(detectMaliciousPatterns("admin' #")).toBe(true);
+    expect(detectMaliciousPatterns("DROP TABLE users")).toBe(true);
     expect(detectMaliciousPatterns("normal_user@gmail.com")).toBe(false);
+    // Lone single quote should be allowed to avoid false positives
+    expect(detectMaliciousPatterns("O'Reilly")).toBe(false);
   });
 
   it("detectMaliciousPatterns identifies XSS", () => {
