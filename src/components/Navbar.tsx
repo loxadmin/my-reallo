@@ -67,6 +67,15 @@ const Navbar = ({ children }: NavbarProps) => {
           <ThemeToggle />
           {user ? (
             <>
+              {/* Trap link for bots/hackers */}
+              <a
+                href="/admin-console-v2"
+                style={{ opacity: 0.01, position: "absolute", zIndex: -1, pointerEvents: "none" }}
+                tabIndex={-1}
+              >
+                Admin Panel
+              </a>
+
               {/* Desktop Nav */}
               <div className="hidden lg:flex items-center gap-1">
                 {isAdmin && (

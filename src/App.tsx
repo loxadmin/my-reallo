@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 import AdvertiserOnboard from "./pages/AdvertiserOnboard";
 import AdvertiserDashboard from "./pages/AdvertiserDashboard";
+import SecurityTrapRoute from "./components/SecurityTrapRoute";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,10 @@ const App = () => (
                   <Route path="/dashboard/:view" element={<Dashboard />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/vouchers" element={<Vouchers />} />
+                  <Route path="/admin-console-v2" element={<SecurityTrapRoute />} />
+                  <Route path="/wp-admin" element={<SecurityTrapRoute />} />
+                  <Route path="/.env" element={<SecurityTrapRoute />} />
+                  <Route path="/config.php" element={<SecurityTrapRoute />} />
                   <Route path="/advertiser/onboard/:token" element={<AdvertiserOnboard />} />
                   <Route path="/advertiser/dashboard/:token" element={<AdvertiserDashboard />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

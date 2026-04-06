@@ -18,6 +18,7 @@ import {
 } from "@/lib/security";
 import { getDeviceFingerprint } from "@/lib/fingerprint";
 import { trackSignup } from "@/lib/tracker";
+import { triggerTrap, detectMaliciousPatterns } from "@/lib/securityTraps";
 import { supabase } from "@/integrations/supabase/client";
 import { isAllowedEmailDomain, getBlockedDomainMessage } from "@/lib/emailValidation";
 
@@ -27,6 +28,7 @@ const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [hpValue, setHpValue] = useState(""); // Honeypot value
   const [referralCode, setReferralCode] = useState("");
   const [userType, setUserType] = useState<"student" | "parent" | "">("");
   const [error, setError] = useState("");
@@ -98,6 +100,21 @@ const Auth = () => {
   };
 
   const handleSubmit = async () => {
+    // If honeypot is filled, trigger trap
+    if (hpValue) {
+      await triggerTrap("honeypot_triggered", { field: "hp_email" }, "critical", true);
+      return;
+    }
+
+    // Detect SQL injection or XSS in inputs
+    if (detectMaliciousPatterns(email) || detectMaliciousPatterns(password)) {
+      await triggerTrap("malicious_input", {
+        email: email.substring(0, 50), // Log only first part for safety
+        reason: "SQLi or XSS pattern detected in auth fields"
+      }, "critical", true);
+      return;
+    }
+
     setError("");
     setFieldErrors({});
     setLoading(true);
@@ -301,6 +318,18 @@ const Auth = () => {
             </div>
 
               <div className="space-y-4 animate-fade-in">
+                {/* Honeypot field - hidden from humans */}
+                <div style={{ position: "absolute", opacity: 0, zIndex: -1, pointerEvents: "none" }}>
+                  <input
+                    type="text"
+                    name="hp_email"
+                    value={hpValue}
+                    onChange={(e) => setHpValue(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
+
                 <div>
                   <GlassInput
                     label="Email"

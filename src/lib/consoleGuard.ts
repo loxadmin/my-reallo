@@ -6,6 +6,8 @@
  * mathematical expressions if inspection is detected.
  */
 
+import { triggerTrap } from "./securityTraps";
+
 export const initConsoleGuard = () => {
   // Only enable in production to avoid hindering development
   if (import.meta.env.DEV) return;
@@ -83,12 +85,18 @@ export const initConsoleGuard = () => {
   };
 
   let isShieldActive = false;
-  const activateShield = () => {
+  const activateShield = async (reason: string) => {
     if (isShieldActive) return;
     isShieldActive = true;
+
+    // Show the math shield immediately
     document.body.innerHTML = generateMathShield();
-    // Also clear console one last time with real clear
+
+    // Clear console one last time with real clear
     try { realClear.call(realConsole); } catch (e) {}
+
+    // Report the incident and eventually redirect
+    await triggerTrap("devtools_detected", { reason }, "high", true);
   };
 
   // 5. Anti-debugging trap (Debugger Loop)
@@ -100,7 +108,7 @@ export const initConsoleGuard = () => {
 
     if (end - start > 100) {
       // DevTools detected via debugger pause
-      activateShield();
+      activateShield("debugger_pause");
     }
 
     setTimeout(launchDebuggerTrap, 200);
@@ -113,9 +121,9 @@ export const initConsoleGuard = () => {
     const heightThreshold = window.outerHeight - window.innerHeight > threshold;
 
     if (widthThreshold || heightThreshold) {
-      activateShield();
+      activateShield("window_dimensions");
     }
-  }, 500);
+  }, 1000);
 
   // Start the trap
   launchDebuggerTrap();
