@@ -78,7 +78,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist";
 
 const navGroups = [
   {
@@ -121,6 +121,8 @@ const navGroups = [
       { id: "ghosts" as AdminTab, label: "Ghost Users", icon: Ghost },
       { id: "activity" as AdminTab, label: "Activity Log", icon: Activity },
       { id: "error_logs" as AdminTab, label: "Error Logs", icon: AlertTriangle },
+      { id: "security_incidents" as AdminTab, label: "Security Incidents", icon: Shield },
+      { id: "blacklist" as AdminTab, label: "Blacklist", icon: Ban },
     ],
   },
 ];
@@ -302,6 +304,8 @@ const Admin = () => {
   const [decisionResponses, setDecisionResponses] = useState<DecisionResponseRow[]>([]);
   const [userWarnings, setUserWarnings] = useState<UserWarning[]>([]);
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
+  const [securityIncidents, setSecurityIncidents] = useState<any[]>([]);
+  const [blacklistedEntities, setBlacklistedEntities] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [warningText, setWarningText] = useState("");
   const [banReason, setBanReason] = useState("");
@@ -368,7 +372,7 @@ const Admin = () => {
 
   const fetchData = async () => {
     setRefreshing(true);
-    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, surveyRes, sQuestionRes, sOptionRes, sRespRes, errorsRes] = await Promise.all([
+    const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, surveyRes, sQuestionRes, sOptionRes, sRespRes, errorsRes, incidentsRes, blacklistRes] = await Promise.all([
       supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
       supabase.from("ghost_users").select("id", { count: "exact", head: true }),
       supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
@@ -382,10 +386,14 @@ const Admin = () => {
       supabase.from("survey_options").select("*").order("created_at", { ascending: true }),
       supabase.from("survey_responses").select("*").order("created_at", { ascending: false }),
       supabase.from("system_errors" as any).select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("security_incidents").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("blacklisted_entities").select("*").order("created_at", { ascending: false }),
     ]);
     const profs = (profilesRes.data as ProfileRow[]) || [];
     setProfiles(profs);
     setErrorLogs(errorsRes.data || []);
+    setSecurityIncidents(incidentsRes.data || []);
+    setBlacklistedEntities(blacklistRes.data || []);
     setSurveys(surveyRes.data || []);
     setSurveyQuestions(sQuestionRes.data || []);
     setSurveyOptions(sOptionRes.data || []);
@@ -925,6 +933,8 @@ const Admin = () => {
     inf_surveys: "Influencer Survey Rewards",
     app_design: "App Design",
     error_logs: "Error Logs",
+    security_incidents: "Security Incidents",
+    blacklist: "Blacklist",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
@@ -2708,6 +2718,142 @@ const Admin = () => {
             {/* ═══ ADVERTISERS ═══ */}
             {activeTab === "advertisers" && (
               <AdvertiserManagement onRefresh={fetchData} />
+            )}
+
+            {/* ═══ SECURITY INCIDENTS ═══ */}
+            {activeTab === "security_incidents" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <MetricCard label="Total Incidents" value={securityIncidents.length} icon={Shield} trend="neutral" trendLabel="Last 100" />
+                  <MetricCard label="Critical" value={securityIncidents.filter(i => i.severity === "critical").length} icon={AlertTriangle} />
+                  <MetricCard label="Malicious Inputs" value={securityIncidents.filter(i => i.type === "malicious_input").length} icon={Zap} />
+                </div>
+
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                    <h3 className="text-[13px] font-semibold text-foreground">Aggressive Security Trap Logs</h3>
+                  </div>
+                  <TableHeader>
+                    <span className="w-40 shrink-0">Time</span>
+                    <span className="w-40 shrink-0">Type / Severity</span>
+                    <span className="flex-1">Source / Details</span>
+                    <span className="w-10 shrink-0"></span>
+                  </TableHeader>
+                  <div className="max-h-[700px] overflow-y-auto">
+                    {securityIncidents.map((incident) => {
+                      const isSelected = selectedUserId === incident.id;
+                      return (
+                        <div key={incident.id} className="border-b border-border/10 last:border-0">
+                          <TableRow onClick={() => setSelectedUserId(isSelected ? null : incident.id)}>
+                            <span className="w-40 shrink-0 text-[11px] text-muted-foreground">{new Date(incident.created_at).toLocaleString()}</span>
+                            <div className="w-40 shrink-0 pr-4">
+                              <p className="text-[11px] font-bold text-foreground capitalize">{incident.type.replace(/_/g, " ")}</p>
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
+                                incident.severity === "critical" ? "bg-destructive text-white" :
+                                incident.severity === "high" ? "bg-destructive/10 text-destructive border border-destructive/20" :
+                                "bg-muted text-muted-foreground"
+                              }`}>
+                                {incident.severity}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0 overflow-hidden">
+                              <p className="text-[11px] font-mono text-foreground truncate">{incident.ip_address}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{JSON.stringify(incident.details)}</p>
+                            </div>
+                            <span className="w-10 shrink-0 flex justify-end">
+                              {isSelected ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                            </span>
+                          </TableRow>
+                          {isSelected && (
+                            <div className="px-5 py-4 bg-destructive/5 space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Full IP Address</p>
+                                  <p className="text-[11px] font-mono text-foreground">{incident.ip_address}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Fingerprint</p>
+                                  <p className="text-[11px] font-mono text-foreground">{incident.fingerprint}</p>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Attack Details</p>
+                                <pre className="text-[10px] text-muted-foreground bg-background/50 p-3 rounded-lg overflow-x-auto font-mono whitespace-pre-wrap border border-border/20">
+                                  {JSON.stringify(incident.details, null, 2)}
+                                </pre>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {securityIncidents.length === 0 && <div className="py-20 text-center text-muted-foreground text-[13px]">No security incidents detected. Platform is secure.</div>}
+                  </div>
+                </TableCard>
+              </div>
+            )}
+
+            {/* ═══ BLACKLIST ═══ */}
+            {activeTab === "blacklist" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <MetricCard label="Blacklisted IPs/Devices" value={blacklistedEntities.length} icon={Ban} trend="neutral" trendLabel="Active blocks" />
+                  <div className={cardCls + " py-4"}>
+                    <p className="text-[11px] text-muted-foreground mb-3">Manually add to blacklist</p>
+                    <div className="flex gap-2">
+                      <input placeholder="IP or Fingerprint" className={inputCls} id="manual-blacklist-val" />
+                      <Btn variant="destructive" onClick={async () => {
+                        const val = (document.getElementById("manual-blacklist-val") as HTMLInputElement).value;
+                        if (!val) return;
+                        await supabase.from("blacklisted_entities").insert({
+                          ip_address: val.includes(".") || val.includes(":") ? val : null,
+                          fingerprint: val.includes(".") || val.includes(":") ? null : val,
+                          reason: "Manually added by admin",
+                          expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+                        });
+                        toast({ title: "Entity blacklisted" });
+                        fetchData();
+                      }}>Blacklist</Btn>
+                    </div>
+                  </div>
+                </div>
+
+                <TableCard>
+                  <div className="px-5 py-4 border-b border-border/30">
+                    <h3 className="text-[13px] font-semibold text-foreground">Currently Blacklisted Entities</h3>
+                  </div>
+                  <TableHeader>
+                    <span className="w-48 shrink-0">IP / Fingerprint</span>
+                    <span className="flex-1">Reason</span>
+                    <span className="w-32 shrink-0">Expires</span>
+                    <span className="w-10 shrink-0"></span>
+                  </TableHeader>
+                  <div className="max-h-[600px] overflow-y-auto">
+                    {blacklistedEntities.map((entity) => (
+                      <TableRow key={entity.id}>
+                        <div className="w-48 shrink-0 min-w-0">
+                          <p className="text-[11px] font-mono text-foreground truncate">{entity.ip_address || "N/A"}</p>
+                          <p className="text-[9px] text-muted-foreground font-mono truncate">{entity.fingerprint || "N/A"}</p>
+                        </div>
+                        <span className="flex-1 text-[11px] text-muted-foreground">{entity.reason}</span>
+                        <span className="w-32 shrink-0 text-[10px] text-muted-foreground">
+                          {entity.expires_at ? new Date(entity.expires_at).toLocaleDateString() : "Permanent"}
+                        </span>
+                        <button onClick={async () => {
+                          if (confirm("Remove from blacklist?")) {
+                            await supabase.from("blacklisted_entities").delete().eq("id", entity.id);
+                            toast({ title: "Entity removed" });
+                            fetchData();
+                          }
+                        }} className="w-10 text-destructive/60 hover:text-destructive flex justify-end">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </TableRow>
+                    ))}
+                    {blacklistedEntities.length === 0 && <div className="py-20 text-center text-muted-foreground text-[13px]">Blacklist is empty.</div>}
+                  </div>
+                </TableCard>
+              </div>
             )}
 
             {/* ═══ ERROR LOGS ═══ */}

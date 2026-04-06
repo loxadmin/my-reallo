@@ -7,6 +7,7 @@ import {
   clearActivityTimestamp,
 } from "@/lib/security";
 import { isAllowedEmailDomain } from "@/lib/emailValidation";
+import { checkBlacklist } from "@/lib/securityTraps";
 
 interface Profile {
   id: string;
@@ -68,7 +69,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [isBlacklisted, setIsBlacklisted] = useState(false);
   const signOutInFlightRef = useRef(false);
+
+  // Aggressive blacklist check on mount
+  useEffect(() => {
+    const runCheck = async () => {
+      const blacklisted = await checkBlacklist();
+      if (blacklisted) {
+        setIsBlacklisted(true);
+      }
+    };
+    runCheck();
+  }, []);
 
   const applyResolvedUserState = useCallback((resolved: ResolvedUserState) => {
     setProfile(resolved.profile);
@@ -299,7 +312,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await performSignOut();
   }, [performSignOut]);
 
-  const loading = !authReady || profileLoading;
+  const loading = !authReady || profileLoading || isBlacklisted;
 
   const value = useMemo(
     () => ({ user, session, profile, isAdmin, loading, signUp, signIn, signOut, refreshProfile }),
