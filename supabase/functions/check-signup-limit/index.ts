@@ -19,6 +19,26 @@ Deno.serve(async (req) => {
 
     const { action, device_fingerprint, user_id } = await req.json();
 
+    // Check if the signup limit feature is enabled in admin settings
+    const { data: settings } = await supabase
+      .from("admin_settings")
+      .select("value")
+      .eq("key", "signup_limit_enabled")
+      .maybeSingle();
+
+    const isLimitEnabled = settings?.value !== "false"; // Default to true if not set
+
+    if (!isLimitEnabled) {
+      if (action === "check") {
+        return new Response(
+          JSON.stringify({ allowed: true, message: "Signup limit disabled by admin" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      // If action is "register", we still want to record the device for future use,
+      // but we won't block based on it. We'll proceed with registration below.
+    }
+
     // Get client IP from headers (Supabase Edge Functions provide this)
     const clientIp =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -68,8 +88,8 @@ Deno.serve(async (req) => {
         .eq("device_fingerprint", device_fingerprint);
 
       if (
-        (ipCount ?? 0) >= MAX_ACCOUNTS_PER_IDENTIFIER ||
-        (deviceCount ?? 0) >= MAX_ACCOUNTS_PER_IDENTIFIER
+        isLimitEnabled &&
+        ((ipCount ?? 0) >= MAX_ACCOUNTS_PER_IDENTIFIER || (deviceCount ?? 0) >= MAX_ACCOUNTS_PER_IDENTIFIER)
       ) {
         return new Response(
           JSON.stringify({ error: "Account limit reached for this device or network" }),
