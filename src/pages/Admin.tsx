@@ -789,7 +789,7 @@ const Admin = () => {
 
   const handleApproveSurveySubmission = async (responseId: string, userId: string, points: number) => {
     await supabase.from("survey_responses").update({ status: "approved", reviewed_at: new Date().toISOString(), points_awarded: points }).eq("id", responseId);
-    const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", userId).single();
+    const { data: profile } = await supabase.from("profiles").select("points_balance").eq("id", userId).maybeSingle();
     await supabase.from("profiles").update({ points_balance: (profile?.points_balance || 0) + points }).eq("id", userId);
     toast({ title: "Submission approved" });
     await fetchData();

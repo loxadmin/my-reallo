@@ -288,7 +288,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
     
     // Also trigger referral click for the linked app
     const { data: refResp } = await fromResponses()
-      .select("*").eq("user_id", user.id).eq("app_id", referralApp.id).single();
+      .select("*").eq("user_id", user.id).eq("app_id", referralApp.id).maybeSingle();
     if (refResp) {
       await fromResponses().update({ referral_clicked: true })
         .eq("id", (refResp as any).id);

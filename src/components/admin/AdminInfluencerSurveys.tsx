@@ -70,7 +70,7 @@ export default function AdminInfluencerSurveys() {
         is_active: draft.is_active,
       })
       .select("id")
-      .single();
+      .maybeSingle();
 
     if (error || !created) {
       console.error("create influencer survey error", error);

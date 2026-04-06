@@ -26,7 +26,7 @@ export const sendNotification = async (params: {
   // Send email for important events
   if (sendEmail !== false && EMAIL_EVENTS.has(type)) {
     try {
-      const { data: profile } = await supabase.from("profiles").select("email").eq("id", userId).single();
+      const { data: profile } = await supabase.from("profiles").select("email").eq("id", userId).maybeSingle();
       if (profile?.email) {
         await supabase.functions.invoke("send-notification-email", {
           body: { to: profile.email, subject: title, body: message },
