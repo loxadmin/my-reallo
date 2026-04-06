@@ -119,18 +119,18 @@ async function streamChat({
   onDone: (fullText: string) => void;
   signal?: AbortSignal;
 }) {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const supabaseUrl = (supabase as any).supabaseUrl;
+  const supabaseKey = (supabase as any).supabaseKey;
 
   const { data: { session } } = await supabase.auth.getSession();
-  const authToken = session?.access_token || publishableKey;
+  const authToken = session?.access_token || supabaseKey;
 
   const resp = await fetch(`${supabaseUrl}/functions/v1/karbali-chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${authToken}`,
-      "apikey": publishableKey,
+      "apikey": supabaseKey,
     },
     body: JSON.stringify({ messages, profile }),
     signal,
