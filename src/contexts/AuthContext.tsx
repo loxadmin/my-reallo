@@ -6,6 +6,7 @@ import {
   isSessionExpiredByInactivity,
   clearActivityTimestamp,
 } from "@/lib/security";
+import { isAllowedEmailDomain } from "@/lib/emailValidation";
 
 interface Profile {
   id: string;
@@ -236,6 +237,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const resolved = await resolveUserState(user.id);
         if (cancelled) return;
+
+        // Auto-block users with non-recognized email domains
+        if (resolved.profile && !isAllowedEmailDomain(resolved.profile.email) && !resolved.isAdmin) {
+          if (!resolved.profile.is_banned) {
+            await supabase.from("profiles").update({
+              is_banned: true,
+              ban_reason: "Unrecognized email provider. Please use Gmail, Outlook, Yahoo, iCloud, or ProtonMail.",
+            } as any).eq("id", user.id);
+          }
+          await performSignOut();
+          return;
+        }
+
+        // Auto-block banned users
+        if (resolved.profile?.is_banned && !resolved.isAdmin) {
+          await performSignOut();
+          return;
+        }
+
         applyResolvedUserState(resolved);
       } catch (error) {
         console.error("User state hydration error:", error);

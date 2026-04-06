@@ -677,6 +677,22 @@ const Admin = () => {
     await fetchData();
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    if (!window.confirm("Are you sure you want to PERMANENTLY delete this user? This action cannot be undone.")) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { user_id: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "User permanently deleted" });
+      setSelectedUserId(null);
+      await fetchData();
+    } catch (err: any) {
+      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+    }
+  };
+
   const handleIssueWarning = async (userId: string, reason: string) => {
     const { user } = (await supabase.auth.getUser()).data;
     if (!user) return;
@@ -1453,6 +1469,10 @@ const Admin = () => {
                                 ))}
                               </div>
                             )}
+
+                            <div className="pt-2 border-t border-destructive/20">
+                              <Btn variant="destructive" onClick={() => handleDeleteUser(p.id)} className="w-full"><Trash2 className="w-3 h-3" /> Permanently Delete User</Btn>
+                            </div>
                           </div>
                         )}
                       </div>
