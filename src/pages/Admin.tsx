@@ -1469,6 +1469,10 @@ const Admin = () => {
                                 ))}
                               </div>
                             )}
+
+                            <div className="pt-2 border-t border-destructive/20">
+                              <Btn variant="destructive" onClick={() => handleDeleteUser(p.id)} className="w-full"><Trash2 className="w-3 h-3" /> Permanently Delete User</Btn>
+                            </div>
                           </div>
                         )}
                       </div>
