@@ -32,33 +32,6 @@ export type Database = {
         }
         Relationships: []
       }
-      blacklisted_entities: {
-        Row: {
-          created_at: string
-          expires_at: string | null
-          fingerprint: string | null
-          id: string
-          ip_address: string | null
-          reason: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at?: string | null
-          fingerprint?: string | null
-          id?: string
-          ip_address?: string | null
-          reason: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string | null
-          fingerprint?: string | null
-          id?: string
-          ip_address?: string | null
-          reason?: string
-        }
-        Relationships: []
-      }
       advertiser_email_verifications: {
         Row: {
           code: string
@@ -93,47 +66,6 @@ export type Database = {
             columns: ["token_id"]
             isOneToOne: false
             referencedRelation: "advertiser_tokens"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      security_incidents: {
-        Row: {
-          created_at: string
-          details: Json | null
-          fingerprint: string | null
-          id: string
-          ip_address: string | null
-          severity: string
-          type: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          details?: Json | null
-          fingerprint?: string | null
-          id?: string
-          ip_address?: string | null
-          severity?: string
-          type: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          details?: Json | null
-          fingerprint?: string | null
-          id?: string
-          ip_address?: string | null
-          severity?: string
-          type?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "security_incidents_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -223,44 +155,6 @@ export type Database = {
           token?: string
         }
         Relationships: []
-      }
-      system_errors: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string
-          metadata: Json | null
-          stack: string | null
-          url: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message: string
-          metadata?: Json | null
-          stack?: string | null
-          url?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string
-          metadata?: Json | null
-          stack?: string | null
-          url?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "system_errors_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       decision_apps: {
         Row: {

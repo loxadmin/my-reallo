@@ -10,7 +10,7 @@ interface ErrorData {
 
 export const logError = async (data: ErrorData) => {
   try {
-    const { error } = await supabase.from("system_errors").insert({
+    const { error } = await supabase.from("system_errors" as any).insert({
       message: data.message,
       stack: data.stack || null,
       user_id: data.user_id || (await supabase.auth.getUser()).data.user?.id || null,
