@@ -20,11 +20,15 @@ Deno.serve(async (req) => {
     const { action, device_fingerprint, user_id } = await req.json();
 
     // Fetch signup_limit_enabled from admin_settings
-    const { data: settingData } = await supabase
+    const { data: settingData, error: settingError } = await supabase
       .from("admin_settings")
       .select("value")
       .eq("key", "signup_limit_enabled")
       .maybeSingle();
+
+    if (settingError) {
+      console.error("Error fetching signup_limit_enabled:", settingError);
+    }
 
     const signupLimitEnabled = settingData?.value !== "false";
 
@@ -34,6 +38,8 @@ Deno.serve(async (req) => {
       req.headers.get("cf-connecting-ip") ||
       req.headers.get("x-real-ip") ||
       "unknown";
+
+    console.log(`Check signup limit: IP=${clientIp}, enabled=${signupLimitEnabled}, fingerprint=${device_fingerprint}, settingData=${JSON.stringify(settingData)}`);
 
     if (action === "check") {
       if (!signupLimitEnabled) {
