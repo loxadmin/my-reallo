@@ -78,7 +78,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps" as any);
 const fromDResponses = () => supabase.from("decision_responses" as any);
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist";
 
 const navGroups = [
   {
@@ -117,7 +117,6 @@ const navGroups = [
     items: [
       { id: "app_design" as AdminTab, label: "App Design", icon: Paintbrush },
       { id: "settings" as AdminTab, label: "Settings", icon: Link },
-      { id: "security_config" as AdminTab, label: "Security Config", icon: Shield },
       { id: "analytics" as AdminTab, label: "Analytics", icon: BarChart3 },
       { id: "ghosts" as AdminTab, label: "Ghost Users", icon: Ghost },
       { id: "activity" as AdminTab, label: "Activity Log", icon: Activity },
@@ -336,7 +335,6 @@ const Admin = () => {
   const [footerAboutUs, setFooterAboutUs] = useState("");
   const [footerInvestWithUs, setFooterInvestWithUs] = useState("");
   const [activeAppDesign, setActiveAppDesign] = useState("default");
-  const [signupLimitEnabled, setSignupLimitEnabled] = useState(true);
   const [currencyRateUsd, setCurrencyRateUsd] = useState("1600");
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
@@ -440,7 +438,6 @@ const Admin = () => {
     setVerifyElectricityActive(settings.find(s => s.key === "verify_electricity_active")?.value === "false" ? false : true);
     setVerifyFoodActive(settings.find(s => s.key === "verify_food_active")?.value === "false" ? false : true);
     setVerifyTransportActive(settings.find(s => s.key === "verify_transport_active")?.value === "false" ? false : true);
-    setSignupLimitEnabled(settings.find(s => s.key === "signup_limit_enabled")?.value === "false" ? false : true);
     setPostQueueReferralPoints(settings.find(s => s.key === "post_queue_referral_points")?.value || "1000");
     setVerifySpendLink(settings.find(s => s.key === "verify_spend_link")?.value || "");
     setVerifySpendDescription(settings.find(s => s.key === "verify_spend_description")?.value || "");
@@ -464,22 +461,6 @@ const Admin = () => {
   useEffect(() => { if (isAdmin) fetchData(); }, [isAdmin]);
 
   // ── All handlers (unchanged logic) ──
-  const handleSaveSecurityConfig = async () => {
-    setSaving(true);
-    const { error } = await supabase.from("admin_settings").upsert({
-      key: "signup_limit_enabled",
-      value: String(signupLimitEnabled),
-      updated_at: new Date().toISOString()
-    });
-    if (error) {
-      toast({ title: "Error saving configuration", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Security configuration updated" });
-      await fetchData();
-    }
-    setSaving(false);
-  };
-
   const handleSaveGoals = async () => {
     setSaving(true);
     for (const [id, changes] of Object.entries(editedGoals)) {
@@ -954,7 +935,6 @@ const Admin = () => {
     error_logs: "Error Logs",
     security_incidents: "Security Incidents",
     blacklist: "Blacklist",
-    security_config: "Security Config",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
@@ -2810,46 +2790,6 @@ const Admin = () => {
                     {securityIncidents.length === 0 && <div className="py-20 text-center text-muted-foreground text-[13px]">No security incidents detected. Platform is secure.</div>}
                   </div>
                 </TableCard>
-              </div>
-            )}
-
-            {/* ═══ SECURITY CONFIG ═══ */}
-            {activeTab === "security_config" && (
-              <div className={cardCls}>
-                <SectionHeader title="Security Configuration" subtitle="Manage platform-wide security and anti-abuse settings" />
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-5 bg-background/30 backdrop-blur-md">
-                    <div className="space-y-1 pr-4">
-                      <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-primary" />
-                        <label className="text-[13px] font-bold text-foreground">Enforce Signup Limit</label>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">
-                        When enabled, the system restricts registration to <strong>maximum 2 accounts per device ID and IP address</strong>.
-                        Disable this only for testing or special promotional events.
-                      </p>
-                    </div>
-                    <div className="shrink-0">
-                      <input
-                        type="checkbox"
-                        checked={signupLimitEnabled}
-                        onChange={(e) => setSignupLimitEnabled(e.target.checked)}
-                        className="w-6 h-6 accent-primary cursor-pointer rounded-md"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 flex items-start gap-3">
-                    <AlertTriangle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      <strong>Note:</strong> Changes to this setting are reflected immediately in the <code className="bg-muted px-1 rounded">check-signup-limit</code> Edge Function.
-                    </p>
-                  </div>
-
-                  <Btn variant="primary" onClick={handleSaveSecurityConfig} disabled={saving} className="w-full h-11">
-                    <Save className="w-4 h-4" /> {saving ? "Saving Changes..." : "Save Security Configuration"}
-                  </Btn>
-                </div>
               </div>
             )}
 
