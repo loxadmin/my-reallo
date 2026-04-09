@@ -41,13 +41,13 @@ const fromResponses = () => supabase.from("decision_responses" as any);
 
 type EarnTab = "earn" | "ongoing" | "past";
 type FlowStep = "checklist" | "sequential" | "done";
-type EarnView = "tasks" | "surveys";
+type EarnView = "offers" | "surveys";
 
 const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
   const { user, refreshProfile } = useAuth();
-  const [activeEarnView, setActiveEarnView] = useState<EarnView>(mode || "tasks");
+  const [activeEarnView, setActiveEarnView] = useState<EarnView>(mode || "offers");
 
-  // Tasks state
+  // Offers state
   const [apps, setApps] = useState<DecisionApp[]>([]);
   const [responses, setResponses] = useState<DecisionResponse[]>([]);
   const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
@@ -574,7 +574,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
     return "past";
   };
 
-  const renderTasks = () => {
+  const renderOffers = () => {
     // ═══ SEQUENTIAL INTERACTION MODE ═══
     if (step === "sequential" && currentInteraction) {
       const app = currentInteraction;
@@ -1098,13 +1098,13 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
       {!mode && (
         <div className="flex gap-2 p-1 rounded-xl glass-strong">
           <button
-            onClick={() => setActiveEarnView("tasks")}
+            onClick={() => setActiveEarnView("offers")}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${
-              activeEarnView === "tasks" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              activeEarnView === "offers" ? "clay-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Zap className="w-4 h-4" />
-            Tasks
+            Offers
           </button>
           <button
             onClick={() => setActiveEarnView("surveys")}
@@ -1126,7 +1126,7 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
         >
-          {activeEarnView === "tasks" ? renderTasks() : renderSurveys()}
+          {activeEarnView === "offers" ? renderOffers() : renderSurveys()}
         </motion.div>
       </AnimatePresence>
     </div>

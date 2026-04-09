@@ -18,9 +18,9 @@ import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useNotifications } from "@/contexts/NotificationContext";
 
-export type DashView = "home" | "earn" | "tasks" | "surveys" | "goal" | "verify" | "influencer" | "notifications" | "chat" | "profile";
+export type DashView = "home" | "earn" | "offers" | "surveys" | "goal" | "verify" | "influencer" | "notifications" | "chat" | "profile";
 
-const validViews: DashView[] = ["home", "earn", "tasks", "surveys", "goal", "verify", "influencer", "notifications", "chat", "profile"];
+const validViews: DashView[] = ["home", "earn", "offers", "surveys", "goal", "verify", "influencer", "notifications", "chat", "profile"];
 
 type DashStep = "onboarding" | "dashboard";
 
@@ -124,7 +124,7 @@ const Dashboard = () => {
         return [
           "🎉 You're off the queue! Head to **Verify** to submit your transaction IDs and start claiming your spend back.",
           `💰 Earn ₦500 per friend who joins! Your referral code: **${profile.referral_code}**`,
-          "📝 Complete surveys and tasks in the **Earn** tab to build up your points faster!",
+          "📝 Complete surveys and offers in the **Earn** tab to build up your points faster!",
           "🌟 Want to earn more? Apply to become a Karbali influencer in the Influencer tab!",
         ];
       }
@@ -197,7 +197,7 @@ const Dashboard = () => {
     { id: "profile" as DashView, label: "Profile", icon: User },
   ];
 
-  const isEarnActive = activeView === "earn" || activeView === "tasks" || activeView === "surveys";
+  const isEarnActive = activeView === "earn" || activeView === "offers" || activeView === "surveys";
 
   const renderHomeDashboard = () => {
     switch (activeDesign) {

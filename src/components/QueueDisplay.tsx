@@ -391,7 +391,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         )}
 
         {/* ═══ EARN VIEWS ═══ */}
-        {(view === "earn" || view === "tasks" || view === "surveys") && (
+        {(view === "earn" || view === "offers" || view === "surveys") && (
           <motion.div key="earn-group" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <GlassCard variant="strong" className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
@@ -405,7 +405,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             {view === "earn" && (
               <div className="grid grid-cols-1 gap-4">
                 <button
-                  onClick={() => onViewChange?.("tasks")}
+                  onClick={() => onViewChange?.("offers")}
                   className="glass-card p-6 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
                 >
                   <div className="flex items-center gap-4">
@@ -413,8 +413,8 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                       <Zap className="w-6 h-6 text-primary" />
                     </div>
                     <div className="text-left">
-                      <h3 className="font-bold text-foreground">Tasks</h3>
-                      <p className="text-[12px] text-muted-foreground">Complete simple tasks to earn points</p>
+                      <h3 className="font-bold text-foreground">Offers</h3>
+                      <p className="text-[12px] text-muted-foreground">browse offers from partner brands to start your financial journey</p>
                     </div>
                   </div>
                   <Check className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
@@ -438,7 +438,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               </div>
             )}
 
-            {(view === "tasks" || view === "surveys") && (
+            {(view === "offers" || view === "surveys") && (
               <div className="space-y-4">
                 <button
                   onClick={() => onViewChange?.("earn")}
@@ -447,7 +447,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
                   <ChevronLeft className="w-4 h-4" />
                   Back to Earn
                 </button>
-                <DecisionFlow mode={view as "tasks" | "surveys"} />
+                <DecisionFlow mode={view as "offers" | "surveys"} />
               </div>
             )}
           </motion.div>
