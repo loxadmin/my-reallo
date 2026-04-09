@@ -19,12 +19,6 @@ const CarsUnder3M = () => {
       description="You can buy a reliable used car in Nigeria for under 3 million Naira by looking for Nigerian-used models like the Toyota Corolla, Honda Civic, or Volkswagen Golf."
       schemaData={schemaData}
     >
-      <h1>How to Buy a Car in Nigeria for Under 3 Million Naira</h1>
-
-      <p className="lead">
-        You can buy a reliable used car in Nigeria for under 3 million Naira by looking for Nigerian-used models like the Toyota Corolla, Honda Civic, or Volkswagen Golf.
-      </p>
-
       <p>
         Finding a good car on a budget in Nigeria requires patience and a good eye for quality. While "Tokunbo" (foreign-used) cars might be slightly above this price range for newer models, the Nigerian-used market offers great value.
       </p>
@@ -63,14 +57,20 @@ const CarsUnder3M = () => {
         </div>
       </div>
 
-      <div className="mt-12 p-6 glass-card rounded-2xl border border-primary/20">
-        <h3>Budgeting for Your First Car?</h3>
-        <p>
-          Karbali is a financial assistant platform that helps users reduce expenses, discover cheaper alternatives, and earn money online based on their lifestyle.
-        </p>
-        <Link to="/auth" className="inline-block bg-primary text-primary-foreground px-6 py-2 rounded-xl font-medium no-underline">
-          Join Karbali to Save More
-        </Link>
+      <div className="mt-16 p-8 md:p-10 glass-card rounded-[2rem] border-primary/20 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative z-10">
+          <h3 className="text-2xl font-bold mb-4 gradient-text">Budgeting for Your First Car?</h3>
+          <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
+            Karbali is your personal financial assistant. We help you reduce expenses, discover cheaper alternatives, and find new ways to earn money online tailored to your lifestyle.
+          </p>
+          <Link
+            to="/auth"
+            className="clay-primary inline-flex items-center justify-center px-8 py-4 rounded-2xl font-semibold no-underline transition-transform hover:scale-105 active:scale-95"
+          >
+            Start Saving with Karbali
+          </Link>
+        </div>
       </div>
     </SEOPageLayout>
   );
