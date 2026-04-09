@@ -18,6 +18,13 @@ import AdvertiserOnboard from "./pages/AdvertiserOnboard";
 import AdvertiserDashboard from "./pages/AdvertiserDashboard";
 import SecurityTrapRoute from "./components/SecurityTrapRoute";
 
+// SEO Guides
+import MakeMoneyOnline from "./pages/guides/MakeMoneyOnline";
+import TravelFree from "./pages/guides/TravelFree";
+import CarsUnder3M from "./pages/guides/CarsUnder3M";
+import CheapestData from "./pages/guides/CheapestData";
+import ReduceExpenses from "./pages/guides/ReduceExpenses";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -44,6 +51,14 @@ const App = () => (
                   <Route path="/config.php" element={<SecurityTrapRoute />} />
                   <Route path="/advertiser/onboard/:token" element={<AdvertiserOnboard />} />
                   <Route path="/advertiser/dashboard/:token" element={<AdvertiserDashboard />} />
+
+                  {/* SEO optimized routes */}
+                  <Route path="/how-to-make-money-online-without-investment-nigeria" element={<MakeMoneyOnline />} />
+                  <Route path="/how-to-travel-for-free" element={<TravelFree />} />
+                  <Route path="/cars-under-3-million-naira-nigeria" element={<CarsUnder3M />} />
+                  <Route path="/cheapest-data-plans-nigeria" element={<CheapestData />} />
+                  <Route path="/how-to-reduce-expenses-nigeria" element={<ReduceExpenses />} />
+
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

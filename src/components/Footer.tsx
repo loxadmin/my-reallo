@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import KarbaliLogo from "./KarbaliLogo";
 
@@ -46,6 +47,16 @@ const Footer = () => {
               <p className="text-[13px] text-muted-foreground leading-relaxed whitespace-pre-line">{content.invest_with_us}</p>
             </div>
           )}
+          <div>
+            <h4 className="text-[14px] font-semibold text-foreground mb-2">Resources</h4>
+            <ul className="text-[13px] text-muted-foreground space-y-2">
+              <li><Link to="/how-to-make-money-online-without-investment-nigeria" className="hover:text-primary transition-colors">Make Money Online</Link></li>
+              <li><Link to="/how-to-travel-for-free" className="hover:text-primary transition-colors">Travel for Free</Link></li>
+              <li><Link to="/cars-under-3-million-naira-nigeria" className="hover:text-primary transition-colors">Cars Under 3M Naira</Link></li>
+              <li><Link to="/cheapest-data-plans-nigeria" className="hover:text-primary transition-colors">Cheapest Data Plans</Link></li>
+              <li><Link to="/how-to-reduce-expenses-nigeria" className="hover:text-primary transition-colors">Reduce Expenses</Link></li>
+            </ul>
+          </div>
         </div>
         <div className="mt-8 pt-4 border-t border-border/20 text-center">
           <p className="text-[10px] text-muted-foreground">© {new Date().getFullYear()} Karbali. All rights reserved.</p>
