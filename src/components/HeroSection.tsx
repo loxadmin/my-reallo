@@ -117,7 +117,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           transition={{ delay: 0.5, duration: 0.7 }}
           className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto mb-8 leading-relaxed"
         >
-          Karbali is a financial assistant platform that helps users reduce expenses, discover cheaper alternatives, and earn money online based on their lifestyle.
+          Tell us what you spend, show us proof, and we will pay you back, up to 30 to 60% at the end of the year
         </motion.p>
 
         {/* CTA */}

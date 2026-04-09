@@ -64,7 +64,7 @@ const MakeMoneyOnline = () => {
         <div className="relative z-10">
           <h3 className="text-2xl font-bold mb-4 gradient-text">Ready to boost your finances?</h3>
           <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
-            Karbali is your personal financial assistant. We help you reduce expenses, discover cheaper alternatives, and find new ways to earn money online tailored to your lifestyle.
+            Tell us what you spend, show us proof, and we will pay you back, up to 30 to 60% at the end of the year
           </p>
           <Link
             to="/auth"
