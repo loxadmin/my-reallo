@@ -29,12 +29,6 @@ const TravelFree = () => {
       description="You can travel for free by leveraging credit card points, house sitting, volunteering, and working remotely. Learn the secrets to seeing the world on a zero budget."
       schemaData={schemaData}
     >
-      <h1>How to Travel for Free: The Ultimate Guide</h1>
-
-      <p className="lead">
-        You can travel for free by leveraging credit card points, house sitting, volunteering, and working remotely.
-      </p>
-
       <p>
         Traveling doesn't always have to be expensive. With the right strategy, you can explore new cultures and destinations without breaking the bank—or even spending a kobo on accommodation.
       </p>
@@ -73,14 +67,20 @@ const TravelFree = () => {
         </div>
       </div>
 
-      <div className="mt-12 p-6 glass-card rounded-2xl border border-primary/20">
-        <h3>Save Money for Your Next Trip</h3>
-        <p>
-          Karbali is a financial assistant platform that helps users reduce expenses, discover cheaper alternatives, and earn money online based on their lifestyle.
-        </p>
-        <Link to="/auth" className="inline-block bg-primary text-primary-foreground px-6 py-2 rounded-xl font-medium no-underline">
-          Start Saving with Karbali
-        </Link>
+      <div className="mt-16 p-8 md:p-10 glass-card rounded-[2rem] border-primary/20 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative z-10">
+          <h3 className="text-2xl font-bold mb-4 gradient-text">Save Money for Your Next Trip</h3>
+          <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
+            Karbali is your personal financial assistant. We help you reduce expenses, discover cheaper alternatives, and find new ways to earn money online tailored to your lifestyle.
+          </p>
+          <Link
+            to="/auth"
+            className="clay-primary inline-flex items-center justify-center px-8 py-4 rounded-2xl font-semibold no-underline transition-transform hover:scale-105 active:scale-95"
+          >
+            Start Saving with Karbali
+          </Link>
+        </div>
       </div>
     </SEOPageLayout>
   );

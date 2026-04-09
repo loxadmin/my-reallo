@@ -27,28 +27,28 @@ const Footer = () => {
 
   return (
     <footer className="relative z-10 mt-16 border-t border-border/30">
-      <div className="max-w-5xl mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
           {content.about_us && (
-            <div>
-              <h4 className="text-[13px] font-semibold text-foreground mb-2">About Us</h4>
+            <div className="text-center sm:text-left">
+              <h4 className="text-[13px] font-semibold text-foreground mb-4">About Us</h4>
               <p className="text-[12px] text-muted-foreground leading-relaxed whitespace-pre-line"><KarbaliLogo size={12} className="inline-block align-middle mr-0.5" /> {content.about_us}</p>
             </div>
           )}
           {content.contact_us && (
-            <div>
-              <h4 className="text-[14px] font-semibold text-foreground mb-2">Contact Us</h4>
+            <div className="text-center sm:text-left">
+              <h4 className="text-[14px] font-semibold text-foreground mb-4">Contact Us</h4>
               <p className="text-[13px] text-muted-foreground leading-relaxed whitespace-pre-line">{content.contact_us}</p>
             </div>
           )}
           {content.invest_with_us && (
-            <div>
-              <h4 className="text-[14px] font-semibold text-foreground mb-2">Invest With Us</h4>
+            <div className="text-center sm:text-left">
+              <h4 className="text-[14px] font-semibold text-foreground mb-4">Invest With Us</h4>
               <p className="text-[13px] text-muted-foreground leading-relaxed whitespace-pre-line">{content.invest_with_us}</p>
             </div>
           )}
-          <div>
-            <h4 className="text-[14px] font-semibold text-foreground mb-2">Resources</h4>
+          <div className="text-center sm:text-left">
+            <h4 className="text-[14px] font-semibold text-foreground mb-4">Resources</h4>
             <ul className="text-[13px] text-muted-foreground space-y-2">
               <li><Link to="/how-to-make-money-online-without-investment-nigeria" className="hover:text-primary transition-colors">Make Money Online</Link></li>
               <li><Link to="/how-to-travel-for-free" className="hover:text-primary transition-colors">Travel for Free</Link></li>

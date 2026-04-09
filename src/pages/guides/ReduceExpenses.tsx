@@ -19,12 +19,6 @@ const ReduceExpenses = () => {
       description="Learn how to significantly reduce your monthly expenses in Nigeria by optimizing your spending on food, power, and transport. Start saving more today."
       schemaData={schemaData}
     >
-      <h1>How to Reduce Your Monthly Expenses in Nigeria</h1>
-
-      <p className="lead">
-        You can reduce your monthly expenses in Nigeria by bulk buying food, using energy-efficient appliances, and utilizing ride-sharing or public transport.
-      </p>
-
       <p>
         With the rising cost of living, managing your finances effectively is more important than ever. Small changes in your daily habits can lead to significant savings over time.
       </p>
@@ -63,14 +57,20 @@ const ReduceExpenses = () => {
         </div>
       </div>
 
-      <div className="mt-12 p-6 glass-card rounded-2xl border border-primary/20">
-        <h3>Let AI Help You Save</h3>
-        <p>
-          Karbali is a financial assistant platform that helps users reduce expenses, discover cheaper alternatives, and earn money online based on their lifestyle.
-        </p>
-        <Link to="/auth" className="inline-block bg-primary text-primary-foreground px-6 py-2 rounded-xl font-medium no-underline">
-          Get Started with Karbali
-        </Link>
+      <div className="mt-16 p-8 md:p-10 glass-card rounded-[2rem] border-primary/20 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative z-10">
+          <h3 className="text-2xl font-bold mb-4 gradient-text">Let AI Help You Save</h3>
+          <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
+            Karbali is your personal financial assistant. We help you reduce expenses, discover cheaper alternatives, and find new ways to earn money online tailored to your lifestyle.
+          </p>
+          <Link
+            to="/auth"
+            className="clay-primary inline-flex items-center justify-center px-8 py-4 rounded-2xl font-semibold no-underline transition-transform hover:scale-105 active:scale-95"
+          >
+            Get Started with Karbali
+          </Link>
+        </div>
       </div>
     </SEOPageLayout>
   );
