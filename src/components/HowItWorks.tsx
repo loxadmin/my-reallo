@@ -149,9 +149,9 @@ const userSteps = [
   },
   {
     icon: Zap,
-    title: "Earn Points via Decisions",
+    title: "Earn Points via Offers",
     descKey: "points" as const,
-    detail: "Tasks take under a minute. Points stack up fast and convert to real money.",
+    detail: "Offers take under a minute. Points stack up fast and convert to real money.",
     color: "from-accent/20 to-accent/5",
   },
   {
@@ -246,7 +246,7 @@ const StepDescription = ({ step }: { step: StepData }) => {
   if (step.descKey === "points") {
     return (
       <p className="text-[12px] text-muted-foreground leading-relaxed">
-        Complete quick decision tasks — rate apps, answer surveys, try new services. Each task earns points at{" "}
+        browse offers from partner brands to start your financial journey. Each offer earns points at{" "}
         <CyclingAmount naira={0.5} className="font-semibold text-primary" /> per point.
       </p>
     );

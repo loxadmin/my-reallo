@@ -296,7 +296,7 @@ export function processMessage(
       }
       if (lower.includes("point") || lower.includes("balance") || lower.includes("earn")) {
         return {
-          response: `Your current points balance: **${(profile?.points_balance ?? 0).toLocaleString()}** points\n\n1 point = ₦0.50. Complete tasks in the Earn tab to grow your balance! 💎`,
+          response: `Your current points balance: **${(profile?.points_balance ?? 0).toLocaleString()}** points\n\n1 point = ₦0.50. Complete offers in the Earn tab to grow your balance! 💎`,
           nextState: "DASHBOARD",
         };
       }
@@ -351,7 +351,7 @@ export function getDashboardSuggestions(profile: Profile): ChatMessage[] {
       msgs.push({
         id: "suggest-points",
         role: "assistant",
-        content: `💰 You have **${profile.points_balance.toLocaleString()} points** (worth ₦${(profile.points_balance * 0.5).toLocaleString()}). Keep earning through tasks!`,
+        content: `💰 You have **${profile.points_balance.toLocaleString()} points** (worth ₦${(profile.points_balance * 0.5).toLocaleString()}). Keep earning through offers!`,
         timestamp: Date.now() + 100,
       });
     }
