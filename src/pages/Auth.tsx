@@ -30,7 +30,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [hpValue, setHpValue] = useState(""); // Honeypot value
   const [referralCode, setReferralCode] = useState("");
-  const [userType, setUserType] = useState<"student" | "parent" | "">("");
+  const [userType, setUserType] = useState<"student" | "parent" | "others" | "">("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -145,7 +145,7 @@ const Auth = () => {
       } else {
         // Validate user type selection
         if (!userType) {
-          setFieldErrors({ userType: "Please select if you are a student or parent" });
+          setFieldErrors({ userType: "Please select your category" });
           setLoading(false);
           return;
         }
@@ -395,19 +395,19 @@ const Auth = () => {
                       {/* Parent / Student selector */}
                       <div>
                         <label className="text-[12px] font-medium text-foreground mb-1.5 block">I am a</label>
-                        <div className="flex gap-2">
-                          {(["student", "parent"] as const).map(type => (
+                        <div className="flex flex-wrap gap-2">
+                          {(["student", "parent", "others"] as const).map(type => (
                             <button
                               key={type}
                               type="button"
                               onClick={() => setUserType(type)}
-                              className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 border ${
+                              className={`flex-1 min-w-[100px] py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 border ${
                                 userType === type
                                   ? "clay-primary text-primary-foreground border-primary/30"
                                   : "glass-button text-muted-foreground border-border/40"
                               }`}
                             >
-                              {type === "student" ? "🎓 Student" : "👨‍👩‍👧 Parent"}
+                              {type === "student" ? "🎓 Student" : type === "parent" ? "👨‍👩‍👧 Parent" : "👤 Others"}
                             </button>
                           ))}
                         </div>
