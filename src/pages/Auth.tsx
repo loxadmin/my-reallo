@@ -30,7 +30,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [hpValue, setHpValue] = useState(""); // Honeypot value
   const [referralCode, setReferralCode] = useState("");
-  const [userType, setUserType] = useState<"student" | "parent" | "">("");
+  const [userType, setUserType] = useState<"student" | "parent" | "others" | "">("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -145,7 +145,7 @@ const Auth = () => {
       } else {
         // Validate user type selection
         if (!userType) {
-          setFieldErrors({ userType: "Please select if you are a student or parent" });
+          setFieldErrors({ userType: "Please select your user type" });
           setLoading(false);
           return;
         }
@@ -317,7 +317,13 @@ const Auth = () => {
               </button>
             </div>
 
-              <div className="space-y-4 animate-fade-in">
+              <form
+                className="space-y-4 animate-fade-in"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void handleSubmit();
+                }}
+              >
                 {/* Honeypot field - hidden from humans */}
                 <div style={{ position: "absolute", opacity: 0, zIndex: -1, pointerEvents: "none" }}>
                   <input
@@ -396,7 +402,7 @@ const Auth = () => {
                       <div>
                         <label className="text-[12px] font-medium text-foreground mb-1.5 block">I am a</label>
                         <div className="flex gap-2">
-                          {(["student", "parent"] as const).map(type => (
+                          {(["student", "parent", "others"] as const).map(type => (
                             <button
                               key={type}
                               type="button"
@@ -407,7 +413,7 @@ const Auth = () => {
                                   : "glass-button text-muted-foreground border-border/40"
                               }`}
                             >
-                              {type === "student" ? "🎓 Student" : "👨‍👩‍👧 Parent"}
+                              {type === "student" ? "🎓 Student" : type === "parent" ? "👨‍👩‍👧 Parent" : "🌟 Others"}
                             </button>
                           ))}
                         </div>
@@ -437,7 +443,7 @@ const Auth = () => {
                   </button>
                 )}
 
-                <GlassButton variant="primary" className="w-full mt-4 text-[13px] py-3.5" onClick={handleSubmit} disabled={loading || !email || !password}>
+                <GlassButton variant="primary" type="submit" className="w-full mt-4 text-[13px] py-3.5" disabled={loading || !email || !password}>
                   {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
                 </GlassButton>
 
@@ -463,7 +469,7 @@ const Auth = () => {
                   </svg>
                   Google
                 </button>
-              </div>
+              </form>
           </GlassCard>
         )}
       </motion.div>

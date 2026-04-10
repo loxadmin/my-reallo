@@ -4,6 +4,7 @@ import { Send, Bot, User as UserIcon, X, MessageSquare, RotateCcw, Trash2 } from
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { logError } from "@/lib/errorLogger";
 import { toast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 
@@ -109,12 +110,16 @@ const MessageBubble = ({ message }: { message: ChatMessage }) => {
 async function streamChat({
   messages,
   profile,
+  verify_page_active,
+  active_apps,
   onDelta,
   onDone,
   signal,
 }: {
   messages: { role: string; content: string }[];
   profile: any;
+  verify_page_active?: boolean;
+  active_apps?: string[];
   onDelta: (text: string) => void;
   onDone: (fullText: string) => void;
   signal?: AbortSignal;
@@ -132,7 +137,7 @@ async function streamChat({
       "Authorization": `Bearer ${authToken}`,
       "apikey": supabaseKey,
     },
-    body: JSON.stringify({ messages, profile }),
+    body: JSON.stringify({ messages, profile, verify_page_active, active_apps }),
     signal,
   });
 
@@ -195,6 +200,7 @@ function parseActions(text: string) {
   let cleanText = text;
   let profileUpdate: Record<string, any> | undefined;
   let navigate: string | undefined;
+  let appRequest: string | undefined;
 
   const saveMatch = text.match(/```karbali-save\s*\n([\s\S]*?)\n```/);
   if (saveMatch) {
@@ -204,7 +210,11 @@ function parseActions(text: string) {
   if (navMatch) {
     try { const d = JSON.parse(navMatch[1]); navigate = d.route; cleanText = cleanText.replace(navMatch[0], "").trim(); } catch { /* */ }
   }
-  return { cleanText, profileUpdate, navigate };
+  const appMatch = text.match(/```karbali-app-request\s*\n([\s\S]*?)\n```/);
+  if (appMatch) {
+    try { const d = JSON.parse(appMatch[1]); appRequest = d.app_name; cleanText = cleanText.replace(appMatch[0], "").trim(); } catch { /* */ }
+  }
+  return { cleanText, profileUpdate, navigate, appRequest };
 }
 
 const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, onClose }: KarbaliChatProps) => {
@@ -212,6 +222,8 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
   const navigate = useNavigate();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [verifyPageActive, setVerifyPageActive] = useState<boolean>(true);
+  const [activeApps, setActiveApps] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isChatReady, setIsChatReady] = useState(false);
@@ -223,6 +235,18 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    const fetchContext = async () => {
+      const [settingsRes, appsRes] = await Promise.all([
+        supabase.from("admin_settings").select("value").eq("key", "verify_page_active").maybeSingle(),
+        supabase.from("decision_apps" as any).select("app_name").eq("is_active", true),
+      ]);
+      if (settingsRes.data) setVerifyPageActive(settingsRes.data.value !== "false");
+      if (appsRes.data) setActiveApps((appsRes.data as any[]).map(a => a.app_name));
+    };
+    void fetchContext();
   }, []);
 
   useEffect(() => {
@@ -303,9 +327,11 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
           off_queue_at: profile.off_queue_at,
           user_type: profile.user_type,
         },
+        verify_page_active: verifyPageActive,
+        active_apps: activeApps,
         onDelta: upsertAssistant,
         onDone: async (fullText) => {
-          const { cleanText, profileUpdate, navigate: navRoute } = parseActions(fullText);
+          const { cleanText, profileUpdate, navigate: navRoute, appRequest } = parseActions(fullText);
           const finalText = cleanText.trim() || (navRoute ? "Taking you there now…" : "Got it — I've saved that.");
           const userId = user.id;
 
@@ -335,6 +361,14 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
           if (navRoute) {
             const targetPath = navRoute === "home" ? "/dashboard" : `/dashboard/${navRoute}`;
             setTimeout(() => navigate(targetPath), 1200);
+          }
+
+          if (appRequest) {
+            void logError({
+              message: `User requested unlisted app: ${appRequest}`,
+              user_id: user.id,
+              metadata: { type: "app_request", app_name: appRequest },
+            });
           }
           abortRef.current = null;
           setIsStreaming(false);
