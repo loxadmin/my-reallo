@@ -7,6 +7,8 @@
 export const identifyUser = (userId: string) => {
   if (typeof window !== "undefined" && window.Karbali) {
     window.Karbali.identify(userId);
+  } else {
+    console.warn("Karbali tracker not initialized for 'identify' event.");
   }
 };
 
