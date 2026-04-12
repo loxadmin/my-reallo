@@ -9,6 +9,7 @@ import { Mail, Lock, UserPlus, LogIn, Gift, Eye, EyeOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import KarbaliLogo from "@/components/KarbaliLogo";
 import WaterBackground from "@/components/WaterBackground";
+import PageSkeleton from "@/components/PageSkeleton";
 import {
   loginSchema,
   signupSchema,
@@ -38,21 +39,30 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
-  const [onlyGoogleAuth, setOnlyGoogleAuth] = useState(false);
+  const [onlyGoogleAuth, setOnlyGoogleAuth] = useState(localStorage.getItem("karbali_only_google_auth") === "true");
+  const [loadingSettings, setLoadingSettings] = useState(true);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const fetchSettings = async () => {
-      const { data, error } = await supabase
-        .from("admin_settings")
-        .select("value")
-        .eq("key", "only_google_auth")
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from("admin_settings")
+          .select("value")
+          .eq("key", "only_google_auth")
+          .maybeSingle();
 
-      if (!error && data) {
-        setOnlyGoogleAuth(data.value === "true");
+        if (!error && data) {
+          const isOnlyGoogle = data.value === "true";
+          setOnlyGoogleAuth(isOnlyGoogle);
+          localStorage.setItem("karbali_only_google_auth", String(isOnlyGoogle));
+        }
+      } catch (err) {
+        console.error("Error fetching settings:", err);
+      } finally {
+        setLoadingSettings(false);
       }
     };
 
@@ -242,7 +252,11 @@ const Auth = () => {
           <p className="text-[13px] text-muted-foreground">Your Financial Assistant</p>
         </div>
 
-        {forgotMode ? (
+        {loadingSettings ? (
+          <GlassCard variant="glow" className="min-h-[400px] flex items-center justify-center">
+            <PageSkeleton />
+          </GlassCard>
+        ) : forgotMode ? (
           <GlassCard variant="glow">
             {forgotSent ? (
               <div className="text-center">
