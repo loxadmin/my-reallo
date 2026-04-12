@@ -17,7 +17,7 @@ import {
   GENERIC_AUTH_ERROR,
 } from "@/lib/security";
 import { getDeviceFingerprint } from "@/lib/fingerprint";
-import { trackSignup, identifyUser } from "@/lib/tracker";
+import { trackSignup } from "@/lib/tracker";
 import { triggerTrap, detectMaliciousPatterns } from "@/lib/securityTraps";
 import { supabase } from "@/integrations/supabase/client";
 import { isAllowedEmailDomain, getBlockedDomainMessage } from "@/lib/emailValidation";
@@ -59,16 +59,6 @@ const Auth = () => {
     const processOAuthRedirect = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (cancelled || !session) return;
-
-      // Track signup if this is a new user (created_at matches last_sign_in_at)
-      const user = session.user;
-      const isNewUser = user.created_at && user.last_sign_in_at &&
-                        Math.abs(new Date(user.created_at).getTime() - new Date(user.last_sign_in_at).getTime()) < 10000;
-
-      if (isNewUser) {
-        trackSignup(user.id);
-      }
-      identifyUser(user.id);
 
       const pendingRef = localStorage.getItem(REFERRAL_STORAGE_KEY);
       if (pendingRef) {
@@ -212,7 +202,6 @@ const Auth = () => {
           }
           if (userId) {
             trackSignup(userId);
-            identifyUser(userId);
           }
           setSignupSuccess(true);
         }
