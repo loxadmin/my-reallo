@@ -325,6 +325,7 @@ const Admin = () => {
   });
   const [verifyExpenseLink, setVerifyExpenseLink] = useState("");
   const [verifyPageActive, setVerifyPageActive] = useState(true);
+  const [onlyGoogleAuth, setOnlyGoogleAuth] = useState(false);
   const [verifyDataActive, setVerifyDataActive] = useState(true);
   const [verifyElectricityActive, setVerifyElectricityActive] = useState(true);
   const [verifyFoodActive, setVerifyFoodActive] = useState(true);
@@ -439,6 +440,7 @@ const Admin = () => {
       const settings = (settingsRes.data || []) as { key: string; value: string }[];
       setVerifyExpenseLink(settings.find(s => s.key === "verify_expense_link")?.value || "");
       setVerifyPageActive(settings.find(s => s.key === "verify_page_active")?.value === "false" ? false : true);
+      setOnlyGoogleAuth(settings.find(s => s.key === "only_google_auth")?.value === "true");
       setVerifyDataActive(settings.find(s => s.key === "verify_data_active")?.value === "false" ? false : true);
       setVerifyElectricityActive(settings.find(s => s.key === "verify_electricity_active")?.value === "false" ? false : true);
       setVerifyFoodActive(settings.find(s => s.key === "verify_food_active")?.value === "false" ? false : true);
@@ -527,6 +529,7 @@ const Admin = () => {
     await Promise.all([
       supabase.from("admin_settings").upsert({ key: "verify_expense_link", value: verifyExpenseLink, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_page_active", value: String(verifyPageActive), updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "only_google_auth", value: String(onlyGoogleAuth), updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_data_active", value: String(verifyDataActive), updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_electricity_active", value: String(verifyElectricityActive), updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "verify_food_active", value: String(verifyFoodActive), updated_at: new Date().toISOString() }),
@@ -2476,6 +2479,13 @@ const Admin = () => {
                       <p className="text-[11px] text-muted-foreground">If disabled, users will see "Coming Soon".</p>
                     </div>
                     <input type="checkbox" checked={verifyPageActive} onChange={e => setVerifyPageActive(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer rounded" />
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
+                    <div>
+                      <label className="text-[12px] font-medium text-foreground">Only Google Authentication</label>
+                      <p className="text-[11px] text-muted-foreground">If enabled, users can only sign in/up with Google.</p>
+                    </div>
+                    <input type="checkbox" checked={onlyGoogleAuth} onChange={e => setOnlyGoogleAuth(e.target.checked)} className="w-5 h-5 accent-primary cursor-pointer rounded" />
                   </div>
                   <p className="text-[12px] font-medium text-foreground">Per-Category Verification Toggles</p>
                   <div className="grid grid-cols-2 gap-3">

@@ -38,11 +38,26 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [onlyGoogleAuth, setOnlyGoogleAuth] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      const { data, error } = await supabase
+        .from("admin_settings")
+        .select("value")
+        .eq("key", "only_google_auth")
+        .maybeSingle();
+
+      if (!error && data) {
+        setOnlyGoogleAuth(data.value === "true");
+      }
+    };
+
+    void fetchSettings();
+
     const ref = searchParams.get("ref");
     if (ref) {
       setReferralCode(ref.toUpperCase());
@@ -294,24 +309,26 @@ const Auth = () => {
           </GlassCard>
         ) : (
           <GlassCard variant="glow">
-            <div className="flex gap-2 mb-6">
-              <button
-                onClick={() => { setMode("login"); setError(""); setFieldErrors({}); }}
-                className={`flex-1 py-2.5 rounded-xl font-display text-[13px] font-medium transition-all duration-300 ${
-                  mode === "login" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"
-                }`}
-              >
-                <LogIn className="inline w-4 h-4 mr-1.5" /> Login
-              </button>
-              <button
-                onClick={() => { setMode("signup"); setError(""); setFieldErrors({}); }}
-                className={`flex-1 py-2.5 rounded-xl font-display text-[13px] font-medium transition-all duration-300 ${
-                  mode === "signup" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"
-                }`}
-              >
-                <UserPlus className="inline w-4 h-4 mr-1.5" /> Sign Up
-              </button>
-            </div>
+            {!onlyGoogleAuth && (
+              <div className="flex gap-2 mb-6">
+                <button
+                  onClick={() => { setMode("login"); setError(""); setFieldErrors({}); }}
+                  className={`flex-1 py-2.5 rounded-xl font-display text-[13px] font-medium transition-all duration-300 ${
+                    mode === "login" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"
+                  }`}
+                >
+                  <LogIn className="inline w-4 h-4 mr-1.5" /> Login
+                </button>
+                <button
+                  onClick={() => { setMode("signup"); setError(""); setFieldErrors({}); }}
+                  className={`flex-1 py-2.5 rounded-xl font-display text-[13px] font-medium transition-all duration-300 ${
+                    mode === "signup" ? "clay-primary text-primary-foreground" : "glass-button text-muted-foreground"
+                  }`}
+                >
+                  <UserPlus className="inline w-4 h-4 mr-1.5" /> Sign Up
+                </button>
+              </div>
+            )}
 
               <form
                 className="space-y-4 animate-fade-in"
@@ -320,137 +337,146 @@ const Auth = () => {
                   void handleSubmit();
                 }}
               >
-                {/* Honeypot field - hidden from humans */}
-                <div style={{ position: "absolute", opacity: 0, zIndex: -1, pointerEvents: "none" }}>
-                  <input
-                    type="text"
-                    name="hp_email"
-                    value={hpValue}
-                    onChange={(e) => setHpValue(e.target.value)}
-                    tabIndex={-1}
-                    autoComplete="off"
-                  />
-                </div>
-
-                <div>
-                  <GlassInput
-                    label="Email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
-                  />
-                  {fieldErrors.email && (
-                    <p className="text-[11px] text-destructive mt-1">{fieldErrors.email}</p>
-                  )}
-                </div>
-
-                <div>
-                  <div className="relative">
-                    <GlassInput
-                      label="Password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      autoComplete={mode === "login" ? "current-password" : "new-password"}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-[38px] text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {fieldErrors.password && (
-                    <p className="text-[11px] text-destructive mt-1">{fieldErrors.password}</p>
-                  )}
-                  {mode === "signup" && password.length > 0 && passwordStrength && (
-                    <div className="mt-2 space-y-1">
-                      <div className="flex gap-1">
-                        {[0, 1, 2, 3].map((i) => (
-                          <div
-                            key={i}
-                            className="h-1 flex-1 rounded-full transition-colors duration-300"
-                            style={{
-                              backgroundColor:
-                                i <= passwordStrength.score
-                                  ? passwordStrength.color
-                                  : "hsl(var(--muted))",
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        Strength: <span style={{ color: passwordStrength.color }}>{passwordStrength.label}</span>
-                      </p>
+                {!onlyGoogleAuth ? (
+                  <>
+                    {/* Honeypot field - hidden from humans */}
+                    <div style={{ position: "absolute", opacity: 0, zIndex: -1, pointerEvents: "none" }}>
+                      <input
+                        type="text"
+                        name="hp_email"
+                        value={hpValue}
+                        onChange={(e) => setHpValue(e.target.value)}
+                        tabIndex={-1}
+                        autoComplete="off"
+                      />
                     </div>
-                  )}
-                </div>
 
-                <div className={`grid transition-all duration-300 ease-in-out ${mode === "signup" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-                  <div className="overflow-hidden">
-                    <div className="pt-1 space-y-3">
-                      {/* Parent / Student selector */}
-                      <div>
-                        <label className="text-[12px] font-medium text-foreground mb-1.5 block">I am a</label>
-                        <div className="flex gap-2">
-                          {(["student", "parent", "others"] as const).map(type => (
-                            <button
-                              key={type}
-                              type="button"
-                              onClick={() => setUserType(type)}
-                              className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 border ${
-                                userType === type
-                                  ? "clay-primary text-primary-foreground border-primary/30"
-                                  : "glass-button text-muted-foreground border-border/40"
-                              }`}
-                            >
-                              {type === "student" ? "🎓 Student" : type === "parent" ? "👨‍👩‍👧 Parent" : "🌟 Others"}
-                            </button>
-                          ))}
+                    <div>
+                      <GlassInput
+                        label="Email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        autoComplete="email"
+                      />
+                      {fieldErrors.email && (
+                        <p className="text-[11px] text-destructive mt-1">{fieldErrors.email}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <div className="relative">
+                        <GlassInput
+                          label="Password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          autoComplete={mode === "login" ? "current-password" : "new-password"}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-[38px] text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {fieldErrors.password && (
+                        <p className="text-[11px] text-destructive mt-1">{fieldErrors.password}</p>
+                      )}
+                      {mode === "signup" && password.length > 0 && passwordStrength && (
+                        <div className="mt-2 space-y-1">
+                          <div className="flex gap-1">
+                            {[0, 1, 2, 3].map((i) => (
+                              <div
+                                key={i}
+                                className="h-1 flex-1 rounded-full transition-colors duration-300"
+                                style={{
+                                  backgroundColor:
+                                    i <= passwordStrength.score
+                                      ? passwordStrength.color
+                                      : "hsl(var(--muted))",
+                                }}
+                              />
+                            ))}
+                          </div>
+                          <p className="text-[11px] text-muted-foreground">
+                            Strength: <span style={{ color: passwordStrength.color }}>{passwordStrength.label}</span>
+                          </p>
                         </div>
-                        {fieldErrors.userType && <p className="text-[11px] text-destructive mt-1">{fieldErrors.userType}</p>}
-                      </div>
-                      <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
-                      <p className="text-[11px] text-primary/60 mt-1 flex items-center gap-1">
-                        <Gift className="w-3 h-3" /> You and your referrer both benefit
-                      </p>
+                      )}
                     </div>
-                  </div>
-                </div>
 
-                {error && (
-                  <p className="text-[13px] text-destructive font-medium">
-                    {error}
-                  </p>
+                    <div className={`grid transition-all duration-300 ease-in-out ${mode === "signup" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                      <div className="overflow-hidden">
+                        <div className="pt-1 space-y-3">
+                          {/* Parent / Student selector */}
+                          <div>
+                            <label className="text-[12px] font-medium text-foreground mb-1.5 block">I am a</label>
+                            <div className="flex gap-2">
+                              {(["student", "parent", "others"] as const).map(type => (
+                                <button
+                                  key={type}
+                                  type="button"
+                                  onClick={() => setUserType(type)}
+                                  className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 border ${
+                                    userType === type
+                                      ? "clay-primary text-primary-foreground border-primary/30"
+                                      : "glass-button text-muted-foreground border-border/40"
+                                  }`}
+                                >
+                                  {type === "student" ? "🎓 Student" : type === "parent" ? "👨‍👩‍👧 Parent" : "🌟 Others"}
+                                </button>
+                              ))}
+                            </div>
+                            {fieldErrors.userType && <p className="text-[11px] text-destructive mt-1">{fieldErrors.userType}</p>}
+                          </div>
+                          <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
+                          <p className="text-[11px] text-primary/60 mt-1 flex items-center gap-1">
+                            <Gift className="w-3 h-3" /> You and your referrer both benefit
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {error && (
+                      <p className="text-[13px] text-destructive font-medium">
+                        {error}
+                      </p>
+                    )}
+
+                    {mode === "login" && !forgotMode && (
+                      <button
+                        type="button"
+                        onClick={() => { setForgotMode(true); setError(""); }}
+                        className="text-xs text-primary hover:underline mt-1"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+
+                    <GlassButton variant="primary" type="submit" className="w-full mt-4 text-[13px] py-3.5" disabled={loading || !email || !password}>
+                      {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
+                    </GlassButton>
+
+                    <div className="relative my-5">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-border/40" />
+                      </div>
+                      <div className="relative flex justify-center text-[11px]">
+                        <span className="bg-card px-3 text-muted-foreground">or continue with</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-4">
+                    <h2 className="font-display text-lg font-bold text-foreground mb-2">Sign in to continue</h2>
+                    <p className="text-[13px] text-muted-foreground mb-6">Access your account securely with Google</p>
+                  </div>
                 )}
-
-                {mode === "login" && !forgotMode && (
-                  <button
-                    type="button"
-                    onClick={() => { setForgotMode(true); setError(""); }}
-                    className="text-xs text-primary hover:underline mt-1"
-                  >
-                    Forgot password?
-                  </button>
-                )}
-
-                <GlassButton variant="primary" type="submit" className="w-full mt-4 text-[13px] py-3.5" disabled={loading || !email || !password}>
-                  {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
-                </GlassButton>
-
-                <div className="relative my-5">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border/40" />
-                  </div>
-                  <div className="relative flex justify-center text-[11px]">
-                    <span className="bg-card px-3 text-muted-foreground">or continue with</span>
-                  </div>
-                </div>
 
                 <button
                   type="button"
