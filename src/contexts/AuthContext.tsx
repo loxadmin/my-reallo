@@ -8,7 +8,6 @@ import {
 } from "@/lib/security";
 import { isAllowedEmailDomain } from "@/lib/emailValidation";
 import { checkBlacklist } from "@/lib/securityTraps";
-import { identifyUser } from "@/lib/tracker";
 
 interface Profile {
   id: string;
@@ -222,12 +221,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
     };
   }, [performSignOut]);
-
-  useEffect(() => {
-    if (user?.id) {
-      identifyUser(user.id);
-    }
-  }, [user?.id]);
 
   useEffect(() => {
     if (!authReady) return;
