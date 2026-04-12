@@ -17,7 +17,6 @@ import {
   GENERIC_AUTH_ERROR,
 } from "@/lib/security";
 import { getDeviceFingerprint } from "@/lib/fingerprint";
-import { trackSignup } from "@/lib/tracker";
 import { triggerTrap, detectMaliciousPatterns } from "@/lib/securityTraps";
 import { supabase } from "@/integrations/supabase/client";
 import { isAllowedEmailDomain, getBlockedDomainMessage } from "@/lib/emailValidation";
@@ -199,9 +198,6 @@ const Auth = () => {
             }
           } catch {
             // Non-critical, don't block signup success
-          }
-          if (userId) {
-            trackSignup(userId);
           }
           setSignupSuccess(true);
         }
