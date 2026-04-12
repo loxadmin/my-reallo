@@ -5,7 +5,9 @@ interface Window {
     apiKey: string;
   };
   Karbali?: {
-    sync: () => void;
-    track: (eventType: string, data: Record<string, any>) => void;
+    identify: (userId: string) => void;
+    trackDownload: (userId?: string) => void;
+    trackSignup: (userId: string) => void;
+    trackPurchase: (data: { user_id: string; amount: number }) => void;
   };
 }

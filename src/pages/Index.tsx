@@ -17,7 +17,7 @@ const Index = () => {
   }
 
   const handleGetStarted = () => {
-    trackDownload();
+    trackDownload(user?.id);
     navigate(user ? "/dashboard" : "/auth");
   };
 

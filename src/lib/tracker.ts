@@ -4,9 +4,15 @@
  * provided by the karbali-tracker.js loader.
  */
 
-export const trackDownload = () => {
+export const identifyUser = (userId: string) => {
   if (typeof window !== "undefined" && window.Karbali) {
-    window.Karbali.track("download", {});
+    window.Karbali.identify(userId);
+  }
+};
+
+export const trackDownload = (userId?: string) => {
+  if (typeof window !== "undefined" && window.Karbali) {
+    window.Karbali.trackDownload(userId);
   } else {
     console.warn("Karbali tracker not initialized for 'download' event.");
   }
@@ -14,15 +20,15 @@ export const trackDownload = () => {
 
 export const trackSignup = (userId: string) => {
   if (typeof window !== "undefined" && window.Karbali) {
-    window.Karbali.track("signup", { user_id: userId });
+    window.Karbali.trackSignup(userId);
   } else {
     console.warn("Karbali tracker not initialized for 'signup' event.");
   }
 };
 
-export const trackPurchase = (userId: string, orderTotal: number) => {
+export const trackPurchase = (userId: string, amount: number) => {
   if (typeof window !== "undefined" && window.Karbali) {
-    window.Karbali.track("purchase", { user_id: userId, amount: orderTotal });
+    window.Karbali.trackPurchase({ user_id: userId, amount });
   } else {
     console.warn("Karbali tracker not initialized for 'purchase' event.");
   }
