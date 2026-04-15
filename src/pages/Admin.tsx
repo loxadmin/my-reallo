@@ -75,8 +75,8 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
   const fmtCompact = (naira: number) => sym + formatCompact(convert(naira));
   return { fmt, fmtCompact };
 };
-const fromApps = () => supabase.from("decision_apps" as any);
-const fromDResponses = () => supabase.from("decision_responses" as any);
+const fromApps = () => supabase.from("decision_apps");
+const fromDResponses = () => supabase.from("decision_responses");
 
 type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config";
 
@@ -393,12 +393,12 @@ const Admin = () => {
         supabase.from("survey_questions").select("*").order("order_index", { ascending: true }),
         supabase.from("survey_options").select("*").order("created_at", { ascending: true }),
         supabase.from("survey_responses").select("*").order("created_at", { ascending: false }),
-        supabase.from("system_errors" as any).select("*").order("created_at", { ascending: false }).limit(100),
+        supabase.from("system_errors").select("*").order("created_at", { ascending: false }).limit(100),
         supabase.from("security_incidents").select("*").order("created_at", { ascending: false }).limit(100),
         supabase.from("blacklisted_entities").select("*").order("created_at", { ascending: false }),
         supabase.from("referrals").select("referrer_id"),
-        supabase.from("dummy_users" as any).select("*").order("created_at", { ascending: false }),
-        supabase.from("dummy_transactions" as any).select("*").order("created_at", { ascending: false })
+        supabase.from("dummy_users").select("*").order("created_at", { ascending: false }),
+        supabase.from("dummy_transactions").select("*").order("created_at", { ascending: false })
       ]);
 
       const profs = (profilesRes.data as ProfileRow[]) || [];
@@ -912,10 +912,10 @@ const Admin = () => {
         }
       }
 
-      const { error: usersError } = await supabase.from("dummy_users" as any).insert(newUsers);
+      const { error: usersError } = await supabase.from("dummy_users").insert(newUsers);
       if (usersError) throw usersError;
 
-      const { error: txsError } = await supabase.from("dummy_transactions" as any).insert(newTransactions);
+      const { error: txsError } = await supabase.from("dummy_transactions").insert(newTransactions);
       if (txsError) throw txsError;
 
       toast({ title: "Dummy users generated", description: `Successfully created ${count} users and ${newTransactions.length} transactions.` });
@@ -931,7 +931,7 @@ const Admin = () => {
     if (!confirm("Are you sure you want to clear all dummy users and transactions?")) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("dummy_users" as any).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      const { error } = await supabase.from("dummy_users").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       if (error) throw error;
       toast({ title: "Dummy data cleared" });
       await fetchData();
