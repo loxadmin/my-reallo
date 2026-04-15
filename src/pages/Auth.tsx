@@ -20,6 +20,7 @@ import { getDeviceFingerprint } from "@/lib/fingerprint";
 import { triggerTrap, detectMaliciousPatterns } from "@/lib/securityTraps";
 import { supabase } from "@/integrations/supabase/client";
 import { isAllowedEmailDomain, getBlockedDomainMessage } from "@/lib/emailValidation";
+import { trackSignup } from "@/lib/tracker";
 
 const REFERRAL_STORAGE_KEY = "karbali_pending_referral";
 
@@ -210,6 +211,7 @@ const Auth = () => {
                 }),
                 supabase.from("profiles").update({ user_type: userType }).eq("id", userId),
               ]);
+              trackSignup(userId);
             }
           } catch {
             // Non-critical, don't block signup success
