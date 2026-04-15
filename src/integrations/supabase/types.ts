@@ -294,6 +294,80 @@ export type Database = {
           },
         ]
       }
+      dummy_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          dummy_user_id: string | null
+          id: string
+          is_verified: boolean
+          transaction_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          dummy_user_id?: string | null
+          id?: string
+          is_verified?: boolean
+          transaction_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          dummy_user_id?: string | null
+          id?: string
+          is_verified?: boolean
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dummy_transactions_dummy_user_id_fkey"
+            columns: ["dummy_user_id"]
+            isOneToOne: false
+            referencedRelation: "dummy_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dummy_users: {
+        Row: {
+          ban_reason: string | null
+          created_at: string
+          email: string
+          id: string
+          is_banned: boolean
+          points_balance: number
+          queue_position: number
+          referral_code: string | null
+          selected_goal: string | null
+          total_annual_spend: number
+        }
+        Insert: {
+          ban_reason?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          is_banned?: boolean
+          points_balance?: number
+          queue_position?: number
+          referral_code?: string | null
+          selected_goal?: string | null
+          total_annual_spend?: number
+        }
+        Update: {
+          ban_reason?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          is_banned?: boolean
+          points_balance?: number
+          queue_position?: number
+          referral_code?: string | null
+          selected_goal?: string | null
+          total_annual_spend?: number
+        }
+        Relationships: []
+      }
       ghost_users: {
         Row: {
           created_at: string | null

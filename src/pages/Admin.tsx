@@ -286,6 +286,8 @@ const Admin = () => {
   const { isAdmin, loading, signOut, user: authUser } = useAuth();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
+  const [dummyUsers, setDummyUsers] = useState<any[]>([]);
+  const [dummyTransactions, setDummyTransactions] = useState<any[]>([]);
   const [surveys, setSurveys] = useState<any[]>([]);
   const [surveyQuestions, setSurveyQuestions] = useState<any[]>([]);
   const [surveyOptions, setSurveyOptions] = useState<any[]>([]);
@@ -359,6 +361,8 @@ const Admin = () => {
     switch_to_referral_app_ids: [] as string[],
   });
   const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0 });
+  const [dummyGenCount, setDummyGenCount] = useState("10");
+  const [dummyGenDate, setDummyGenDate] = useState(new Date().toISOString().split("T")[0]);
   const [newSurvey, setNewSurvey] = useState({
     title: "",
     description: "",
@@ -376,7 +380,7 @@ const Admin = () => {
   const fetchData = async () => {
     setRefreshing(true);
     try {
-      const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, surveyRes, sQuestionRes, sOptionRes, sRespRes, errorsRes, incidentsRes, blacklistRes, referralsRes] = await Promise.all([
+      const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, surveyRes, sQuestionRes, sOptionRes, sRespRes, errorsRes, incidentsRes, blacklistRes, referralsRes, dummyUsersRes, dummyTxsRes] = await Promise.all([
         supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
         supabase.from("ghost_users").select("id", { count: "exact", head: true }),
         supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
@@ -392,11 +396,15 @@ const Admin = () => {
         supabase.from("system_errors" as any).select("*").order("created_at", { ascending: false }).limit(100),
         supabase.from("security_incidents").select("*").order("created_at", { ascending: false }).limit(100),
         supabase.from("blacklisted_entities").select("*").order("created_at", { ascending: false }),
-        supabase.from("referrals").select("referrer_id")
+        supabase.from("referrals").select("referrer_id"),
+        supabase.from("dummy_users" as any).select("*").order("created_at", { ascending: false }),
+        supabase.from("dummy_transactions" as any).select("*").order("created_at", { ascending: false })
       ]);
 
       const profs = (profilesRes.data as ProfileRow[]) || [];
       setProfiles(profs);
+      setDummyUsers(dummyUsersRes.data || []);
+      setDummyTransactions(dummyTxsRes.data || []);
       setErrorLogs(errorsRes.data || []);
       setSecurityIncidents(incidentsRes.data || []);
       setBlacklistedEntities(blacklistRes.data || []);
@@ -862,6 +870,78 @@ const Admin = () => {
     await fetchData();
   };
 
+  const handleGenerateDummyUsers = async () => {
+    const count = parseInt(dummyGenCount) || 0;
+    if (count <= 0) return;
+    setSaving(true);
+    try {
+      const domains = ["gmail.com", "yahoo.com"];
+      const prefixes = ["alex", "sam", "jordan", "taylor", "morgan", "casey", "quinn", "jamie", "riley", "avery", "blake", "reese", "parker", "skyler", "charlie", "dakota", "finley", "hayden", "logan", "micah", "payton", "river", "rowan", "sage", "sawyer", "shiloh", "tatum", "zuri"];
+
+      const newUsers = [];
+      const newTransactions = [];
+      const date = new Date(dummyGenDate);
+
+      for (let i = 0; i < count; i++) {
+        const id = crypto.randomUUID();
+        const email = `${prefixes[Math.floor(Math.random() * prefixes.length)]}${Math.floor(Math.random() * 9999)}@${domains[Math.floor(Math.random() * domains.length)]}`;
+        const points = Math.floor(Math.random() * 15000) + 500;
+        const spend = Math.floor(Math.random() * 4500000) + 100000;
+        const queuePos = Math.floor(Math.random() * 5000) + 1;
+
+        newUsers.push({
+          id,
+          email,
+          total_annual_spend: spend,
+          points_balance: points,
+          queue_position: queuePos,
+          created_at: date.toISOString(),
+          referral_code: Math.random().toString(36).substring(2, 10).toUpperCase()
+        });
+
+        // Generate 1-3 transactions per user
+        const txCount = Math.floor(Math.random() * 3) + 1;
+        for (let j = 0; j < txCount; j++) {
+          newTransactions.push({
+            dummy_user_id: id,
+            amount: Math.floor(spend / 12 / (txCount)) + (Math.floor(Math.random() * 10000)),
+            transaction_id: `TXN${Math.random().toString(36).substring(2, 12).toUpperCase()}`,
+            created_at: date.toISOString(),
+            is_verified: true
+          });
+        }
+      }
+
+      const { error: usersError } = await supabase.from("dummy_users" as any).insert(newUsers);
+      if (usersError) throw usersError;
+
+      const { error: txsError } = await supabase.from("dummy_transactions" as any).insert(newTransactions);
+      if (txsError) throw txsError;
+
+      toast({ title: "Dummy users generated", description: `Successfully created ${count} users and ${newTransactions.length} transactions.` });
+      await fetchData();
+    } catch (error: any) {
+      toast({ title: "Generation failed", description: error.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleClearDummyUsers = async () => {
+    if (!confirm("Are you sure you want to clear all dummy users and transactions?")) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("dummy_users" as any).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+      toast({ title: "Dummy data cleared" });
+      await fetchData();
+    } catch (error: any) {
+      toast({ title: "Clear failed", description: error.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const downloadDecisionAnalytics = () => {
     const rows = [["App Name", "Category", "Total Responses", "Has App", "Doesn't Have", "Would Switch", "Switch Completed", "Referral Clicked", "Referral Approved", "% Selected"]];
     for (const app of decisionApps) {
@@ -895,6 +975,10 @@ const Admin = () => {
       const key = p.created_at?.split("T")[0];
       if (key && days[key]) days[key].signups++;
     }
+    for (const p of dummyUsers) {
+      const key = p.created_at?.split("T")[0];
+      if (key && days[key]) days[key].signups++;
+    }
     for (const a of activities) {
       const key = a.created_at?.split("T")[0];
       if (key && days[key]) {
@@ -906,8 +990,12 @@ const Admin = () => {
       const key = t.submitted_at?.split("T")[0];
       if (key && days[key]) days[key].verifications++;
     }
+    for (const t of dummyTransactions) {
+      const key = t.created_at?.split("T")[0];
+      if (key && days[key]) days[key].verifications++;
+    }
     return Object.values(days);
-  }, [profiles, activities, verificationTxs]);
+  }, [profiles, activities, verificationTxs, dummyUsers, dummyTransactions]);
 
   if (loading) {
     return (
@@ -922,19 +1010,33 @@ const Admin = () => {
   if (!isAdmin) return null;
 
   const referralApps = decisionApps.filter(a => a.category === "referral");
-  const totalSpend = profiles.reduce((s, p) => s + (p.total_annual_spend || 0), 0);
-  const totalPoints = profiles.reduce((s, p) => s + (p.points_balance || 0), 0);
-  const totalRevenue = verificationTxs.filter(t => t.is_verified).reduce((s, t) => s + Number(t.verified_amount || 0), 0);
+
+  const combinedProfiles = [...profiles, ...dummyUsers];
+  const combinedTransactions = [
+    ...verificationTxs,
+    ...dummyTransactions.map(dt => ({
+      ...dt,
+      user_id: dt.dummy_user_id,
+      submitted_at: dt.created_at,
+      verified_amount: dt.amount,
+      is_verified: dt.is_verified,
+      is_duplicate: false
+    }))
+  ];
+
+  const totalSpend = combinedProfiles.reduce((s, p) => s + (Number(p.total_annual_spend) || 0), 0);
+  const totalPoints = combinedProfiles.reduce((s, p) => s + (p.points_balance || 0), 0);
+  const totalRevenue = combinedTransactions.filter(t => t.is_verified).reduce((s, t) => s + Number(t.verified_amount || 0), 0);
   const pendingWithdrawals = infWithdrawals.filter((w: any) => w.status === "pending").length;
   const pendingApps = infApps.filter((a: any) => a.status === "pending_review" || a.status === "pending_appeal").length;
-  const bannedCount = profiles.filter(p => p.is_banned).length;
-  const activeUsers = profiles.filter(p => !p.is_banned).length;
+  const bannedCount = combinedProfiles.filter(p => p.is_banned).length;
+  const activeUsers = combinedProfiles.filter(p => !p.is_banned).length;
 
   const pendingDecisionApprovals = decisionResponses.filter(r => r.referral_screenshot_url && !r.referral_approved).length;
   const pendingSurveyApprovals = surveyResponses.filter(r => r.screenshot_url && r.status === "pending").length;
 
   const counts: Record<string, number> = {
-    users: profiles.length,
+    users: combinedProfiles.length,
     warnings: userWarnings.length,
     ghosts: ghostCount,
     activity: activities.length,
@@ -943,7 +1045,7 @@ const Admin = () => {
     dec_submissions: pendingDecisionApprovals,
     surveys: pendingSurveyApprovals,
     analytics: decisionResponses.length,
-    verification: verificationTxs.length,
+    verification: combinedTransactions.length,
     inf_apps: pendingApps,
     inf_wallets: infWallets.filter((w: any) => w.status === "pending_activation").length,
     inf_referrals: infReferrals.length,
@@ -956,8 +1058,8 @@ const Admin = () => {
   const cardCls = "rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm p-6";
 
   const filteredProfiles = searchQuery
-    ? profiles.filter(p => p.email.toLowerCase().includes(searchQuery.toLowerCase()) || p.id.includes(searchQuery))
-    : profiles;
+    ? combinedProfiles.filter(p => p.email.toLowerCase().includes(searchQuery.toLowerCase()) || p.id.includes(searchQuery))
+    : combinedProfiles;
 
   const tabTitle: Record<AdminTab, string> = {
     overview: "Dashboard", users: "Users", ghosts: "Ghost Users", activity: "Activity Log",
@@ -982,27 +1084,27 @@ const Admin = () => {
     const fmtVal = (n: number) => cv(n).toFixed(2);
     const today = new Date().toISOString().split("T")[0];
 
-    const verifiedTxs = verificationTxs.filter(t => t.is_verified);
+    const verifiedTxs = combinedTransactions.filter(t => t.is_verified);
     const totalVerified = verifiedTxs.reduce((s, t) => s + Number(t.verified_amount || 0), 0);
     const totalInfluencerPayouts = infWithdrawals.filter((w: any) => w.status === "approved").reduce((s: number, w: any) => s + (w.amount || 0), 0);
     const totalVoucherValue = 0; // placeholder if vouchers data available
 
     // Computed stats for statement
     const totalReferrals = activities.filter(a => a.action_type === "referral").length;
-    const avgSpendPerUser = profiles.length > 0 ? totalSpend / profiles.length : 0;
-    const usersWithGoals = profiles.filter(p => p.selected_goal).length;
-    const usersOffQueue = profiles.filter(p => (p.queue_position ?? 999) <= 0).length;
-    const usersOnQueue = profiles.filter(p => (p.queue_position ?? 0) > 0).length;
+    const avgSpendPerUser = combinedProfiles.length > 0 ? totalSpend / combinedProfiles.length : 0;
+    const usersWithGoals = combinedProfiles.filter(p => p.selected_goal).length;
+    const usersOffQueue = combinedProfiles.filter(p => (p.queue_position ?? 999) <= 0).length;
+    const usersOnQueue = combinedProfiles.filter(p => (p.queue_position ?? 0) > 0).length;
     const totalInfluencerReferralEarnings = infReferrals.reduce((s: number, r: any) => s + (r.reward_amount || 0), 0);
     const pendingInfluencerPayouts = infWithdrawals.filter((w: any) => w.status === "pending").reduce((s: number, w: any) => s + (w.amount || 0), 0);
     const activeInfluencers = infWallets.filter((w: any) => w.status === "active").length;
     const totalInfluencerBalance = infWallets.reduce((s: number, w: any) => s + (w.balance || 0), 0);
-    const duplicateTxs = verificationTxs.filter(t => t.is_duplicate).length;
-    const unverifiedTxs = verificationTxs.filter(t => !t.is_verified && !t.is_duplicate).length;
+    const duplicateTxs = combinedTransactions.filter(t => t.is_duplicate).length;
+    const unverifiedTxs = combinedTransactions.filter(t => !t.is_verified && !t.is_duplicate).length;
     const decisionTotalResponses = decisionResponses.length;
     const decisionSwitchCompleted = decisionResponses.filter(r => r.switch_completed).length;
     const goalBreakdown: Record<string, number> = {};
-    profiles.forEach(p => { if (p.selected_goal) goalBreakdown[p.selected_goal] = (goalBreakdown[p.selected_goal] || 0) + 1; });
+    combinedProfiles.forEach(p => { if (p.selected_goal) goalBreakdown[p.selected_goal] = (goalBreakdown[p.selected_goal] || 0) + 1; });
 
     const lines = [
       ["KARBALI PLATFORM — FINANCIAL STATEMENT"],
@@ -1010,7 +1112,7 @@ const Admin = () => {
       [],
       ["═══ 1. PLATFORM OVERVIEW ═══"],
       ["Metric", "Value"],
-      ["Total Registered Users", String(profiles.length)],
+      ["Total Registered Users", String(combinedProfiles.length)],
       ["Active Users", String(activeUsers)],
       ["Banned Users", String(bannedCount)],
       ["Users On Queue", String(usersOnQueue)],
@@ -1053,7 +1155,7 @@ const Admin = () => {
       ["Metric", "Value"],
       ["Total Points in Circulation", totalPoints.toLocaleString()],
       [`Points Monetary Value (${sym})`, `${sym}${fmtVal(totalPoints * 0.5)}`],
-      ["Average Points Per User", profiles.length > 0 ? Math.round(totalPoints / profiles.length).toLocaleString() : "0"],
+      ["Average Points Per User", combinedProfiles.length > 0 ? Math.round(totalPoints / combinedProfiles.length).toLocaleString() : "0"],
       [],
       ["═══ 5. GOAL DISTRIBUTION ═══"],
       ["Goal Type", "Users"],
@@ -1192,7 +1294,7 @@ const Admin = () => {
             {activeTab === "overview" && (
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                  <MetricCard label="Total Users" value={formatCompact(profiles.length)} icon={Users} trend="up" trendLabel={`${formatCompact(activeUsers)} active`} />
+                  <MetricCard label="Total Users" value={formatCompact(combinedProfiles.length)} icon={Users} trend="up" trendLabel={`${formatCompact(activeUsers)} active`} />
                   <MetricCard label="Annual Spend" value={formatNairaCompact(totalSpend)} icon={Wallet} trend="up" trendLabel="All users" />
                   <MetricCard label="Processed Revenue" value={formatNairaCompact(totalRevenue)} icon={DollarSign} trend="up" trendLabel={`${verificationTxs.filter(t => t.is_verified).length} verified txns`} />
                   <MetricCard label="Total Points" value={formatCompact(totalPoints)} icon={Star} trend="neutral" trendLabel="In circulation" />
@@ -1533,13 +1635,50 @@ const Admin = () => {
 
             {/* ═══ GHOSTS ═══ */}
             {activeTab === "ghosts" && (
-              <div className={cardCls}>
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                    <Ghost className="w-8 h-8 text-muted-foreground/40" />
+              <div className="space-y-6">
+                <div className={cardCls}>
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                      <Ghost className="w-8 h-8 text-muted-foreground/40" />
+                    </div>
+                    <p className="text-4xl font-bold text-foreground">{ghostCount}</p>
+                    <p className="text-[12px] text-muted-foreground mt-2">Ghost users seeded in the waitlist queue</p>
                   </div>
-                  <p className="text-4xl font-bold text-foreground">{ghostCount}</p>
-                  <p className="text-[12px] text-muted-foreground mt-2">Ghost users seeded in the waitlist queue</p>
+                </div>
+
+                <div className={cardCls}>
+                  <SectionHeader title="Generate Dummy Users" subtitle="Inflate user metrics for records and financial statements" />
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[11px] text-muted-foreground font-medium">Number of Users</label>
+                        <input
+                          type="number"
+                          value={dummyGenCount}
+                          onChange={e => setDummyGenCount(e.target.value)}
+                          placeholder="10"
+                          className={`${inputCls} mt-1.5`}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] text-muted-foreground font-medium">Registration Date</label>
+                        <input
+                          type="date"
+                          value={dummyGenDate}
+                          onChange={e => setDummyGenDate(e.target.value)}
+                          className={`${inputCls} mt-1.5`}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <Btn variant="primary" onClick={handleGenerateDummyUsers} disabled={saving} className="flex-1">
+                        <Plus className="w-3.5 h-3.5" /> {saving ? "Generating..." : "Generate Dummy Users"}
+                      </Btn>
+                      <Btn variant="destructive" onClick={handleClearDummyUsers} disabled={saving} className="px-6">
+                        <Trash2 className="w-3.5 h-3.5" /> Clear All Dummy Data
+                      </Btn>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -1877,7 +2016,7 @@ const Admin = () => {
                     <span className="w-24 shrink-0 text-right">Status</span>
                   </TableHeader>
                   <div className="max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-                    {verificationTxs.map(tx => {
+                    {combinedTransactions.map(tx => {
                       return (
                         <TableRow key={tx.id} className={tx.is_duplicate ? "bg-destructive/5" : ""}>
                           <span className="flex-1 min-w-0"><UserLink userId={tx.user_id} /></span>
