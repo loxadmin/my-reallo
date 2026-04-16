@@ -294,6 +294,38 @@ export type Database = {
           },
         ]
       }
+      dummy_activity: {
+        Row: {
+          action_type: string
+          created_at: string
+          dummy_user_id: string | null
+          id: string
+          positions_moved: number
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          dummy_user_id?: string | null
+          id?: string
+          positions_moved?: number
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          dummy_user_id?: string | null
+          id?: string
+          positions_moved?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dummy_activity_dummy_user_id_fkey"
+            columns: ["dummy_user_id"]
+            isOneToOne: false
+            referencedRelation: "dummy_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dummy_transactions: {
         Row: {
           amount: number
@@ -331,6 +363,10 @@ export type Database = {
       }
       dummy_users: {
         Row: {
+          annual_data_spend: number | null
+          annual_electricity_spend: number | null
+          annual_food_spend: number | null
+          annual_transport_spend: number | null
           ban_reason: string | null
           created_at: string
           email: string
@@ -340,9 +376,16 @@ export type Database = {
           queue_position: number
           referral_code: string | null
           selected_goal: string | null
+          spend_verified: boolean | null
+          target_amount: number | null
           total_annual_spend: number
+          user_type: string | null
         }
         Insert: {
+          annual_data_spend?: number | null
+          annual_electricity_spend?: number | null
+          annual_food_spend?: number | null
+          annual_transport_spend?: number | null
           ban_reason?: string | null
           created_at?: string
           email: string
@@ -352,9 +395,16 @@ export type Database = {
           queue_position?: number
           referral_code?: string | null
           selected_goal?: string | null
+          spend_verified?: boolean | null
+          target_amount?: number | null
           total_annual_spend?: number
+          user_type?: string | null
         }
         Update: {
+          annual_data_spend?: number | null
+          annual_electricity_spend?: number | null
+          annual_food_spend?: number | null
+          annual_transport_spend?: number | null
           ban_reason?: string | null
           created_at?: string
           email?: string
@@ -364,7 +414,10 @@ export type Database = {
           queue_position?: number
           referral_code?: string | null
           selected_goal?: string | null
+          spend_verified?: boolean | null
+          target_amount?: number | null
           total_annual_spend?: number
+          user_type?: string | null
         }
         Relationships: []
       }
