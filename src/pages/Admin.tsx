@@ -383,6 +383,14 @@ const Admin = () => {
     if (!loading && !isAdmin) navigate("/");
   }, [loading, isAdmin, navigate]);
 
+  const ensureDummyTables = async () => {
+    const { data, error } = await supabase.rpc("ensure_dummy_data_tables");
+    if (error) {
+      return false;
+    }
+    return Boolean(data);
+  };
+
   const fetchData = async () => {
     setRefreshing(true);
     try {
@@ -413,6 +421,15 @@ const Admin = () => {
         isMissingRelationError(dummyUsersRes.error, "dummy_users") ||
         isMissingRelationError(dummyTxsRes.error, "dummy_transactions") ||
         isMissingRelationError(dummyActivitiesRes.error, "dummy_activity");
+
+      if (missingDummyTables) {
+        const bootstrapped = await ensureDummyTables();
+        if (bootstrapped) {
+          setDummyTablesUnavailable(false);
+          await fetchData();
+          return;
+        }
+      }
 
       setDummyTablesUnavailable(missingDummyTables);
       setProfiles(profs);
@@ -886,12 +903,16 @@ const Admin = () => {
 
   const handleGenerateDummyUsers = async () => {
     if (dummyTablesUnavailable) {
-      toast({
-        title: "Dummy data unavailable",
-        description: "Dummy tables are not available in this Supabase environment yet.",
-        variant: "destructive"
-      });
-      return;
+      const bootstrapped = await ensureDummyTables();
+      if (!bootstrapped) {
+        toast({
+          title: "Dummy data unavailable",
+          description: "Dummy tables are not available in this Supabase environment yet.",
+          variant: "destructive"
+        });
+        return;
+      }
+      setDummyTablesUnavailable(false);
     }
 
     const count = parseInt(dummyGenCount) || 0;
