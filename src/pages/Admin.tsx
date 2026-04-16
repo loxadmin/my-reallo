@@ -13,6 +13,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "@/hooks/use-toast";
 import { sendNotification } from "@/lib/notifications";
+import { isMissingRelationError } from "@/lib/supabaseErrorGuards";
 import WaterBackground from "@/components/WaterBackground";
 import UserProfileDrawer from "@/components/UserProfileDrawer";
 import AdvertiserManagement from "@/components/admin/AdvertiserManagement";
@@ -367,6 +368,7 @@ const Admin = () => {
   const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0 });
   const [dummyGenCount, setDummyGenCount] = useState("10");
   const [dummyGenDate, setDummyGenDate] = useState(new Date().toISOString().split("T")[0]);
+  const [dummyTablesUnavailable, setDummyTablesUnavailable] = useState(false);
   const [newSurvey, setNewSurvey] = useState({
     title: "",
     description: "",
@@ -407,10 +409,16 @@ const Admin = () => {
       ]);
 
       const profs = (profilesRes.data as ProfileRow[]) || [];
+      const missingDummyTables =
+        isMissingRelationError(dummyUsersRes.error, "dummy_users") ||
+        isMissingRelationError(dummyTxsRes.error, "dummy_transactions") ||
+        isMissingRelationError(dummyActivitiesRes.error, "dummy_activity");
+
+      setDummyTablesUnavailable(missingDummyTables);
       setProfiles(profs);
-      setDummyUsers((dummyUsersRes.data as ProfileRow[]) || []);
-      setDummyTransactions(dummyTxsRes.data || []);
-      setDummyActivities((dummyActivitiesRes.data as ActivityRow[]) || []);
+      setDummyUsers(missingDummyTables ? [] : ((dummyUsersRes.data as ProfileRow[]) || []));
+      setDummyTransactions(missingDummyTables ? [] : (dummyTxsRes.data || []));
+      setDummyActivities(missingDummyTables ? [] : ((dummyActivitiesRes.data as ActivityRow[]) || []));
       setErrorLogs(errorsRes.data || []);
       setSecurityIncidents(incidentsRes.data || []);
       setBlacklistedEntities(blacklistRes.data || []);
@@ -877,6 +885,15 @@ const Admin = () => {
   };
 
   const handleGenerateDummyUsers = async () => {
+    if (dummyTablesUnavailable) {
+      toast({
+        title: "Dummy data unavailable",
+        description: "Dummy tables are not available in this Supabase environment yet.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const count = parseInt(dummyGenCount) || 0;
     if (count <= 0) return;
     setSaving(true);
@@ -964,13 +981,31 @@ const Admin = () => {
       toast({ title: "Dummy users generated", description: `Successfully created ${count} users, ${newTransactions.length} transactions, and ${newActivities.length} activities.` });
       await fetchData();
     } catch (error: any) {
-      toast({ title: "Generation failed", description: error.message, variant: "destructive" });
+      if (isMissingRelationError(error, "dummy_users") || isMissingRelationError(error, "dummy_transactions") || isMissingRelationError(error, "dummy_activity")) {
+        setDummyTablesUnavailable(true);
+        toast({
+          title: "Dummy data unavailable",
+          description: "Dummy tables are not available in this Supabase environment yet.",
+          variant: "destructive"
+        });
+      } else {
+        toast({ title: "Generation failed", description: error.message, variant: "destructive" });
+      }
     } finally {
       setSaving(false);
     }
   };
 
   const handleClearDummyUsers = async () => {
+    if (dummyTablesUnavailable) {
+      toast({
+        title: "Dummy data unavailable",
+        description: "Dummy tables are not available in this Supabase environment yet.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!confirm("Are you sure you want to clear all dummy users and transactions?")) return;
     setSaving(true);
     try {
@@ -979,7 +1014,16 @@ const Admin = () => {
       toast({ title: "Dummy data cleared" });
       await fetchData();
     } catch (error: any) {
-      toast({ title: "Clear failed", description: error.message, variant: "destructive" });
+      if (isMissingRelationError(error, "dummy_users")) {
+        setDummyTablesUnavailable(true);
+        toast({
+          title: "Dummy data unavailable",
+          description: "Dummy tables are not available in this Supabase environment yet.",
+          variant: "destructive"
+        });
+      } else {
+        toast({ title: "Clear failed", description: error.message, variant: "destructive" });
+      }
     } finally {
       setSaving(false);
     }
