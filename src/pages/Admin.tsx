@@ -30,6 +30,9 @@ interface ProfileRow {
   id: string; email: string; total_annual_spend: number; selected_goal: string | null;
   queue_position: number; referral_code: string | null; points_balance: number; created_at: string;
   is_banned: boolean; ban_reason: string | null;
+  annual_data_spend?: number; annual_electricity_spend?: number;
+  annual_food_spend?: number; annual_transport_spend?: number;
+  user_type?: string; spend_verified?: boolean; target_amount?: number;
 }
 interface ActivityRow { id: string; user_id: string; action_type: string; positions_moved: number; created_at: string; }
 interface GoalCategoryRow { id: string; goal_type: string; subcategory: string | null; label: string; max_price: number; }
@@ -286,8 +289,9 @@ const Admin = () => {
   const { isAdmin, loading, signOut, user: authUser } = useAuth();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
-  const [dummyUsers, setDummyUsers] = useState<any[]>([]);
+  const [dummyUsers, setDummyUsers] = useState<ProfileRow[]>([]);
   const [dummyTransactions, setDummyTransactions] = useState<any[]>([]);
+  const [dummyActivities, setDummyActivities] = useState<ActivityRow[]>([]);
   const [surveys, setSurveys] = useState<any[]>([]);
   const [surveyQuestions, setSurveyQuestions] = useState<any[]>([]);
   const [surveyOptions, setSurveyOptions] = useState<any[]>([]);
@@ -380,7 +384,7 @@ const Admin = () => {
   const fetchData = async () => {
     setRefreshing(true);
     try {
-      const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, surveyRes, sQuestionRes, sOptionRes, sRespRes, errorsRes, incidentsRes, blacklistRes, referralsRes, dummyUsersRes, dummyTxsRes] = await Promise.all([
+      const [profilesRes, ghostsRes, activityRes, goalsRes, settingsRes, vtRes, daRes, drRes, surveyRes, sQuestionRes, sOptionRes, sRespRes, errorsRes, incidentsRes, blacklistRes, referralsRes, dummyUsersRes, dummyTxsRes, dummyActivitiesRes] = await Promise.all([
         supabase.from("profiles").select("*").order("queue_position", { ascending: true }),
         supabase.from("ghost_users").select("id", { count: "exact", head: true }),
         supabase.from("waitlist_activity").select("*").order("created_at", { ascending: false }).limit(50),
@@ -398,13 +402,15 @@ const Admin = () => {
         supabase.from("blacklisted_entities").select("*").order("created_at", { ascending: false }),
         supabase.from("referrals").select("referrer_id"),
         supabase.from("dummy_users").select("*").order("created_at", { ascending: false }),
-        supabase.from("dummy_transactions").select("*").order("created_at", { ascending: false })
+        supabase.from("dummy_transactions").select("*").order("created_at", { ascending: false }),
+        supabase.from("dummy_activity").select("*").order("created_at", { ascending: false }).limit(50)
       ]);
 
       const profs = (profilesRes.data as ProfileRow[]) || [];
       setProfiles(profs);
-      setDummyUsers(dummyUsersRes.data || []);
+      setDummyUsers((dummyUsersRes.data as ProfileRow[]) || []);
       setDummyTransactions(dummyTxsRes.data || []);
+      setDummyActivities((dummyActivitiesRes.data as ActivityRow[]) || []);
       setErrorLogs(errorsRes.data || []);
       setSecurityIncidents(incidentsRes.data || []);
       setBlacklistedEntities(blacklistRes.data || []);
@@ -877,37 +883,71 @@ const Admin = () => {
     try {
       const domains = ["gmail.com", "yahoo.com"];
       const prefixes = ["alex", "sam", "jordan", "taylor", "morgan", "casey", "quinn", "jamie", "riley", "avery", "blake", "reese", "parker", "skyler", "charlie", "dakota", "finley", "hayden", "logan", "micah", "payton", "river", "rowan", "sage", "sawyer", "shiloh", "tatum", "zuri"];
+      const userTypes = ["student", "parent", "others"];
 
       const newUsers = [];
       const newTransactions = [];
-      const date = new Date(dummyGenDate);
+      const newActivities = [];
+      const baseDate = new Date(dummyGenDate);
 
       for (let i = 0; i < count; i++) {
         const id = crypto.randomUUID();
         const email = `${prefixes[Math.floor(Math.random() * prefixes.length)]}${Math.floor(Math.random() * 9999)}@${domains[Math.floor(Math.random() * domains.length)]}`;
         const points = Math.floor(Math.random() * 15000) + 500;
-        const spend = Math.floor(Math.random() * 4500000) + 100000;
         const queuePos = Math.floor(Math.random() * 5000) + 1;
+
+        // Randomize registration time a bit within the day
+        const date = new Date(baseDate);
+        date.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60), Math.floor(Math.random() * 60));
+
+        const annualData = Math.floor(Math.random() * 120000) + 10000;
+        const annualElec = Math.floor(Math.random() * 240000) + 20000;
+        const annualFood = Math.floor(Math.random() * 1200000) + 100000;
+        const annualTransport = Math.floor(Math.random() * 600000) + 50000;
+        const spend = annualData + annualElec + annualFood + annualTransport;
 
         newUsers.push({
           id,
           email,
           total_annual_spend: spend,
+          annual_data_spend: annualData,
+          annual_electricity_spend: annualElec,
+          annual_food_spend: annualFood,
+          annual_transport_spend: annualTransport,
+          user_type: userTypes[Math.floor(Math.random() * userTypes.length)],
+          spend_verified: Math.random() > 0.3,
           points_balance: points,
           queue_position: queuePos,
           created_at: date.toISOString(),
-          referral_code: Math.random().toString(36).substring(2, 10).toUpperCase()
+          referral_code: Math.random().toString(36).substring(2, 10).toUpperCase(),
+          target_amount: Math.floor(spend * 0.4)
         });
 
         // Generate 1-3 transactions per user
         const txCount = Math.floor(Math.random() * 3) + 1;
         for (let j = 0; j < txCount; j++) {
+          const txDate = new Date(date);
+          txDate.setHours(txDate.getHours() + j + 1);
           newTransactions.push({
             dummy_user_id: id,
             amount: Math.floor(spend / 12 / (txCount)) + (Math.floor(Math.random() * 10000)),
             transaction_id: `TXN${Math.random().toString(36).substring(2, 12).toUpperCase()}`,
-            created_at: date.toISOString(),
+            created_at: txDate.toISOString(),
             is_verified: true
+          });
+        }
+
+        // Generate 1-5 dummy activities
+        const actCount = Math.floor(Math.random() * 5) + 1;
+        const actionTypes = ["referral", "survey", "task", "verification"];
+        for (let k = 0; k < actCount; k++) {
+          const actDate = new Date(date);
+          actDate.setHours(actDate.getHours() + k + 1);
+          newActivities.push({
+            dummy_user_id: id,
+            action_type: actionTypes[Math.floor(Math.random() * actionTypes.length)],
+            positions_moved: Math.floor(Math.random() * 1000) + 10,
+            created_at: actDate.toISOString()
           });
         }
       }
@@ -918,7 +958,10 @@ const Admin = () => {
       const { error: txsError } = await supabase.from("dummy_transactions").insert(newTransactions);
       if (txsError) throw txsError;
 
-      toast({ title: "Dummy users generated", description: `Successfully created ${count} users and ${newTransactions.length} transactions.` });
+      const { error: actsError } = await supabase.from("dummy_activity").insert(newActivities);
+      if (actsError) throw actsError;
+
+      toast({ title: "Dummy users generated", description: `Successfully created ${count} users, ${newTransactions.length} transactions, and ${newActivities.length} activities.` });
       await fetchData();
     } catch (error: any) {
       toast({ title: "Generation failed", description: error.message, variant: "destructive" });
@@ -986,6 +1029,13 @@ const Admin = () => {
         else days[key].points += (a.positions_moved || 0);
       }
     }
+    for (const a of dummyActivities) {
+      const key = a.created_at?.split("T")[0];
+      if (key && days[key]) {
+        if (a.action_type === "referral") days[key].referrals++;
+        else days[key].points += (a.positions_moved || 0);
+      }
+    }
     for (const t of verificationTxs) {
       const key = t.submitted_at?.split("T")[0];
       if (key && days[key]) days[key].verifications++;
@@ -1023,6 +1073,13 @@ const Admin = () => {
       is_duplicate: false
     }))
   ];
+  const combinedActivities = [
+    ...activities,
+    ...dummyActivities.map(da => ({
+      ...da,
+      user_id: da.user_id || (da as any).dummy_user_id
+    }))
+  ];
 
   const totalSpend = combinedProfiles.reduce((s, p) => s + (Number(p.total_annual_spend) || 0), 0);
   const totalPoints = combinedProfiles.reduce((s, p) => s + (p.points_balance || 0), 0);
@@ -1039,7 +1096,7 @@ const Admin = () => {
     users: combinedProfiles.length,
     warnings: userWarnings.length,
     ghosts: ghostCount,
-    activity: activities.length,
+    activity: combinedActivities.length,
     goals: goalCategories.length,
     decisions: decisionApps.length,
     dec_submissions: pendingDecisionApprovals,
@@ -1090,7 +1147,7 @@ const Admin = () => {
     const totalVoucherValue = 0; // placeholder if vouchers data available
 
     // Computed stats for statement
-    const totalReferrals = activities.filter(a => a.action_type === "referral").length;
+    const totalReferrals = combinedActivities.filter(a => a.action_type === "referral").length;
     const avgSpendPerUser = combinedProfiles.length > 0 ? totalSpend / combinedProfiles.length : 0;
     const usersWithGoals = combinedProfiles.filter(p => p.selected_goal).length;
     const usersOffQueue = combinedProfiles.filter(p => (p.queue_position ?? 999) <= 0).length;
@@ -1215,7 +1272,7 @@ const Admin = () => {
 
   // Clickable user email that opens profile drawer
   const UserLink = ({ userId }: { userId: string }) => {
-    const email = profiles.find(p => p.id === userId)?.email || userId?.slice(0, 8);
+    const email = combinedProfiles.find(p => p.id === userId)?.email || userId?.slice(0, 8);
     return (
       <button onClick={() => setDrawerUserId(userId)} className="text-[12px] font-semibold text-primary hover:underline cursor-pointer text-left truncate">
         {email}
@@ -1296,7 +1353,7 @@ const Admin = () => {
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                   <MetricCard label="Total Users" value={formatCompact(combinedProfiles.length)} icon={Users} trend="up" trendLabel={`${formatCompact(activeUsers)} active`} />
                   <MetricCard label="Annual Spend" value={formatNairaCompact(totalSpend)} icon={Wallet} trend="up" trendLabel="All users" />
-                  <MetricCard label="Processed Revenue" value={formatNairaCompact(totalRevenue)} icon={DollarSign} trend="up" trendLabel={`${verificationTxs.filter(t => t.is_verified).length} verified txns`} />
+                  <MetricCard label="Processed Revenue" value={formatNairaCompact(totalRevenue)} icon={DollarSign} trend="up" trendLabel={`${combinedTransactions.filter(t => t.is_verified).length} verified txns`} />
                   <MetricCard label="Total Points" value={formatCompact(totalPoints)} icon={Star} trend="neutral" trendLabel="In circulation" />
                   <MetricCard label="Banned Users" value={formatCompact(bannedCount)} icon={Ban} trend={bannedCount > 0 ? "down" : "neutral"} trendLabel={`${formatCompact(userWarnings.length)} warnings`} />
                   <MetricCard label="Ghost Users" value={formatCompact(ghostCount)} icon={Ghost} trend="neutral" trendLabel="Seeded" />
@@ -1469,7 +1526,7 @@ const Admin = () => {
                         { label: "Active Users", value: activeUsers, color: "text-primary" },
                         { label: "Banned Users", value: bannedCount, color: "text-destructive" },
                         { label: "Warnings Issued", value: userWarnings.length, color: "text-foreground" },
-                        { label: "Duplicate Transactions", value: verificationTxs.filter(t => t.is_duplicate).length, color: "text-destructive" },
+                      { label: "Duplicate Transactions", value: combinedTransactions.filter(t => t.is_duplicate).length, color: "text-destructive" },
                       ].map((item) => (
                         <div key={item.label} className="px-5 py-3 flex items-center justify-between">
                           <span className="text-[12px] text-muted-foreground">{item.label}</span>
@@ -1505,7 +1562,7 @@ const Admin = () => {
                     <span className="w-20 shrink-0 text-right">Positions</span>
                     <span className="w-24 shrink-0 text-right">Date</span>
                   </TableHeader>
-                  {activities.slice(0, 6).map((a) => (
+                  {[...combinedActivities].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6).map((a) => (
                     <TableRow key={a.id}>
                       <span className="flex-1 min-w-0 text-[11px] text-muted-foreground font-mono truncate">{a.user_id.slice(0, 8)}</span>
                       <span className="w-24 shrink-0 text-[11px] text-foreground capitalize">{a.action_type}</span>
@@ -1513,7 +1570,7 @@ const Admin = () => {
                       <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
                     </TableRow>
                   ))}
-                  {activities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No activity yet</div>}
+                  {combinedActivities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No activity yet</div>}
                 </TableCard>
               </>
             )}
@@ -1687,7 +1744,7 @@ const Admin = () => {
             {activeTab === "activity" && (
               <TableCard>
                 <div className="px-5 py-4 border-b border-border/30">
-                  <h3 className="text-[13px] font-semibold text-foreground">Activity Log ({activities.length})</h3>
+                  <h3 className="text-[13px] font-semibold text-foreground">Activity Log ({combinedActivities.length})</h3>
                 </div>
                 <TableHeader>
                   <span className="flex-1">User</span>
@@ -1696,7 +1753,7 @@ const Admin = () => {
                   <span className="w-28 text-right">Date</span>
                 </TableHeader>
                 <div className="max-h-[600px] overflow-y-auto">
-                  {activities.map((a) => (
+                  {[...combinedActivities].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((a) => (
                     <TableRow key={a.id}>
                       <span className="flex-1 text-[12px] text-muted-foreground font-mono">{a.user_id.slice(0, 12)}...</span>
                       <span className="w-32 text-[12px] text-foreground capitalize">{a.action_type}</span>
@@ -1704,7 +1761,7 @@ const Admin = () => {
                       <span className="w-28 text-right text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
                     </TableRow>
                   ))}
-                  {activities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No activity yet</div>}
+                  {combinedActivities.length === 0 && <div className="py-8 text-center text-muted-foreground text-[12px]">No activity yet</div>}
                 </div>
               </TableCard>
             )}
@@ -1995,9 +2052,9 @@ const Admin = () => {
             {activeTab === "verification" && (
               <div className="space-y-6">
                 <div className="grid grid-cols-3 gap-4">
-                  <MetricCard label="Verified" value={verificationTxs.filter(t => t.is_verified).length} icon={CheckCircle2} trend="up" trendLabel="Confirmed" />
-                  <MetricCard label="Pending" value={verificationTxs.filter(t => !t.is_verified && !t.is_duplicate).length} icon={Activity} />
-                  <MetricCard label="Duplicates" value={verificationTxs.filter(t => t.is_duplicate).length} icon={AlertTriangle} trend="down" trendLabel="Flagged" />
+                  <MetricCard label="Verified" value={combinedTransactions.filter(t => t.is_verified).length} icon={CheckCircle2} trend="up" trendLabel="Confirmed" />
+                  <MetricCard label="Pending" value={combinedTransactions.filter(t => !t.is_verified && !t.is_duplicate).length} icon={Activity} />
+                  <MetricCard label="Duplicates" value={combinedTransactions.filter(t => t.is_duplicate).length} icon={AlertTriangle} trend="down" trendLabel="Flagged" />
                 </div>
                 <div className={cardCls}>
                   <SectionHeader title="Upload Transaction CSV" subtitle="CSV columns: transaction_id, amount" />
@@ -2045,7 +2102,7 @@ const Admin = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-3 gap-4">
                   <MetricCard label="Total Warnings" value={userWarnings.length} icon={AlertTriangle} trend="neutral" trendLabel="All time" />
-                  <MetricCard label="Banned Users" value={bannedCount} icon={Ban} trend={bannedCount > 0 ? "down" : "neutral"} trendLabel={`of ${profiles.length}`} />
+                  <MetricCard label="Banned Users" value={bannedCount} icon={Ban} trend={bannedCount > 0 ? "down" : "neutral"} trendLabel={`of ${combinedProfiles.length}`} />
                   <MetricCard label="Dup TX IDs" value={verificationTxs.filter(t => t.is_duplicate).length} icon={Activity} />
                 </div>
 
@@ -2060,7 +2117,7 @@ const Admin = () => {
                         <h3 className="text-[13px] font-semibold text-foreground">🚩 Users with Duplicate Transaction IDs</h3>
                       </div>
                       {dupUserIds.map(uid => {
-                        const prof = profiles.find(p => p.id === uid);
+                        const prof = combinedProfiles.find(p => p.id === uid);
                         const userDups = dupTxs.filter(t => t.user_id === uid);
                         return (
                           <div key={uid} className="px-5 py-4 border-b border-border/20 last:border-0">
@@ -2108,7 +2165,7 @@ const Admin = () => {
                   </TableHeader>
                   <div className="max-h-[400px] overflow-y-auto">
                     {userWarnings.map(w => {
-                      const userEmail = profiles.find(p => p.id === w.user_id)?.email || w.user_id.slice(0, 8);
+                      const userEmail = combinedProfiles.find(p => p.id === w.user_id)?.email || w.user_id.slice(0, 8);
                       return (
                         <TableRow key={w.id}>
                           <span className="flex-1 text-[12px] font-medium text-foreground">{userEmail}</span>
@@ -2239,7 +2296,7 @@ const Admin = () => {
                     {infReferrals.map((r: any) => {
                       return (
                         <TableRow key={r.id}>
-                          <span className="flex-1 min-w-0 flex items-center gap-1 text-[11px]"><button onClick={() => setDrawerUserId(r.influencer_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8)}</button> → <button onClick={() => setDrawerUserId(r.referred_user_id)} className="text-primary hover:underline truncate">{profiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8)}</button></span>
+                          <span className="flex-1 min-w-0 flex items-center gap-1 text-[11px]"><button onClick={() => setDrawerUserId(r.influencer_id)} className="text-primary hover:underline truncate">{combinedProfiles.find(p => p.id === r.influencer_id)?.email || r.influencer_id?.slice(0, 8)}</button> → <button onClick={() => setDrawerUserId(r.referred_user_id)} className="text-primary hover:underline truncate">{combinedProfiles.find(p => p.id === r.referred_user_id)?.email || r.referred_user_id?.slice(0, 8)}</button></span>
                           <span className="w-20 shrink-0 text-right text-[11px] text-primary font-semibold">{formatNaira(r.reward_amount)}</span>
                           <span className="w-24 shrink-0 text-right text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
                         </TableRow>
@@ -2388,7 +2445,7 @@ const Admin = () => {
                         <div className="p-4 border-t border-border/20 space-y-2">
                           <p className="text-[11px] text-primary font-semibold">Pending Approvals</p>
                           {pendingSubs.map((sub: any) => {
-                            const userEmail = profiles.find(p => p.id === sub.user_id)?.email || sub.user_id?.slice(0, 8);
+                            const userEmail = combinedProfiles.find(p => p.id === sub.user_id)?.email || sub.user_id?.slice(0, 8);
                             const enrollment = enrollments.find((e: any) => e.user_id === sub.user_id);
                             return (
                               <div key={sub.id} className="rounded-lg border border-border/40 p-3">
@@ -3109,7 +3166,7 @@ const Admin = () => {
                   <div className="max-h-[700px] overflow-y-auto">
                     {errorLogs.map((log) => {
                       const isSelected = selectedUserId === log.id;
-                      const userEmail = profiles.find(p => p.id === log.user_id)?.email || log.user_id?.slice(0, 8) || "Guest";
+                      const userEmail = combinedProfiles.find(p => p.id === log.user_id)?.email || log.user_id?.slice(0, 8) || "Guest";
                       return (
                         <div key={log.id} className="border-b border-border/10 last:border-0">
                           <TableRow onClick={() => setSelectedUserId(isSelected ? null : log.id)}>
@@ -3169,7 +3226,7 @@ const Admin = () => {
       </div>
       {/* User Profile Drawer */}
       {(() => {
-        const drawerProfile = drawerUserId ? profiles.find(p => p.id === drawerUserId) : null;
+        const drawerProfile = drawerUserId ? combinedProfiles.find(p => p.id === drawerUserId) : null;
         const dp = drawerProfile as any;
         return (
           <UserProfileDrawer

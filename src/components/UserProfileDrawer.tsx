@@ -12,6 +12,12 @@ interface ProfileData {
   created_at: string;
   is_banned: boolean;
   ban_reason: string | null;
+  annual_data_spend?: number;
+  annual_electricity_spend?: number;
+  annual_food_spend?: number;
+  annual_transport_spend?: number;
+  user_type?: string;
+  spend_verified?: boolean;
 }
 
 interface UserProfileDrawerProps {
@@ -99,9 +105,23 @@ const UserProfileDrawer = ({
               <div className="rounded-xl border border-border/40 bg-muted/10 p-4">
                 <p className="text-[11px] font-semibold text-foreground mb-3 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-primary" /> Account Details</p>
                 <Field label="Email" value={profile.email} />
+                <Field label="User Type" value={<span className="capitalize">{profile.user_type || "User"}</span>} />
                 <Field label="Queue Position" value={`#${profile.queue_position}`} />
                 <Field label="Points Balance" value={profile.points_balance.toLocaleString()} />
-                <Field label="Annual Spend" value={formatNaira(profile.total_annual_spend || 0)} />
+                <Field label="Annual Spend" value={
+                  <div className="text-right">
+                    <p className="font-bold">{formatNaira(profile.total_annual_spend || 0)}</p>
+                    {profile.spend_verified && <p className="text-[9px] text-primary">✓ Verified</p>}
+                  </div>
+                } />
+                {(profile.annual_data_spend || profile.annual_electricity_spend || profile.annual_food_spend || profile.annual_transport_spend) && (
+                  <div className="mt-2 pt-2 border-t border-border/10 space-y-1">
+                    {profile.annual_data_spend ? <Field label="Data" value={formatNaira(profile.annual_data_spend)} /> : null}
+                    {profile.annual_electricity_spend ? <Field label="Electricity" value={formatNaira(profile.annual_electricity_spend)} /> : null}
+                    {profile.annual_food_spend ? <Field label="Food" value={formatNaira(profile.annual_food_spend)} /> : null}
+                    {profile.annual_transport_spend ? <Field label="Transport" value={formatNaira(profile.annual_transport_spend)} /> : null}
+                  </div>
+                )}
                 <Field label="Selected Goal" value={profile.selected_goal} />
                 <Field label="Referral Code" value={profile.referral_code} mono />
                 <Field label="Referrals Made" value={referralCount} />
