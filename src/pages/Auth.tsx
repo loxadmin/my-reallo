@@ -135,13 +135,6 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Block non-recognized email domains
-      if (!isAllowedEmailDomain(email)) {
-        setError(getBlockedDomainMessage());
-        setLoading(false);
-        return;
-      }
-
       if (mode === "login") {
         const result = loginSchema.safeParse({ email, password });
         if (!result.success) {
@@ -158,6 +151,13 @@ const Auth = () => {
         if (error) setError(sanitizeAuthError(error));
         else navigate("/dashboard");
       } else {
+        // Block non-recognized email domains for new signups only
+        if (!isAllowedEmailDomain(email)) {
+          setError(getBlockedDomainMessage());
+          setLoading(false);
+          return;
+        }
+
         // Validate user type selection
         if (!userType) {
           setFieldErrors({ userType: "Please select your user type" });
