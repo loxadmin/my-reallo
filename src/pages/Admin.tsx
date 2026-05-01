@@ -841,6 +841,39 @@ const Admin = () => {
     }
 
     toast({ title: "Survey created with questions" });
+    // Notify all users (in-app + email) about the new survey
+    try {
+      const { data: allUsers } = await supabase.from("profiles").select("id,email").eq("is_banned", false);
+      const newSurveyId = surveyData?.id;
+      if (allUsers && Array.isArray(allUsers) && newSurveyId) {
+        const notifs = allUsers.map((u: any) => ({
+          user_id: u.id,
+          type: "new_survey",
+          title: `New survey: ${newSurvey.title}`,
+          message: `Earn ${newSurvey.points_reward} pts for completing "${newSurvey.title}". You can finish it right inside the Karbali Assistant chat.`,
+        }));
+        // chunk inserts to keep payload small
+        const chunkSize = 200;
+        for (let i = 0; i < notifs.length; i += chunkSize) {
+          await supabase.from("notifications" as any).insert(notifs.slice(i, i + chunkSize) as any);
+        }
+        // Email blast (best-effort, fire-and-forget)
+        const emails = allUsers.map((u: any) => u.email).filter(Boolean);
+        if (emails.length) {
+          for (const email of emails) {
+            void supabase.functions.invoke("send-notification-email", {
+              body: {
+                to: email,
+                subject: `New survey live on Karbali — earn ${newSurvey.points_reward} pts`,
+                body: `A new survey "${newSurvey.title}" is live. Sign in and chat with your Karbali Assistant to complete it for ${newSurvey.points_reward} points.`,
+              },
+            }).catch(() => {});
+          }
+        }
+      }
+    } catch (notifErr) {
+      console.error("Survey notification error:", notifErr);
+    }
     setNewSurvey({
       title: "",
       description: "",
