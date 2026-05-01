@@ -539,7 +539,7 @@ const Admin = () => {
   const handleSaveGoals = async () => {
     setSaving(true);
     for (const [id, changes] of Object.entries(editedGoals)) {
-      await supabase.from("goal_categories").update(changes).eq("id", id);
+      await supabase.from("goal_categories").update(changes as any).eq("id", id);
     }
     toast({ title: "Goals updated" });
     await fetchData();
