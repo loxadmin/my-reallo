@@ -145,7 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [applyResolvedUserState, resolveUserState, user?.id]);
 
-  // 48-hour inactivity auto-logout
+  // 72-hour inactivity auto-logout
   useEffect(() => {
     if (!authReady || !user) return;
     const checkInactivity = () => {
