@@ -291,24 +291,30 @@ export type Database = {
           goal_type: string
           id: string
           label: string
+          lock_period_months: number
           max_price: number
           subcategory: string | null
+          user_segments: string[]
         }
         Insert: {
           created_at?: string | null
           goal_type: string
           id?: string
           label: string
+          lock_period_months?: number
           max_price?: number
           subcategory?: string | null
+          user_segments?: string[]
         }
         Update: {
           created_at?: string | null
           goal_type?: string
           id?: string
           label?: string
+          lock_period_months?: number
           max_price?: number
           subcategory?: string | null
+          user_segments?: string[]
         }
         Relationships: []
       }
