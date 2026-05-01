@@ -551,9 +551,11 @@ const Admin = () => {
     await supabase.from("goal_categories").insert({
       goal_type: newGoal.goal_type, subcategory: newGoal.subcategory || null,
       label: newGoal.label, max_price: newGoal.max_price,
-    });
+      user_segments: newGoal.user_segments,
+      lock_period_months: newGoal.lock_period_months,
+    } as any);
     toast({ title: "Goal category created" });
-    setNewGoal({ goal_type: "", subcategory: "", label: "", max_price: 0 });
+    setNewGoal({ goal_type: "", subcategory: "", label: "", max_price: 0, user_segments: [], lock_period_months: 6 });
     await fetchData();
   };
 
