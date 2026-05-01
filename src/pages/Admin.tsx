@@ -36,7 +36,7 @@ interface ProfileRow {
   user_type?: string; spend_verified?: boolean; target_amount?: number;
 }
 interface ActivityRow { id: string; user_id: string; action_type: string; positions_moved: number; created_at: string; }
-interface GoalCategoryRow { id: string; goal_type: string; subcategory: string | null; label: string; max_price: number; }
+interface GoalCategoryRow { id: string; goal_type: string; subcategory: string | null; label: string; max_price: number; user_segments?: string[] | null; lock_period_months?: number | null; }
 interface DecisionAppRow {
   id: string; app_name: string; app_logo_url: string | null; category: string;
   points_select: number; points_switch_intent: number; points_switch_complete: number;
