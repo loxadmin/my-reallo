@@ -365,7 +365,7 @@ const Admin = () => {
     switch_link: "", referral_message: "", referral_link: "", referral_points: 10000,
     switch_to_referral_app_ids: [] as string[],
   });
-  const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0 });
+  const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0, user_segments: [] as string[], lock_period_months: 6 });
   const [dummyGenCount, setDummyGenCount] = useState("10");
   const [dummyGenDate, setDummyGenDate] = useState(new Date().toISOString().split("T")[0]);
   const [dummyTablesUnavailable, setDummyTablesUnavailable] = useState(false);
