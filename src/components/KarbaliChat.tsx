@@ -112,6 +112,8 @@ async function streamChat({
   profile,
   verify_page_active,
   active_apps,
+  available_goals,
+  available_surveys,
   onDelta,
   onDone,
   signal,
@@ -120,6 +122,8 @@ async function streamChat({
   profile: any;
   verify_page_active?: boolean;
   active_apps?: string[];
+  available_goals?: any[];
+  available_surveys?: any[];
   onDelta: (text: string) => void;
   onDone: (fullText: string) => void;
   signal?: AbortSignal;
@@ -137,7 +141,7 @@ async function streamChat({
       "Authorization": `Bearer ${authToken}`,
       "apikey": supabaseKey,
     },
-    body: JSON.stringify({ messages, profile, verify_page_active, active_apps }),
+    body: JSON.stringify({ messages, profile, verify_page_active, active_apps, available_goals, available_surveys }),
     signal,
   });
 
@@ -224,6 +228,8 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [verifyPageActive, setVerifyPageActive] = useState<boolean>(true);
   const [activeApps, setActiveApps] = useState<string[]>([]);
+  const [availableGoals, setAvailableGoals] = useState<any[]>([]);
+  const [availableSurveys, setAvailableSurveys] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isChatReady, setIsChatReady] = useState(false);
@@ -239,12 +245,16 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
 
   useEffect(() => {
     const fetchContext = async () => {
-      const [settingsRes, appsRes] = await Promise.all([
+      const [settingsRes, appsRes, goalsRes, surveysRes] = await Promise.all([
         supabase.from("admin_settings").select("value").eq("key", "verify_page_active").maybeSingle(),
         supabase.from("decision_apps" as any).select("app_name").eq("is_active", true),
+        supabase.from("goal_categories").select("*"),
+        supabase.from("surveys").select("id,title,description,points_reward,completion_link,completion_instructions").eq("is_active", true),
       ]);
       if (settingsRes.data) setVerifyPageActive(settingsRes.data.value !== "false");
       if (appsRes.data) setActiveApps((appsRes.data as any[]).map(a => a.app_name));
+      if (goalsRes.data) setAvailableGoals(goalsRes.data as any[]);
+      if (surveysRes.data) setAvailableSurveys(surveysRes.data as any[]);
     };
     void fetchContext();
   }, []);
@@ -329,6 +339,12 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
         },
         verify_page_active: verifyPageActive,
         active_apps: activeApps,
+        available_goals: (availableGoals || []).filter((g: any) => {
+          const segs: string[] = Array.isArray(g.user_segments) ? g.user_segments : [];
+          if (!profile.user_type) return segs.length === 0; // unknown segment -> show only universal goals
+          return segs.length === 0 || segs.includes(profile.user_type);
+        }),
+        available_surveys: availableSurveys,
         onDelta: upsertAssistant,
         onDone: async (fullText) => {
           const { cleanText, profileUpdate, navigate: navRoute, appRequest } = parseActions(fullText);

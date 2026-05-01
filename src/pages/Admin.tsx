@@ -36,7 +36,7 @@ interface ProfileRow {
   user_type?: string; spend_verified?: boolean; target_amount?: number;
 }
 interface ActivityRow { id: string; user_id: string; action_type: string; positions_moved: number; created_at: string; }
-interface GoalCategoryRow { id: string; goal_type: string; subcategory: string | null; label: string; max_price: number; }
+interface GoalCategoryRow { id: string; goal_type: string; subcategory: string | null; label: string; max_price: number; user_segments?: string[] | null; lock_period_months?: number | null; }
 interface DecisionAppRow {
   id: string; app_name: string; app_logo_url: string | null; category: string;
   points_select: number; points_switch_intent: number; points_switch_complete: number;
@@ -365,7 +365,7 @@ const Admin = () => {
     switch_link: "", referral_message: "", referral_link: "", referral_points: 10000,
     switch_to_referral_app_ids: [] as string[],
   });
-  const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0 });
+  const [newGoal, setNewGoal] = useState({ goal_type: "", subcategory: "", label: "", max_price: 0, user_segments: [] as string[], lock_period_months: 6 });
   const [dummyGenCount, setDummyGenCount] = useState("10");
   const [dummyGenDate, setDummyGenDate] = useState(new Date().toISOString().split("T")[0]);
   const [dummyTablesUnavailable, setDummyTablesUnavailable] = useState(false);
@@ -539,7 +539,7 @@ const Admin = () => {
   const handleSaveGoals = async () => {
     setSaving(true);
     for (const [id, changes] of Object.entries(editedGoals)) {
-      await supabase.from("goal_categories").update(changes).eq("id", id);
+      await supabase.from("goal_categories").update(changes as any).eq("id", id);
     }
     toast({ title: "Goals updated" });
     await fetchData();
@@ -551,9 +551,11 @@ const Admin = () => {
     await supabase.from("goal_categories").insert({
       goal_type: newGoal.goal_type, subcategory: newGoal.subcategory || null,
       label: newGoal.label, max_price: newGoal.max_price,
-    });
+      user_segments: newGoal.user_segments,
+      lock_period_months: newGoal.lock_period_months,
+    } as any);
     toast({ title: "Goal category created" });
-    setNewGoal({ goal_type: "", subcategory: "", label: "", max_price: 0 });
+    setNewGoal({ goal_type: "", subcategory: "", label: "", max_price: 0, user_segments: [], lock_period_months: 6 });
     await fetchData();
   };
 
@@ -839,6 +841,39 @@ const Admin = () => {
     }
 
     toast({ title: "Survey created with questions" });
+    // Notify all users (in-app + email) about the new survey
+    try {
+      const { data: allUsers } = await supabase.from("profiles").select("id,email").eq("is_banned", false);
+      const newSurveyId = surveyData?.id;
+      if (allUsers && Array.isArray(allUsers) && newSurveyId) {
+        const notifs = allUsers.map((u: any) => ({
+          user_id: u.id,
+          type: "new_survey",
+          title: `New survey: ${newSurvey.title}`,
+          message: `Earn ${newSurvey.points_reward} pts for completing "${newSurvey.title}". You can finish it right inside the Karbali Assistant chat.`,
+        }));
+        // chunk inserts to keep payload small
+        const chunkSize = 200;
+        for (let i = 0; i < notifs.length; i += chunkSize) {
+          await supabase.from("notifications" as any).insert(notifs.slice(i, i + chunkSize) as any);
+        }
+        // Email blast (best-effort, fire-and-forget)
+        const emails = allUsers.map((u: any) => u.email).filter(Boolean);
+        if (emails.length) {
+          for (const email of emails) {
+            void supabase.functions.invoke("send-notification-email", {
+              body: {
+                to: email,
+                subject: `New survey live on Karbali — earn ${newSurvey.points_reward} pts`,
+                body: `A new survey "${newSurvey.title}" is live. Sign in and chat with your Karbali Assistant to complete it for ${newSurvey.points_reward} points.`,
+              },
+            }).catch(() => {});
+          }
+        }
+      }
+    } catch (notifErr) {
+      console.error("Survey notification error:", notifErr);
+    }
     setNewSurvey({
       title: "",
       description: "",
@@ -1842,21 +1877,39 @@ const Admin = () => {
                     )}
                   </div>
                   <TableHeader>
-                    <span className="w-32">Type</span>
-                    <span className="w-32">Subcategory</span>
+                    <span className="w-28">Type</span>
+                    <span className="w-28">Subcategory</span>
                     <span className="flex-1">Label</span>
-                    <span className="w-28">Max Price</span>
+                    <span className="w-24">Max Price</span>
+                    <span className="w-44">Segments</span>
+                    <span className="w-20">Lock (mo)</span>
                     <span className="w-12"></span>
                   </TableHeader>
                   {goalCategories.map((cat) => {
                     const edited = editedGoals[cat.id] || {};
+                    const currentSegments = (edited.user_segments ?? cat.user_segments ?? []) as string[];
+                    const toggleSegment = (seg: string) => {
+                      const next = currentSegments.includes(seg)
+                        ? currentSegments.filter((s) => s !== seg)
+                        : [...currentSegments, seg];
+                      setEditedGoals((p) => ({ ...p, [cat.id]: { ...p[cat.id], user_segments: next } }));
+                    };
                     return (
                       <div key={cat.id} className="px-5 py-3 border-b border-border/20 last:border-0">
                         <div className="flex items-center gap-4">
-                          <input value={edited.goal_type ?? cat.goal_type} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], goal_type: e.target.value } }))} className={`w-32 ${inputCls}`} />
-                          <input value={edited.subcategory ?? (cat.subcategory || "")} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], subcategory: e.target.value || null } }))} className={`w-32 ${inputCls}`} />
+                          <input value={edited.goal_type ?? cat.goal_type} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], goal_type: e.target.value } }))} className={`w-28 ${inputCls}`} />
+                          <input value={edited.subcategory ?? (cat.subcategory || "")} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], subcategory: e.target.value || null } }))} className={`w-28 ${inputCls}`} />
                           <input value={edited.label ?? cat.label} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], label: e.target.value } }))} className={`flex-1 ${inputCls}`} />
-                          <input type="number" value={edited.max_price ?? cat.max_price} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], max_price: parseInt(e.target.value) || 0 } }))} className={`w-28 ${inputCls}`} />
+                          <input type="number" value={edited.max_price ?? cat.max_price} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], max_price: parseInt(e.target.value) || 0 } }))} className={`w-24 ${inputCls}`} />
+                          <div className="w-44 flex flex-wrap gap-1">
+                            {["student","parent","others"].map((seg) => (
+                              <button key={seg} type="button" onClick={() => toggleSegment(seg)}
+                                className={`px-2 py-0.5 text-[10px] rounded border ${currentSegments.includes(seg) ? "bg-primary text-primary-foreground border-primary" : "border-border/40 text-muted-foreground"}`}>
+                                {seg}
+                              </button>
+                            ))}
+                          </div>
+                          <input type="number" min={1} value={edited.lock_period_months ?? cat.lock_period_months ?? 6} onChange={e => setEditedGoals(p => ({ ...p, [cat.id]: { ...p[cat.id], lock_period_months: parseInt(e.target.value) || 6 } }))} className={`w-20 ${inputCls}`} />
                           <button onClick={() => handleDeleteGoal(cat.id)} className="w-12 flex justify-center text-destructive/60 hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                       </div>
@@ -1866,11 +1919,25 @@ const Admin = () => {
 
                 <div className={cardCls}>
                   <SectionHeader title="Add Goal Category" />
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                     <input value={newGoal.goal_type} onChange={e => setNewGoal(p => ({ ...p, goal_type: e.target.value }))} placeholder="Type (e.g. education)" className={inputCls} />
                     <input value={newGoal.subcategory} onChange={e => setNewGoal(p => ({ ...p, subcategory: e.target.value }))} placeholder="Subcategory (optional)" className={inputCls} />
                     <input value={newGoal.label} onChange={e => setNewGoal(p => ({ ...p, label: e.target.value }))} placeholder="Label" className={inputCls} />
                     <input type="number" value={newGoal.max_price} onChange={e => setNewGoal(p => ({ ...p, max_price: parseInt(e.target.value) || 0 }))} placeholder="Max price" className={inputCls} />
+                  </div>
+                  <div className="flex items-center gap-3 mb-4 flex-wrap">
+                    <span className="text-[10px] text-muted-foreground">Segments:</span>
+                    {["student","parent","others"].map((seg) => (
+                      <button key={seg} type="button"
+                        onClick={() => setNewGoal(p => ({ ...p, user_segments: p.user_segments.includes(seg) ? p.user_segments.filter(s => s !== seg) : [...p.user_segments, seg] }))}
+                        className={`px-2 py-1 text-[11px] rounded border ${newGoal.user_segments.includes(seg) ? "bg-primary text-primary-foreground border-primary" : "border-border/40 text-muted-foreground"}`}>
+                        {seg}
+                      </button>
+                    ))}
+                    <span className="text-[10px] text-muted-foreground ml-2">Lock months:</span>
+                    <input type="number" min={1} value={newGoal.lock_period_months}
+                      onChange={e => setNewGoal(p => ({ ...p, lock_period_months: parseInt(e.target.value) || 6 }))}
+                      className={`w-20 ${inputCls}`} />
                   </div>
                   <Btn variant="primary" onClick={handleCreateGoal}><Plus className="w-3 h-3" /> Add Goal</Btn>
                 </div>

@@ -85,9 +85,9 @@ export function getPasswordStrength(password: string): {
   return { score, label: labels[score], color: colors[score] };
 }
 
-// ─── 48-hour inactivity management ───
+// ─── 72-hour inactivity management ───
 const INACTIVITY_KEY = "karbali-last-activity";
-const MAX_INACTIVITY_MS = 48 * 60 * 60 * 1000; // 48 hours
+const MAX_INACTIVITY_MS = 72 * 60 * 60 * 1000; // 72 hours
 
 export function updateLastActivity(): void {
   try {
