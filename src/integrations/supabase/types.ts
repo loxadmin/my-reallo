@@ -156,33 +156,6 @@ export type Database = {
         }
         Relationships: []
       }
-      blacklisted_entities: {
-        Row: {
-          created_at: string
-          expires_at: string | null
-          fingerprint: string | null
-          id: string
-          ip_address: string | null
-          reason: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at?: string | null
-          fingerprint?: string | null
-          id?: string
-          ip_address?: string | null
-          reason: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string | null
-          fingerprint?: string | null
-          id?: string
-          ip_address?: string | null
-          reason?: string
-        }
-        Relationships: []
-      }
       decision_apps: {
         Row: {
           app_logo_url: string | null
@@ -293,80 +266,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      dummy_transactions: {
-        Row: {
-          amount: number
-          created_at: string
-          dummy_user_id: string | null
-          id: string
-          is_verified: boolean
-          transaction_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          dummy_user_id?: string | null
-          id?: string
-          is_verified?: boolean
-          transaction_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          dummy_user_id?: string | null
-          id?: string
-          is_verified?: boolean
-          transaction_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "dummy_transactions_dummy_user_id_fkey"
-            columns: ["dummy_user_id"]
-            isOneToOne: false
-            referencedRelation: "dummy_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      dummy_users: {
-        Row: {
-          ban_reason: string | null
-          created_at: string
-          email: string
-          id: string
-          is_banned: boolean
-          points_balance: number
-          queue_position: number
-          referral_code: string | null
-          selected_goal: string | null
-          total_annual_spend: number
-        }
-        Insert: {
-          ban_reason?: string | null
-          created_at?: string
-          email: string
-          id?: string
-          is_banned?: boolean
-          points_balance?: number
-          queue_position?: number
-          referral_code?: string | null
-          selected_goal?: string | null
-          total_annual_spend?: number
-        }
-        Update: {
-          ban_reason?: string | null
-          created_at?: string
-          email?: string
-          id?: string
-          is_banned?: boolean
-          points_balance?: number
-          queue_position?: number
-          referral_code?: string | null
-          selected_goal?: string | null
-          total_annual_spend?: number
-        }
-        Relationships: []
       }
       ghost_users: {
         Row: {
@@ -1229,39 +1128,6 @@ export type Database = {
           },
         ]
       }
-      security_incidents: {
-        Row: {
-          created_at: string
-          details: Json | null
-          fingerprint: string | null
-          id: string
-          ip_address: string | null
-          severity: string
-          type: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          details?: Json | null
-          fingerprint?: string | null
-          id?: string
-          ip_address?: string | null
-          severity?: string
-          type: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          details?: Json | null
-          fingerprint?: string | null
-          id?: string
-          ip_address?: string | null
-          severity?: string
-          type?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       signup_devices: {
         Row: {
           created_at: string
@@ -1447,44 +1313,6 @@ export type Database = {
           },
           {
             foreignKeyName: "survey_responses_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      system_errors: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string
-          metadata: Json | null
-          stack: string | null
-          url: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message: string
-          metadata?: Json | null
-          stack?: string | null
-          url?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string
-          metadata?: Json | null
-          stack?: string | null
-          url?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "system_errors_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
