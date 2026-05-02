@@ -2890,13 +2890,13 @@ const Admin = () => {
                       <Download className="w-3.5 h-3.5" /> Download sitemap.xml
                     </Btn>
                     <Btn
-                      variant="ghost"
+                      variant="outline"
                       onClick={() => window.open("/sitemap.xml", "_blank")}
                     >
                       <ExternalLink className="w-3.5 h-3.5" /> View live sitemap
                     </Btn>
                     <Btn
-                      variant="ghost"
+                      variant="outline"
                       onClick={() => window.open("/robots.txt", "_blank")}
                     >
                       <ExternalLink className="w-3.5 h-3.5" /> View robots.txt
