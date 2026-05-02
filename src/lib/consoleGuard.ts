@@ -7,6 +7,21 @@ export const initConsoleGuard = () => {
   // Only disable in production to allow development
   if (import.meta.env.MODE === "development") return;
 
+  // Never run anti-debug protections for search engine crawlers, social bots,
+  // or headless browsers — otherwise the page gets replaced with the math
+  // equations decoy and Google indexes that instead of the real content.
+  try {
+    const ua = (navigator.userAgent || "").toLowerCase();
+    const botPattern = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|facebot|twitterbot|linkedinbot|embedly|quora link preview|pinterestbot|whatsapp|telegrambot|discordbot|googlebot|google-inspectiontool|chrome-lighthouse|headlesschrome|phantomjs|prerender|ahrefsbot|semrushbot|mj12bot|petalbot|yandexbot|duckduckbot|applebot/i;
+    const isHeadless = (navigator as any).webdriver === true;
+    if (botPattern.test(ua) || isHeadless) {
+      return;
+    }
+  } catch (e) {
+    // If anything fails, be safe and skip protections rather than risk hiding content from crawlers
+    return;
+  }
+
   // 1. Disable Right-Click
   document.addEventListener("contextmenu", (e) => {
     e.preventDefault();

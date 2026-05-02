@@ -1,8 +1,18 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /vouchers
+Disallow: /reset-password
+Disallow: /advertiser/
 
 User-agent: Bingbot
 Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /vouchers
+Disallow: /reset-password
+Disallow: /advertiser/
 
 User-agent: Twitterbot
 Allow: /
@@ -12,3 +22,10 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /vouchers
+Disallow: /reset-password
+Disallow: /advertiser/
+
+Sitemap: https://claim-glow-flow.lovable.app/sitemap.xml

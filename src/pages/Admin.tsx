@@ -2864,6 +2864,45 @@ const Admin = () => {
                   <p className="text-[10px] text-muted-foreground">Geolocation mapping: Nigeria → ₦, USA → $, UK → £, Europe → €, Others → $</p>
                   <Btn variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full"><Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save Settings"}</Btn>
                 </div>
+
+                {/* SEO / Sitemap */}
+                <div className="glass-card p-4 rounded-xl border border-border/30 space-y-3">
+                  <div>
+                    <h3 className="text-sm font-semibold flex items-center gap-2"><Download className="w-3.5 h-3.5" /> SEO & Sitemap</h3>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Download the sitemap.xml for submission to Google Search Console, Bing Webmaster Tools, etc.
+                      The live sitemap is served at <code className="text-primary">/sitemap.xml</code>.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Btn
+                      variant="primary"
+                      onClick={() => {
+                        const link = document.createElement("a");
+                        link.href = "/sitemap.xml";
+                        link.download = "sitemap.xml";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        toast({ title: "Sitemap downloaded", description: "sitemap.xml saved to your device." });
+                      }}
+                    >
+                      <Download className="w-3.5 h-3.5" /> Download sitemap.xml
+                    </Btn>
+                    <Btn
+                      variant="outline"
+                      onClick={() => window.open("/sitemap.xml", "_blank")}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> View live sitemap
+                    </Btn>
+                    <Btn
+                      variant="outline"
+                      onClick={() => window.open("/robots.txt", "_blank")}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> View robots.txt
+                    </Btn>
+                  </div>
+                </div>
               </div>
             )}
 
