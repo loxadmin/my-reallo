@@ -390,7 +390,7 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
         available_surveys: availableSurveys,
         onDelta: upsertAssistant,
         onDone: async (fullText) => {
-          const { cleanText, profileUpdate, navigate: navRoute, appRequest } = parseActions(fullText);
+          const { cleanText, profileUpdate, navigate: navRoute, appRequest, surveyComplete } = parseActions(fullText);
           const finalText = cleanText.trim() || (navRoute ? "Taking you there now…" : "Got it — I've saved that.");
           const userId = user.id;
 
@@ -428,6 +428,35 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
               user_id: user.id,
               metadata: { type: "app_request", app_name: appRequest },
             });
+          }
+
+          if (surveyComplete) {
+            try {
+              const survey = (availableSurveys || []).find((s: any) => s.id === surveyComplete.survey_id);
+              const reward = surveyComplete.passed ? (survey?.points_reward || 0) : 0;
+              const { error: insErr } = await supabase.from("survey_responses").insert({
+                user_id: user.id,
+                survey_id: surveyComplete.survey_id,
+                status: surveyComplete.passed ? "approved" : "rejected",
+                points_awarded: reward,
+                reviewed_at: new Date().toISOString(),
+                quiz_completed_at: new Date().toISOString(),
+              } as any);
+              if (!insErr && reward > 0) {
+                await supabase
+                  .from("profiles")
+                  .update({ points_balance: (profile.points_balance || 0) + reward })
+                  .eq("id", user.id);
+                toast({ title: "Survey complete!", description: `+${reward} points awarded.` });
+                await refreshProfile();
+              } else if (!insErr && !surveyComplete.passed) {
+                toast({ title: "Survey ended", description: "An incorrect answer ended this survey.", variant: "destructive" });
+              }
+              // Remove from available list so the assistant doesn't offer it again
+              setAvailableSurveys(prev => prev.filter((s: any) => s.id !== surveyComplete.survey_id));
+            } catch (e) {
+              console.error("survey complete error", e);
+            }
           }
           abortRef.current = null;
           setIsStreaming(false);
