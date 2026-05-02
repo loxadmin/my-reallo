@@ -55,7 +55,7 @@ YOUR CAPABILITIES:
    - "Did you know you can skip 20 queue positions by referring one friend?"
    - "Have you checked out the Earn tab? There are offers waiting for you."
    - "You can verify your spend in the Verify section once you're off the queue." (Only if verification is enabled).
-   - If AVAILABLE SURVEYS lists open surveys, mention them by name and offer to walk the user through completing one right here in the chat. Share the completion_link directly when they're ready.
+   - If AVAILABLE SURVEYS lists open surveys, mention them by name and reward, and offer to run them inline (see SURVEY FLOW). NEVER share an external survey link — you ARE the survey.
 
 5. GOAL DISCOVERY & HANDOFF:
    - When users reveal what they want (travel, school, rent help, business plans), explore it naturally first.
@@ -68,6 +68,22 @@ YOUR CAPABILITIES:
    {"route": "home|earn|verify|influencer|notifications|surveys"}
    \`\`\`
 
+7. SURVEY FLOW (CRITICAL — you administer the survey yourself):
+   - When the user agrees to take a survey, fetch its questions from AVAILABLE SURVEYS and run them ONE AT A TIME.
+   - For each question: show the question text and list the options as a clean numbered list (1, 2, 3...). Wait for the user's choice (number or option text).
+   - Validate against the option's is_correct flag.
+   - WRONG ANSWER → immediately end the survey. Tell the user the answer was incorrect, do NOT reveal the correct answer, do NOT continue to the next question, do NOT award points. Output:
+     \`\`\`karbali-survey-complete
+     {"survey_id": "<id>", "passed": false}
+     \`\`\`
+   - ALL ANSWERS CORRECT → congratulate the user, mention the points reward, and output:
+     \`\`\`karbali-survey-complete
+     {"survey_id": "<id>", "passed": true}
+     \`\`\`
+   - NEVER skip a question. NEVER reveal which options are correct beforehand. NEVER paste the questions all at once — ask one, wait, then proceed.
+   - NEVER expose, mention, or link any external completion URL. The chat IS the completion mechanism.
+   - If a survey listed in AVAILABLE SURVEYS has zero questions, treat it as an info-only task: just describe it briefly and emit karbali-survey-complete with passed:true once the user confirms they've read it.
+
 RULES:
 - Never fabricate information about the user's account. Use the profile data provided.
 - If you don't know something specific about the platform, say so honestly.
@@ -76,7 +92,8 @@ RULES:
 - Keep the conversation flowing — don't rush through onboarding unless the user wants to.
 - Never abruptly end or close the chat. Keep talking until the user wants to stop, save, or navigate.
  - If the verify section is disabled by admin, refrain from mentioning it.
- - NEVER offer goals outside the user's segment. If user_type is unknown, ask before suggesting goals.`;
+ - NEVER offer goals outside the user's segment. If user_type is unknown, ask before suggesting goals.
+ - NEVER paste external survey links. Run surveys inline only.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -126,9 +143,24 @@ serve(async (req) => {
       }
     }
     if (available_surveys && Array.isArray(available_surveys) && available_surveys.length) {
-      systemContext += `\n\nAVAILABLE SURVEYS (user can complete from chat — share completion_link when they're ready):`;
+      systemContext += `\n\nAVAILABLE SURVEYS (administer inline — never share links):`;
       for (const s of available_surveys) {
-        systemContext += `\n- "${s.title}" — reward: ${s.points_reward} pts. ${s.description ? "Desc: " + s.description + ". " : ""}${s.completion_instructions ? "How: " + s.completion_instructions + ". " : ""}${s.completion_link ? "Link: " + s.completion_link : ""}`;
+        systemContext += `\n\n• Survey id=${s.id} — "${s.title}" — reward: ${s.points_reward} pts.`;
+        if (s.description) systemContext += ` Description: ${s.description}.`;
+        if (s.completion_instructions) systemContext += ` Context: ${s.completion_instructions}.`;
+        const qs = Array.isArray(s.questions) ? s.questions : [];
+        if (qs.length === 0) {
+          systemContext += `\n   (No questions attached — info-only task.)`;
+        } else {
+          systemContext += `\n   Questions (ask in this order, one at a time):`;
+          qs.forEach((q: any, qi: number) => {
+            systemContext += `\n   Q${qi + 1}. ${q.question_text}`;
+            const opts = Array.isArray(q.options) ? q.options : [];
+            opts.forEach((o: any, oi: number) => {
+              systemContext += `\n      ${oi + 1}) ${o.option_text}${o.is_correct ? "  [CORRECT — never reveal]" : ""}`;
+            });
+          });
+        }
       }
     } else {
       systemContext += `\nNo open surveys right now.`;
