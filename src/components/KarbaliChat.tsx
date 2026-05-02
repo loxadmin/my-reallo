@@ -205,6 +205,7 @@ function parseActions(text: string) {
   let profileUpdate: Record<string, any> | undefined;
   let navigate: string | undefined;
   let appRequest: string | undefined;
+  let surveyComplete: { survey_id: string; passed: boolean } | undefined;
 
   const saveMatch = text.match(/```karbali-save\s*\n([\s\S]*?)\n```/);
   if (saveMatch) {
@@ -218,7 +219,15 @@ function parseActions(text: string) {
   if (appMatch) {
     try { const d = JSON.parse(appMatch[1]); appRequest = d.app_name; cleanText = cleanText.replace(appMatch[0], "").trim(); } catch { /* */ }
   }
-  return { cleanText, profileUpdate, navigate, appRequest };
+  const surveyMatch = text.match(/```karbali-survey-complete\s*\n([\s\S]*?)\n```/);
+  if (surveyMatch) {
+    try {
+      const d = JSON.parse(surveyMatch[1]);
+      if (d?.survey_id) surveyComplete = { survey_id: d.survey_id, passed: d.passed !== false };
+      cleanText = cleanText.replace(surveyMatch[0], "").trim();
+    } catch { /* */ }
+  }
+  return { cleanText, profileUpdate, navigate, appRequest, surveyComplete };
 }
 
 const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, onClose }: KarbaliChatProps) => {
@@ -249,15 +258,49 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
         supabase.from("admin_settings").select("value").eq("key", "verify_page_active").maybeSingle(),
         supabase.from("decision_apps" as any).select("app_name").eq("is_active", true),
         supabase.from("goal_categories").select("*"),
-        supabase.from("surveys").select("id,title,description,points_reward,completion_link,completion_instructions").eq("is_active", true),
+        supabase.from("surveys").select("id,title,description,points_reward,completion_instructions").eq("is_active", true),
       ]);
       if (settingsRes.data) setVerifyPageActive(settingsRes.data.value !== "false");
       if (appsRes.data) setActiveApps((appsRes.data as any[]).map(a => a.app_name));
       if (goalsRes.data) setAvailableGoals(goalsRes.data as any[]);
-      if (surveysRes.data) setAvailableSurveys(surveysRes.data as any[]);
+
+      // Fetch full survey content (questions + options w/ correct flags) so the
+      // assistant can run the survey inline. Also exclude surveys the user has
+      // already completed.
+      if (surveysRes.data && surveysRes.data.length) {
+        const surveyIds = (surveysRes.data as any[]).map(s => s.id);
+        const [qRes, oRes, doneRes] = await Promise.all([
+          supabase.from("survey_questions").select("id,survey_id,question_text,order_index").in("survey_id", surveyIds).order("order_index", { ascending: true }),
+          supabase.from("survey_options").select("id,question_id,option_text,is_correct"),
+          user?.id
+            ? supabase.from("survey_responses").select("survey_id").eq("user_id", user.id)
+            : Promise.resolve({ data: [] as any[] }),
+        ]);
+        const questions = (qRes.data || []) as any[];
+        const options = (oRes.data || []) as any[];
+        const doneIds = new Set(((doneRes as any).data || []).map((r: any) => r.survey_id));
+        const enriched = (surveysRes.data as any[])
+          .filter(s => !doneIds.has(s.id))
+          .map(s => ({
+            ...s,
+            questions: questions
+              .filter(q => q.survey_id === s.id)
+              .map(q => ({
+                id: q.id,
+                question_text: q.question_text,
+                order_index: q.order_index,
+                options: options
+                  .filter(o => o.question_id === q.id)
+                  .map(o => ({ id: o.id, option_text: o.option_text, is_correct: !!o.is_correct })),
+              })),
+          }));
+        setAvailableSurveys(enriched);
+      } else {
+        setAvailableSurveys([]);
+      }
     };
     void fetchContext();
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -347,7 +390,7 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
         available_surveys: availableSurveys,
         onDelta: upsertAssistant,
         onDone: async (fullText) => {
-          const { cleanText, profileUpdate, navigate: navRoute, appRequest } = parseActions(fullText);
+          const { cleanText, profileUpdate, navigate: navRoute, appRequest, surveyComplete } = parseActions(fullText);
           const finalText = cleanText.trim() || (navRoute ? "Taking you there now…" : "Got it — I've saved that.");
           const userId = user.id;
 
@@ -385,6 +428,35 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
               user_id: user.id,
               metadata: { type: "app_request", app_name: appRequest },
             });
+          }
+
+          if (surveyComplete) {
+            try {
+              const survey = (availableSurveys || []).find((s: any) => s.id === surveyComplete.survey_id);
+              const reward = surveyComplete.passed ? (survey?.points_reward || 0) : 0;
+              const { error: insErr } = await supabase.from("survey_responses").insert({
+                user_id: user.id,
+                survey_id: surveyComplete.survey_id,
+                status: surveyComplete.passed ? "approved" : "rejected",
+                points_awarded: reward,
+                reviewed_at: new Date().toISOString(),
+                quiz_completed_at: new Date().toISOString(),
+              } as any);
+              if (!insErr && reward > 0) {
+                await supabase
+                  .from("profiles")
+                  .update({ points_balance: (profile.points_balance || 0) + reward })
+                  .eq("id", user.id);
+                toast({ title: "Survey complete!", description: `+${reward} points awarded.` });
+                await refreshProfile();
+              } else if (!insErr && !surveyComplete.passed) {
+                toast({ title: "Survey ended", description: "An incorrect answer ended this survey.", variant: "destructive" });
+              }
+              // Remove from available list so the assistant doesn't offer it again
+              setAvailableSurveys(prev => prev.filter((s: any) => s.id !== surveyComplete.survey_id));
+            } catch (e) {
+              console.error("survey complete error", e);
+            }
           }
           abortRef.current = null;
           setIsStreaming(false);
