@@ -249,15 +249,49 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
         supabase.from("admin_settings").select("value").eq("key", "verify_page_active").maybeSingle(),
         supabase.from("decision_apps" as any).select("app_name").eq("is_active", true),
         supabase.from("goal_categories").select("*"),
-        supabase.from("surveys").select("id,title,description,points_reward,completion_link,completion_instructions").eq("is_active", true),
+        supabase.from("surveys").select("id,title,description,points_reward,completion_instructions").eq("is_active", true),
       ]);
       if (settingsRes.data) setVerifyPageActive(settingsRes.data.value !== "false");
       if (appsRes.data) setActiveApps((appsRes.data as any[]).map(a => a.app_name));
       if (goalsRes.data) setAvailableGoals(goalsRes.data as any[]);
-      if (surveysRes.data) setAvailableSurveys(surveysRes.data as any[]);
+
+      // Fetch full survey content (questions + options w/ correct flags) so the
+      // assistant can run the survey inline. Also exclude surveys the user has
+      // already completed.
+      if (surveysRes.data && surveysRes.data.length) {
+        const surveyIds = (surveysRes.data as any[]).map(s => s.id);
+        const [qRes, oRes, doneRes] = await Promise.all([
+          supabase.from("survey_questions").select("id,survey_id,question_text,order_index").in("survey_id", surveyIds).order("order_index", { ascending: true }),
+          supabase.from("survey_options").select("id,question_id,option_text,is_correct"),
+          user?.id
+            ? supabase.from("survey_responses").select("survey_id").eq("user_id", user.id)
+            : Promise.resolve({ data: [] as any[] }),
+        ]);
+        const questions = (qRes.data || []) as any[];
+        const options = (oRes.data || []) as any[];
+        const doneIds = new Set(((doneRes as any).data || []).map((r: any) => r.survey_id));
+        const enriched = (surveysRes.data as any[])
+          .filter(s => !doneIds.has(s.id))
+          .map(s => ({
+            ...s,
+            questions: questions
+              .filter(q => q.survey_id === s.id)
+              .map(q => ({
+                id: q.id,
+                question_text: q.question_text,
+                order_index: q.order_index,
+                options: options
+                  .filter(o => o.question_id === q.id)
+                  .map(o => ({ id: o.id, option_text: o.option_text, is_correct: !!o.is_correct })),
+              })),
+          }));
+        setAvailableSurveys(enriched);
+      } else {
+        setAvailableSurveys([]);
+      }
     };
     void fetchContext();
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) {
