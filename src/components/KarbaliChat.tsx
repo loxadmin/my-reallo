@@ -205,6 +205,7 @@ function parseActions(text: string) {
   let profileUpdate: Record<string, any> | undefined;
   let navigate: string | undefined;
   let appRequest: string | undefined;
+  let surveyComplete: { survey_id: string; passed: boolean } | undefined;
 
   const saveMatch = text.match(/```karbali-save\s*\n([\s\S]*?)\n```/);
   if (saveMatch) {
@@ -218,7 +219,15 @@ function parseActions(text: string) {
   if (appMatch) {
     try { const d = JSON.parse(appMatch[1]); appRequest = d.app_name; cleanText = cleanText.replace(appMatch[0], "").trim(); } catch { /* */ }
   }
-  return { cleanText, profileUpdate, navigate, appRequest };
+  const surveyMatch = text.match(/```karbali-survey-complete\s*\n([\s\S]*?)\n```/);
+  if (surveyMatch) {
+    try {
+      const d = JSON.parse(surveyMatch[1]);
+      if (d?.survey_id) surveyComplete = { survey_id: d.survey_id, passed: d.passed !== false };
+      cleanText = cleanText.replace(surveyMatch[0], "").trim();
+    } catch { /* */ }
+  }
+  return { cleanText, profileUpdate, navigate, appRequest, surveyComplete };
 }
 
 const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, onClose }: KarbaliChatProps) => {
