@@ -17,7 +17,7 @@ export const logError = async (data: ErrorData) => {
   if (isSystemErrorsTableUnavailable) return;
 
   try {
-    const { error } = await supabase.from("system_errors").insert({
+    const { error } = await (supabase as any).from("system_errors").insert({
       message: data.message,
       stack: data.stack || null,
       user_id: data.user_id || (await supabase.auth.getSession()).data.session?.user.id || null,

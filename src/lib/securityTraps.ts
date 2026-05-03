@@ -86,7 +86,7 @@ export async function checkBlacklist(): Promise<boolean> {
   const fingerprint = getDeviceFingerprint();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .rpc("check_is_blacklisted", { client_fingerprint: fingerprint });
 
     if (error) {
