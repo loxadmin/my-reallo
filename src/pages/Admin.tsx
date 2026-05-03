@@ -407,13 +407,13 @@ const Admin = () => {
         supabase.from("survey_questions").select("*").order("order_index", { ascending: true }),
         supabase.from("survey_options").select("*").order("created_at", { ascending: true }),
         supabase.from("survey_responses").select("*").order("created_at", { ascending: false }),
-        supabase.from("system_errors").select("*").order("created_at", { ascending: false }).limit(100),
-        supabase.from("security_incidents").select("*").order("created_at", { ascending: false }).limit(100),
-        supabase.from("blacklisted_entities").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("system_errors").select("*").order("created_at", { ascending: false }).limit(100),
+        (supabase as any).from("security_incidents").select("*").order("created_at", { ascending: false }).limit(100),
+        (supabase as any).from("blacklisted_entities").select("*").order("created_at", { ascending: false }),
         supabase.from("referrals").select("referrer_id"),
-        supabase.from("dummy_users").select("*").order("created_at", { ascending: false }),
-        supabase.from("dummy_transactions").select("*").order("created_at", { ascending: false }),
-        supabase.from("dummy_activity").select("*").order("created_at", { ascending: false }).limit(50)
+        (supabase as any).from("dummy_users").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("dummy_transactions").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("dummy_activity").select("*").order("created_at", { ascending: false }).limit(50)
       ]);
 
       const profs = (profilesRes.data as ProfileRow[]) || [];
@@ -1025,13 +1025,13 @@ const Admin = () => {
         }
       }
 
-      const { error: usersError } = await supabase.from("dummy_users").insert(newUsers);
+      const { error: usersError } = await (supabase as any).from("dummy_users").insert(newUsers);
       if (usersError) throw usersError;
 
-      const { error: txsError } = await supabase.from("dummy_transactions").insert(newTransactions);
+      const { error: txsError } = await (supabase as any).from("dummy_transactions").insert(newTransactions);
       if (txsError) throw txsError;
 
-      const { error: actsError } = await supabase.from("dummy_activity").insert(newActivities);
+      const { error: actsError } = await (supabase as any).from("dummy_activity").insert(newActivities);
       if (actsError) throw actsError;
 
       toast({ title: "Dummy users generated", description: `Successfully created ${count} users, ${newTransactions.length} transactions, and ${newActivities.length} activities.` });
@@ -1065,7 +1065,7 @@ const Admin = () => {
     if (!confirm("Are you sure you want to clear all dummy users and transactions?")) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("dummy_users").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      const { error } = await (supabase as any).from("dummy_users").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       if (error) throw error;
       toast({ title: "Dummy data cleared" });
       await fetchData();
@@ -3257,7 +3257,7 @@ const Admin = () => {
                       <Btn variant="destructive" onClick={async () => {
                         const val = (document.getElementById("manual-blacklist-val") as HTMLInputElement).value;
                         if (!val) return;
-                        await supabase.from("blacklisted_entities").insert({
+                        await (supabase as any).from("blacklisted_entities").insert({
                           ip_address: val.includes(".") || val.includes(":") ? val : null,
                           fingerprint: val.includes(".") || val.includes(":") ? null : val,
                           reason: "Manually added by admin",
@@ -3293,7 +3293,7 @@ const Admin = () => {
                         </span>
                         <button onClick={async () => {
                           if (confirm("Remove from blacklist?")) {
-                            await supabase.from("blacklisted_entities").delete().eq("id", entity.id);
+                            await (supabase as any).from("blacklisted_entities").delete().eq("id", entity.id);
                             toast({ title: "Entity removed" });
                             fetchData();
                           }
