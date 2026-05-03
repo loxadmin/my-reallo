@@ -384,7 +384,7 @@ const Admin = () => {
   }, [loading, isAdmin, navigate]);
 
   const ensureDummyTables = async () => {
-    const { data, error } = await supabase.rpc("ensure_dummy_data_tables");
+    const { data, error } = await (supabase as any).rpc("ensure_dummy_data_tables");
     if (error) {
       return false;
     }
