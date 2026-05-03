@@ -28,4 +28,4 @@ Disallow: /vouchers
 Disallow: /reset-password
 Disallow: /advertiser/
 
-Sitemap: https://claim-glow-flow.lovable.app/sitemap.xml
+Sitemap: https://www.karbali.com/sitemap.xml
