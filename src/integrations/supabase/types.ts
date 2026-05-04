@@ -156,10 +156,47 @@ export type Database = {
         }
         Relationships: []
       }
+      business_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_verified: boolean
+          item_name: string
+          last_verified_at: string | null
+          updated_at: string
+          user_id: string
+          verification_frequency: string
+          weekly_spend: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          item_name: string
+          last_verified_at?: string | null
+          updated_at?: string
+          user_id: string
+          verification_frequency?: string
+          weekly_spend?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          item_name?: string
+          last_verified_at?: string | null
+          updated_at?: string
+          user_id?: string
+          verification_frequency?: string
+          weekly_spend?: number
+        }
+        Relationships: []
+      }
       decision_apps: {
         Row: {
           app_logo_url: string | null
           app_name: string
+          audience: string
           category: string
           created_at: string
           id: string
@@ -176,6 +213,7 @@ export type Database = {
         Insert: {
           app_logo_url?: string | null
           app_name: string
+          audience?: string
           category?: string
           created_at?: string
           id?: string
@@ -192,6 +230,7 @@ export type Database = {
         Update: {
           app_logo_url?: string | null
           app_name?: string
+          audience?: string
           category?: string
           created_at?: string
           id?: string
@@ -498,6 +537,7 @@ export type Database = {
       }
       influencer_challenges: {
         Row: {
+          audience: string
           challenge_type: string
           created_at: string
           description: string
@@ -511,6 +551,7 @@ export type Database = {
           total_videos: number
         }
         Insert: {
+          audience?: string
           challenge_type?: string
           created_at?: string
           description?: string
@@ -524,6 +565,7 @@ export type Database = {
           total_videos?: number
         }
         Update: {
+          audience?: string
           challenge_type?: string
           created_at?: string
           description?: string
@@ -713,6 +755,7 @@ export type Database = {
       }
       influencer_surveys: {
         Row: {
+          audience: string
           completion_instructions: string | null
           completion_link: string | null
           created_at: string
@@ -725,6 +768,7 @@ export type Database = {
           upload_type: string
         }
         Insert: {
+          audience?: string
           completion_instructions?: string | null
           completion_link?: string | null
           created_at?: string
@@ -737,6 +781,7 @@ export type Database = {
           upload_type?: string
         }
         Update: {
+          audience?: string
           completion_instructions?: string | null
           completion_link?: string | null
           created_at?: string
@@ -900,16 +945,22 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: string
           annual_data_spend: number | null
           annual_electricity_spend: number | null
           annual_food_spend: number | null
           annual_transport_spend: number | null
           ban_reason: string | null
+          business_category: string | null
           created_at: string | null
+          credit_line: number | null
+          credit_line_verified: boolean
           email: string
+          financing_claimed_at: string | null
           id: string
           is_banned: boolean
           last_active: string | null
+          monthly_business_spend: number | null
           off_queue_at: string | null
           points_balance: number
           queue_position: number | null
@@ -920,18 +971,25 @@ export type Database = {
           target_amount: number | null
           total_annual_spend: number | null
           user_type: string | null
+          weekly_business_spend: number | null
         }
         Insert: {
+          account_type?: string
           annual_data_spend?: number | null
           annual_electricity_spend?: number | null
           annual_food_spend?: number | null
           annual_transport_spend?: number | null
           ban_reason?: string | null
+          business_category?: string | null
           created_at?: string | null
+          credit_line?: number | null
+          credit_line_verified?: boolean
           email: string
+          financing_claimed_at?: string | null
           id: string
           is_banned?: boolean
           last_active?: string | null
+          monthly_business_spend?: number | null
           off_queue_at?: string | null
           points_balance?: number
           queue_position?: number | null
@@ -942,18 +1000,25 @@ export type Database = {
           target_amount?: number | null
           total_annual_spend?: number | null
           user_type?: string | null
+          weekly_business_spend?: number | null
         }
         Update: {
+          account_type?: string
           annual_data_spend?: number | null
           annual_electricity_spend?: number | null
           annual_food_spend?: number | null
           annual_transport_spend?: number | null
           ban_reason?: string | null
+          business_category?: string | null
           created_at?: string | null
+          credit_line?: number | null
+          credit_line_verified?: boolean
           email?: string
+          financing_claimed_at?: string | null
           id?: string
           is_banned?: boolean
           last_active?: string | null
+          monthly_business_spend?: number | null
           off_queue_at?: string | null
           points_balance?: number
           queue_position?: number | null
@@ -964,6 +1029,7 @@ export type Database = {
           target_amount?: number | null
           total_annual_spend?: number | null
           user_type?: string | null
+          weekly_business_spend?: number | null
         }
         Relationships: [
           {
@@ -1328,6 +1394,7 @@ export type Database = {
       }
       surveys: {
         Row: {
+          audience: string
           completion_instructions: string | null
           completion_link: string | null
           created_at: string
@@ -1339,6 +1406,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          audience?: string
           completion_instructions?: string | null
           completion_link?: string | null
           created_at?: string
@@ -1350,6 +1418,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          audience?: string
           completion_instructions?: string | null
           completion_link?: string | null
           created_at?: string
