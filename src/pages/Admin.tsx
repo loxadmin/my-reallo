@@ -2518,6 +2518,18 @@ const Admin = () => {
                         <div><p className="text-[10px] text-muted-foreground mb-1">Post interval (days)</p><input type="number" value={newChallenge.posting_interval_days} onChange={e => setNewChallenge(p => ({ ...p, posting_interval_days: parseInt(e.target.value) || 1 }))} min={1} className={inputCls} /></div>
                       </div>
                     )}
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-1">Show to</p>
+                      <select
+                        value={(newChallenge as any).audience || "both"}
+                        onChange={e => setNewChallenge(p => ({ ...(p as any), audience: e.target.value }))}
+                        className={inputCls}
+                      >
+                        <option value="both">Both account types</option>
+                        <option value="personal">Personal accounts only</option>
+                        <option value="business">Business accounts only</option>
+                      </select>
+                    </div>
                     <Btn variant="primary" onClick={async () => {
                       if (!newChallenge.title) return;
                       await supabase.from("influencer_challenges" as any).insert({
@@ -2526,9 +2538,10 @@ const Admin = () => {
                         challenge_type: newChallenge.challenge_type,
                         total_videos: newChallenge.challenge_type === "single" ? 1 : newChallenge.total_videos,
                         reward_per_video: newChallenge.reward_per_video, posting_interval_days: newChallenge.posting_interval_days,
+                        audience: (newChallenge as any).audience || "both",
                       } as any);
                       toast({ title: "Challenge created" });
-                      setNewChallenge({ title: "", description: "", instructions: "", hashtag: "", challenge_type: "single", total_videos: 1, reward_per_video: 3000, posting_interval_days: 1 });
+                      setNewChallenge({ title: "", description: "", instructions: "", hashtag: "", challenge_type: "single", total_videos: 1, reward_per_video: 3000, posting_interval_days: 1, audience: "both" } as any);
                       await fetchData();
                     }}><Plus className="w-3 h-3" /> Create Challenge</Btn>
                   </div>
