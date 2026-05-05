@@ -30,7 +30,7 @@ interface InfluencerSurveyPanelProps {
 }
 
 export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurveyPanelProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
 
   const [surveys, setSurveys] = useState<InfluencerSurvey[]>([]);
@@ -45,7 +45,7 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
   const fetchData = async () => {
     if (!user) return;
 
-    const audienceList = (user as any)?.account_type === "business"
+    const audienceList = profile?.account_type === "business"
       ? ["both", "business"]
       : ["both", "personal"];
     const [surveysRes, responsesRes] = await Promise.all([
