@@ -375,6 +375,7 @@ const Admin = () => {
     points_reward: 1000,
     completion_link: "",
     completion_instructions: "",
+    audience: "both" as "both" | "personal" | "business",
     questions: [{ question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] }]
   });
   const [newSurveyQuestion, setNewSurveyQuestion] = useState({ survey_id: "", question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] });
