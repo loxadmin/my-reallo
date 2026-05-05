@@ -806,7 +806,8 @@ const Admin = () => {
       description: newSurvey.description,
       points_reward: newSurvey.points_reward,
       completion_link: newSurvey.completion_link,
-      completion_instructions: newSurvey.completion_instructions
+      completion_instructions: newSurvey.completion_instructions,
+      audience: newSurvey.audience,
     }).select().maybeSingle();
 
     if (surveyError) {
@@ -881,6 +882,7 @@ const Admin = () => {
       points_reward: 1000,
       completion_link: "",
       completion_instructions: "",
+      audience: "both",
       questions: [{ question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] }]
     });
     await fetchData();
