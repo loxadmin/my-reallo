@@ -31,6 +31,13 @@ interface Profile {
   off_queue_at: string | null;
   spend_verified: boolean | null;
   user_type: string | null;
+  account_type: string;
+  business_category: string | null;
+  weekly_business_spend: number | null;
+  monthly_business_spend: number | null;
+  credit_line: number | null;
+  credit_line_verified: boolean;
+  financing_claimed_at: string | null;
 }
 
 interface AuthContextType {
@@ -40,6 +47,7 @@ interface AuthContextType {
   isAdmin: boolean;
   loading: boolean;
   signUp: (email: string, password: string, referralCode?: string) => Promise<{ data: any; error: any }>;
+  signUpWithMeta: (email: string, password: string, meta: Record<string, any>) => Promise<{ data: any; error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -292,6 +300,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) { return { data: null, error }; }
   };
 
+  const signUpWithMeta = async (email: string, password: string, meta: Record<string, any>) => {
+    try {
+      const { data, error } = await withTimeout(
+        supabase.auth.signUp({
+          email, password,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: meta,
+          },
+        }),
+        "sign up"
+      );
+      return { data, error };
+    } catch (error) { return { data: null, error }; }
+  };
+
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await withTimeout(
@@ -310,7 +334,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loading = !authReady || profileLoading;
 
   const value = useMemo(
-    () => ({ user, session, profile, isAdmin, loading, signUp, signIn, signOut, refreshProfile }),
+    () => ({ user, session, profile, isAdmin, loading, signUp, signUpWithMeta, signIn, signOut, refreshProfile }),
     [user, session, profile, isAdmin, loading, signOut, refreshProfile]
   );
 
