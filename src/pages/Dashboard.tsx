@@ -88,6 +88,13 @@ const Dashboard = () => {
   useEffect(() => {
     if (profile) {
       if (profile.account_type === "business") {
+        if ((profile.monthly_business_spend ?? 0) > 0) {
+          setSpendResult({
+            weeklyData: 0, monthlyElectricity: 0,
+            annualData: 0, annualElectricity: 0, annualFood: 0, annualTransport: 0,
+            totalAnnual: (profile.monthly_business_spend ?? 0) * 12,
+          });
+        }
         if (profile.business_category && (profile.monthly_business_spend ?? 0) > 0) {
           setStep("dashboard");
         } else {
