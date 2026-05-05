@@ -31,6 +31,7 @@ export default function AdminInfluencerSurveys() {
     completion_link: "",
     completion_instructions: "",
     upload_type: "screenshot" as "screenshot" | "link",
+    audience: "both" as "both" | "personal" | "business",
     is_active: true,
     questions: [blankQuestion()],
   });
@@ -67,6 +68,7 @@ export default function AdminInfluencerSurveys() {
         completion_link: draft.completion_link.trim() || null,
         completion_instructions: draft.completion_instructions.trim() || null,
         upload_type: draft.upload_type,
+        audience: draft.audience,
         is_active: draft.is_active,
       })
       .select("id")
@@ -110,6 +112,7 @@ export default function AdminInfluencerSurveys() {
       completion_link: "",
       completion_instructions: "",
       upload_type: "screenshot",
+      audience: "both",
       is_active: true,
       questions: [blankQuestion()],
     });
@@ -131,6 +134,18 @@ export default function AdminInfluencerSurveys() {
         <label className="text-xs flex items-center gap-2">
           <input type="checkbox" checked={draft.is_active} onChange={(e) => setDraft((p) => ({ ...p, is_active: e.target.checked }))} /> Active
         </label>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Show to:</span>
+          <select
+            value={draft.audience}
+            onChange={(e) => setDraft((p) => ({ ...p, audience: e.target.value as "both" | "personal" | "business" }))}
+            className="glass-input rounded-xl px-2 py-1 text-xs"
+          >
+            <option value="both">Both</option>
+            <option value="personal">Personal</option>
+            <option value="business">Business</option>
+          </select>
+        </div>
 
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground">User upload type:</span>
