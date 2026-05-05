@@ -13,6 +13,9 @@ import DashboardBold from "@/components/dashboard/DashboardBold";
 import DashboardMinimal from "@/components/dashboard/DashboardMinimal";
 import DashboardNeon from "@/components/dashboard/DashboardNeon";
 import DashboardCards from "@/components/dashboard/DashboardCards";
+import BusinessDashboard from "@/components/dashboard/BusinessDashboard";
+import BusinessOnboarding from "@/components/BusinessOnboarding";
+import BusinessVerifyFlow from "@/components/BusinessVerifyFlow";
 import { LayoutDashboard, Award, ShieldCheck, Star, Bell, MessageSquare, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -44,6 +47,10 @@ const Dashboard = () => {
   const { view: urlView } = useParams<{ view?: string }>();
 
   const getInitialStep = (p: typeof profile): DashStep => {
+    if (p?.account_type === "business") {
+      if (p?.business_category && (p?.monthly_business_spend ?? 0) > 0) return "dashboard";
+      return "onboarding";
+    }
     if (p?.selected_goal && p?.total_annual_spend && p.total_annual_spend > 0) return "dashboard";
     return "onboarding";
   };
@@ -80,6 +87,14 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (profile) {
+      if (profile.account_type === "business") {
+        if (profile.business_category && (profile.monthly_business_spend ?? 0) > 0) {
+          setStep("dashboard");
+        } else {
+          setStep("onboarding");
+        }
+        return;
+      }
       if (profile.selected_goal && profile.total_annual_spend && profile.total_annual_spend > 0) {
         setSpendResult({
           weeklyData: 0, monthlyElectricity: 0,
@@ -177,6 +192,16 @@ const Dashboard = () => {
   }
 
   if (step === "onboarding") {
+    if (profile.account_type === "business") {
+      return (
+        <div className="relative min-h-screen overflow-x-hidden bg-background">
+          <Navbar />
+          <div className="relative z-10 pt-14">
+            <BusinessOnboarding onComplete={handleOnboardingComplete} />
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="relative min-h-screen overflow-x-hidden bg-background">
         <Navbar />
@@ -187,11 +212,13 @@ const Dashboard = () => {
     );
   }
 
+  const isBusiness = profile.account_type === "business";
+
   const navItems: { id: DashView; label: string; icon: typeof LayoutDashboard }[] = [
     { id: "home", label: "Home", icon: LayoutDashboard },
     { id: "earn", label: "Earn", icon: Award },
-    ...(isOffQueue ? [{ id: "verify" as DashView, label: "Verify", icon: ShieldCheck }] : []),
-    { id: "influencer" as DashView, label: "Influencer", icon: Star },
+    ...((isOffQueue || isBusiness) ? [{ id: "verify" as DashView, label: "Verify", icon: ShieldCheck }] : []),
+    { id: "influencer" as DashView, label: isBusiness ? "Affiliate" : "Influencer", icon: Star },
     { id: "chat" as DashView, label: "Karbali", icon: MessageSquare },
     { id: "notifications" as DashView, label: "Alerts", icon: Bell },
     { id: "profile" as DashView, label: "Profile", icon: User },
@@ -200,6 +227,7 @@ const Dashboard = () => {
   const isEarnActive = activeView === "earn" || activeView === "offers" || activeView === "surveys";
 
   const renderHomeDashboard = () => {
+    if (isBusiness) return <BusinessDashboard />;
     switch (activeDesign) {
       case "bold": return <DashboardBold />;
       case "minimal": return <DashboardMinimal />;
@@ -276,6 +304,10 @@ const Dashboard = () => {
           ) : activeView === "home" ? (
             <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
               {renderHomeDashboard()}
+            </motion.div>
+          ) : activeView === "verify" && isBusiness ? (
+            <motion.div key="bverify" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+              <BusinessVerifyFlow />
             </motion.div>
           ) : (
             <motion.div key="queue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
