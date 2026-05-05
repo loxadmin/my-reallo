@@ -2937,6 +2937,18 @@ const Admin = () => {
                       <div><p className="text-[10px] text-muted-foreground mb-1">Completion Link</p><input value={newSurvey.completion_link} onChange={e => setNewSurvey(p => ({ ...p, completion_link: e.target.value }))} placeholder="https://..." className={inputCls} /></div>
                     </div>
                     <textarea value={newSurvey.completion_instructions} onChange={e => setNewSurvey(p => ({ ...p, completion_instructions: e.target.value }))} placeholder="Completion Instructions" className={`${inputCls} min-h-[60px] resize-none`} />
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-1">Show to</p>
+                      <select
+                        value={newSurvey.audience}
+                        onChange={e => setNewSurvey(p => ({ ...p, audience: e.target.value as "both" | "personal" | "business" }))}
+                        className={inputCls}
+                      >
+                        <option value="both">Both account types</option>
+                        <option value="personal">Personal accounts only</option>
+                        <option value="business">Business accounts only</option>
+                      </select>
+                    </div>
 
                     {/* Questions in Create Form */}
                     <div className="space-y-4 pt-2">
