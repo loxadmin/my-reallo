@@ -420,7 +420,29 @@ const Auth = () => {
                     <div className={`grid transition-all duration-300 ease-in-out ${mode === "signup" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
                       <div className="overflow-hidden">
                         <div className="pt-1 space-y-3">
-                          {/* Parent / Student selector */}
+                          {/* Account type selector */}
+                          <div>
+                            <label className="text-[12px] font-medium text-foreground mb-1.5 block">Account type</label>
+                            <div className="flex gap-2">
+                              {(["personal", "business"] as const).map(t => (
+                                <button
+                                  key={t}
+                                  type="button"
+                                  onClick={() => setAccountType(t)}
+                                  className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 border ${
+                                    accountType === t
+                                      ? "clay-primary text-primary-foreground border-primary/30"
+                                      : "glass-button text-muted-foreground border-border/40"
+                                  }`}
+                                >
+                                  {t === "personal" ? "👤 Personal" : "🏢 Business"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Parent / Student selector — only for personal accounts */}
+                          {accountType === "personal" && (
                           <div>
                             <label className="text-[12px] font-medium text-foreground mb-1.5 block">I am a</label>
                             <div className="flex gap-2">
@@ -441,6 +463,7 @@ const Auth = () => {
                             </div>
                             {fieldErrors.userType && <p className="text-[11px] text-destructive mt-1">{fieldErrors.userType}</p>}
                           </div>
+                          )}
                           <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
                           <p className="text-[11px] text-primary/60 mt-1 flex items-center gap-1">
                             <Gift className="w-3 h-3" /> You and your referrer both benefit
