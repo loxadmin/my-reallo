@@ -68,6 +68,7 @@ const BankSearchSelect = ({
 
 const InfluencerPanel = () => {
   const { user, profile } = useAuth();
+  const roleLabel = profile?.account_type === "business" ? "Affiliate" : "Influencer";
   const { formatCurrency: formatNaira } = useCurrency();
   const [application, setApplication] = useState<InfluencerApp | null>(null);
   const [wallet, setWallet] = useState<InfluencerWallet | null>(null);
@@ -119,7 +120,7 @@ const InfluencerPanel = () => {
       supabase.from("influencer_bank_accounts" as any).select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("influencer_referrals" as any).select("*").eq("influencer_id", user.id).order("created_at", { ascending: false }),
       supabase.from("influencer_withdrawals" as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("influencer_challenges" as any).select("*").eq("is_active", true).order("created_at", { ascending: false }),
+      supabase.from("influencer_challenges" as any).select("*").eq("is_active", true).in("audience", profile?.account_type === "business" ? ["both", "business"] : ["both", "personal"]).order("created_at", { ascending: false }),
       supabase.from("influencer_challenge_enrollments" as any).select("*").eq("user_id", user.id),
       supabase.from("influencer_challenge_submissions" as any).select("*").eq("user_id", user.id).order("submitted_at", { ascending: false }),
       supabase.from("influencer_wallet_transactions" as any).select("*").eq("user_id", user.id).eq("status", "completed"),
@@ -307,7 +308,7 @@ const InfluencerPanel = () => {
       <GlassCard variant="glow" className="p-5">
         <div className="flex items-center gap-2 mb-4">
           <Star className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-foreground text-[15px]">Become an Influencer</h3>
+          <h3 className="font-semibold text-foreground text-[15px]">Become an {roleLabel}</h3>
         </div>
         <p className="text-muted-foreground text-[12px] mb-4">
           Share your social media profile to apply. Your account must be public and include your registered email ({user?.email}) in your bio/description.
@@ -347,7 +348,7 @@ const InfluencerPanel = () => {
             ✓ Profile must be public &nbsp;•&nbsp; ✓ Email must be visible in bio &nbsp;•&nbsp; ✓ Email must match: {user?.email}
           </p>
           <GlassButton variant="primary" onClick={handleApply} disabled={applying || !socialLink.trim() || !socialPlatform} className="w-full text-[13px]">
-            {applying ? "Submitting..." : "Apply as Influencer"}
+            {applying ? "Submitting..." : `Apply as ${roleLabel}`}
           </GlassButton>
         </div>
       </GlassCard>
@@ -449,7 +450,7 @@ const InfluencerPanel = () => {
             <h3 className="font-semibold text-foreground text-[15px]">Application Approved!</h3>
           </div>
           <p className="text-muted-foreground text-[12px] mb-4">
-            Activate your influencer wallet by verifying your bank account and uploading identification.
+            Activate your {roleLabel.toLowerCase()} wallet by verifying your bank account and uploading identification.
           </p>
 
           <div className="space-y-3">
@@ -507,7 +508,7 @@ const InfluencerPanel = () => {
               disabled={activating || !accountName || !idDocUrl}
               className="w-full text-[13px]"
             >
-              {activating ? "Submitting..." : "Activate Influencer Wallet"}
+              {activating ? "Submitting..." : `Activate ${roleLabel} Wallet`}
             </GlassButton>
           </div>
         </GlassCard>
@@ -541,7 +542,7 @@ const InfluencerPanel = () => {
           <GlassCard variant="glow" className="p-5 flex flex-col h-full">
             <div className="flex items-center gap-2 mb-3">
               <Wallet className="w-5 h-5 text-primary" />
-              <h3 className="font-semibold text-foreground text-[15px]">Influencer Wallet</h3>
+              <h3 className="font-semibold text-foreground text-[15px]">{roleLabel} Wallet</h3>
             </div>
             <div className="text-center py-2 flex-grow flex flex-col justify-center">
               <p className="text-muted-foreground uppercase tracking-[0.2em] text-[10px]">Balance</p>
@@ -570,7 +571,7 @@ const InfluencerPanel = () => {
           <GlassCard variant="glow" className="p-5 flex flex-col h-full">
             <div className="flex items-center gap-2 mb-3">
               <Star className="w-5 h-5 text-primary" />
-              <h3 className="font-semibold text-foreground text-[15px]">Influencer Surveys</h3>
+              <h3 className="font-semibold text-foreground text-[15px]">{roleLabel} Surveys</h3>
             </div>
             <div className="flex-grow overflow-auto">
               <InfluencerSurveyPanel mode="highlight" />

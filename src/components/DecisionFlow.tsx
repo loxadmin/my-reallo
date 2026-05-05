@@ -44,7 +44,7 @@ type FlowStep = "checklist" | "sequential" | "done";
 type EarnView = "offers" | "surveys";
 
 const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [activeEarnView, setActiveEarnView] = useState<EarnView>(mode || "offers");
 
   // Offers state
@@ -99,10 +99,13 @@ const DecisionFlow = ({ mode }: { mode?: EarnView }) => {
 
   const fetchData = async () => {
     if (!user) return;
+    const audienceList = profile?.account_type === "business"
+      ? ["both", "business"]
+      : ["both", "personal"];
     const [appsRes, respRes, surveysRes, sRespRes] = await Promise.all([
-      fromApps().select("*").eq("is_active", true).order("app_name"),
+      fromApps().select("*").eq("is_active", true).in("audience", audienceList).order("app_name"),
       fromResponses().select("*").eq("user_id", user.id),
-      supabase.from("surveys").select("*, survey_questions(*, survey_options(*))").eq("is_active", true).order("created_at", { ascending: false }),
+      supabase.from("surveys").select("*, survey_questions(*, survey_options(*))").eq("is_active", true).in("audience", audienceList).order("created_at", { ascending: false }),
       supabase.from("survey_responses").select("*").eq("user_id", user.id),
     ]);
 

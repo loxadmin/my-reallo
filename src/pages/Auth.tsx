@@ -31,6 +31,7 @@ const Auth = () => {
   const [hpValue, setHpValue] = useState(""); // Honeypot value
   const [referralCode, setReferralCode] = useState("");
   const [userType, setUserType] = useState<"student" | "parent" | "others" | "">("");
+  const [accountType, setAccountType] = useState<"personal" | "business">("personal");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -40,7 +41,7 @@ const Auth = () => {
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [onlyGoogleAuth, setOnlyGoogleAuth] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signUpWithMeta } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -158,8 +159,8 @@ const Auth = () => {
           return;
         }
 
-        // Validate user type selection
-        if (!userType) {
+        // Validate user type selection (personal accounts only)
+        if (accountType === "personal" && !userType) {
           setFieldErrors({ userType: "Please select your user type" });
           setLoading(false);
           return;
@@ -197,7 +198,9 @@ const Auth = () => {
           // If check fails, allow signup to proceed (fail-open for UX)
         }
 
-        const { data: signUpData, error: signUpError } = await signUp(email, password, referralCode || undefined);
+        const meta: Record<string, any> = { account_type: accountType };
+        if (referralCode) meta.referral_code = referralCode.toUpperCase();
+        const { data: signUpData, error: signUpError } = await signUpWithMeta(email, password, meta);
         if (signUpError) {
           setError(sanitizeAuthError(signUpError));
         } else {
@@ -205,11 +208,13 @@ const Auth = () => {
           // Register this device/IP and save user_type after successful signup
           try {
             if (userId) {
+              const profileUpdate: Record<string, any> = { account_type: accountType };
+              if (accountType === "personal" && userType) profileUpdate.user_type = userType;
               await Promise.all([
                 supabase.functions.invoke("check-signup-limit", {
                   body: { action: "register", device_fingerprint: deviceFp, user_id: userId },
                 }),
-                supabase.from("profiles").update({ user_type: userType }).eq("id", userId),
+                supabase.from("profiles").update(profileUpdate).eq("id", userId),
               ]);
               trackSignup(userId);
             }
@@ -415,7 +420,29 @@ const Auth = () => {
                     <div className={`grid transition-all duration-300 ease-in-out ${mode === "signup" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
                       <div className="overflow-hidden">
                         <div className="pt-1 space-y-3">
-                          {/* Parent / Student selector */}
+                          {/* Account type selector */}
+                          <div>
+                            <label className="text-[12px] font-medium text-foreground mb-1.5 block">Account type</label>
+                            <div className="flex gap-2">
+                              {(["personal", "business"] as const).map(t => (
+                                <button
+                                  key={t}
+                                  type="button"
+                                  onClick={() => setAccountType(t)}
+                                  className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 border ${
+                                    accountType === t
+                                      ? "clay-primary text-primary-foreground border-primary/30"
+                                      : "glass-button text-muted-foreground border-border/40"
+                                  }`}
+                                >
+                                  {t === "personal" ? "👤 Personal" : "🏢 Business"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Parent / Student selector — only for personal accounts */}
+                          {accountType === "personal" && (
                           <div>
                             <label className="text-[12px] font-medium text-foreground mb-1.5 block">I am a</label>
                             <div className="flex gap-2">
@@ -436,6 +463,7 @@ const Auth = () => {
                             </div>
                             {fieldErrors.userType && <p className="text-[11px] text-destructive mt-1">{fieldErrors.userType}</p>}
                           </div>
+                          )}
                           <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
                           <p className="text-[11px] text-primary/60 mt-1 flex items-center gap-1">
                             <Gift className="w-3 h-3" /> You and your referrer both benefit

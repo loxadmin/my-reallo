@@ -375,6 +375,7 @@ const Admin = () => {
     points_reward: 1000,
     completion_link: "",
     completion_instructions: "",
+    audience: "both" as "both" | "personal" | "business",
     questions: [{ question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] }]
   });
   const [newSurveyQuestion, setNewSurveyQuestion] = useState({ survey_id: "", question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] });
@@ -805,7 +806,8 @@ const Admin = () => {
       description: newSurvey.description,
       points_reward: newSurvey.points_reward,
       completion_link: newSurvey.completion_link,
-      completion_instructions: newSurvey.completion_instructions
+      completion_instructions: newSurvey.completion_instructions,
+      audience: newSurvey.audience,
     }).select().maybeSingle();
 
     if (surveyError) {
@@ -880,6 +882,7 @@ const Admin = () => {
       points_reward: 1000,
       completion_link: "",
       completion_instructions: "",
+      audience: "both",
       questions: [{ question_text: "", options: [{ option_text: "", is_correct: false }, { option_text: "", is_correct: false }] }]
     });
     await fetchData();
@@ -2515,6 +2518,18 @@ const Admin = () => {
                         <div><p className="text-[10px] text-muted-foreground mb-1">Post interval (days)</p><input type="number" value={newChallenge.posting_interval_days} onChange={e => setNewChallenge(p => ({ ...p, posting_interval_days: parseInt(e.target.value) || 1 }))} min={1} className={inputCls} /></div>
                       </div>
                     )}
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-1">Show to</p>
+                      <select
+                        value={(newChallenge as any).audience || "both"}
+                        onChange={e => setNewChallenge(p => ({ ...(p as any), audience: e.target.value }))}
+                        className={inputCls}
+                      >
+                        <option value="both">Both account types</option>
+                        <option value="personal">Personal accounts only</option>
+                        <option value="business">Business accounts only</option>
+                      </select>
+                    </div>
                     <Btn variant="primary" onClick={async () => {
                       if (!newChallenge.title) return;
                       await supabase.from("influencer_challenges" as any).insert({
@@ -2523,9 +2538,10 @@ const Admin = () => {
                         challenge_type: newChallenge.challenge_type,
                         total_videos: newChallenge.challenge_type === "single" ? 1 : newChallenge.total_videos,
                         reward_per_video: newChallenge.reward_per_video, posting_interval_days: newChallenge.posting_interval_days,
+                        audience: (newChallenge as any).audience || "both",
                       } as any);
                       toast({ title: "Challenge created" });
-                      setNewChallenge({ title: "", description: "", instructions: "", hashtag: "", challenge_type: "single", total_videos: 1, reward_per_video: 3000, posting_interval_days: 1 });
+                      setNewChallenge({ title: "", description: "", instructions: "", hashtag: "", challenge_type: "single", total_videos: 1, reward_per_video: 3000, posting_interval_days: 1, audience: "both" } as any);
                       await fetchData();
                     }}><Plus className="w-3 h-3" /> Create Challenge</Btn>
                   </div>
@@ -2934,6 +2950,18 @@ const Admin = () => {
                       <div><p className="text-[10px] text-muted-foreground mb-1">Completion Link</p><input value={newSurvey.completion_link} onChange={e => setNewSurvey(p => ({ ...p, completion_link: e.target.value }))} placeholder="https://..." className={inputCls} /></div>
                     </div>
                     <textarea value={newSurvey.completion_instructions} onChange={e => setNewSurvey(p => ({ ...p, completion_instructions: e.target.value }))} placeholder="Completion Instructions" className={`${inputCls} min-h-[60px] resize-none`} />
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-1">Show to</p>
+                      <select
+                        value={newSurvey.audience}
+                        onChange={e => setNewSurvey(p => ({ ...p, audience: e.target.value as "both" | "personal" | "business" }))}
+                        className={inputCls}
+                      >
+                        <option value="both">Both account types</option>
+                        <option value="personal">Personal accounts only</option>
+                        <option value="business">Business accounts only</option>
+                      </select>
+                    </div>
 
                     {/* Questions in Create Form */}
                     <div className="space-y-4 pt-2">

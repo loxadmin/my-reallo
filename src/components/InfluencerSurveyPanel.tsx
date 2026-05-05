@@ -30,7 +30,7 @@ interface InfluencerSurveyPanelProps {
 }
 
 export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurveyPanelProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
 
   const [surveys, setSurveys] = useState<InfluencerSurvey[]>([]);
@@ -45,11 +45,15 @@ export default function InfluencerSurveyPanel({ mode = "full" }: InfluencerSurve
   const fetchData = async () => {
     if (!user) return;
 
+    const audienceList = profile?.account_type === "business"
+      ? ["both", "business"]
+      : ["both", "personal"];
     const [surveysRes, responsesRes] = await Promise.all([
       supabase
         .from("influencer_surveys" as any)
         .select("*, influencer_survey_questions(*, influencer_survey_options(*))")
         .eq("is_active", true)
+        .in("audience", audienceList)
         .order("created_at", { ascending: false }),
       supabase
         .from("influencer_survey_responses" as any)
