@@ -18,7 +18,7 @@ import { useCurrency, CurrencyCode } from "@/contexts/CurrencyContext";
 
 /* ── Currency cycling hook ── */
 const CURRENCIES: CurrencyCode[] = ["NGN", "USD", "EUR", "GBP"];
-const SYMBOLS: Record<CurrencyCode, string> = { NGN: "₦", USD: "$", EUR: "€", GBP: "£" };
+const SYMBOLS: Record<CurrencyCode, string> = { NGN: "₦", USD: "$", EUR: "€", GBP: "£", CAD: "C$", AUD: "A$", ZAR: "R", GHS: "₵", KES: "KSh" };
 
 const useCurrencyCycle = (intervalMs = 3000) => {
   const [index, setIndex] = useState(0);
