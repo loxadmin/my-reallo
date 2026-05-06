@@ -101,19 +101,19 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   // Fetch exchange rates from admin_settings
   useEffect(() => {
     const fetchRates = async () => {
+      const rateKeys = Object.values(RATE_KEYS);
       const { data } = await supabase
         .from("admin_settings")
         .select("key, value")
-        .in("key", ["currency_rate_usd", "currency_rate_eur", "currency_rate_gbp"]);
+        .in("key", rateKeys);
 
       if (data) {
         const newRates = { ...DEFAULT_RATES };
         for (const row of data) {
           const val = Number(row.value);
           if (val > 0) {
-            if (row.key === "currency_rate_usd") newRates.USD = val;
-            if (row.key === "currency_rate_eur") newRates.EUR = val;
-            if (row.key === "currency_rate_gbp") newRates.GBP = val;
+            const currencyEntry = Object.entries(RATE_KEYS).find(([, key]) => key === row.key);
+            if (currencyEntry) newRates[currencyEntry[0] as Exclude<CurrencyCode, "NGN">] = val;
           }
         }
         setRates(newRates);
@@ -126,9 +126,20 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const detectCurrency = async () => {
       try {
-        const res = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(5000) });
-        const data = await res.json();
-        const countryCode = data?.country_code?.toUpperCase();
+        const lookups = [
+          () => fetchWithTimeout("https://ipapi.co/json/"),
+          () => fetchWithTimeout("https://ipwho.is/"),
+        ];
+        let countryCode = "";
+        for (const lookup of lookups) {
+          try {
+            const data = await lookup();
+            countryCode = (data?.country_code || data?.country || "").toUpperCase();
+            if (countryCode) break;
+          } catch {
+            continue;
+          }
+        }
         if (countryCode) {
           const mapped = COUNTRY_CURRENCY[countryCode] || "USD";
           setCurrencyCode(mapped);
@@ -136,8 +147,7 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
           setCurrencyCode("USD");
         }
       } catch {
-        // Default to USD for non-NG users, but since we can't detect, default NGN
-        setCurrencyCode("NGN");
+        setCurrencyCode("USD");
       }
       setLoaded(true);
     };
