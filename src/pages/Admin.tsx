@@ -57,9 +57,9 @@ interface UserWarning {
   id: string; user_id: string; reason: string; issued_by: string; created_at: string;
 }
 
-type AdminCurrency = "NGN" | "USD" | "EUR" | "GBP";
-const ADMIN_CURRENCY_SYMBOLS: Record<AdminCurrency, string> = { NGN: "₦", USD: "$", EUR: "€", GBP: "£" };
-const ADMIN_CURRENCY_DEFAULTS: Record<AdminCurrency, number> = { NGN: 1, USD: 1600, EUR: 1700, GBP: 2000 };
+type AdminCurrency = "NGN" | "USD" | "EUR" | "GBP" | "CAD" | "AUD" | "ZAR" | "GHS" | "KES";
+const ADMIN_CURRENCY_SYMBOLS: Record<AdminCurrency, string> = { NGN: "₦", USD: "$", EUR: "€", GBP: "£", CAD: "C$", AUD: "A$", ZAR: "R", GHS: "₵", KES: "KSh" };
+const ADMIN_CURRENCY_DEFAULTS: Record<AdminCurrency, number> = { NGN: 1, USD: 1600, EUR: 1700, GBP: 2000, CAD: 1170, AUD: 1050, ZAR: 86, GHS: 145, KES: 12 };
 
 const formatCompact = (n: number): string => {
   if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
@@ -348,6 +348,11 @@ const Admin = () => {
   const [currencyRateUsd, setCurrencyRateUsd] = useState("1600");
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
+  const [currencyRateCad, setCurrencyRateCad] = useState("1170");
+  const [currencyRateAud, setCurrencyRateAud] = useState("1050");
+  const [currencyRateZar, setCurrencyRateZar] = useState("86");
+  const [currencyRateGhs, setCurrencyRateGhs] = useState("145");
+  const [currencyRateKes, setCurrencyRateKes] = useState("12");
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerUserId, setDrawerUserId] = useState<string | null>(null);
   const [adminCurrency, setAdminCurrency] = useState<AdminCurrency>("NGN");
@@ -357,7 +362,12 @@ const Admin = () => {
     USD: Number(currencyRateUsd) || ADMIN_CURRENCY_DEFAULTS.USD,
     EUR: Number(currencyRateEur) || ADMIN_CURRENCY_DEFAULTS.EUR,
     GBP: Number(currencyRateGbp) || ADMIN_CURRENCY_DEFAULTS.GBP,
-  }), [currencyRateUsd, currencyRateEur, currencyRateGbp]);
+    CAD: Number(currencyRateCad) || ADMIN_CURRENCY_DEFAULTS.CAD,
+    AUD: Number(currencyRateAud) || ADMIN_CURRENCY_DEFAULTS.AUD,
+    ZAR: Number(currencyRateZar) || ADMIN_CURRENCY_DEFAULTS.ZAR,
+    GHS: Number(currencyRateGhs) || ADMIN_CURRENCY_DEFAULTS.GHS,
+    KES: Number(currencyRateKes) || ADMIN_CURRENCY_DEFAULTS.KES,
+  }), [currencyRateUsd, currencyRateEur, currencyRateGbp, currencyRateCad, currencyRateAud, currencyRateZar, currencyRateGhs, currencyRateKes]);
   const { fmt: formatNaira, fmtCompact: formatNairaCompact } = useMemo(() => makeAdminFormat(adminCurrency, adminRates), [adminCurrency, adminRates]);
   const [newApp, setNewApp] = useState({
     app_name: "", app_logo_url: "", category: "yes_no" as string,
@@ -495,6 +505,11 @@ const Admin = () => {
       setCurrencyRateUsd(settings.find(s => s.key === "currency_rate_usd")?.value || "1600");
       setCurrencyRateEur(settings.find(s => s.key === "currency_rate_eur")?.value || "1700");
       setCurrencyRateGbp(settings.find(s => s.key === "currency_rate_gbp")?.value || "2000");
+      setCurrencyRateCad(settings.find(s => s.key === "currency_rate_cad")?.value || "1170");
+      setCurrencyRateAud(settings.find(s => s.key === "currency_rate_aud")?.value || "1050");
+      setCurrencyRateZar(settings.find(s => s.key === "currency_rate_zar")?.value || "86");
+      setCurrencyRateGhs(settings.find(s => s.key === "currency_rate_ghs")?.value || "145");
+      setCurrencyRateKes(settings.find(s => s.key === "currency_rate_kes")?.value || "12");
       setActiveAppDesign(settings.find(s => s.key === "active_app_design")?.value || "default");
 
       const counts: Record<string, number> = {};
@@ -585,6 +600,11 @@ const Admin = () => {
       supabase.from("admin_settings").upsert({ key: "currency_rate_usd", value: currencyRateUsd, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "currency_rate_eur", value: currencyRateEur, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "currency_rate_gbp", value: currencyRateGbp, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_cad", value: currencyRateCad, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_aud", value: currencyRateAud, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_zar", value: currencyRateZar, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_ghs", value: currencyRateGhs, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_kes", value: currencyRateKes, updated_at: new Date().toISOString() }),
     ]);
     toast({ title: "Settings saved" });
     setSaving(false);
@@ -1414,7 +1434,7 @@ const Admin = () => {
                 onChange={e => setAdminCurrency(e.target.value as AdminCurrency)}
                 className="rounded-lg border border-border/40 bg-muted/30 text-[11px] text-foreground px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-pointer"
               >
-                {(["NGN", "USD", "EUR", "GBP"] as AdminCurrency[]).map(c => (
+                {(["NGN", "USD", "EUR", "GBP", "CAD", "AUD", "ZAR", "GHS", "KES"] as AdminCurrency[]).map(c => (
                   <option key={c} value={c}>{ADMIN_CURRENCY_SYMBOLS[c]} {c}</option>
                 ))}
               </select>
@@ -2863,7 +2883,7 @@ const Admin = () => {
                   <hr className="border-border/30" />
                   <h4 className="text-[13px] font-semibold text-foreground">Currency Exchange Rates</h4>
                   <p className="text-[11px] text-muted-foreground -mt-3">Set how many Naira (₦) equals 1 unit of each currency. Users see amounts in their local currency based on geolocation.</p>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <label className="text-[11px] text-muted-foreground font-medium">1 USD = ₦</label>
                       <input type="number" value={currencyRateUsd} onChange={e => setCurrencyRateUsd(e.target.value)} placeholder="1600" className={`${inputCls} mt-1.5`} />
@@ -2876,8 +2896,13 @@ const Admin = () => {
                       <label className="text-[11px] text-muted-foreground font-medium">1 GBP = ₦</label>
                       <input type="number" value={currencyRateGbp} onChange={e => setCurrencyRateGbp(e.target.value)} placeholder="2000" className={`${inputCls} mt-1.5`} />
                     </div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">1 CAD = ₦</label><input type="number" value={currencyRateCad} onChange={e => setCurrencyRateCad(e.target.value)} placeholder="1170" className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">1 AUD = ₦</label><input type="number" value={currencyRateAud} onChange={e => setCurrencyRateAud(e.target.value)} placeholder="1050" className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">1 ZAR = ₦</label><input type="number" value={currencyRateZar} onChange={e => setCurrencyRateZar(e.target.value)} placeholder="86" className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">1 GHS = ₦</label><input type="number" value={currencyRateGhs} onChange={e => setCurrencyRateGhs(e.target.value)} placeholder="145" className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">1 KES = ₦</label><input type="number" value={currencyRateKes} onChange={e => setCurrencyRateKes(e.target.value)} placeholder="12" className={`${inputCls} mt-1.5`} /></div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Geolocation mapping: Nigeria → ₦, USA → $, UK → £, Europe → €, Others → $</p>
+                  <p className="text-[10px] text-muted-foreground">Geolocation mapping: Nigeria → ₦, USA/others → $, UK → £, Europe → €, Canada → C$, Australia/NZ → A$, South Africa → R, Ghana → ₵, Kenya → KSh.</p>
                   <Btn variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full"><Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save Settings"}</Btn>
                 </div>
 
