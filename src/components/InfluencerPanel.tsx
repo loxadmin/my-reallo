@@ -259,8 +259,8 @@ const InfluencerPanel = () => {
   const handleWithdraw = async () => {
     if (!user || !wallet || !bankAccount) return;
     const amount = parseInt(withdrawAmount);
-    if (!amount || amount < 30000) {
-      toast({ title: "Minimum ₦30,000", description: "You need at least ₦30,000 to withdraw." });
+    if (!amount || amount < 50000) {
+      toast({ title: "Minimum ₦50,000", description: "You need at least ₦50,000 to withdraw." });
       return;
     }
     if (amount > wallet.balance) {
@@ -556,8 +556,8 @@ const InfluencerPanel = () => {
                   type="number"
                   value={withdrawAmount}
                   onChange={e => setWithdrawAmount(e.target.value)}
-                  placeholder="30000"
-                  min={30000}
+                  placeholder="50000"
+                  min={50000}
                   className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]"
                 />
               </div>
