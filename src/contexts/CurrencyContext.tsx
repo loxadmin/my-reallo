@@ -25,8 +25,10 @@ const CURRENCY_MAP: Record<CurrencyCode, Omit<CurrencyInfo, "rateToNaira">> = {
 const COUNTRY_CURRENCY: Record<string, CurrencyCode> = {
   NG: "NGN",
   US: "USD",
+  AE: "USD",
   CA: "CAD",
   AU: "AUD",
+  NZ: "AUD",
   ZA: "ZAR",
   GH: "GHS",
   KE: "KES",
@@ -66,6 +68,29 @@ const DEFAULT_RATES: Record<CurrencyCode, number> = {
   ZAR: 86,
   GHS: 145,
   KES: 12,
+};
+
+const RATE_KEYS: Record<Exclude<CurrencyCode, "NGN">, string> = {
+  USD: "currency_rate_usd",
+  EUR: "currency_rate_eur",
+  GBP: "currency_rate_gbp",
+  CAD: "currency_rate_cad",
+  AUD: "currency_rate_aud",
+  ZAR: "currency_rate_zar",
+  GHS: "currency_rate_ghs",
+  KES: "currency_rate_kes",
+};
+
+const fetchWithTimeout = async (url: string, timeoutMs = 4500) => {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal, cache: "no-store" });
+    if (!res.ok) throw new Error(`Geo lookup failed: ${res.status}`);
+    return await res.json();
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 };
 
 export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
