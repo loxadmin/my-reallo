@@ -57,9 +57,9 @@ interface UserWarning {
   id: string; user_id: string; reason: string; issued_by: string; created_at: string;
 }
 
-type AdminCurrency = "NGN" | "USD" | "EUR" | "GBP";
-const ADMIN_CURRENCY_SYMBOLS: Record<AdminCurrency, string> = { NGN: "₦", USD: "$", EUR: "€", GBP: "£" };
-const ADMIN_CURRENCY_DEFAULTS: Record<AdminCurrency, number> = { NGN: 1, USD: 1600, EUR: 1700, GBP: 2000 };
+type AdminCurrency = "NGN" | "USD" | "EUR" | "GBP" | "CAD" | "AUD" | "ZAR" | "GHS" | "KES";
+const ADMIN_CURRENCY_SYMBOLS: Record<AdminCurrency, string> = { NGN: "₦", USD: "$", EUR: "€", GBP: "£", CAD: "C$", AUD: "A$", ZAR: "R", GHS: "₵", KES: "KSh" };
+const ADMIN_CURRENCY_DEFAULTS: Record<AdminCurrency, number> = { NGN: 1, USD: 1600, EUR: 1700, GBP: 2000, CAD: 1170, AUD: 1050, ZAR: 86, GHS: 145, KES: 12 };
 
 const formatCompact = (n: number): string => {
   if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
@@ -348,6 +348,11 @@ const Admin = () => {
   const [currencyRateUsd, setCurrencyRateUsd] = useState("1600");
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
+  const [currencyRateCad, setCurrencyRateCad] = useState("1170");
+  const [currencyRateAud, setCurrencyRateAud] = useState("1050");
+  const [currencyRateZar, setCurrencyRateZar] = useState("86");
+  const [currencyRateGhs, setCurrencyRateGhs] = useState("145");
+  const [currencyRateKes, setCurrencyRateKes] = useState("12");
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerUserId, setDrawerUserId] = useState<string | null>(null);
   const [adminCurrency, setAdminCurrency] = useState<AdminCurrency>("NGN");
@@ -357,7 +362,12 @@ const Admin = () => {
     USD: Number(currencyRateUsd) || ADMIN_CURRENCY_DEFAULTS.USD,
     EUR: Number(currencyRateEur) || ADMIN_CURRENCY_DEFAULTS.EUR,
     GBP: Number(currencyRateGbp) || ADMIN_CURRENCY_DEFAULTS.GBP,
-  }), [currencyRateUsd, currencyRateEur, currencyRateGbp]);
+    CAD: Number(currencyRateCad) || ADMIN_CURRENCY_DEFAULTS.CAD,
+    AUD: Number(currencyRateAud) || ADMIN_CURRENCY_DEFAULTS.AUD,
+    ZAR: Number(currencyRateZar) || ADMIN_CURRENCY_DEFAULTS.ZAR,
+    GHS: Number(currencyRateGhs) || ADMIN_CURRENCY_DEFAULTS.GHS,
+    KES: Number(currencyRateKes) || ADMIN_CURRENCY_DEFAULTS.KES,
+  }), [currencyRateUsd, currencyRateEur, currencyRateGbp, currencyRateCad, currencyRateAud, currencyRateZar, currencyRateGhs, currencyRateKes]);
   const { fmt: formatNaira, fmtCompact: formatNairaCompact } = useMemo(() => makeAdminFormat(adminCurrency, adminRates), [adminCurrency, adminRates]);
   const [newApp, setNewApp] = useState({
     app_name: "", app_logo_url: "", category: "yes_no" as string,
