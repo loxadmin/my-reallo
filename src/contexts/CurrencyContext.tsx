@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type CurrencyCode = "NGN" | "USD" | "EUR" | "GBP";
+export type CurrencyCode = "NGN" | "USD" | "EUR" | "GBP" | "CAD" | "AUD" | "ZAR" | "GHS" | "KES";
 
 interface CurrencyInfo {
   code: CurrencyCode;
@@ -14,12 +14,22 @@ const CURRENCY_MAP: Record<CurrencyCode, Omit<CurrencyInfo, "rateToNaira">> = {
   USD: { code: "USD", symbol: "$" },
   EUR: { code: "EUR", symbol: "€" },
   GBP: { code: "GBP", symbol: "£" },
+  CAD: { code: "CAD", symbol: "C$" },
+  AUD: { code: "AUD", symbol: "A$" },
+  ZAR: { code: "ZAR", symbol: "R" },
+  GHS: { code: "GHS", symbol: "₵" },
+  KES: { code: "KES", symbol: "KSh" },
 };
 
 // Country code -> currency
 const COUNTRY_CURRENCY: Record<string, CurrencyCode> = {
   NG: "NGN",
   US: "USD",
+  CA: "CAD",
+  AU: "AUD",
+  ZA: "ZAR",
+  GH: "GHS",
+  KE: "KES",
   GB: "GBP",
   // European countries
   AT: "EUR", BE: "EUR", CY: "EUR", EE: "EUR", FI: "EUR", FR: "EUR",
@@ -51,6 +61,11 @@ const DEFAULT_RATES: Record<CurrencyCode, number> = {
   USD: 1600,  // 1 USD = 1600 NGN default
   EUR: 1700,
   GBP: 2000,
+  CAD: 1170,
+  AUD: 1050,
+  ZAR: 86,
+  GHS: 145,
+  KES: 12,
 };
 
 export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
