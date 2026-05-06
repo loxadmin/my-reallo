@@ -1434,7 +1434,7 @@ const Admin = () => {
                 onChange={e => setAdminCurrency(e.target.value as AdminCurrency)}
                 className="rounded-lg border border-border/40 bg-muted/30 text-[11px] text-foreground px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-pointer"
               >
-                {(["NGN", "USD", "EUR", "GBP"] as AdminCurrency[]).map(c => (
+                {(["NGN", "USD", "EUR", "GBP", "CAD", "AUD", "ZAR", "GHS", "KES"] as AdminCurrency[]).map(c => (
                   <option key={c} value={c}>{ADMIN_CURRENCY_SYMBOLS[c]} {c}</option>
                 ))}
               </select>
@@ -2883,7 +2883,7 @@ const Admin = () => {
                   <hr className="border-border/30" />
                   <h4 className="text-[13px] font-semibold text-foreground">Currency Exchange Rates</h4>
                   <p className="text-[11px] text-muted-foreground -mt-3">Set how many Naira (₦) equals 1 unit of each currency. Users see amounts in their local currency based on geolocation.</p>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <label className="text-[11px] text-muted-foreground font-medium">1 USD = ₦</label>
                       <input type="number" value={currencyRateUsd} onChange={e => setCurrencyRateUsd(e.target.value)} placeholder="1600" className={`${inputCls} mt-1.5`} />
@@ -2896,8 +2896,13 @@ const Admin = () => {
                       <label className="text-[11px] text-muted-foreground font-medium">1 GBP = ₦</label>
                       <input type="number" value={currencyRateGbp} onChange={e => setCurrencyRateGbp(e.target.value)} placeholder="2000" className={`${inputCls} mt-1.5`} />
                     </div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">1 CAD = ₦</label><input type="number" value={currencyRateCad} onChange={e => setCurrencyRateCad(e.target.value)} placeholder="1170" className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">1 AUD = ₦</label><input type="number" value={currencyRateAud} onChange={e => setCurrencyRateAud(e.target.value)} placeholder="1050" className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">1 ZAR = ₦</label><input type="number" value={currencyRateZar} onChange={e => setCurrencyRateZar(e.target.value)} placeholder="86" className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">1 GHS = ₦</label><input type="number" value={currencyRateGhs} onChange={e => setCurrencyRateGhs(e.target.value)} placeholder="145" className={`${inputCls} mt-1.5`} /></div>
+                    <div><label className="text-[11px] text-muted-foreground font-medium">1 KES = ₦</label><input type="number" value={currencyRateKes} onChange={e => setCurrencyRateKes(e.target.value)} placeholder="12" className={`${inputCls} mt-1.5`} /></div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Geolocation mapping: Nigeria → ₦, USA → $, UK → £, Europe → €, Others → $</p>
+                  <p className="text-[10px] text-muted-foreground">Geolocation mapping: Nigeria → ₦, USA/others → $, UK → £, Europe → €, Canada → C$, Australia/NZ → A$, South Africa → R, Ghana → ₵, Kenya → KSh.</p>
                   <Btn variant="primary" onClick={handleSaveSettings} disabled={saving} className="w-full"><Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save Settings"}</Btn>
                 </div>
 
