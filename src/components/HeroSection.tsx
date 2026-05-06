@@ -7,7 +7,7 @@ import { MoveRight, TrendingUp, Users, Shield } from "lucide-react";
 import { useCurrency, CurrencyCode } from "@/contexts/CurrencyContext";
 
 const CURRENCIES: CurrencyCode[] = ["NGN", "USD", "EUR", "GBP"];
-const SYMBOLS: Record<CurrencyCode, string> = { NGN: "₦", USD: "$", EUR: "€", GBP: "£" };
+const SYMBOLS: Record<CurrencyCode, string> = { NGN: "₦", USD: "$", EUR: "€", GBP: "£", CAD: "C$", AUD: "A$", ZAR: "R", GHS: "₵", KES: "KSh" };
 
 const CyclingFreeLabel = () => {
   const [index, setIndex] = useState(0);
