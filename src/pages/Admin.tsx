@@ -505,6 +505,11 @@ const Admin = () => {
       setCurrencyRateUsd(settings.find(s => s.key === "currency_rate_usd")?.value || "1600");
       setCurrencyRateEur(settings.find(s => s.key === "currency_rate_eur")?.value || "1700");
       setCurrencyRateGbp(settings.find(s => s.key === "currency_rate_gbp")?.value || "2000");
+      setCurrencyRateCad(settings.find(s => s.key === "currency_rate_cad")?.value || "1170");
+      setCurrencyRateAud(settings.find(s => s.key === "currency_rate_aud")?.value || "1050");
+      setCurrencyRateZar(settings.find(s => s.key === "currency_rate_zar")?.value || "86");
+      setCurrencyRateGhs(settings.find(s => s.key === "currency_rate_ghs")?.value || "145");
+      setCurrencyRateKes(settings.find(s => s.key === "currency_rate_kes")?.value || "12");
       setActiveAppDesign(settings.find(s => s.key === "active_app_design")?.value || "default");
 
       const counts: Record<string, number> = {};
@@ -595,6 +600,11 @@ const Admin = () => {
       supabase.from("admin_settings").upsert({ key: "currency_rate_usd", value: currencyRateUsd, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "currency_rate_eur", value: currencyRateEur, updated_at: new Date().toISOString() }),
       supabase.from("admin_settings").upsert({ key: "currency_rate_gbp", value: currencyRateGbp, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_cad", value: currencyRateCad, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_aud", value: currencyRateAud, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_zar", value: currencyRateZar, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_ghs", value: currencyRateGhs, updated_at: new Date().toISOString() }),
+      supabase.from("admin_settings").upsert({ key: "currency_rate_kes", value: currencyRateKes, updated_at: new Date().toISOString() }),
     ]);
     toast({ title: "Settings saved" });
     setSaving(false);
