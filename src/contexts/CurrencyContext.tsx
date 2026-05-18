@@ -39,6 +39,19 @@ const COUNTRY_CURRENCY: Record<string, CurrencyCode> = {
   ES: "EUR", HR: "EUR",
 };
 
+const COUNTRY_NAME_CURRENCY: Record<string, CurrencyCode> = {
+  NIGERIA: "NGN",
+  USA: "USD",
+  "UNITED STATES": "USD",
+  "UNITED KINGDOM": "GBP",
+  UK: "GBP",
+  CANADA: "CAD",
+  AUSTRALIA: "AUD",
+  GHANA: "GHS",
+  KENYA: "KES",
+  "SOUTH AFRICA": "ZAR",
+};
+
 interface CurrencyContextType {
   currency: CurrencyInfo;
   currencyCode: CurrencyCode;
@@ -130,18 +143,22 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
           () => fetchWithTimeout("https://ipwho.is/"),
         ];
         let countryCode = "";
+        let countryName = "";
         for (const lookup of lookups) {
           try {
             const data = await lookup();
-            countryCode = (data?.country_code || data?.country || "").toUpperCase();
-            if (countryCode) break;
+            countryCode = String(data?.country_code || "").toUpperCase();
+            countryName = String(data?.country || "").toUpperCase();
+            if (countryCode || countryName) break;
           } catch {
             continue;
           }
         }
-        if (countryCode) {
-          const mapped = COUNTRY_CURRENCY[countryCode] || "USD";
-          setCurrencyCode(mapped);
+
+        if (countryCode && COUNTRY_CURRENCY[countryCode]) {
+          setCurrencyCode(COUNTRY_CURRENCY[countryCode]);
+        } else if (countryName && COUNTRY_NAME_CURRENCY[countryName]) {
+          setCurrencyCode(COUNTRY_NAME_CURRENCY[countryName]);
         } else {
           setCurrencyCode("USD");
         }
