@@ -306,6 +306,124 @@ export type Database = {
           },
         ]
       }
+      dummy_activity: {
+        Row: {
+          action_type: string
+          created_at: string
+          dummy_user_id: string | null
+          id: string
+          positions_moved: number | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          dummy_user_id?: string | null
+          id?: string
+          positions_moved?: number | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          dummy_user_id?: string | null
+          id?: string
+          positions_moved?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dummy_activity_dummy_user_id_fkey"
+            columns: ["dummy_user_id"]
+            isOneToOne: false
+            referencedRelation: "dummy_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dummy_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          dummy_user_id: string | null
+          id: string
+          is_verified: boolean
+          transaction_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          dummy_user_id?: string | null
+          id?: string
+          is_verified?: boolean
+          transaction_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          dummy_user_id?: string | null
+          id?: string
+          is_verified?: boolean
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dummy_transactions_dummy_user_id_fkey"
+            columns: ["dummy_user_id"]
+            isOneToOne: false
+            referencedRelation: "dummy_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dummy_users: {
+        Row: {
+          annual_data_spend: number | null
+          annual_electricity_spend: number | null
+          annual_food_spend: number | null
+          annual_transport_spend: number | null
+          created_at: string
+          email: string
+          id: string
+          points_balance: number | null
+          queue_position: number | null
+          referral_code: string | null
+          spend_verified: boolean | null
+          target_amount: number | null
+          total_annual_spend: number | null
+          user_type: string | null
+        }
+        Insert: {
+          annual_data_spend?: number | null
+          annual_electricity_spend?: number | null
+          annual_food_spend?: number | null
+          annual_transport_spend?: number | null
+          created_at?: string
+          email: string
+          id?: string
+          points_balance?: number | null
+          queue_position?: number | null
+          referral_code?: string | null
+          spend_verified?: boolean | null
+          target_amount?: number | null
+          total_annual_spend?: number | null
+          user_type?: string | null
+        }
+        Update: {
+          annual_data_spend?: number | null
+          annual_electricity_spend?: number | null
+          annual_food_spend?: number | null
+          annual_transport_spend?: number | null
+          created_at?: string
+          email?: string
+          id?: string
+          points_balance?: number | null
+          queue_position?: number | null
+          referral_code?: string | null
+          spend_verified?: boolean | null
+          target_amount?: number | null
+          total_annual_spend?: number | null
+          user_type?: string | null
+        }
+        Relationships: []
+      }
       ghost_users: {
         Row: {
           created_at: string | null
@@ -1602,6 +1720,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_dummy_data_tables: { Args: never; Returns: boolean }
       generate_referral_code: { Args: never; Returns: string }
       generate_voucher_code: { Args: never; Returns: string }
       get_next_queue_position: { Args: never; Returns: number }
