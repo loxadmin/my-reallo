@@ -28,7 +28,6 @@ const COUNTRY_CURRENCY: Record<string, CurrencyCode> = {
   AE: "USD",
   CA: "CAD",
   AU: "AUD",
-  NZ: "AUD",
   ZA: "ZAR",
   GH: "GHS",
   KE: "KES",
@@ -94,7 +93,7 @@ const fetchWithTimeout = async (url: string, timeoutMs = 4500) => {
 };
 
 export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
-  const [currencyCode, setCurrencyCode] = useState<CurrencyCode>("NGN");
+  const [currencyCode, setCurrencyCode] = useState<CurrencyCode>("USD");
   const [rates, setRates] = useState<Record<CurrencyCode, number>>(DEFAULT_RATES);
   const [loaded, setLoaded] = useState(false);
 
