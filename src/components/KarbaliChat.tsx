@@ -436,26 +436,72 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
           if (surveyComplete) {
             try {
               const survey = (availableSurveys || []).find((s: any) => s.id === surveyComplete.survey_id);
-              const reward = surveyComplete.passed ? (survey?.points_reward || 0) : 0;
-              const { error: insErr } = await supabase.from("survey_responses").insert({
-                user_id: user.id,
-                survey_id: surveyComplete.survey_id,
-                status: surveyComplete.passed ? "approved" : "rejected",
-                points_awarded: reward,
-                reviewed_at: new Date().toISOString(),
-                quiz_completed_at: new Date().toISOString(),
-              } as any);
-              if (!insErr && reward > 0) {
-                await supabase
-                  .from("profiles")
-                  .update({ points_balance: (profile.points_balance || 0) + reward })
-                  .eq("id", user.id);
-                toast({ title: "Survey complete!", description: `+${reward} points awarded.` });
-                await refreshProfile();
-              } else if (!insErr && !surveyComplete.passed) {
-                toast({ title: "Survey ended", description: "An incorrect answer ended this survey.", variant: "destructive" });
+              if (!surveyComplete.passed) {
+                // Wrong answer — close the survey for this user. No points.
+                await supabase.from("survey_responses").upsert(
+                  {
+                    user_id: user.id,
+                    survey_id: surveyComplete.survey_id,
+                    status: "failed_quiz",
+                    screenshot_url: null,
+                    points_awarded: 0,
+                  } as any,
+                  { onConflict: "user_id,survey_id" } as any
+                );
+                toast({
+                  title: "Survey ended",
+                  description: "An incorrect answer ended this survey.",
+                  variant: "destructive",
+                });
+              } else {
+                // Passed the quiz — DO NOT credit yet. Points are only awarded after
+                // the user uploads a proof screenshot AND an admin approves it.
+                const now = new Date();
+                const expiresAt = new Date(now);
+                expiresAt.setDate(expiresAt.getDate() + 20);
+                const { error: insErr } = await supabase.from("survey_responses").upsert(
+                  {
+                    user_id: user.id,
+                    survey_id: surveyComplete.survey_id,
+                    status: "in_progress",
+                    quiz_completed_at: now.toISOString(),
+                    completion_expires_at: expiresAt.toISOString(),
+                    points_awarded: 0,
+                  } as any,
+                  { onConflict: "user_id,survey_id" } as any
+                );
+                if (!insErr) {
+                  toast({
+                    title: "Quiz passed!",
+                    description: "Finish the task and upload your screenshot in Earn → Surveys for admin approval.",
+                  });
+                  // Append a follow-up assistant message with the completion link + CTA
+                  const link = survey?.completion_link as string | undefined;
+                  const reward = survey?.points_reward || 0;
+                  const followup =
+                    `Nice — quiz passed ✅\n\n` +
+                    (link
+                      ? `Now finish the task here: [Open task link](${link})\n\n`
+                      : "") +
+                    `After completing it, head to **Earn → Surveys** and upload a screenshot as proof. ` +
+                    `Your **${reward.toLocaleString()} points** will be credited once an admin approves your submission (usually within 24h). ` +
+                    `You have 20 days to upload proof before this survey resets.`;
+                  setMessages(prev => {
+                    const updated = [
+                      ...prev,
+                      {
+                        id: `assistant-survey-followup-${Date.now()}`,
+                        role: "assistant" as const,
+                        content: followup,
+                        timestamp: Date.now(),
+                      },
+                    ];
+                    saveMessages(user.id, updated);
+                    return updated;
+                  });
+                }
               }
-              // Remove from available list so the assistant doesn't offer it again
+              // Remove from available list so the assistant doesn't offer it again this session
               setAvailableSurveys(prev => prev.filter((s: any) => s.id !== surveyComplete.survey_id));
             } catch (e) {
               console.error("survey complete error", e);
