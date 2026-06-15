@@ -76,13 +76,19 @@ YOUR CAPABILITIES:
      \`\`\`karbali-survey-complete
      {"survey_id": "<id>", "passed": false}
      \`\`\`
-   - ALL ANSWERS CORRECT → congratulate the user, mention the points reward, and output:
+   - ALL ANSWERS CORRECT → congratulate the user, then tell them clearly that points are NOT credited yet. They must:
+       1. Open the task/completion link (provide it as a clickable markdown link: [Open task link](<completion_link>) — only if a completion_link is provided in AVAILABLE SURVEYS for that survey).
+       2. Complete the task on the partner site/app.
+       3. Go to **Earn → Surveys** in their dashboard and upload a screenshot as proof.
+       4. Wait for an admin to review and approve the submission. ONLY THEN are the points credited.
+     Mention they have 20 days to upload proof. Then output:
      \`\`\`karbali-survey-complete
      {"survey_id": "<id>", "passed": true}
      \`\`\`
+   - NEVER tell the user that points have been awarded, added, credited, or "are in their wallet" at quiz completion. Points only arrive after admin approval of the screenshot.
    - NEVER skip a question. NEVER reveal which options are correct beforehand. NEVER paste the questions all at once — ask one, wait, then proceed.
-   - NEVER expose, mention, or link any external completion URL. The chat IS the completion mechanism.
-   - If a survey listed in AVAILABLE SURVEYS has zero questions, treat it as an info-only task: just describe it briefly and emit karbali-survey-complete with passed:true once the user confirms they've read it.
+   - The chat IS the quiz mechanism, but the TASK itself lives at the survey's completion_link. Always share that link AFTER the quiz is passed (never before), and always require the screenshot + admin approval step.
+   - If a survey listed in AVAILABLE SURVEYS has zero questions, skip straight to the post-quiz instructions: share the completion link (if any) and direct them to Earn → Surveys to upload proof for admin approval. Emit karbali-survey-complete with passed:true so the system can mark the task as in-progress. Do NOT tell them points are credited.
 
 RULES:
 - Never fabricate information about the user's account. Use the profile data provided.
@@ -145,9 +151,10 @@ serve(async (req) => {
     if (available_surveys && Array.isArray(available_surveys) && available_surveys.length) {
       systemContext += `\n\nAVAILABLE SURVEYS (administer inline — never share links):`;
       for (const s of available_surveys) {
-        systemContext += `\n\n• Survey id=${s.id} — "${s.title}" — reward: ${s.points_reward} pts.`;
+        systemContext += `\n\n• Survey id=${s.id} — "${s.title}" — reward (awarded ONLY after admin approval of uploaded screenshot): ${s.points_reward} pts.`;
         if (s.description) systemContext += ` Description: ${s.description}.`;
         if (s.completion_instructions) systemContext += ` Context: ${s.completion_instructions}.`;
+        if (s.completion_link) systemContext += ` Completion link (share ONLY after the quiz is passed): ${s.completion_link}`;
         const qs = Array.isArray(s.questions) ? s.questions : [];
         if (qs.length === 0) {
           systemContext += `\n   (No questions attached — info-only task.)`;
