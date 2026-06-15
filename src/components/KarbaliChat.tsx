@@ -261,7 +261,7 @@ const KarbaliChat = ({ onOnboardingComplete, mode = "fullscreen", proactiveTip, 
         supabase.from("admin_settings").select("value").eq("key", "verify_page_active").maybeSingle(),
         supabase.from("decision_apps" as any).select("app_name").eq("is_active", true).in("audience", audienceList),
         supabase.from("goal_categories").select("*"),
-        supabase.from("surveys").select("id,title,description,points_reward,completion_instructions").eq("is_active", true).in("audience", audienceList),
+        supabase.from("surveys").select("id,title,description,points_reward,completion_instructions,completion_link").eq("is_active", true).in("audience", audienceList),
       ]);
       if (settingsRes.data) setVerifyPageActive(settingsRes.data.value !== "false");
       if (appsRes.data) setActiveApps((appsRes.data as any[]).map(a => a.app_name));
