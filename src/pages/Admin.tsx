@@ -168,7 +168,11 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
                     <SidebarMenuItem key={item.id}>
                       <SidebarMenuButton
                         isActive={isActive}
-                        onClick={() => setActiveTab(item.id)}
+                        onClick={() => {
+                          const href = (item as any).href;
+                          if (href) { window.location.href = href; return; }
+                          setActiveTab(item.id);
+                        }}
                         tooltip={item.label}
                         className={`rounded-xl h-10 px-3 transition-all duration-200 border ${isActive
                           ? "bg-primary text-primary-foreground font-semibold shadow-md border-primary/30"
