@@ -1061,6 +1061,443 @@ export type Database = {
         }
         Relationships: []
       }
+      oauth_access_tokens: {
+        Row: {
+          app_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          revoked_at: string | null
+          scopes: string[]
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_access_tokens_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_api_usage: {
+        Row: {
+          app_id: string | null
+          created_at: string
+          endpoint: string
+          id: string
+          ip: string | null
+          status: number
+          user_agent: string | null
+        }
+        Insert: {
+          app_id?: string | null
+          created_at?: string
+          endpoint: string
+          id?: string
+          ip?: string | null
+          status: number
+          user_agent?: string | null
+        }
+        Update: {
+          app_id?: string | null
+          created_at?: string
+          endpoint?: string
+          id?: string
+          ip?: string | null
+          status?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_api_usage_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_app_domains: {
+        Row: {
+          app_id: string
+          created_at: string
+          domain: string
+          id: string
+          verification_token: string
+          verified_at: string | null
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          domain: string
+          id?: string
+          verification_token: string
+          verified_at?: string | null
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          verification_token?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_app_domains_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_app_redirect_uris: {
+        Row: {
+          app_id: string
+          created_at: string
+          id: string
+          uri: string
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          id?: string
+          uri: string
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          id?: string
+          uri?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_app_redirect_uris_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_app_scopes: {
+        Row: {
+          app_id: string
+          approved: boolean
+          created_at: string
+          id: string
+          scope: Database["public"]["Enums"]["oauth_scope"]
+        }
+        Insert: {
+          app_id: string
+          approved?: boolean
+          created_at?: string
+          id?: string
+          scope: Database["public"]["Enums"]["oauth_scope"]
+        }
+        Update: {
+          app_id?: string
+          approved?: boolean
+          created_at?: string
+          id?: string
+          scope?: Database["public"]["Enums"]["oauth_scope"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_app_scopes_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_apps: {
+        Row: {
+          client_id: string
+          client_secret_hash: string
+          company_name: string | null
+          contact_email: string | null
+          created_at: string
+          description: string | null
+          environment: Database["public"]["Enums"]["oauth_environment"]
+          id: string
+          logo_url: string | null
+          name: string
+          owner_user_id: string | null
+          public_key: string | null
+          status: Database["public"]["Enums"]["oauth_app_status"]
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          client_id: string
+          client_secret_hash: string
+          company_name?: string | null
+          contact_email?: string | null
+          created_at?: string
+          description?: string | null
+          environment?: Database["public"]["Enums"]["oauth_environment"]
+          id?: string
+          logo_url?: string | null
+          name: string
+          owner_user_id?: string | null
+          public_key?: string | null
+          status?: Database["public"]["Enums"]["oauth_app_status"]
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          client_id?: string
+          client_secret_hash?: string
+          company_name?: string | null
+          contact_email?: string | null
+          created_at?: string
+          description?: string | null
+          environment?: Database["public"]["Enums"]["oauth_environment"]
+          id?: string
+          logo_url?: string | null
+          name?: string
+          owner_user_id?: string | null
+          public_key?: string | null
+          status?: Database["public"]["Enums"]["oauth_app_status"]
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      oauth_authorization_codes: {
+        Row: {
+          app_id: string
+          code_challenge: string
+          code_challenge_method: string
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          redirect_uri: string
+          scopes: string[]
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          app_id: string
+          code_challenge: string
+          code_challenge_method?: string
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          redirect_uri: string
+          scopes?: string[]
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          app_id?: string
+          code_challenge?: string
+          code_challenge_method?: string
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          redirect_uri?: string
+          scopes?: string[]
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_authorization_codes_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_points_ledger: {
+        Row: {
+          amount: number
+          app_id: string
+          created_at: string
+          id: string
+          reference: string | null
+          type: Database["public"]["Enums"]["oauth_ledger_type"]
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          app_id: string
+          created_at?: string
+          id?: string
+          reference?: string | null
+          type: Database["public"]["Enums"]["oauth_ledger_type"]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          app_id?: string
+          created_at?: string
+          id?: string
+          reference?: string | null
+          type?: Database["public"]["Enums"]["oauth_ledger_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_points_ledger_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_refresh_tokens: {
+        Row: {
+          app_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          revoked_at: string | null
+          scopes: string[]
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_refresh_tokens_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_user_consents: {
+        Row: {
+          app_id: string
+          granted_at: string
+          id: string
+          revoked_at: string | null
+          scopes: string[]
+          user_id: string
+        }
+        Insert: {
+          app_id: string
+          granted_at?: string
+          id?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id: string
+        }
+        Update: {
+          app_id?: string
+          granted_at?: string
+          id?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_user_consents_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_webhook_events: {
+        Row: {
+          app_id: string
+          attempts: number
+          created_at: string
+          delivered_at: string | null
+          event_type: string
+          id: string
+          last_error: string | null
+          payload: Json
+          signature: string | null
+        }
+        Insert: {
+          app_id: string
+          attempts?: number
+          created_at?: string
+          delivered_at?: string | null
+          event_type: string
+          id?: string
+          last_error?: string | null
+          payload: Json
+          signature?: string | null
+        }
+        Update: {
+          app_id?: string
+          attempts?: number
+          created_at?: string
+          delivered_at?: string | null
+          event_type?: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          signature?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_webhook_events_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: string
@@ -1731,6 +2168,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      oauth_get_matured_points: { Args: { _user_id: string }; Returns: number }
       request_influencer_withdrawal: {
         Args: { p_amount: number; p_bank_account_id: string }
         Returns: Json
@@ -1738,6 +2176,19 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      oauth_app_status: "pending" | "approved" | "suspended" | "revoked"
+      oauth_environment: "sandbox" | "production"
+      oauth_ledger_type: "spend" | "reversal"
+      oauth_scope:
+        | "profile.read"
+        | "email.read"
+        | "username.read"
+        | "points.read"
+        | "points.balance.read"
+        | "points.matured.read"
+        | "savings.read"
+        | "goals.read"
+        | "transactions.read"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1866,6 +2317,20 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      oauth_app_status: ["pending", "approved", "suspended", "revoked"],
+      oauth_environment: ["sandbox", "production"],
+      oauth_ledger_type: ["spend", "reversal"],
+      oauth_scope: [
+        "profile.read",
+        "email.read",
+        "username.read",
+        "points.read",
+        "points.balance.read",
+        "points.matured.read",
+        "savings.read",
+        "goals.read",
+        "transactions.read",
+      ],
     },
   },
 } as const

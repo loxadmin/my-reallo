@@ -117,6 +117,12 @@ const navGroups = [
     ],
   },
   {
+    label: "PARTNER INTEGRATIONS",
+    items: [
+      { id: "oauth_apps" as AdminTab, label: "OAuth Apps", icon: Link, href: "/admin/oauth-apps" } as any,
+    ],
+  },
+  {
     label: "ACCOUNT",
     items: [
       { id: "app_design" as AdminTab, label: "App Design", icon: Paintbrush },
@@ -162,7 +168,11 @@ function AdminSidebar({ activeTab, setActiveTab, counts, onLogout }: { activeTab
                     <SidebarMenuItem key={item.id}>
                       <SidebarMenuButton
                         isActive={isActive}
-                        onClick={() => setActiveTab(item.id)}
+                        onClick={() => {
+                          const href = (item as any).href;
+                          if (href) { window.location.href = href; return; }
+                          setActiveTab(item.id);
+                        }}
                         tooltip={item.label}
                         className={`rounded-xl h-10 px-3 transition-all duration-200 border ${isActive
                           ? "bg-primary text-primary-foreground font-semibold shadow-md border-primary/30"
