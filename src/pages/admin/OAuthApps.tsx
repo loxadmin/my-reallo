@@ -76,7 +76,7 @@ export default function OAuthApps() {
   }
 
   async function updateStatus(app: App, status: string) {
-    await supabase.from("oauth_apps").update({ status }).eq("id", app.id);
+    await supabase.from("oauth_apps").update({ status: status as any }).eq("id", app.id);
     await load();
     toast.success(`App ${status}`);
   }
@@ -86,7 +86,7 @@ export default function OAuthApps() {
     if (existing) {
       await supabase.from("oauth_app_scopes").update({ approved }).eq("id", existing.id);
     } else {
-      await supabase.from("oauth_app_scopes").insert({ app_id: app.id, scope, approved });
+      await supabase.from("oauth_app_scopes").insert([{ app_id: app.id, scope: scope as any, approved }]);
     }
     await load();
   }
