@@ -27,10 +27,7 @@ Deno.serve(async (req) => {
   }).select("id").single();
   if (error) return json({ error: "ledger_failed", detail: error.message }, 500);
 
-  // Deduct from profile balance
-  await s.rpc("oauth_get_matured_points", { _user_id: at.user_id });
-  await s.from("profiles").update({ points_balance: (matured ?? 0) - amount + ((await s.from("profiles").select("points_balance").eq("id", at.user_id).maybeSingle()).data?.points_balance ?? 0) - (matured ?? 0) }).eq("id", at.user_id);
-  // Simpler: direct decrement
+  // Decrement user's points_balance
   const { data: prof } = await s.from("profiles").select("points_balance").eq("id", at.user_id).maybeSingle();
   await s.from("profiles").update({ points_balance: Math.max(0, (prof?.points_balance ?? 0) - amount) }).eq("id", at.user_id);
 
