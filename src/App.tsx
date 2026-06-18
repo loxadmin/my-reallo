@@ -18,6 +18,9 @@ import ResetPassword from "./pages/ResetPassword";
 import AdvertiserOnboard from "./pages/AdvertiserOnboard";
 import AdvertiserDashboard from "./pages/AdvertiserDashboard";
 import SecurityTrapRoute from "./components/SecurityTrapRoute";
+import OAuthApps from "./pages/admin/OAuthApps";
+import OAuthAuthorize from "./pages/oauth/Authorize";
+import PartnerDashboard from "./pages/partner/Dashboard";
 
 // SEO Guides
 import MakeMoneyOnline from "./pages/guides/MakeMoneyOnline";
@@ -54,6 +57,9 @@ const AnimatedRoutes = () => {
                   <Route path="/config.php" element={<SecurityTrapRoute />} />
                   <Route path="/advertiser/onboard/:token" element={<AdvertiserOnboard />} />
                   <Route path="/advertiser/dashboard/:token" element={<AdvertiserDashboard />} />
+                  <Route path="/admin/oauth-apps" element={<OAuthApps />} />
+                  <Route path="/oauth/authorize" element={<OAuthAuthorize />} />
+                  <Route path="/partner/dashboard" element={<PartnerDashboard />} />
 
                   {/* SEO optimized routes */}
                   <Route path="/how-to-make-money-online-without-investment-nigeria" element={<MakeMoneyOnline />} />
