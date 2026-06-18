@@ -12,16 +12,16 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_token" }, 401);
   }
 
-  const { data: profile } = await s.from("profiles").select("id, email, username, avatar_url, points_balance").eq("id", at.user_id).maybeSingle();
+  const { data: profile } = await s.from("profiles").select("id, email, points_balance, referral_code").eq("id", at.user_id).maybeSingle();
   if (!profile) return json({ error: "user_not_found" }, 404);
 
   const scopes: string[] = at.scopes ?? [];
   const out: Record<string, unknown> = { id: profile.id };
   if (scopes.includes("email.read")) out.email = profile.email;
-  if (scopes.includes("username.read")) out.username = (profile as any).username ?? null;
+  if (scopes.includes("username.read")) out.username = (profile.email ?? "").split("@")[0];
   if (scopes.includes("profile.read")) {
-    out.avatar = (profile as any).avatar_url ?? null;
-    out.username = (profile as any).username ?? null;
+    out.username = (profile.email ?? "").split("@")[0];
+    out.referralCode = (profile as any).referral_code ?? null;
   }
   if (scopes.includes("points.read") || scopes.includes("points.balance.read")) {
     out.pointsBalance = profile.points_balance ?? 0;
