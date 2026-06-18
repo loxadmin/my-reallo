@@ -20,3 +20,27 @@ verify_jwt = false
 
 [functions.karbali-chat]
 verify_jwt = false
+
+[functions.oauth-authorize]
+verify_jwt = false
+
+[functions.oauth-consent]
+verify_jwt = false
+
+[functions.oauth-token]
+verify_jwt = false
+
+[functions.oauth-userinfo]
+verify_jwt = false
+
+[functions.oauth-spend]
+verify_jwt = false
+
+[functions.oauth-revoke]
+verify_jwt = false
+
+[functions.oauth-verify-domain]
+verify_jwt = false
+
+[functions.oauth-app-create]
+verify_jwt = false
