@@ -117,6 +117,12 @@ const navGroups = [
     ],
   },
   {
+    label: "PARTNER INTEGRATIONS",
+    items: [
+      { id: "oauth_apps" as AdminTab, label: "OAuth Apps", icon: Link, href: "/admin/oauth-apps" } as any,
+    ],
+  },
+  {
     label: "ACCOUNT",
     items: [
       { id: "app_design" as AdminTab, label: "App Design", icon: Paintbrush },
