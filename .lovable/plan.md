@@ -1,82 +1,58 @@
-# Karbali OAuth Partner Platform
+# Valid Referrals & Influencer Withdrawal Target
 
-Build a "Sign in with Karbali" identity + value-exchange provider. Phase 1 scope below — only what you asked for, nothing else touched.
+## Concept
 
-## 1. Database (new tables only)
+- **Valid referral** = a referred user who has completed at least one task (admin-approved survey screenshot, approved spend verification, approved decision/referral-app task, or approved influencer challenge submission).
+- All referral rewards (points to regular users, ₦500 to influencer wallets) become **pending** at signup and are **released** only when the referred user achieves a valid referral.
+- **Influencer withdrawal target**: in a rolling 30-day window, an influencer must have at least **100 valid new referrals**, otherwise withdrawals are blocked with a clear message showing progress (e.g. "42 / 100 valid referrals in last 30 days").
 
-All in `public`, RLS on, admin-only write, service_role full access.
+## Database changes (migration)
 
-- `oauth_apps` — app_uuid, name, description, company_name, website_url, logo_url, contact_email, environment (`sandbox`|`production`), status (`pending`|`approved`|`suspended`|`revoked`), client_id, client_secret_hash, public_key, owner_user_id, created_at
-- `oauth_app_domains` — app_id, domain, verification_token, verified_at
-- `oauth_app_redirect_uris` — app_id, uri
-- `oauth_app_scopes` — app_id, scope, approved (bool) — scopes enum: `profile.read`, `email.read`, `username.read`, `points.read`, `points.balance.read`, `points.matured.read`
-- `oauth_authorization_codes` — code_hash, app_id, user_id, scopes[], redirect_uri, code_challenge, code_challenge_method, expires_at, used_at
-- `oauth_access_tokens` — token_hash, app_id, user_id, scopes[], expires_at, revoked_at
-- `oauth_refresh_tokens` — token_hash, app_id, user_id, scopes[], expires_at, revoked_at
-- `oauth_user_consents` — user_id, app_id, scopes[], granted_at, revoked_at (unique on user_id+app_id)
-- `oauth_points_ledger` — **immutable** debit/credit log: id, user_id, app_id, amount (negative=debit), type (`spend`|`reversal`), reference, created_at. No updates/deletes allowed (RLS + trigger).
-- `oauth_webhook_events` — app_id, event_type, payload, signature, delivered_at, attempts
-- `oauth_api_usage` — app_id, endpoint, status, ip, created_at (for rate-limit + dashboard metrics)
+1. `referrals` table — add:
+   - `status text not null default 'pending'` ('pending' | 'valid')
+   - `validated_at timestamptz`
+   - `validation_source text` (e.g. 'survey', 'spend', 'decision', 'challenge')
+2. `influencer_referrals` table — add `status`, `validated_at` (mirror).
+3. New SQL function `public.mark_referral_valid(_referred_user_id uuid, _source text)`:
+   - Idempotent. If referral already valid → no-op.
+   - Marks `referrals` row valid.
+   - If referrer is a regular user with pending points: credit `profiles.points_balance` (the 1000 pts or 20-queue-skip is already applied at signup for queue skip; only points reward is held — keep queue skip immediate, hold only points/₦).
+   - If referrer has active influencer wallet: credit ₦500 to `influencer_wallets.balance` and mark `influencer_referrals` valid + insert `influencer_wallet_transactions` row.
+4. New SQL function `public.count_valid_referrals_last_30d(_user_id uuid) returns int`.
+5. Update `request_influencer_withdrawal` RPC to check `count_valid_referrals_last_30d(auth.uid()) >= 100` else return `{ error: 'You need 100 valid referrals in the last 30 days to withdraw. Current: X' }`.
+6. Update `handle_new_user` trigger and the `credit_influencer_referral` trigger:
+   - Insert referral row with `status='pending'`.
+   - Do NOT credit points / wallet immediately. Queue-skip stays immediate (it's a queue mechanic, not a monetary reward).
+7. Add task-completion hooks (triggers) that call `mark_referral_valid` when a row transitions to approved:
+   - `survey_responses` → status becomes 'approved' or `points_awarded > 0`
+   - `spend_verifications` → status becomes 'approved'
+   - `decision_responses` → status becomes 'approved'
+   - `influencer_challenge_submissions` → status becomes 'approved'
 
-Matured-points rule: a point is "matured" if the originating `waitlist_activity`/credit row is ≥ 6 months old. Implement as SQL function `get_matured_points(user_id)` derived from existing points history. Spendable = `matured_points - sum(oauth_points_ledger debits)`.
+## Edge function changes
 
-## 2. Edge Functions
+- `handle-referral` and `handle-google-referral`: remove immediate points credit / ₦500 credit. Still record referral (pending) and apply queue skip.
 
-All under `supabase/functions/oauth-*`, public (verify_jwt=false), CORS open, HMAC/PKCE validated in code.
+## Frontend changes
 
-- `oauth-authorize` — GET; validates client_id, redirect_uri, scopes, PKCE challenge; requires Karbali user session; renders consent (returns JSON the frontend consent page consumes).
-- `oauth-consent` — POST; user Allow/Cancel; issues short-lived authorization code (10 min).
-- `oauth-token` — POST; exchanges code+verifier for access_token (1h) + refresh_token (30d); also handles `grant_type=refresh_token`.
-- `oauth-userinfo` — GET `/oauth/user`; bearer token; returns fields per granted scopes including `pointsBalance` and `maturedPoints`.
-- `oauth-spend` — POST `/oauth/spend`; bearer token w/ `points.matured.read` + spend grant; validates matured balance; inserts immutable ledger debit; fires `points.spent` webhook.
-- `oauth-revoke` — POST; revoke token/consent.
-- `oauth-verify-domain` — POST; admin triggers DNS TXT lookup for `karbali-verification=<token>`; marks domain verified.
-- `oauth-webhook-dispatch` — internal; HMAC-SHA256 signs payload with app's client_secret; retries with backoff.
+- `InfluencerPanel.tsx` (withdrawal UI):
+  - Fetch `count_valid_referrals_last_30d` via RPC.
+  - Show progress: "Valid referrals (last 30 days): X / 100". Disable Withdraw button until ≥100, with tooltip explaining the rule.
+  - Surface server-side error message from RPC.
+- Referral list views (user dashboard + influencer dashboard): show each referral's status badge (Pending / Valid) and validated date.
 
-Rate limiting: simple in-function check against `oauth_api_usage` (e.g. 60 req/min per app per endpoint). Device/IP captured into usage table.
+## Backfill
 
-## 3. Frontend — Admin Panel
+- For existing `referrals` rows where the referred user already has ≥1 approved task: mark `status='valid'`, set `validated_at = now()`. Do NOT retroactively credit money/points (avoid double-credit since old logic already paid out).
+- For new referrals only, the pending→valid credit logic applies.
 
-New route `src/pages/admin/OAuthApps.tsx` linked from existing Admin page under "Partner Integrations":
-- List apps with status badges
-- Create/edit app drawer (all fields above)
-- Reveal client_id, regenerate client_secret (shown once)
-- Manage redirect URIs, allowed domains (with verification token + "Verify" button + status)
-- Approve/suspend/revoke
-- Approve/reject requested scopes
-- View ledger + API usage per app
+## Out of scope
 
-## 4. Frontend — User Consent Screen
-
-New public route `src/pages/oauth/Authorize.tsx`:
-- Reads query params (`client_id`, `redirect_uri`, `scope`, `state`, `code_challenge`, `code_challenge_method`)
-- If not signed in → redirect to /auth with return URL
-- Calls `oauth-authorize` to fetch app metadata + requested scopes
-- Renders consent UI: app logo, name, "<App> wants access to:" with per-scope checklist, **Allow** / **Cancel**
-- On Allow → calls `oauth-consent`, redirects back to `redirect_uri?code=...&state=...`
-
-## 5. Frontend — Partner Dashboard
-
-New route `src/pages/partner/Dashboard.tsx` (access via partner login = app owner_user_id):
-- Total users connected, OAuth sign-ins, points redeemed, active users, conversion, API usage charts
-- Webhook delivery log
-- Pull credentials, rotate secret
-
-## 6. Security
-
-- PKCE required (S256 only)
-- Redirect URI exact-match against `oauth_app_redirect_uris`
-- Domain must be verified before app moves to `approved`
-- client_secret stored as bcrypt hash; shown once on creation/rotation
-- Access tokens stored as SHA-256 hash
-- Authorization codes single-use, 10-min TTL
-- Webhook HMAC signature header `X-Karbali-Signature`
-- Rate limiting per app+endpoint
-- Immutable ledger enforced by trigger that blocks UPDATE/DELETE on `oauth_points_ledger`
-
-## 7. Out of scope (Phase 2+)
-Goals/savings/transactions scopes, marketplace, universal wallet UI — schemas reserved, endpoints stubbed to return 403 `scope_not_yet_available`.
+- No changes to queue mechanics, OAuth, currency, or other features.
+- Existing balances untouched.
 
 ## Technical notes
-- Matured-points calc: derive from existing `profiles.points_balance` minus a cached "locked_points" view computed from `waitlist_activity` entries newer than 6 months. If existing points history doesn't carry timestamps per credit, we'll add a lightweight `points_credits` audit table going forward and treat pre-existing balance as fully matured (documented in admin UI).
-- All new code isolated under `oauth_*` tables, `oauth-*` edge functions, and `src/pages/oauth/`, `src/pages/admin/OAuthApps.tsx`, `src/pages/partner/` — no existing files modified except Admin.tsx (add nav link) and App.tsx (add routes).
+
+- Validation triggers (not CHECK) used for state transitions.
+- All new functions `SECURITY DEFINER` with `set search_path = public`.
+- All grants included per public-schema rule.

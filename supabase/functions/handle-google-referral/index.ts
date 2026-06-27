@@ -78,30 +78,9 @@ Deno.serve(async (req) => {
 
         if (isOffQueue) {
           positionsMoved = 0;
-
-          const { data: influencerApp, error: influencerError } = await supabase
-            .from("influencer_applications")
-            .select("id")
-            .eq("user_id", referrer.id)
-            .eq("status", "approved")
-            .maybeSingle();
-
-          if (influencerError) {
-            throw influencerError;
-          }
-
-          if (!influencerApp) {
-            activityType = "referral_points";
-
-            const { error: pointsError } = await supabase
-              .from("profiles")
-              .update({ points_balance: (referrer.points_balance || 0) + 1000 })
-              .eq("id", referrer.id);
-
-            if (pointsError) {
-              throw pointsError;
-            }
-          }
+          // Point rewards are held until the referred user completes an approved task
+          // (mark_referral_valid). Only the queue/activity log is updated here.
+          activityType = "referral_pending";
         } else {
           const newQueuePosition = Math.max(1, (referrer.queue_position ?? 100) - 20);
           const { error: queueError } = await supabase
@@ -116,7 +95,7 @@ Deno.serve(async (req) => {
 
         const { error: referralInsertError } = await supabase
           .from("referrals")
-          .insert({ referrer_id: referrer.id, referred_user_id: user.id });
+          .insert({ referrer_id: referrer.id, referred_user_id: user.id, status: "pending" });
 
         if (referralInsertError) {
           throw referralInsertError;

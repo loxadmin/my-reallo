@@ -706,6 +706,7 @@ export type Database = {
           referred_user_id: string
           reward_amount: number
           status: string
+          validated_at: string | null
         }
         Insert: {
           created_at?: string
@@ -714,6 +715,7 @@ export type Database = {
           referred_user_id: string
           reward_amount?: number
           status?: string
+          validated_at?: string | null
         }
         Update: {
           created_at?: string
@@ -722,6 +724,7 @@ export type Database = {
           referred_user_id?: string
           reward_amount?: number
           status?: string
+          validated_at?: string | null
         }
         Relationships: [
           {
@@ -1725,18 +1728,27 @@ export type Database = {
           id: string
           referred_user_id: string
           referrer_id: string
+          status: string
+          validated_at: string | null
+          validation_source: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           referred_user_id: string
           referrer_id: string
+          status?: string
+          validated_at?: string | null
+          validation_source?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
           referred_user_id?: string
           referrer_id?: string
+          status?: string
+          validated_at?: string | null
+          validation_source?: string | null
         }
         Relationships: [
           {
@@ -2157,6 +2169,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      count_valid_referrals_last_30d: {
+        Args: { _user_id: string }
+        Returns: number
+      }
       ensure_dummy_data_tables: { Args: never; Returns: boolean }
       generate_referral_code: { Args: never; Returns: string }
       generate_voucher_code: { Args: never; Returns: string }
@@ -2167,6 +2183,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      mark_referral_valid: {
+        Args: { _referred_user_id: string; _source: string }
+        Returns: undefined
       }
       oauth_get_matured_points: { Args: { _user_id: string }; Returns: number }
       request_influencer_withdrawal: {
