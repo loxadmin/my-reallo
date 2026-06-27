@@ -105,6 +105,7 @@ const InfluencerPanel = () => {
   // Withdrawal
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
+  const [validReferrals30d, setValidReferrals30d] = useState<number>(0);
 
   // Tab
   const [tab, setTab] = useState<"overview" | "withdraw" | "challenges">("overview");
@@ -136,6 +137,9 @@ const InfluencerPanel = () => {
     setEnrollments(((enRes.data as any) || []) as ChallengeEnrollment[]);
     setSubmissions(((subRes.data as any) || []) as ChallengeSubmission[]);
     setWalletTransactions(((txnRes.data as any) || []) as InfluencerWalletTransaction[]);
+    // Valid referrals in last 30 days (withdrawal target)
+    const { data: vrCount } = await supabase.rpc("count_valid_referrals_last_30d" as any, { _user_id: user.id });
+    setValidReferrals30d(typeof vrCount === "number" ? vrCount : Number(vrCount ?? 0));
     setLoading(false);
   };
 
@@ -550,6 +554,23 @@ const InfluencerPanel = () => {
               <p className="text-muted-foreground text-[11px] mt-1">Total earned: {formatNaira(totalEarned)}</p>
             </div>
             <div className="space-y-3 mt-4">
+              <div className="rounded-xl border border-border/40 bg-card/40 p-3">
+                <div className="flex items-center justify-between text-[11px] mb-1.5">
+                  <span className="text-muted-foreground">Valid referrals (last 30 days)</span>
+                  <span className={`font-semibold ${validReferrals30d >= 100 ? "text-primary" : "text-foreground"}`}>
+                    {validReferrals30d} / 100
+                  </span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all"
+                    style={{ width: `${Math.min(100, (validReferrals30d / 100) * 100)}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1.5 leading-tight">
+                  You need at least 100 valid referrals in the last 30 days to withdraw. A referral becomes valid once the referred user completes their first admin-approved task.
+                </p>
+              </div>
               <div>
                 <label className="text-[11px] text-muted-foreground mb-1 block">Amount (₦)</label>
                 <input
@@ -561,8 +582,18 @@ const InfluencerPanel = () => {
                   className="w-full glass-input rounded-xl px-4 py-3 text-foreground text-[13px]"
                 />
               </div>
-              <GlassButton variant="primary" onClick={handleWithdraw} disabled={withdrawing} className="w-full text-[13px]">
-                <ArrowDownToLine className="w-3.5 h-3.5 mr-1" /> {withdrawing ? "Processing..." : "Request Withdrawal"}
+              <GlassButton
+                variant="primary"
+                onClick={handleWithdraw}
+                disabled={withdrawing || validReferrals30d < 100}
+                className="w-full text-[13px]"
+              >
+                <ArrowDownToLine className="w-3.5 h-3.5 mr-1" />
+                {withdrawing
+                  ? "Processing..."
+                  : validReferrals30d < 100
+                    ? `Locked · ${validReferrals30d}/100 valid referrals`
+                    : "Request Withdrawal"}
               </GlassButton>
             </div>
           </GlassCard>
