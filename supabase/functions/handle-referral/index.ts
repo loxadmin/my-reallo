@@ -64,19 +64,10 @@ Deno.serve(async (req) => {
 
     const isOffQueue = referrer.queue_position <= 0 && referrer.off_queue_at !== null;
 
-    if (isOffQueue) {
-      // Award 1000 points to off-queue users
-      await supabase
-        .from("profiles")
-        .update({ points_balance: (referrer.points_balance || 0) + 1000 })
-        .eq("id", referrer.id);
-
-      await supabase.from("waitlist_activity").insert({
-        user_id: referrer.id,
-        action_type: "referral_points",
-        positions_moved: 0,
-      });
-    } else if (referrer.queue_position > 0) {
+    // Queue skip is applied immediately (queue mechanic, not a monetary reward).
+    // Point/wallet rewards are now held until the referred user completes an approved task
+    // (handled by mark_referral_valid SQL function).
+    if (!isOffQueue && referrer.queue_position > 0) {
       // Skip 20 positions for on-queue users
       const newPos = Math.max(1, (referrer.queue_position || 0) - 20);
       await supabase
@@ -94,6 +85,7 @@ Deno.serve(async (req) => {
     await supabase.from("referrals").insert({
       referrer_id: referrer.id,
       referred_user_id: user.id,
+      status: "pending",
     });
 
     return new Response(
