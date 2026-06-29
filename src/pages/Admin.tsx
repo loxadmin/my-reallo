@@ -2682,16 +2682,6 @@ const Admin = () => {
                   <MetricCard label="Approved" value={infChallengeSubmissions.filter((s: any) => s.status === "approved").length} icon={CheckCircle2} />
                   <MetricCard label="Rejected" value={infChallengeSubmissions.filter((s: any) => s.status === "rejected" || s.status === "closed").length} icon={X} />
                 </div>
-              </div>
-            )}
-
-            {/* ═══ INF LEADERBOARD CONTESTS ═══ */}
-            {activeTab === "inf_leaderboard" && (
-              <AdminLeaderboardContests />
-            )}
-
-            {activeTab === "__never__inf_submissions__" && (
-              <div className="space-y-6">
 
                 {/* Pending submissions first */}
                 {(() => {
