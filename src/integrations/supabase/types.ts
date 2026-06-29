@@ -1034,6 +1034,98 @@ export type Database = {
           },
         ]
       }
+      leaderboard_contest_winners: {
+        Row: {
+          awarded_at: string
+          contest_id: string
+          id: string
+          paid: boolean
+          prize_amount: number
+          rank: number
+          user_id: string
+          valid_referrals: number
+        }
+        Insert: {
+          awarded_at?: string
+          contest_id: string
+          id?: string
+          paid?: boolean
+          prize_amount: number
+          rank: number
+          user_id: string
+          valid_referrals: number
+        }
+        Update: {
+          awarded_at?: string
+          contest_id?: string
+          id?: string
+          paid?: boolean
+          prize_amount?: number
+          rank?: number
+          user_id?: string
+          valid_referrals?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leaderboard_contest_winners_contest_id_fkey"
+            columns: ["contest_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard_contests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leaderboard_contests: {
+        Row: {
+          created_at: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          period_days: number
+          prize_amount: number
+          prize_currency: string
+          rules: string | null
+          starts_at: string
+          target_referrals: number
+          title: string
+          updated_at: string
+          winner_count: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          period_days?: number
+          prize_amount?: number
+          prize_currency?: string
+          rules?: string | null
+          starts_at?: string
+          target_referrals?: number
+          title: string
+          updated_at?: string
+          winner_count?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          period_days?: number
+          prize_amount?: number
+          prize_currency?: string
+          rules?: string | null
+          starts_at?: string
+          target_referrals?: number
+          title?: string
+          updated_at?: string
+          winner_count?: number
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -2174,6 +2266,10 @@ export type Database = {
         Returns: number
       }
       ensure_dummy_data_tables: { Args: never; Returns: boolean }
+      evaluate_leaderboard_contests: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       generate_referral_code: { Args: never; Returns: string }
       generate_voucher_code: { Args: never; Returns: string }
       get_next_queue_position: { Args: never; Returns: number }
@@ -2182,6 +2278,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      influencer_completed_general_task_last_30d: {
+        Args: { _user_id: string }
         Returns: boolean
       }
       mark_referral_valid: {
