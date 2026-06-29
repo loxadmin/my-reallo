@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { GlassCard } from "@/components/GlassCard";
-import { GlassButton } from "@/components/GlassButton";
+import GlassCard from "@/components/GlassCard";
+import GlassButton from "@/components/GlassButton";
 import { toast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus, Trophy } from "lucide-react";
 
