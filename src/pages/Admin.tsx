@@ -2976,6 +2976,9 @@ const Admin = () => {
                 <AdminInfluencerSurveyResponses adminUserId={(authUser?.id || "") as string} />
               </div>
             )}
+            {activeTab === "inf_leaderboard" && (
+              <AdminLeaderboardContests />
+            )}
             {activeTab === "surveys" && (
               <div className="space-y-6">
                 <div className={cardCls}>
