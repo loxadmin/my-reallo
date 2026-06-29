@@ -19,6 +19,7 @@ import UserProfileDrawer from "@/components/UserProfileDrawer";
 import AdvertiserManagement from "@/components/admin/AdvertiserManagement";
 import AdminInfluencerSurveys from "@/components/admin/AdminInfluencerSurveys";
 import AdminInfluencerSurveyResponses from "@/components/admin/AdminInfluencerSurveyResponses";
+import AdminLeaderboardContests from "@/components/admin/AdminLeaderboardContests";
 import PageSkeleton from "@/components/PageSkeleton";
 import {
   SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
