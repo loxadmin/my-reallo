@@ -82,7 +82,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps");
 const fromDResponses = () => supabase.from("decision_responses");
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "inf_leaderboard" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config";
 
 const navGroups = [
   {
@@ -108,6 +108,7 @@ const navGroups = [
       { id: "inf_challenges" as AdminTab, label: "Challenges", icon: Upload },
       { id: "inf_submissions" as AdminTab, label: "Submissions", icon: Eye },
       { id: "inf_surveys" as AdminTab, label: "Survey Rewards", icon: DollarSign },
+      { id: "inf_leaderboard" as AdminTab, label: "Leaderboard Contests", icon: Star },
     ],
   },
   {
