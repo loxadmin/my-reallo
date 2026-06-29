@@ -1261,6 +1261,7 @@ const Admin = () => {
     advertisers: "Advertisers",
     surveys: "Surveys",
     inf_surveys: "Influencer Survey Rewards",
+    inf_leaderboard: "Leaderboard Contests",
     app_design: "App Design",
     error_logs: "Error Logs",
     security_incidents: "Security Incidents",
