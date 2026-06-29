@@ -19,6 +19,7 @@ import UserProfileDrawer from "@/components/UserProfileDrawer";
 import AdvertiserManagement from "@/components/admin/AdvertiserManagement";
 import AdminInfluencerSurveys from "@/components/admin/AdminInfluencerSurveys";
 import AdminInfluencerSurveyResponses from "@/components/admin/AdminInfluencerSurveyResponses";
+import AdminLeaderboardContests from "@/components/admin/AdminLeaderboardContests";
 import PageSkeleton from "@/components/PageSkeleton";
 import {
   SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
@@ -82,7 +83,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps");
 const fromDResponses = () => supabase.from("decision_responses");
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "inf_leaderboard" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config";
 
 const navGroups = [
   {
@@ -108,6 +109,7 @@ const navGroups = [
       { id: "inf_challenges" as AdminTab, label: "Challenges", icon: Upload },
       { id: "inf_submissions" as AdminTab, label: "Submissions", icon: Eye },
       { id: "inf_surveys" as AdminTab, label: "Survey Rewards", icon: DollarSign },
+      { id: "inf_leaderboard" as AdminTab, label: "Leaderboard Contests", icon: Star },
     ],
   },
   {
@@ -1260,6 +1262,7 @@ const Admin = () => {
     advertisers: "Advertisers",
     surveys: "Surveys",
     inf_surveys: "Influencer Survey Rewards",
+    inf_leaderboard: "Leaderboard Contests",
     app_design: "App Design",
     error_logs: "Error Logs",
     security_incidents: "Security Incidents",
@@ -2972,6 +2975,9 @@ const Admin = () => {
                 />
                 <AdminInfluencerSurveyResponses adminUserId={(authUser?.id || "") as string} />
               </div>
+            )}
+            {activeTab === "inf_leaderboard" && (
+              <AdminLeaderboardContests />
             )}
             {activeTab === "surveys" && (
               <div className="space-y-6">
