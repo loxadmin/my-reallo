@@ -175,7 +175,8 @@ export default function AdminLeaderboardContests() {
 
       {editing && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={() => setEditing(null)}>
-          <GlassCard className="p-5 w-full max-w-lg my-8" onClick={(e: any) => e.stopPropagation()}>
+          <div className="w-full max-w-lg my-8" onClick={(e) => e.stopPropagation()}>
+          <GlassCard className="p-5">
             <h3 className="font-bold mb-3">{editing.id ? "Edit Contest" : "New Contest"}</h3>
             <div className="space-y-3 text-sm">
               <label className="block">
@@ -236,6 +237,7 @@ export default function AdminLeaderboardContests() {
               </div>
             </div>
           </GlassCard>
+          </div>
         </div>
       )}
     </div>
