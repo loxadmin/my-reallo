@@ -37,6 +37,8 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
   const [queueCount, setQueueCount] = useState(0);
+  const [queueEnabled, setQueueEnabled] = useState(true);
+  const [ghostEnabled, setGhostEnabled] = useState(true);
   const [titleNumber, setTitleNumber] = useState(0);
 
   const titles = useMemo(() => ["Losing", "Wasting", "Burning", "Draining"], []);
@@ -50,11 +52,17 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
 
   useEffect(() => {
     const fetchCount = async () => {
-      const [profilesRes, ghostsRes] = await Promise.all([
+      const [profilesRes, ghostsRes, settingsRes] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("ghost_users").select("id", { count: "exact", head: true }),
+        supabase.from("admin_settings").select("key,value").in("key", ["queue_enabled", "ghost_users_enabled"]),
       ]);
-      setQueueCount((profilesRes.count || 0) + (ghostsRes.count || 0));
+      const settings = (settingsRes.data || []) as { key: string; value: string }[];
+      const qEnabled = settings.find(s => s.key === "queue_enabled")?.value !== "false";
+      const gEnabled = settings.find(s => s.key === "ghost_users_enabled")?.value !== "false";
+      setQueueEnabled(qEnabled);
+      setGhostEnabled(gEnabled);
+      setQueueCount((profilesRes.count || 0) + (gEnabled ? (ghostsRes.count || 0) : 0));
     };
     fetchCount();
   }, []);
@@ -146,9 +154,9 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
             <Users className="w-4 h-4 text-primary mx-auto mb-1.5" />
             <p className="font-display text-lg sm:text-xl font-bold text-primary glow-text">
-              <CountUpAnimation end={queueCount} duration={2} suffix="+" />
+              {queueEnabled ? <CountUpAnimation end={queueCount} duration={2} suffix="+" /> : "Open"}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">In Queue</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{queueEnabled ? "In Queue" : "Instant Access"}</p>
           </div>
           <div className="glass-stat rounded-2xl px-3 py-4 text-center">
             <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1.5" />

@@ -357,6 +357,9 @@ const Admin = () => {
   const [footerInvestWithUs, setFooterInvestWithUs] = useState("");
   const [activeAppDesign, setActiveAppDesign] = useState("default");
   const [signupLimitEnabled, setSignupLimitEnabled] = useState(true);
+  const [queueEnabled, setQueueEnabled] = useState(true);
+  const [ghostUsersEnabled, setGhostUsersEnabled] = useState(true);
+  const [dummyUserCount, setDummyUserCount] = useState(0);
   const [currencyRateUsd, setCurrencyRateUsd] = useState("1600");
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
@@ -434,7 +437,7 @@ const Admin = () => {
         (supabase as any).from("security_incidents").select("*").order("created_at", { ascending: false }).limit(100),
         (supabase as any).from("blacklisted_entities").select("*").order("created_at", { ascending: false }),
         supabase.from("referrals").select("referrer_id"),
-        (supabase as any).from("dummy_users").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("dummy_users").select("*", { count: "exact" }).order("created_at", { ascending: false }).range(0, 999),
         (supabase as any).from("dummy_transactions").select("*").order("created_at", { ascending: false }),
         (supabase as any).from("dummy_activity").select("*").order("created_at", { ascending: false }).limit(50)
       ]);
@@ -457,6 +460,7 @@ const Admin = () => {
       setDummyTablesUnavailable(missingDummyTables);
       setProfiles(profs);
       setDummyUsers(missingDummyTables ? [] : ((dummyUsersRes.data as ProfileRow[]) || []));
+      setDummyUserCount(missingDummyTables ? 0 : ((dummyUsersRes as any).count || ((dummyUsersRes.data as any[])?.length ?? 0)));
       setDummyTransactions(missingDummyTables ? [] : (dummyTxsRes.data || []));
       setDummyActivities(missingDummyTables ? [] : ((dummyActivitiesRes.data as ActivityRow[]) || []));
       setErrorLogs(errorsRes.data || []);
@@ -508,6 +512,8 @@ const Admin = () => {
       setVerifyFoodActive(settings.find(s => s.key === "verify_food_active")?.value === "false" ? false : true);
       setVerifyTransportActive(settings.find(s => s.key === "verify_transport_active")?.value === "false" ? false : true);
       setSignupLimitEnabled(settings.find(s => s.key === "signup_limit_enabled")?.value === "false" ? false : true);
+      setQueueEnabled(settings.find(s => s.key === "queue_enabled")?.value === "false" ? false : true);
+      setGhostUsersEnabled(settings.find(s => s.key === "ghost_users_enabled")?.value === "false" ? false : true);
       setPostQueueReferralPoints(settings.find(s => s.key === "post_queue_referral_points")?.value || "1000");
       setVerifySpendLink(settings.find(s => s.key === "verify_spend_link")?.value || "");
       setVerifySpendDescription(settings.find(s => s.key === "verify_spend_description")?.value || "");
@@ -545,11 +551,11 @@ const Admin = () => {
   const handleSaveSecurityConfig = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase.from("admin_settings").upsert({
-        key: "signup_limit_enabled",
-        value: String(signupLimitEnabled),
-        updated_at: new Date().toISOString()
-      });
+      const { error } = await supabase.from("admin_settings").upsert([
+        { key: "signup_limit_enabled", value: String(signupLimitEnabled), updated_at: new Date().toISOString() },
+        { key: "queue_enabled", value: String(queueEnabled), updated_at: new Date().toISOString() },
+        { key: "ghost_users_enabled", value: String(ghostUsersEnabled), updated_at: new Date().toISOString() },
+      ]);
       if (error) {
         toast({ title: "Error saving configuration", description: error.message, variant: "destructive" });
       } else {
@@ -1197,6 +1203,7 @@ const Admin = () => {
   const referralApps = decisionApps.filter(a => a.category === "referral");
 
   const combinedProfiles = [...profiles, ...dummyUsers];
+  const totalUsersCount = profiles.length + dummyUserCount;
   const combinedTransactions = [
     ...verificationTxs,
     ...dummyTransactions.map(dt => ({
@@ -1487,12 +1494,14 @@ const Admin = () => {
             {activeTab === "overview" && (
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                  <MetricCard label="Total Users" value={formatCompact(combinedProfiles.length)} icon={Users} trend="up" trendLabel={`${formatCompact(activeUsers)} active`} />
+                  <MetricCard label="Total Users" value={formatCompact(totalUsersCount)} icon={Users} trend="up" trendLabel={`${formatCompact(activeUsers)} active`} />
                   <MetricCard label="Annual Spend" value={formatNairaCompact(totalSpend)} icon={Wallet} trend="up" trendLabel="All users" />
                   <MetricCard label="Processed Revenue" value={formatNairaCompact(totalRevenue)} icon={DollarSign} trend="up" trendLabel={`${combinedTransactions.filter(t => t.is_verified).length} verified txns`} />
                   <MetricCard label="Total Points" value={formatCompact(totalPoints)} icon={Star} trend="neutral" trendLabel="In circulation" />
                   <MetricCard label="Banned Users" value={formatCompact(bannedCount)} icon={Ban} trend={bannedCount > 0 ? "down" : "neutral"} trendLabel={`${formatCompact(userWarnings.length)} warnings`} />
-                  <MetricCard label="Ghost Users" value={formatCompact(ghostCount)} icon={Ghost} trend="neutral" trendLabel="Seeded" />
+                  {ghostUsersEnabled && (
+                    <MetricCard label="Ghost Users" value={formatCompact(ghostCount)} icon={Ghost} trend="neutral" trendLabel="Seeded" />
+                  )}
                 </div>
 
                 {/* Events Graph */}
@@ -3295,6 +3304,46 @@ const Admin = () => {
                         type="checkbox"
                         checked={signupLimitEnabled}
                         onChange={(e) => setSignupLimitEnabled(e.target.checked)}
+                        className="w-6 h-6 accent-primary cursor-pointer rounded-md"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-5 bg-background/30 backdrop-blur-md">
+                    <div className="space-y-1 pr-4">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-primary" />
+                        <label className="text-[13px] font-bold text-foreground">Signup Queue Enabled</label>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        When OFF, new signups bypass the waitlist entirely — they are placed straight off-queue with full access. Existing referral queue-skip bonuses are also paused while the queue is off.
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={queueEnabled}
+                        onChange={(e) => setQueueEnabled(e.target.checked)}
+                        className="w-6 h-6 accent-primary cursor-pointer rounded-md"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-5 bg-background/30 backdrop-blur-md">
+                    <div className="space-y-1 pr-4">
+                      <div className="flex items-center gap-2">
+                        <Ghost className="w-4 h-4 text-primary" />
+                        <label className="text-[13px] font-bold text-foreground">Show Ghost Users</label>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Controls whether ghost-user metrics (seeded waitlist count) appear on the public landing page and in your admin overview. Turn OFF when the queue is disabled so visitors don't see a phantom queue count.
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={ghostUsersEnabled}
+                        onChange={(e) => setGhostUsersEnabled(e.target.checked)}
                         className="w-6 h-6 accent-primary cursor-pointer rounded-md"
                       />
                     </div>
