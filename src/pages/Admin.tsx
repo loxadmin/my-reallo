@@ -3309,6 +3309,46 @@ const Admin = () => {
                     </div>
                   </div>
 
+                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-5 bg-background/30 backdrop-blur-md">
+                    <div className="space-y-1 pr-4">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-primary" />
+                        <label className="text-[13px] font-bold text-foreground">Signup Queue Enabled</label>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        When OFF, new signups bypass the waitlist entirely — they are placed straight off-queue with full access. Existing referral queue-skip bonuses are also paused while the queue is off.
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={queueEnabled}
+                        onChange={(e) => setQueueEnabled(e.target.checked)}
+                        className="w-6 h-6 accent-primary cursor-pointer rounded-md"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border border-border/40 p-5 bg-background/30 backdrop-blur-md">
+                    <div className="space-y-1 pr-4">
+                      <div className="flex items-center gap-2">
+                        <Ghost className="w-4 h-4 text-primary" />
+                        <label className="text-[13px] font-bold text-foreground">Show Ghost Users</label>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Controls whether ghost-user metrics (seeded waitlist count) appear on the public landing page and in your admin overview. Turn OFF when the queue is disabled so visitors don't see a phantom queue count.
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={ghostUsersEnabled}
+                        onChange={(e) => setGhostUsersEnabled(e.target.checked)}
+                        className="w-6 h-6 accent-primary cursor-pointer rounded-md"
+                      />
+                    </div>
+                  </div>
+
                   <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 flex items-start gap-3">
                     <AlertTriangle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
