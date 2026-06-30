@@ -437,7 +437,7 @@ const Admin = () => {
         (supabase as any).from("security_incidents").select("*").order("created_at", { ascending: false }).limit(100),
         (supabase as any).from("blacklisted_entities").select("*").order("created_at", { ascending: false }),
         supabase.from("referrals").select("referrer_id"),
-        (supabase as any).from("dummy_users").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("dummy_users").select("*", { count: "exact" }).order("created_at", { ascending: false }).range(0, 999),
         (supabase as any).from("dummy_transactions").select("*").order("created_at", { ascending: false }),
         (supabase as any).from("dummy_activity").select("*").order("created_at", { ascending: false }).limit(50)
       ]);
@@ -460,6 +460,7 @@ const Admin = () => {
       setDummyTablesUnavailable(missingDummyTables);
       setProfiles(profs);
       setDummyUsers(missingDummyTables ? [] : ((dummyUsersRes.data as ProfileRow[]) || []));
+      setDummyUserCount(missingDummyTables ? 0 : ((dummyUsersRes as any).count || ((dummyUsersRes.data as any[])?.length ?? 0)));
       setDummyTransactions(missingDummyTables ? [] : (dummyTxsRes.data || []));
       setDummyActivities(missingDummyTables ? [] : ((dummyActivitiesRes.data as ActivityRow[]) || []));
       setErrorLogs(errorsRes.data || []);
