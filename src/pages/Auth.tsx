@@ -30,7 +30,6 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [hpValue, setHpValue] = useState(""); // Honeypot value
   const [referralCode, setReferralCode] = useState("");
-  const [userType, setUserType] = useState<"student" | "parent" | "others" | "">("");
   const [accountType, setAccountType] = useState<"personal" | "business">("personal");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -159,13 +158,6 @@ const Auth = () => {
           return;
         }
 
-        // Validate user type selection (personal accounts only)
-        if (accountType === "personal" && !userType) {
-          setFieldErrors({ userType: "Please select your user type" });
-          setLoading(false);
-          return;
-        }
-
         const result = signupSchema.safeParse({
           email,
           password,
@@ -209,7 +201,6 @@ const Auth = () => {
           try {
             if (userId) {
               const profileUpdate: Record<string, any> = { account_type: accountType };
-              if (accountType === "personal" && userType) profileUpdate.user_type = userType;
               await Promise.all([
                 supabase.functions.invoke("check-signup-limit", {
                   body: { action: "register", device_fingerprint: deviceFp, user_id: userId },
@@ -441,29 +432,6 @@ const Auth = () => {
                             </div>
                           </div>
 
-                          {/* Parent / Student selector — only for personal accounts */}
-                          {accountType === "personal" && (
-                          <div>
-                            <label className="text-[12px] font-medium text-foreground mb-1.5 block">I am a</label>
-                            <div className="flex gap-2">
-                              {(["student", "parent", "others"] as const).map(type => (
-                                <button
-                                  key={type}
-                                  type="button"
-                                  onClick={() => setUserType(type)}
-                                  className={`flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 border ${
-                                    userType === type
-                                      ? "clay-primary text-primary-foreground border-primary/30"
-                                      : "glass-button text-muted-foreground border-border/40"
-                                  }`}
-                                >
-                                  {type === "student" ? "🎓 Student" : type === "parent" ? "👨‍👩‍👧 Parent" : "🌟 Others"}
-                                </button>
-                              ))}
-                            </div>
-                            {fieldErrors.userType && <p className="text-[11px] text-destructive mt-1">{fieldErrors.userType}</p>}
-                          </div>
-                          )}
                           <GlassInput label="Referral Code (optional)" placeholder="e.g. AB12CD34" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
                           <p className="text-[11px] text-primary/60 mt-1 flex items-center gap-1">
                             <Gift className="w-3 h-3" /> You and your referrer both benefit
