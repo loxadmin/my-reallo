@@ -511,6 +511,8 @@ const Admin = () => {
       setVerifyFoodActive(settings.find(s => s.key === "verify_food_active")?.value === "false" ? false : true);
       setVerifyTransportActive(settings.find(s => s.key === "verify_transport_active")?.value === "false" ? false : true);
       setSignupLimitEnabled(settings.find(s => s.key === "signup_limit_enabled")?.value === "false" ? false : true);
+      setQueueEnabled(settings.find(s => s.key === "queue_enabled")?.value === "false" ? false : true);
+      setGhostUsersEnabled(settings.find(s => s.key === "ghost_users_enabled")?.value === "false" ? false : true);
       setPostQueueReferralPoints(settings.find(s => s.key === "post_queue_referral_points")?.value || "1000");
       setVerifySpendLink(settings.find(s => s.key === "verify_spend_link")?.value || "");
       setVerifySpendDescription(settings.find(s => s.key === "verify_spend_description")?.value || "");
