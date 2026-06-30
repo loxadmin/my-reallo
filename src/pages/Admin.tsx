@@ -551,11 +551,11 @@ const Admin = () => {
   const handleSaveSecurityConfig = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase.from("admin_settings").upsert({
-        key: "signup_limit_enabled",
-        value: String(signupLimitEnabled),
-        updated_at: new Date().toISOString()
-      });
+      const { error } = await supabase.from("admin_settings").upsert([
+        { key: "signup_limit_enabled", value: String(signupLimitEnabled), updated_at: new Date().toISOString() },
+        { key: "queue_enabled", value: String(queueEnabled), updated_at: new Date().toISOString() },
+        { key: "ghost_users_enabled", value: String(ghostUsersEnabled), updated_at: new Date().toISOString() },
+      ]);
       if (error) {
         toast({ title: "Error saving configuration", description: error.message, variant: "destructive" });
       } else {
