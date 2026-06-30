@@ -1203,6 +1203,7 @@ const Admin = () => {
   const referralApps = decisionApps.filter(a => a.category === "referral");
 
   const combinedProfiles = [...profiles, ...dummyUsers];
+  const totalUsersCount = profiles.length + dummyUserCount;
   const combinedTransactions = [
     ...verificationTxs,
     ...dummyTransactions.map(dt => ({
@@ -1493,12 +1494,14 @@ const Admin = () => {
             {activeTab === "overview" && (
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                  <MetricCard label="Total Users" value={formatCompact(combinedProfiles.length)} icon={Users} trend="up" trendLabel={`${formatCompact(activeUsers)} active`} />
+                  <MetricCard label="Total Users" value={formatCompact(totalUsersCount)} icon={Users} trend="up" trendLabel={`${formatCompact(activeUsers)} active`} />
                   <MetricCard label="Annual Spend" value={formatNairaCompact(totalSpend)} icon={Wallet} trend="up" trendLabel="All users" />
                   <MetricCard label="Processed Revenue" value={formatNairaCompact(totalRevenue)} icon={DollarSign} trend="up" trendLabel={`${combinedTransactions.filter(t => t.is_verified).length} verified txns`} />
                   <MetricCard label="Total Points" value={formatCompact(totalPoints)} icon={Star} trend="neutral" trendLabel="In circulation" />
                   <MetricCard label="Banned Users" value={formatCompact(bannedCount)} icon={Ban} trend={bannedCount > 0 ? "down" : "neutral"} trendLabel={`${formatCompact(userWarnings.length)} warnings`} />
-                  <MetricCard label="Ghost Users" value={formatCompact(ghostCount)} icon={Ghost} trend="neutral" trendLabel="Seeded" />
+                  {ghostUsersEnabled && (
+                    <MetricCard label="Ghost Users" value={formatCompact(ghostCount)} icon={Ghost} trend="neutral" trendLabel="Seeded" />
+                  )}
                 </div>
 
                 {/* Events Graph */}
