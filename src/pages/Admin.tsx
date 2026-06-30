@@ -357,6 +357,9 @@ const Admin = () => {
   const [footerInvestWithUs, setFooterInvestWithUs] = useState("");
   const [activeAppDesign, setActiveAppDesign] = useState("default");
   const [signupLimitEnabled, setSignupLimitEnabled] = useState(true);
+  const [queueEnabled, setQueueEnabled] = useState(true);
+  const [ghostUsersEnabled, setGhostUsersEnabled] = useState(true);
+  const [dummyUserCount, setDummyUserCount] = useState(0);
   const [currencyRateUsd, setCurrencyRateUsd] = useState("1600");
   const [currencyRateEur, setCurrencyRateEur] = useState("1700");
   const [currencyRateGbp, setCurrencyRateGbp] = useState("2000");
