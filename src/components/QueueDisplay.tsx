@@ -19,6 +19,7 @@ import type { WalletType } from "./WalletCarousel";
 import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Award, Gift, Lock, AlertCircle, CheckCircle2, Star, MessageSquare, ChevronLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
+import RecommendedOffers from "./RecommendedOffers";
 
 interface QueueDisplayProps {
   totalAnnualSpend: number;
@@ -404,6 +405,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
 
             {view === "earn" && (
               <div className="grid grid-cols-1 gap-4">
+                <RecommendedOffers />
                 <button
                   onClick={() => onViewChange?.("offers")}
                   className="glass-card p-6 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
