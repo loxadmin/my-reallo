@@ -1281,6 +1281,12 @@ const Admin = () => {
     security_incidents: "Security Incidents",
     blacklist: "Blacklist",
     security_config: "Security Config",
+    ai_onboarding: "AI Onboarding Manager",
+    brand_catalog: "Brand Catalog",
+    goal_ideas: "Goal Ideas",
+    behavior_analytics: "User Behavior Analytics",
+    user_goals: "User Goals",
+    campaign_eligibility: "Campaign Eligibility",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
