@@ -156,6 +156,33 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_catalog: {
+        Row: {
+          active: boolean
+          category: string
+          country: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       business_items: {
         Row: {
           created_at: string
@@ -189,6 +216,102 @@ export type Database = {
           user_id?: string
           verification_frequency?: string
           weekly_spend?: number
+        }
+        Relationships: []
+      }
+      campaign_eligibility: {
+        Row: {
+          active: boolean
+          budget_remaining: number | null
+          campaign_id: string
+          campaign_type: string
+          created_at: string
+          deposit_required: number
+          eligible_brands: string[]
+          eligible_goals: string[]
+          eligible_interests: string[]
+          eligible_locations: string[]
+          eligible_segments: string[]
+          expires_at: string | null
+          id: string
+          priority: number
+          proof_instructions: string | null
+          proof_types: string[]
+          referral_required: number
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          active?: boolean
+          budget_remaining?: number | null
+          campaign_id: string
+          campaign_type?: string
+          created_at?: string
+          deposit_required?: number
+          eligible_brands?: string[]
+          eligible_goals?: string[]
+          eligible_interests?: string[]
+          eligible_locations?: string[]
+          eligible_segments?: string[]
+          expires_at?: string | null
+          id?: string
+          priority?: number
+          proof_instructions?: string | null
+          proof_types?: string[]
+          referral_required?: number
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          active?: boolean
+          budget_remaining?: number | null
+          campaign_id?: string
+          campaign_type?: string
+          created_at?: string
+          deposit_required?: number
+          eligible_brands?: string[]
+          eligible_goals?: string[]
+          eligible_interests?: string[]
+          eligible_locations?: string[]
+          eligible_segments?: string[]
+          expires_at?: string | null
+          id?: string
+          priority?: number
+          proof_instructions?: string | null
+          proof_types?: string[]
+          referral_required?: number
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      campaign_recommendations: {
+        Row: {
+          campaign_id: string
+          campaign_type: string | null
+          generated_at: string
+          id: string
+          reason: Json
+          score: number
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          campaign_type?: string | null
+          generated_at?: string
+          id?: string
+          reason?: Json
+          score?: number
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          campaign_type?: string | null
+          generated_at?: string
+          id?: string
+          reason?: Json
+          score?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -472,6 +595,39 @@ export type Database = {
           max_price?: number
           subcategory?: string | null
           user_segments?: string[]
+        }
+        Relationships: []
+      }
+      goal_ideas: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          tags: string[]
+          title: string
+          typical_target_max: number | null
+          typical_target_min: number | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          tags?: string[]
+          title: string
+          typical_target_max?: number | null
+          typical_target_min?: number | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          tags?: string[]
+          title?: string
+          typical_target_max?: number | null
+          typical_target_min?: number | null
         }
         Relationships: []
       }
@@ -1593,6 +1749,80 @@ export type Database = {
           },
         ]
       }
+      onboarding_question_categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      onboarding_questions: {
+        Row: {
+          active: boolean
+          category_id: string | null
+          created_at: string
+          id: string
+          options: Json
+          prompt: string
+          question_type: string
+          required: boolean
+          sort_order: number
+          tag_key: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          options?: Json
+          prompt: string
+          question_type?: string
+          required?: boolean
+          sort_order?: number
+          tag_key: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          options?: Json
+          prompt?: string
+          question_type?: string
+          required?: boolean
+          sort_order?: number
+          tag_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_questions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_question_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: string
@@ -2089,6 +2319,128 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_behavior_profile: {
+        Row: {
+          age_group: string | null
+          brands_used: string[]
+          city: string | null
+          country: string | null
+          financial: Json
+          occupation: string | null
+          raw: Json
+          segments: string[]
+          spending_habits: string[]
+          state: string | null
+          task_capabilities: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age_group?: string | null
+          brands_used?: string[]
+          city?: string | null
+          country?: string | null
+          financial?: Json
+          occupation?: string | null
+          raw?: Json
+          segments?: string[]
+          spending_habits?: string[]
+          state?: string | null
+          task_capabilities?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age_group?: string | null
+          brands_used?: string[]
+          city?: string | null
+          country?: string | null
+          financial?: Json
+          occupation?: string | null
+          raw?: Json
+          segments?: string[]
+          spending_habits?: string[]
+          state?: string | null
+          task_capabilities?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_goals: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          plan: Json
+          status: string
+          target_amount: number
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          plan?: Json
+          status?: string
+          target_amount?: number
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          plan?: Json
+          status?: string
+          target_amount?: number
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_onboarding_answers: {
+        Row: {
+          answer: Json
+          created_at: string
+          id: string
+          question_id: string | null
+          tag_key: string
+          user_id: string
+        }
+        Insert: {
+          answer: Json
+          created_at?: string
+          id?: string
+          question_id?: string | null
+          tag_key: string
+          user_id: string
+        }
+        Update: {
+          answer?: Json
+          created_at?: string
+          id?: string
+          question_id?: string | null
+          tag_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_onboarding_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
