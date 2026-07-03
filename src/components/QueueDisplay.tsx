@@ -404,6 +404,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
 
             {view === "earn" && (
               <div className="grid grid-cols-1 gap-4">
+                <RecommendedOffers />
                 <button
                   onClick={() => onViewChange?.("offers")}
                   className="glass-card p-6 flex items-center justify-between group hover:border-primary/40 transition-all duration-300"
