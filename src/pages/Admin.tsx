@@ -3533,6 +3533,13 @@ const Admin = () => {
               </div>
             )}
 
+            {activeTab === "ai_onboarding" && <AdminOnboardingManager />}
+            {activeTab === "brand_catalog" && <AdminBrandCatalog />}
+            {activeTab === "goal_ideas" && <AdminGoalIdeas />}
+            {activeTab === "behavior_analytics" && <AdminBehaviorAnalytics />}
+            {activeTab === "user_goals" && <AdminUserGoals />}
+            {activeTab === "campaign_eligibility" && <AdminCampaignEligibility />}
+
           </main>
         </div>
       </div>
