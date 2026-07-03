@@ -131,6 +131,17 @@ const navGroups = [
     ],
   },
   {
+    label: "AI & OFFERS",
+    items: [
+      { id: "ai_onboarding" as AdminTab, label: "AI Onboarding", icon: Zap },
+      { id: "brand_catalog" as AdminTab, label: "Brand Catalog", icon: Smartphone },
+      { id: "goal_ideas" as AdminTab, label: "Goal Ideas", icon: Star },
+      { id: "behavior_analytics" as AdminTab, label: "Behavior Analytics", icon: BarChart3 },
+      { id: "user_goals" as AdminTab, label: "User Goals", icon: TrendingUp },
+      { id: "campaign_eligibility" as AdminTab, label: "Campaign Eligibility", icon: Settings },
+    ],
+  },
+  {
     label: "ACCOUNT",
     items: [
       { id: "app_design" as AdminTab, label: "App Design", icon: Paintbrush },
