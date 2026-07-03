@@ -20,6 +20,12 @@ import AdvertiserManagement from "@/components/admin/AdvertiserManagement";
 import AdminInfluencerSurveys from "@/components/admin/AdminInfluencerSurveys";
 import AdminInfluencerSurveyResponses from "@/components/admin/AdminInfluencerSurveyResponses";
 import AdminLeaderboardContests from "@/components/admin/AdminLeaderboardContests";
+import AdminOnboardingManager from "@/components/admin/AdminOnboardingManager";
+import AdminBrandCatalog from "@/components/admin/AdminBrandCatalog";
+import AdminGoalIdeas from "@/components/admin/AdminGoalIdeas";
+import AdminBehaviorAnalytics from "@/components/admin/AdminBehaviorAnalytics";
+import AdminUserGoals from "@/components/admin/AdminUserGoals";
+import AdminCampaignEligibility from "@/components/admin/AdminCampaignEligibility";
 import PageSkeleton from "@/components/PageSkeleton";
 import {
   SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
@@ -83,7 +89,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps");
 const fromDResponses = () => supabase.from("decision_responses");
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "inf_leaderboard" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "inf_leaderboard" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config" | "ai_onboarding" | "brand_catalog" | "goal_ideas" | "behavior_analytics" | "user_goals" | "campaign_eligibility";
 
 const navGroups = [
   {
