@@ -20,6 +20,8 @@ import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Awar
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
 import RecommendedOffers from "./RecommendedOffers";
+import GoalAccountFlow from "./GoalAccountFlow";
+import GoalAccountCard from "./GoalAccountCard";
 
 interface QueueDisplayProps {
   totalAnnualSpend: number;
