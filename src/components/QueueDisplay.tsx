@@ -20,6 +20,8 @@ import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Awar
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
 import RecommendedOffers from "./RecommendedOffers";
+import GoalAccountFlow from "./GoalAccountFlow";
+import GoalAccountCard from "./GoalAccountCard";
 
 interface QueueDisplayProps {
   totalAnnualSpend: number;
@@ -405,6 +407,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
 
             {view === "earn" && (
               <div className="grid grid-cols-1 gap-4">
+                <GoalAccountsSection />
                 <RecommendedOffers />
                 <button
                   onClick={() => onViewChange?.("offers")}
@@ -542,3 +545,51 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
 };
 
 export default QueueDisplay;
+
+function GoalAccountsSection() {
+  const { user } = useAuth();
+  const [goals, setGoals] = useState<any[]>([]);
+  const [showNew, setShowNew] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data } = await supabase.from("goal_accounts")
+      .select("*").eq("user_id", user.id)
+      .in("status", ["active", "completed"])
+      .order("opened_at", { ascending: false });
+    setGoals(data ?? []);
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  if (loading) return null;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Your Goal Accounts</h3>
+        {!showNew && (
+          <button onClick={() => setShowNew(true)} className="text-xs text-primary">+ New goal</button>
+        )}
+      </div>
+      {goals.length === 0 && !showNew && (
+        <div className="glass-card p-4 text-center space-y-2">
+          <p className="text-xs text-muted-foreground">You don't have a Goal Account yet. Tell the AI what you want to achieve and it will build a funded plan for you.</p>
+          <button onClick={() => setShowNew(true)} className="text-xs px-4 py-2 rounded-lg bg-primary text-primary-foreground">
+            Open your first Goal Account
+          </button>
+        </div>
+      )}
+      {showNew && (
+        <div>
+          <GoalAccountFlow onOpened={() => { setShowNew(false); void load(); }} />
+          <button onClick={() => setShowNew(false)} className="mt-2 text-xs text-muted-foreground">Cancel</button>
+        </div>
+      )}
+      {goals.map(g => <GoalAccountCard key={g.id} goal={g} onChange={load} />)}
+    </div>
+  );
+}

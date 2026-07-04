@@ -3,11 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Trash2, Plus } from "lucide-react";
 
-const PROOF = ["screenshot","screen_recording","photo","video"];
+const PROOF = ["screenshot","screen_recording","photo","video","receipt","image"];
 
 export default function AdminCampaignEligibility() {
   const [rows, setRows] = useState<any[]>([]);
-  const [form, setForm] = useState<any>({ campaign_id: "", campaign_type: "online", eligible_segments: "", eligible_brands: "", eligible_goals: "", eligible_locations: "", deposit_required: 0, referral_required: 0, weight: 1, priority: 0, proof_types: [] as string[], proof_instructions: "" });
+  const [form, setForm] = useState<any>({ campaign_id: "", campaign_type: "online", eligible_segments: "", eligible_brands: "", eligible_goals: "", eligible_locations: "", deposit_required: 0, referral_required: 0, weight: 1, priority: 0, proof_types: [] as string[], proof_instructions: "", task_mode: "either", goal_contribution_value: 0, ai_weight: 1 });
   const load = async () => { const { data } = await supabase.from("campaign_eligibility").select("*").order("created_at", { ascending: false }); setRows(data ?? []); };
   useEffect(() => { void load(); }, []);
   const list = (s: string) => s.split(",").map(x => x.trim()).filter(Boolean);
@@ -20,6 +20,8 @@ export default function AdminCampaignEligibility() {
       deposit_required: Number(form.deposit_required) || 0, referral_required: Number(form.referral_required) || 0,
       weight: Number(form.weight) || 1, priority: Number(form.priority) || 0,
       proof_types: form.proof_types, proof_instructions: form.proof_instructions || null,
+      task_mode: form.task_mode, goal_contribution_value: Number(form.goal_contribution_value) || 0,
+      ai_weight: Number(form.ai_weight) || 1,
     });
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
     void load();
@@ -37,6 +39,11 @@ export default function AdminCampaignEligibility() {
         <input type="number" placeholder="referrals" value={form.referral_required} onChange={e => setForm({ ...form, referral_required: e.target.value })} className="px-2 py-1.5 rounded border bg-background" />
         <input type="number" placeholder="weight" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} className="px-2 py-1.5 rounded border bg-background" />
         <input type="number" placeholder="priority" value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })} className="px-2 py-1.5 rounded border bg-background" />
+        <select value={form.task_mode} onChange={e => setForm({ ...form, task_mode: e.target.value })} className="px-2 py-1.5 rounded border bg-background">
+          <option value="either">either</option><option value="online">online</option><option value="offline">offline</option>
+        </select>
+        <input type="number" placeholder="goal contribution ₦" value={form.goal_contribution_value} onChange={e => setForm({ ...form, goal_contribution_value: e.target.value })} className="px-2 py-1.5 rounded border bg-background" />
+        <input type="number" step="0.1" placeholder="AI weight" value={form.ai_weight} onChange={e => setForm({ ...form, ai_weight: e.target.value })} className="px-2 py-1.5 rounded border bg-background" />
         <div className="md:col-span-4 flex flex-wrap gap-2 items-center">
           <span>Proof:</span>
           {PROOF.map(p => (
