@@ -1299,6 +1299,7 @@ const Admin = () => {
     goal_ideas: "Goal Ideas",
     behavior_analytics: "User Behavior Analytics",
     user_goals: "User Goals",
+    goal_accounts: "Goal Accounts",
     campaign_eligibility: "Campaign Eligibility",
   };
 
