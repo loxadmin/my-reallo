@@ -222,6 +222,7 @@ export type Database = {
       campaign_eligibility: {
         Row: {
           active: boolean
+          ai_weight: number
           budget_remaining: number | null
           campaign_id: string
           campaign_type: string
@@ -233,16 +234,19 @@ export type Database = {
           eligible_locations: string[]
           eligible_segments: string[]
           expires_at: string | null
+          goal_contribution_value: number
           id: string
           priority: number
           proof_instructions: string | null
           proof_types: string[]
           referral_required: number
+          task_mode: string
           updated_at: string
           weight: number
         }
         Insert: {
           active?: boolean
+          ai_weight?: number
           budget_remaining?: number | null
           campaign_id: string
           campaign_type?: string
@@ -254,16 +258,19 @@ export type Database = {
           eligible_locations?: string[]
           eligible_segments?: string[]
           expires_at?: string | null
+          goal_contribution_value?: number
           id?: string
           priority?: number
           proof_instructions?: string | null
           proof_types?: string[]
           referral_required?: number
+          task_mode?: string
           updated_at?: string
           weight?: number
         }
         Update: {
           active?: boolean
+          ai_weight?: number
           budget_remaining?: number | null
           campaign_id?: string
           campaign_type?: string
@@ -275,11 +282,13 @@ export type Database = {
           eligible_locations?: string[]
           eligible_segments?: string[]
           expires_at?: string | null
+          goal_contribution_value?: number
           id?: string
           priority?: number
           proof_instructions?: string | null
           proof_types?: string[]
           referral_required?: number
+          task_mode?: string
           updated_at?: string
           weight?: number
         }
@@ -290,6 +299,7 @@ export type Database = {
           campaign_id: string
           campaign_type: string | null
           generated_at: string
+          goal_account_id: string | null
           id: string
           reason: Json
           score: number
@@ -299,6 +309,7 @@ export type Database = {
           campaign_id: string
           campaign_type?: string | null
           generated_at?: string
+          goal_account_id?: string | null
           id?: string
           reason?: Json
           score?: number
@@ -308,12 +319,21 @@ export type Database = {
           campaign_id?: string
           campaign_type?: string | null
           generated_at?: string
+          goal_account_id?: string | null
           id?: string
           reason?: Json
           score?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaign_recommendations_goal_account_id_fkey"
+            columns: ["goal_account_id"]
+            isOneToOne: false
+            referencedRelation: "goal_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       decision_apps: {
         Row: {
@@ -562,6 +582,166 @@ export type Database = {
           created_at?: string | null
           id?: string
           position?: number
+        }
+        Relationships: []
+      }
+      goal_account_contributions: {
+        Row: {
+          amount: number
+          created_at: string
+          goal_account_id: string
+          id: string
+          note: string | null
+          source: string
+          source_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          goal_account_id: string
+          id?: string
+          note?: string | null
+          source: string
+          source_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          goal_account_id?: string
+          id?: string
+          note?: string | null
+          source?: string
+          source_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_account_contributions_goal_account_id_fkey"
+            columns: ["goal_account_id"]
+            isOneToOne: false
+            referencedRelation: "goal_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goal_account_options: {
+        Row: {
+          chosen: boolean
+          created_at: string
+          deposit: number
+          duration_months: number | null
+          goal_account_id: string | null
+          id: string
+          label: string
+          monthly_contribution: number | null
+          requirements: Json
+          user_id: string
+        }
+        Insert: {
+          chosen?: boolean
+          created_at?: string
+          deposit?: number
+          duration_months?: number | null
+          goal_account_id?: string | null
+          id?: string
+          label: string
+          monthly_contribution?: number | null
+          requirements?: Json
+          user_id: string
+        }
+        Update: {
+          chosen?: boolean
+          created_at?: string
+          deposit?: number
+          duration_months?: number | null
+          goal_account_id?: string | null
+          id?: string
+          label?: string
+          monthly_contribution?: number | null
+          requirements?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_account_options_goal_account_id_fkey"
+            columns: ["goal_account_id"]
+            isOneToOne: false
+            referencedRelation: "goal_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goal_accounts: {
+        Row: {
+          category: string | null
+          chosen_option: string | null
+          closed_at: string | null
+          created_at: string
+          deposit_paid: number
+          deposit_required: number
+          id: string
+          maturity_months: number | null
+          opened_at: string
+          plan: Json
+          risk_level: string | null
+          status: string
+          target_amount: number
+          target_date: string | null
+          title: string
+          unlock_sources: Json
+          unlocked_amount: number
+          updated_at: string
+          user_id: string
+          withdrawn_amount: number | null
+          withdrawn_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          chosen_option?: string | null
+          closed_at?: string | null
+          created_at?: string
+          deposit_paid?: number
+          deposit_required?: number
+          id?: string
+          maturity_months?: number | null
+          opened_at?: string
+          plan?: Json
+          risk_level?: string | null
+          status?: string
+          target_amount: number
+          target_date?: string | null
+          title: string
+          unlock_sources?: Json
+          unlocked_amount?: number
+          updated_at?: string
+          user_id: string
+          withdrawn_amount?: number | null
+          withdrawn_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          chosen_option?: string | null
+          closed_at?: string | null
+          created_at?: string
+          deposit_paid?: number
+          deposit_required?: number
+          id?: string
+          maturity_months?: number | null
+          opened_at?: string
+          plan?: Json
+          risk_level?: string | null
+          status?: string
+          target_amount?: number
+          target_date?: string | null
+          title?: string
+          unlock_sources?: Json
+          unlocked_amount?: number
+          updated_at?: string
+          user_id?: string
+          withdrawn_amount?: number | null
+          withdrawn_at?: string | null
         }
         Relationships: []
       }
@@ -2613,6 +2793,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      active_goal_account: { Args: { _user_id: string }; Returns: string }
+      apply_goal_unlock: {
+        Args: {
+          p_amount: number
+          p_goal_id: string
+          p_note: string
+          p_source: string
+          p_source_id: string
+        }
+        Returns: number
+      }
       count_valid_referrals_last_30d: {
         Args: { _user_id: string }
         Returns: number
@@ -2641,10 +2832,20 @@ export type Database = {
         Returns: undefined
       }
       oauth_get_matured_points: { Args: { _user_id: string }; Returns: number }
+      open_goal_account: {
+        Args: {
+          p_option_id: string
+          p_target_amount: number
+          p_target_date: string
+          p_title: string
+        }
+        Returns: string
+      }
       request_influencer_withdrawal: {
         Args: { p_amount: number; p_bank_account_id: string }
         Returns: Json
       }
+      withdraw_goal_account: { Args: { p_goal_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
