@@ -1,0 +1,95 @@
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Sparkles, X } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+
+const REQUIRED_VERSION = 2;
+
+type Msg = { role: "user" | "assistant"; content: string };
+
+export default function ReOnboardingGate() {
+  const { user, profile, refreshProfile } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const bottom = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!profile) return;
+    const version = (profile as any).onboarding_version ?? 0;
+    if (version < REQUIRED_VERSION) setOpen(true);
+  }, [profile]);
+
+  useEffect(() => {
+    if (!open || messages.length) return;
+    setMessages([{ role: "assistant", content: "Hi! We've upgraded Karbali with smarter offers matched to your habits. It'll take ~2 minutes to answer a few questions. Ready?" }]);
+  }, [open, messages.length]);
+
+  useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  const send = async () => {
+    if (!input.trim() || sending) return;
+    const userMsg: Msg = { role: "user", content: input.trim() };
+    setMessages(m => [...m, userMsg]);
+    setInput("");
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-onboard", {
+        body: { messages: [...messages, userMsg] },
+      });
+      if (error) throw error;
+      const reply = (data as any)?.reply ?? "Thanks!";
+      const done = !!(data as any)?.done;
+      setMessages(m => [...m, { role: "assistant", content: reply }]);
+      if (done) {
+        await refreshProfile?.();
+        toast({ title: "Onboarding complete", description: "You're all set." });
+        setTimeout(() => setOpen(false), 800);
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: e?.message ?? "Try again", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (!user || !open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="w-full sm:max-w-md h-[92vh] sm:h-[80vh] bg-card border rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <div className="text-sm font-semibold">Quick setup</div>
+          </div>
+          <button onClick={() => setOpen(false)} className="p-1 text-muted-foreground" aria-label="Minimize">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          {messages.map((m, i) => (
+            <div key={i} className={`text-sm max-w-[85%] rounded-2xl px-3 py-2 ${m.role === "user" ? "bg-primary text-primary-foreground ml-auto" : "bg-muted"}`}>
+              {m.content}
+            </div>
+          ))}
+          {sending && <div className="text-xs text-muted-foreground">Karbali is typing…</div>}
+          <div ref={bottom} />
+        </div>
+        <div className="p-3 border-t flex gap-2">
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") void send(); }}
+            placeholder="Type your answer…"
+            className="flex-1 px-3 py-2 rounded-lg border bg-background text-sm"
+            style={{ fontSize: 16 }}
+          />
+          <button onClick={() => void send()} disabled={sending || !input.trim()} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm disabled:opacity-50">Send</button>
+        </div>
+      </div>
+    </div>
+  );
+}

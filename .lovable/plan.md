@@ -1,99 +1,123 @@
-# Goal Accounts (replaces Savings Accounts)
+# Onboarding v2, Brand Switching & Daily Offer Proofs
 
-Extends existing Karbali. Reuses existing AI onboarding (`ai-onboard`), profile (`user_behavior_profile`), goal planner (`ai-goal-plan`), campaign recommender (`ai-recommend-campaigns`), brand catalog, onboarding questions, campaign eligibility, and Earn UI. No changes to auth, wallets, referrals, influencer program, admin shell, or existing rewards math.
+Scope is additive. No changes to auth, wallet, referrals, influencer program, or the goal-account math.
 
-## 1. Database (one migration)
+## 1. Force re-onboarding for existing users
 
-New / extended tables (public, with GRANTs + RLS):
+- Add `profiles.onboarding_version int default 0` and current required version constant `2` in code.
+- `KarbaliChat` / `QueueDisplay` gate: if `onboarding_version < 2`, launch the AI onboarding flow before the rest of the app is usable (soft banner + modal — no logout).
+- Bump to `2` when `ai-onboard` returns `done: true` AND the switch-intent step is finished.
 
-- `goal_accounts` — the funded-account model, replaces free-form `user_goals` as the source of truth for savings.
-  - `id, user_id, title, category, target_amount, target_date, status` (`active|completed|closed|abandoned`)
-  - `deposit_required int default 0`, `deposit_paid int default 0`
-  - `locked_amount int` (= target_amount − unlocked_amount), `unlocked_amount int default 0`
-  - `plan jsonb` (chosen AI plan: duration_months, required tasks, referrals, deposit)
-  - `chosen_option text`, `risk_level text`, `maturity_months int`
-  - `opened_at, closed_at, withdrawn_at, withdrawn_amount`
-  - `unlock_sources jsonb` (running tally: `{deposits, tasks, referrals, purchases, streaks, campaigns}`)
-- `goal_account_contributions` — every unit of unlock (append-only ledger)
-  - `id, goal_account_id, user_id, source` (`deposit|task|referral|purchase|streak|campaign|partner|bonus`)
-  - `source_id`, `amount int`, `note`, `created_at`
-- `goal_account_options` — the 2–3 AI-generated paths at creation time so user can pick
-  - `id, goal_account_id, label, deposit int, duration_months int, requirements jsonb, monthly_contribution int, chosen bool, created_at`
-- Extend `campaign_eligibility` (already exists) with:
-  - `task_mode text` (`online|offline|either`) default `either`
-  - `proof_types text[]` default `{screenshot}` (screenshot|video|screen_recording|receipt|image)
-  - `goal_contribution_value int` (naira added to unlocked balance on approval)
-  - `ai_weight numeric` default 1
-- Extend `campaign_recommendations` with `goal_account_id uuid null` so recs can be scoped to a specific goal.
-- Keep `user_goals` table but stop writing to it from UI (read-only legacy). All new work uses `goal_accounts`.
+## 2. Currency picker during onboarding
 
-Functions (SECURITY DEFINER, search_path=public):
-- `open_goal_account(p_title, p_target_amount, p_target_date, p_option_id)` — creates goal_accounts row from chosen option; if deposit_required > 0, expects wallet deduction (existing wallets flow) and records a `deposit` contribution.
-- `apply_goal_unlock(p_goal_id, p_source, p_source_id, p_amount, p_note)` — inserts contribution, increments `unlocked_amount`, decrements `locked_amount`, caps at target, marks `status='completed'` when fully unlocked.
-- `withdraw_goal_account(p_goal_id)` — one-time: transfers `unlocked_amount` to wallet, sets `withdrawn_at`, `status='closed'`, forfeits any remaining locked amount (audit note). Enforces "one goal, one withdrawal".
-- Extend triggers on `survey_responses`, `spend_verifications`, `decision_responses`, `influencer_challenge_submissions` on approval → find user's active goal_account (most recent) → call `apply_goal_unlock` using campaign's `goal_contribution_value` (fallback: reward amount / 2).
+- Since IP geolocation is unreliable, `ai-onboard` asks the user their preferred currency early on (NGN, USD, GBP, EUR, GHS, KES, ZAR, "Other").
+- Store on `profiles.preferred_currency` (new column). `CurrencyContext` reads `profiles.preferred_currency` first, then falls back to IP.
 
-Grants: authenticated own rows for `goal_accounts` / `goal_account_contributions` / `goal_account_options`; admin via `has_role` for full read. Service role all.
+## 3. Fill the missing onboarding questions
 
-## 2. Edge functions
+Seed missing questions into `onboarding_questions` (idempotent upsert on `tag_key`):
 
-- **New `ai-open-goal`** — one-shot: given `{title, target_amount, target_date}` + profile → returns 2–3 options with `deposit`, `duration_months`, `monthly_contribution`, `requirements` (referrals, tasks, purchases). Wraps `ai-goal-plan` and persists into `goal_account_options`.
-- **Extend `ai-recommend-campaigns`** — accept optional `goal_account_id`; when supplied, boost score by campaigns whose `eligible_brands` overlap the user's `brands_used` AND whose `goal_contribution_value` fits remaining locked amount. Add "brand migration" scoring: if user uses brand X and a partner Y in same `brand_catalog.category` exists, surface Y campaign with a `migration_from: X` reason.
-- **Extend `ai-onboard`** — no shape change; already adaptive.
-- **New `ai-goal-optimize`** (invoked on client cadence + on progress events) — inspects goal_account progress vs plan.duration_months; if behind pace, invokes `ai-recommend-campaigns` and returns coaching text + suggested actions.
+- `monthly_data_spend` (numeric)
+- `monthly_electricity_spend` (numeric)
+- `monthly_airtime_spend` (numeric)
+- `monthly_transport_spend` (numeric)
+- `monthly_food_spend` (numeric)
+- `monthly_rent_spend` (numeric)
+- `monthly_streaming_spend` (numeric)
 
-All use `google/gemini-2.5-flash` via Lovable AI Gateway (existing pattern).
+`ai-onboard` prompt already iterates `onboarding_questions`, so no function change beyond making sure numeric answers land in `user_behavior_profile.financial`.
 
-## 3. Admin UI
+## 4. "Other" brands + free-typed brands
 
-- **`AdminGoalAccounts.tsx`** — list all goal_accounts (filter status/goal/user), CSV+XLSX export (add `xlsx` dep), progress bars, view contribution ledger.
-- **Extend `AdminCampaignEligibility.tsx`** — add fields: `task_mode`, `proof_types` (multi-select), `goal_contribution_value`, `ai_weight`.
-- **Extend `AdminBehaviorAnalytics.tsx`** — add sections: users-by-brand (OPay/PalmPay/Bolt/Uber/MTN/Airtel counts), users-by-goal-category, avg deposit, avg goal size, most common goals, willingness (online vs offline tasks) — all filterable + XLSX export.
-- Keep existing `AdminUserGoals.tsx` as read-only legacy view.
+- Ensure every category in `brand_catalog` also has an implicit "Other" — surfaced by `ai-onboard` as a follow-up: "Any other brands you use we didn't list? Type them in."
+- New table `user_custom_brands(user_id, name, category, created_at)` for user-typed brands.
+- `AdminBrandCatalog` gets a "Suggested by users" panel to promote a custom brand into the official catalog (moves the row, dedupes case-insensitively).
 
-## 4. User-facing
+## 5. Brand switching intent
 
-- **`GoalAccountFlow.tsx`** (new) launched from AI chat when user states a goal:
-  1. AI extracts title + target (via existing `ai-onboard` extract path).
-  2. Client calls `ai-open-goal` → shows 2–3 options as cards (deposit vs no-deposit tradeoffs, duration, required tasks/referrals).
-  3. User picks → `open_goal_account` RPC → if deposit>0, wallet flow → goal_account created.
-- **`GoalAccountCard.tsx`** — visual funded-account: Locked / Unlocked / Remaining / Progress %, contribution ledger, "Withdraw" button (disabled until `unlocked_amount >= min_withdraw` — reuse existing 50k rule; withdrawal is one-shot and closes the account with a confirmation modal explaining forfeit of locked).
-- **`RecommendedOffers.tsx`** — already exists; extend to accept `goalAccountId` prop and pass to `ai-recommend-campaigns`.
-- **Earn tab toggle** — add "Personalized / All Offers" switch (Personalized default = `campaign_recommendations`, All = existing full list). Already partially in place; wire the toggle.
-- **Task submission** — no shape change; on admin approval, existing triggers apply unlock via `apply_goal_unlock`.
+New table:
 
-## 5. Data migration
+```
+user_brand_switch_intent (
+  user_id uuid,
+  brand_name text,    -- normalized lower
+  brand_category text,
+  willing_to_switch boolean,
+  captured_at timestamptz default now(),
+  primary key (user_id, brand_name)
+)
+```
 
-- Do NOT migrate `user_goals` rows (kept for admin history).
-- Existing "savings" surfaces (if any) route to Goal Account list — one legacy card in dashboard becomes "Open your first Goal Account" CTA when none exist.
+- After brands step, `ai-onboard` returns a `switch_prompt` payload: `{ brands: [{name, category}, ...] }`.
+- Frontend renders a checklist: for each brand the user selected, a Yes/No toggle "Willing to switch from <Brand> to a Karbali partner?".
+- Submission writes/updates `user_brand_switch_intent`. Onboarding v2 is only complete once this step is submitted.
+- Admin export: `AdminBehaviorAnalytics` gets a "Switch intent" tab — bar chart per brand of Yes counts + CSV download ("how many will switch from Opay / Peak Milk / …").
 
-## 6. Out of scope
+## 6. Admin brand-competition targeting on offers
 
-Auth, wallet primitives, referral gating, influencer program, existing admin tabs, currency conversion, existing rewards math, visual redesign of Auth/Nav/Footer.
+Extend `campaign_eligibility`:
 
-## Technical notes
+- `competes_with_brands text[] default '{}'` — admin picks brands this offer is designed to steal customers from.
+- `exclusive_to_switchers boolean default true` — when true, offer only surfaces to users who (a) selected one of those brands AND (b) said "willing to switch" AND (c) have never had an approved offer completion with another Karbali partner brand. Users can still opt to view via the existing "All offers" toggle on the Earn tab.
 
-- All new SQL SECURITY DEFINER + `set search_path=public`.
-- Structured output via chat-completions `response_format: { type: 'json_object' }` (existing edge-function pattern in `ai-goal-plan`) — no zod schema bounds.
-- XLSX export via `xlsx` npm package (add dep) for admin analytics; CSV stays client-side.
-- One-time withdrawal enforced at DB level (`withdraw_goal_account` refuses if `withdrawn_at IS NOT NULL`).
-- Unlock is monotonic and capped at target; overflow (bigger contribution than remaining) trims to remaining and marks `completed`.
+`ai-recommend-campaigns` scoring update:
 
-## Files to create
+```
+if (competes_with_brands.length) {
+  const willing = switchIntent.filter(s => competes.includes(s.brand) && s.willing).map(s=>s.brand);
+  if (willing.length === 0 && exclusive_to_switchers) skip;
+  else score += willing.length * 5;   // strong boost
+}
+// exemption: if user has any approved offer_daily_proofs with campaign whose category === this.category, skip when exclusive_to_switchers
+```
 
-- `supabase/migrations/<ts>_goal_accounts.sql`
-- `supabase/functions/ai-open-goal/index.ts`
-- `supabase/functions/ai-goal-optimize/index.ts`
-- `src/components/GoalAccountFlow.tsx`
-- `src/components/GoalAccountCard.tsx`
-- `src/components/admin/AdminGoalAccounts.tsx`
+`AdminCampaignEligibility.tsx` gains a brand multi-select bound to `brand_catalog` + toggle for `exclusive_to_switchers`.
 
-## Files to edit
+## 7. Daily-screenshot proof for offers
 
-- `supabase/functions/ai-recommend-campaigns/index.ts` (goal-scoped + brand migration)
-- `src/components/admin/AdminCampaignEligibility.tsx` (new fields)
-- `src/components/admin/AdminBehaviorAnalytics.tsx` (brand + goal aggregates + xlsx)
-- `src/components/RecommendedOffers.tsx` (accept `goalAccountId`)
-- `src/pages/Admin.tsx` (register `AdminGoalAccounts` tab)
-- `src/components/QueueDisplay.tsx` (Earn toggle, Goal Account section)
-- `src/components/KarbaliChat.tsx` (launch `GoalAccountFlow` on goal intent)
+New tables:
+
+```
+offer_enrollments (
+  id, user_id, campaign_id, started_at, expected_days int, status ('active'|'completed'|'expired')
+)
+offer_daily_proofs (
+  id, enrollment_id, user_id, day_index int, screenshot_url text,
+  status ('pending'|'approved'|'rejected'), admin_note, reviewed_by, reviewed_at, created_at
+)
+unique (enrollment_id, day_index)
+```
+
+- `campaign_eligibility.duration_days int default 1` — admin sets how many daily proofs are required.
+- User flow (`OfferEnrollmentCard.tsx` inside `RecommendedOffers`):
+  - "Accept offer" → creates enrollment.
+  - Each day shows an upload slot ("Day 3 of 10 — upload today's screenshot"). One upload per calendar day per enrollment.
+  - Screenshot goes to existing `survey_screenshots` bucket under `offers/<user>/<enrollment>/<day>.jpg`.
+- Admin queue: new `AdminOfferProofs.tsx` (mirrors `VerifySpend` admin view) — approve/reject each daily proof. On the final approved day, enrollment flips to `completed` and the goal-account contribution trigger fires (reuse the `apply_goal_unlock` pattern).
+- Partial completion = no reward. Rejected day requires re-upload same day.
+
+## 8. Files
+
+**New**
+- `supabase/migrations/…_onboarding_v2_switch_intent_offer_proofs.sql`
+- `src/components/OfferEnrollmentCard.tsx`
+- `src/components/BrandSwitchIntentStep.tsx`
+- `src/components/admin/AdminOfferProofs.tsx`
+- `src/components/admin/AdminBrandSwitchIntent.tsx` (tab inside behavior analytics)
+
+**Edited**
+- `supabase/functions/ai-onboard/index.ts` — currency Q, custom brands, switch-intent payload, sets `onboarding_version=2`
+- `supabase/functions/ai-recommend-campaigns/index.ts` — switch-intent scoring & exemption
+- `src/components/admin/AdminBrandCatalog.tsx` — suggested-by-users panel
+- `src/components/admin/AdminCampaignEligibility.tsx` — competes_with_brands, exclusive_to_switchers, duration_days
+- `src/components/admin/AdminBehaviorAnalytics.tsx` — switch-intent tab + CSV
+- `src/components/RecommendedOffers.tsx` — enroll + daily proof entry point
+- `src/components/QueueDisplay.tsx` / `KarbaliChat.tsx` — force re-onboarding when `onboarding_version < 2`
+- `src/contexts/CurrencyContext.tsx` — prefer `profiles.preferred_currency`
+- `src/pages/Admin.tsx` — new "Offer Proofs" sidebar entry
+
+## Out of scope
+
+Auth, wallets, existing goal-account math, influencer program, existing surveys/decision/spend flows, currency conversion rates.
+
+Confirm and I'll ship it.

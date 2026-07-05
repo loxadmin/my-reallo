@@ -16,12 +16,24 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const goalAccountId: string | undefined = body?.goal_account_id;
 
-    const [{ data: profile }, { data: goalAccounts }, { data: campaigns }, { data: brandCatalog }] = await Promise.all([
+    const [{ data: profile }, { data: goalAccounts }, { data: campaigns }, { data: brandCatalog }, { data: switchIntent }, { data: prevCompletions }] = await Promise.all([
       supabase.from('user_behavior_profile').select('*').eq('user_id', userId).maybeSingle(),
       supabase.from('goal_accounts').select('id, title, category').eq('user_id', userId).eq('status', 'active'),
       supabase.from('campaign_eligibility').select('*').eq('active', true),
       supabase.from('brand_catalog').select('name, category').eq('active', true),
+      supabase.from('user_brand_switch_intent').select('brand_name, brand_category, willing_to_switch').eq('user_id', userId),
+      supabase.from('offer_enrollments').select('campaign_id, status').eq('user_id', userId).eq('status', 'completed'),
     ]);
+
+    const willingBrands = new Set(
+      (switchIntent ?? []).filter((s: any) => s.willing_to_switch).map((s: any) => String(s.brand_name).toLowerCase())
+    );
+    // Categories the user has already migrated to a Karbali partner in
+    const completedCategories = new Set<string>();
+    for (const c of prevCompletions ?? []) {
+      const cat = (campaigns ?? []).find((cc: any) => cc.campaign_id === c.campaign_id)?.category;
+      if (cat) completedCategories.add(String(cat).toLowerCase());
+    }
 
     const brands = new Set((profile?.brands_used ?? []).map((s: string) => s.toLowerCase()));
     // Build "brand migration" targets: for each user brand, find partner brands in same category
@@ -54,6 +66,20 @@ Deno.serve(async (req) => {
       score += overlap(c.eligible_goals, goalTitles) * 4;
       score += (c.eligible_locations ?? []).filter((l: string) => loc.includes(String(l).toLowerCase())).length * 2;
       score += Number(c.ai_weight ?? c.weight ?? 1);
+
+      // Brand competition / switching intent targeting
+      const competes = (c.competes_with_brands ?? []).map((b: string) => String(b).toLowerCase());
+      let switcherBoost = 0;
+      if (competes.length) {
+        const matchedWilling = competes.filter((b: string) => willingBrands.has(b));
+        if (c.exclusive_to_switchers) {
+          // Exemption: user already migrated in this category
+          if (c.category && completedCategories.has(String(c.category).toLowerCase())) return null;
+          if (matchedWilling.length === 0) return null;
+        }
+        switcherBoost = matchedWilling.length * 8;
+        score += switcherBoost;
+      }
       return {
         campaign_id: c.campaign_id,
         campaign_type: c.campaign_type,
@@ -61,6 +87,9 @@ Deno.serve(async (req) => {
         reason: {
           matched_brands: (c.eligible_brands ?? []).filter((b: string) => brands.has(String(b).toLowerCase())),
           migration_targets: migMatched,
+          competes_with: (c.competes_with_brands ?? []),
+          exclusive_to_switchers: !!c.exclusive_to_switchers,
+          duration_days: c.duration_days ?? 1,
         },
       };
     }).filter(Boolean) as any[];

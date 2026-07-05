@@ -137,6 +137,20 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   // Detect geolocation
   useEffect(() => {
     const detectCurrency = async () => {
+      // 1. Prefer user-selected currency from onboarding
+      try {
+        const { data: sess } = await supabase.auth.getUser();
+        const uid = sess?.user?.id;
+        if (uid) {
+          const { data: p } = await supabase.from("profiles").select("preferred_currency").eq("id", uid).maybeSingle();
+          const pref = (p?.preferred_currency ?? "").toString().toUpperCase();
+          if (pref && (pref in CURRENCY_MAP)) {
+            setCurrencyCode(pref as CurrencyCode);
+            setLoaded(true);
+            return;
+          }
+        }
+      } catch { /* fall through to geo */ }
       try {
         const lookups = [
           () => fetchWithTimeout("https://ipapi.co/json/"),

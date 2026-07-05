@@ -27,6 +27,7 @@ import AdminBehaviorAnalytics from "@/components/admin/AdminBehaviorAnalytics";
 import AdminUserGoals from "@/components/admin/AdminUserGoals";
 import AdminCampaignEligibility from "@/components/admin/AdminCampaignEligibility";
 import AdminGoalAccounts from "@/components/admin/AdminGoalAccounts";
+import AdminOfferProofs from "@/components/admin/AdminOfferProofs";
 import PageSkeleton from "@/components/PageSkeleton";
 import {
   SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
@@ -90,7 +91,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps");
 const fromDResponses = () => supabase.from("decision_responses");
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "inf_leaderboard" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config" | "ai_onboarding" | "brand_catalog" | "goal_ideas" | "behavior_analytics" | "user_goals" | "goal_accounts" | "campaign_eligibility";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "inf_leaderboard" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config" | "ai_onboarding" | "brand_catalog" | "goal_ideas" | "behavior_analytics" | "user_goals" | "goal_accounts" | "campaign_eligibility" | "offer_proofs";
 
 const navGroups = [
   {
@@ -141,6 +142,7 @@ const navGroups = [
       { id: "user_goals" as AdminTab, label: "User Goals", icon: TrendingUp },
       { id: "goal_accounts" as AdminTab, label: "Goal Accounts", icon: TrendingUp },
       { id: "campaign_eligibility" as AdminTab, label: "Campaign Eligibility", icon: Settings },
+      { id: "offer_proofs" as AdminTab, label: "Offer Daily Proofs", icon: CheckCircle2 },
     ],
   },
   {
@@ -1301,6 +1303,7 @@ const Admin = () => {
     user_goals: "User Goals",
     goal_accounts: "Goal Accounts",
     campaign_eligibility: "Campaign Eligibility",
+    offer_proofs: "Offer Daily Proofs",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
@@ -3543,6 +3546,7 @@ const Admin = () => {
             {activeTab === "user_goals" && <AdminUserGoals />}
             {activeTab === "goal_accounts" && <AdminGoalAccounts />}
             {activeTab === "campaign_eligibility" && <AdminCampaignEligibility />}
+            {activeTab === "offer_proofs" && <AdminOfferProofs />}
 
           </main>
         </div>
