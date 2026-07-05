@@ -337,6 +337,7 @@ const Dashboard = () => {
       {activeView === "home" && (
         <ChatPopup proactiveTip={proactiveTip} />
       )}
+      <ReOnboardingGate />
     </div>
   );
 };
