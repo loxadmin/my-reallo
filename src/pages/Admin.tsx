@@ -1302,6 +1302,7 @@ const Admin = () => {
     user_goals: "User Goals",
     goal_accounts: "Goal Accounts",
     campaign_eligibility: "Campaign Eligibility",
+    offer_proofs: "Offer Daily Proofs",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
