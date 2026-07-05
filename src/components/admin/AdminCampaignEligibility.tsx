@@ -66,7 +66,7 @@ export default function AdminCampaignEligibility() {
       </div>
       <div className="bg-card rounded-xl border overflow-auto">
         <table className="w-full text-xs">
-          <thead className="bg-muted/50"><tr><th className="text-left p-2">Campaign</th><th className="p-2">Type</th><th className="p-2">Segments</th><th className="p-2">Brands</th><th className="p-2">Goals</th><th className="p-2">Weight/Priority</th><th className="p-2">Proof</th><th></th></tr></thead>
+          <thead className="bg-muted/50"><tr><th className="text-left p-2">Campaign</th><th className="p-2">Type</th><th className="p-2">Segments</th><th className="p-2">Brands</th><th className="p-2">Competes w/</th><th className="p-2">Excl. switchers</th><th className="p-2">Days</th><th className="p-2">Weight/Prio</th><th></th></tr></thead>
           <tbody>
             {rows.map(r => (
               <tr key={r.id} className="border-t align-top">
@@ -74,9 +74,10 @@ export default function AdminCampaignEligibility() {
                 <td className="p-2">{r.campaign_type}</td>
                 <td className="p-2">{(r.eligible_segments ?? []).join(", ")}</td>
                 <td className="p-2">{(r.eligible_brands ?? []).join(", ")}</td>
-                <td className="p-2">{(r.eligible_goals ?? []).join(", ")}</td>
+                <td className="p-2">{(r.competes_with_brands ?? []).join(", ")}</td>
+                <td className="p-2">{r.exclusive_to_switchers ? "yes" : "no"}</td>
+                <td className="p-2">{r.duration_days ?? 1}</td>
                 <td className="p-2">{r.weight}/{r.priority}</td>
-                <td className="p-2">{(r.proof_types ?? []).join(", ")}</td>
                 <td className="p-2 text-right"><button onClick={() => supabase.from("campaign_eligibility").delete().eq("id", r.id).then(load)} className="text-destructive"><Trash2 className="w-4 h-4" /></button></td>
               </tr>
             ))}
