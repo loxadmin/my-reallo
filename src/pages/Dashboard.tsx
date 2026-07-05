@@ -9,6 +9,7 @@ import WaterBackground from "@/components/WaterBackground";
 import PageSkeleton from "@/components/PageSkeleton";
 import KarbaliChat from "@/components/KarbaliChat";
 import { ChatPopup } from "@/components/KarbaliChat";
+import ReOnboardingGate from "@/components/ReOnboardingGate";
 import DashboardBold from "@/components/dashboard/DashboardBold";
 import DashboardMinimal from "@/components/dashboard/DashboardMinimal";
 import DashboardNeon from "@/components/dashboard/DashboardNeon";
