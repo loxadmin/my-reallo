@@ -3546,6 +3546,7 @@ const Admin = () => {
             {activeTab === "user_goals" && <AdminUserGoals />}
             {activeTab === "goal_accounts" && <AdminGoalAccounts />}
             {activeTab === "campaign_eligibility" && <AdminCampaignEligibility />}
+            {activeTab === "offer_proofs" && <AdminOfferProofs />}
 
           </main>
         </div>
