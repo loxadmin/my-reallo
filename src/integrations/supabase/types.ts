@@ -226,13 +226,17 @@ export type Database = {
           budget_remaining: number | null
           campaign_id: string
           campaign_type: string
+          category: string | null
+          competes_with_brands: string[]
           created_at: string
           deposit_required: number
+          duration_days: number
           eligible_brands: string[]
           eligible_goals: string[]
           eligible_interests: string[]
           eligible_locations: string[]
           eligible_segments: string[]
+          exclusive_to_switchers: boolean
           expires_at: string | null
           goal_contribution_value: number
           id: string
@@ -250,13 +254,17 @@ export type Database = {
           budget_remaining?: number | null
           campaign_id: string
           campaign_type?: string
+          category?: string | null
+          competes_with_brands?: string[]
           created_at?: string
           deposit_required?: number
+          duration_days?: number
           eligible_brands?: string[]
           eligible_goals?: string[]
           eligible_interests?: string[]
           eligible_locations?: string[]
           eligible_segments?: string[]
+          exclusive_to_switchers?: boolean
           expires_at?: string | null
           goal_contribution_value?: number
           id?: string
@@ -274,13 +282,17 @@ export type Database = {
           budget_remaining?: number | null
           campaign_id?: string
           campaign_type?: string
+          category?: string | null
+          competes_with_brands?: string[]
           created_at?: string
           deposit_required?: number
+          duration_days?: number
           eligible_brands?: string[]
           eligible_goals?: string[]
           eligible_interests?: string[]
           eligible_locations?: string[]
           eligible_segments?: string[]
+          exclusive_to_switchers?: boolean
           expires_at?: string | null
           goal_contribution_value?: number
           id?: string
@@ -1929,6 +1941,100 @@ export type Database = {
           },
         ]
       }
+      offer_daily_proofs: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          day_index: number
+          enrollment_id: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          screenshot_url: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          day_index: number
+          enrollment_id: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_url: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          day_index?: number
+          enrollment_id?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_url?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_daily_proofs_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "offer_enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_enrollments: {
+        Row: {
+          campaign_id: string
+          completed_at: string | null
+          created_at: string
+          eligibility_id: string | null
+          expected_days: number
+          id: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          completed_at?: string | null
+          created_at?: string
+          eligibility_id?: string | null
+          expected_days?: number
+          id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          completed_at?: string | null
+          created_at?: string
+          eligibility_id?: string | null
+          expected_days?: number
+          id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_enrollments_eligibility_id_fkey"
+            columns: ["eligibility_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_eligibility"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_question_categories: {
         Row: {
           active: boolean
@@ -2022,7 +2128,9 @@ export type Database = {
           last_active: string | null
           monthly_business_spend: number | null
           off_queue_at: string | null
+          onboarding_version: number
           points_balance: number
+          preferred_currency: string | null
           queue_position: number | null
           referral_code: string | null
           referred_by: string | null
@@ -2051,7 +2159,9 @@ export type Database = {
           last_active?: string | null
           monthly_business_spend?: number | null
           off_queue_at?: string | null
+          onboarding_version?: number
           points_balance?: number
+          preferred_currency?: string | null
           queue_position?: number | null
           referral_code?: string | null
           referred_by?: string | null
@@ -2080,7 +2190,9 @@ export type Database = {
           last_active?: string | null
           monthly_business_spend?: number | null
           off_queue_at?: string | null
+          onboarding_version?: number
           points_balance?: number
+          preferred_currency?: string | null
           queue_position?: number | null
           referral_code?: string | null
           referred_by?: string | null
@@ -2544,6 +2656,57 @@ export type Database = {
           state?: string | null
           task_capabilities?: string[]
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_brand_switch_intent: {
+        Row: {
+          brand_category: string | null
+          brand_name: string
+          captured_at: string
+          user_id: string
+          willing_to_switch: boolean
+        }
+        Insert: {
+          brand_category?: string | null
+          brand_name: string
+          captured_at?: string
+          user_id: string
+          willing_to_switch: boolean
+        }
+        Update: {
+          brand_category?: string | null
+          brand_name?: string
+          captured_at?: string
+          user_id?: string
+          willing_to_switch?: boolean
+        }
+        Relationships: []
+      }
+      user_custom_brands: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          name: string
+          promoted: boolean
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          promoted?: boolean
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          promoted?: boolean
           user_id?: string
         }
         Relationships: []
