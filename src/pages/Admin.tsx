@@ -27,6 +27,7 @@ import AdminBehaviorAnalytics from "@/components/admin/AdminBehaviorAnalytics";
 import AdminUserGoals from "@/components/admin/AdminUserGoals";
 import AdminCampaignEligibility from "@/components/admin/AdminCampaignEligibility";
 import AdminGoalAccounts from "@/components/admin/AdminGoalAccounts";
+import AdminOfferProofs from "@/components/admin/AdminOfferProofs";
 import PageSkeleton from "@/components/PageSkeleton";
 import {
   SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
