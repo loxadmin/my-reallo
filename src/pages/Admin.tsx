@@ -142,6 +142,7 @@ const navGroups = [
       { id: "user_goals" as AdminTab, label: "User Goals", icon: TrendingUp },
       { id: "goal_accounts" as AdminTab, label: "Goal Accounts", icon: TrendingUp },
       { id: "campaign_eligibility" as AdminTab, label: "Campaign Eligibility", icon: Settings },
+      { id: "offer_proofs" as AdminTab, label: "Offer Daily Proofs", icon: CheckCircle2 },
     ],
   },
   {
