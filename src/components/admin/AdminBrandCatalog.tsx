@@ -1,14 +1,22 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, ArrowUp } from "lucide-react";
 
 const CATS = ["bank","ride","shopping","telecom","food","streaming","other"];
 
 export default function AdminBrandCatalog() {
   const [brands, setBrands] = useState<any[]>([]);
+  const [suggested, setSuggested] = useState<any[]>([]);
   const [name, setName] = useState(""); const [cat, setCat] = useState("bank");
-  const load = async () => { const { data } = await supabase.from("brand_catalog").select("*").order("category").order("name"); setBrands(data ?? []); };
+  const load = async () => {
+    const [{ data: bc }, { data: sg }] = await Promise.all([
+      supabase.from("brand_catalog").select("*").order("category").order("name"),
+      supabase.from("user_custom_brands").select("*").eq("promoted", false).order("created_at", { ascending: false }).limit(200),
+    ]);
+    setBrands(bc ?? []);
+    setSuggested(sg ?? []);
+  };
   useEffect(() => { void load(); }, []);
 
   const add = async () => {
@@ -19,6 +27,21 @@ export default function AdminBrandCatalog() {
   };
   const del = async (id: string) => { await supabase.from("brand_catalog").delete().eq("id", id); void load(); };
   const toggle = async (id: string, active: boolean) => { await supabase.from("brand_catalog").update({ active }).eq("id", id); void load(); };
+
+  const promote = async (row: any) => {
+    const category = row.category || "other";
+    const existing = brands.find(b => b.name.toLowerCase() === row.name.toLowerCase());
+    if (!existing) {
+      const { error } = await supabase.from("brand_catalog").insert({ name: row.name.trim(), category });
+      if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+    await supabase.from("user_custom_brands").update({ promoted: true }).eq("id", row.id);
+    void load();
+  };
+  const dismiss = async (id: string) => {
+    await supabase.from("user_custom_brands").delete().eq("id", id);
+    void load();
+  };
 
   return (
     <div className="space-y-4">
@@ -43,6 +66,27 @@ export default function AdminBrandCatalog() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="bg-card rounded-xl border p-4">
+        <div className="text-sm font-semibold mb-2">Suggested by users ({suggested.length})</div>
+        {suggested.length === 0 ? (
+          <div className="text-xs text-muted-foreground">No pending suggestions.</div>
+        ) : (
+          <div className="space-y-1 text-sm">
+            {suggested.map(s => (
+              <div key={s.id} className="flex items-center justify-between border-t pt-1">
+                <div>{s.name} <span className="text-xs text-muted-foreground">({s.category ?? "—"})</span></div>
+                <div className="flex gap-2">
+                  <button onClick={() => promote(s)} className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded bg-primary/10 text-primary">
+                    <ArrowUp className="w-3 h-3" /> Promote
+                  </button>
+                  <button onClick={() => dismiss(s.id)} className="text-xs text-destructive"><Trash2 className="w-3 h-3" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
