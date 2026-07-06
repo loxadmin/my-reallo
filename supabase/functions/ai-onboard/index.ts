@@ -54,6 +54,8 @@ You MUST cover, in this order:
 After EACH user reply, respond with a STRICT JSON object (no code fences):
 {
   "reply": "your next message",
+  "options": ["optional", "clickable", "choices"],
+  "multi_select": false,
   "extract": {
     "preferred_currency": "",
     "segments": [], "brands_used": [], "custom_brands": [{"name":"","category":""}],
@@ -66,7 +68,15 @@ After EACH user reply, respond with a STRICT JSON object (no code fences):
   "stage": "currency|profile|brands|spend|switch|done",
   "done": false
 }
-Only mark "done": true after the switch_intent step is complete for every brand the user selected. When done, confirm and ask "What goal are you working toward?".`;
+Only mark "done": true after the switch_intent step is complete for every brand the user selected. When done, confirm and ask "What goal are you working toward?".
+
+IMPORTANT — whenever your question has a fixed set of choices, ALWAYS include them in the "options" array so the UI can render them as clickable chips. Set "multi_select": true when the user can pick multiple (e.g. segments, brands per category, spending habits). Examples of when to include options:
+- Currency picker: ["NGN","USD","GBP","EUR","GHS","KES","ZAR","CAD","AUD","Other"]
+- Age group, occupation categories, income ranges
+- Segments (multi): ["Student","Parent","Entrepreneur","Employee","Business owner","Other"]
+- Brand catalog per category (multi) — include partner brands from the catalog plus "Other (type it in)"
+- Yes/No for switch intent per brand: ["Yes","No"]
+Do NOT include options for free-text numeric questions (monthly spend amounts) or open-ended city/name inputs.`;
 
     const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
