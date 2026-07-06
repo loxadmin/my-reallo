@@ -158,7 +158,14 @@ Do NOT include options for free-text numeric questions (monthly spend amounts) o
       await supabase.from('profiles').update({ onboarding_version: 2 }).eq('id', user.id);
     }
 
-    return new Response(JSON.stringify({ reply: parsed.reply ?? '', done: !!parsed.done, stage: parsed.stage ?? null, extract: ex }), {
+    return new Response(JSON.stringify({
+      reply: parsed.reply ?? '',
+      options: Array.isArray(parsed.options) ? parsed.options.map((o: any) => String(o)).filter(Boolean) : [],
+      multi_select: !!parsed.multi_select,
+      done: !!parsed.done,
+      stage: parsed.stage ?? null,
+      extract: ex,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
