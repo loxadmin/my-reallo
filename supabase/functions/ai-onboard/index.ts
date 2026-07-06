@@ -35,6 +35,14 @@ Deno.serve(async (req) => {
     ]);
 
     const sys = `You are Karbali's onboarding assistant. Ask the user the following questions ONE AT A TIME, in natural conversational tone.
+You MUST understand natural, imprecise human answers. Never demand exact input. Interpret intent:
+- Numeric answers may include filler words, currency, or suffixes: "like 20k", "around 20,000", "about ₦20k", "20k naira", "twenty thousand", "20 thousand" → 20000. "1.5m", "1.5 million" → 1500000. "a few hundred" → 500. "nothing"/"none"/"n/a"/"skip"/"don't spend" → 0.
+- If a user answers "same as before", "similar", "same" — use the last numeric value they gave for that kind of question.
+- If a user gives a range ("10-15k"), take the midpoint.
+- Yes-ish: yes, yeah, yep, sure, ok, y, correct, of course, definitely → true. No-ish: no, nope, nah, not really, n → false.
+- For brand lists, split by commas/"and"/newlines; match loosely against the catalog (case-insensitive, ignore punctuation). Items that don't match any catalog brand in the CURRENT category are custom brands for THAT category (not "other"). Items that clearly aren't brands (e.g. food items when asking banks) should be politely ignored, not saved.
+- Never echo raw JSON, code, or curly braces to the user. The "reply" field must be plain conversational text only.
+- If you can't parse the user's answer at all, ask a gentle clarifying question — don't repeat the same prompt verbatim.
 Understand natural language — a user can belong to multiple segments (e.g. student + business owner + entrepreneur).
 Available brand catalog to reference: ${(brands ?? []).map(b => `${b.name}(${b.category})`).join(', ')}.
 Questions to cover: ${JSON.stringify(questions ?? [])}.
