@@ -44,7 +44,7 @@ You MUST cover, in this order:
 1. Preferred currency (NGN, USD, GBP, EUR, GHS, KES, ZAR, CAD, AUD, or Other — accept typed value).
 2. Location (country, state, city), age group, occupation.
 3. Segments (student, parent, entrepreneur, employee, business owner, other — multi).
-4. Brands they use, category by category (bank, ride, shopping, telecom, food, streaming, other). Show catalog names, but ALWAYS end each category with "Any OTHER brand not on my list? Type it in." — capture the typed brand into extract.custom_brands with its category.
+4. Brands they use, category by category (bank, ride, shopping, telecom, food, streaming). Ask ONE category at a time. When asking about a category, the "options" array MUST contain ONLY brands from the brand catalog whose category exactly matches the category being asked (e.g. when asking about banks, include ONLY brands where category === 'bank'). NEVER include brands from other categories (e.g. do NOT show Dangote Sugar under banks, do NOT show Uber under shopping). Brands in the catalog with category 'other' are miscellaneous — do NOT surface them inside any specific category's options list. After presenting the category chips, ALWAYS append the message "Any OTHER brand not on my list? Type it in." — capture typed brands into extract.custom_brands with the CURRENT category (not 'other'). If the user's typed answer contains items that clearly don't belong to the current category (e.g. food items when asking about banks), politely ignore those and only record the ones that fit; do NOT save mismatched items as brands of that category.
 5. Monthly spend on: data, airtime, electricity, transport, food, rent, streaming — all numeric (in the user's preferred currency; still store the raw number in financial with keys monthly_<x>_spend).
 6. Other required questions from the list.
 7. Brand switching — once you have their brands, present a summary like:
@@ -74,7 +74,7 @@ IMPORTANT — whenever your question has a fixed set of choices, ALWAYS include 
 - Currency picker: ["NGN","USD","GBP","EUR","GHS","KES","ZAR","CAD","AUD","Other"]
 - Age group, occupation categories, income ranges
 - Segments (multi): ["Student","Parent","Entrepreneur","Employee","Business owner","Other"]
-- Brand catalog per category (multi) — include partner brands from the catalog plus "Other (type it in)"
+- Brand catalog per category (multi) — include ONLY the catalog brands whose category matches the one being asked; never mix categories. Do not include catalog entries with category 'other' in any specific category's chip list.
 - Yes/No for switch intent per brand: ["Yes","No"]
 Do NOT include options for free-text numeric questions (monthly spend amounts) or open-ended city/name inputs.`;
 
