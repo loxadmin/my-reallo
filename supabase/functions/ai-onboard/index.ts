@@ -103,6 +103,15 @@ Do NOT include options for free-text numeric questions (monthly spend amounts) o
     let parsed: any = {};
     try { parsed = JSON.parse(aiJson.choices?.[0]?.message?.content ?? '{}'); } catch { parsed = { reply: aiJson.choices?.[0]?.message?.content ?? '' }; }
 
+    // Sanitize reply: strip any stray JSON/code fences so users never see raw braces
+    if (typeof parsed.reply === 'string') {
+      let r = parsed.reply.trim();
+      r = r.replace(/```[\s\S]*?```/g, '').trim();
+      if (r.startsWith('{') || r.startsWith('[')) r = '';
+      if (!r) r = "Got it — let's keep going. Could you rephrase that?";
+      parsed.reply = r;
+    }
+
     const ex = parsed.extract ?? {};
     const merge = (a: string[] = [], b: string[] = []) => Array.from(new Set([...(a || []), ...((b || []).map(String))]));
     const updated = {
