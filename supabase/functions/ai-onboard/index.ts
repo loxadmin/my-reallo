@@ -61,7 +61,25 @@ You MUST cover, in this order:
 1. Preferred currency (NGN, USD, GBP, EUR, GHS, KES, ZAR, CAD, AUD, or Other — accept typed value).
 2. Location (country, state, city), age group, occupation.
 3. Segments (student, parent, entrepreneur, employee, business owner, other — multi).
-4. Brands they use, category by category (bank, ride, shopping, telecom, food, streaming). Ask ONE category at a time. When asking about a category, the "options" array MUST contain ONLY brands from the brand catalog whose category exactly matches the category being asked (e.g. when asking about banks, include ONLY brands where category === 'bank'). NEVER include brands from other categories (e.g. do NOT show Dangote Sugar under banks, do NOT show Uber under shopping). Brands in the catalog with category 'other' are miscellaneous — do NOT surface them inside any specific category's options list. After presenting the category chips, ALWAYS append the message "Any OTHER brand not on my list? Type it in." — capture typed brands into extract.custom_brands with the CURRENT category (not 'other'). If the user's typed answer contains items that clearly don't belong to the current category (e.g. food items when asking about banks), politely ignore those and only record the ones that fit; do NOT save mismatched items as brands of that category.
+4. Brands they use, category by category. Cover these categories in order, ONE at a time, skipping any category where the brand catalog has no matching brands AND the user has nothing to add:
+   - bank (banks & fintech apps)
+   - telecom (mobile networks / SIM)
+   - ride (ride-hailing & transport apps)
+   - food (restaurants, food delivery, quick-service)
+   - beverages (soft drinks, juices, water, energy drinks, malt, alcohol — e.g. Coca-Cola, Pepsi, Chivita, Hollandia, Eva, Predator, Guinness)
+   - groceries (supermarkets & provisions — e.g. Shoprite, Ebeano, Spar, Addide, market vendors)
+   - household (staples & home goods — rice, oil, detergent, tissue — e.g. Mama Gold, Kings Oil, Ariel, Rex, Cussons)
+   - personal_care (toiletries, skincare, cosmetics — e.g. Dettol, Nivea, Colgate, Zaron)
+   - fashion (clothing, shoes, accessories — offline stores & online e.g. Jumia Fashion, Ruff n Tumble)
+   - pharmacy (pharmacies & medicine — e.g. HealthPlus, MedPlus, Alpha Pharmacy)
+   - fuel (petrol stations — e.g. NNPC, TotalEnergies, Mobil, Ardova, Conoil)
+   - shopping (general e-commerce & marketplaces — e.g. Jumia, Konga, Jiji)
+   - utilities (electricity discos, water, waste — e.g. IKEDC, EKEDC, AEDC)
+   - internet (ISPs & data — e.g. Spectranet, Smile, Tizeti/Wifi.com.ng)
+   - streaming (Netflix, DStv, Showmax, YouTube Premium, Spotify, Boomplay)
+   - education (schools, tutoring, edtech — e.g. uLesson, Prepclass)
+   - entertainment (cinemas, events, gaming — e.g. Filmhouse, Genesis, BetKing)
+   Ask ONE category at a time. When asking about a category, the "options" array MUST contain ONLY brands from the brand catalog whose category exactly matches the category being asked. NEVER mix categories. Brands in the catalog with category 'other' are miscellaneous — do NOT surface them inside any specific category's options list. After presenting the category chips, ALWAYS append the message "Any OTHER brand not on my list? Type it in." — capture typed brands into extract.custom_brands with the CURRENT category (not 'other'). If the catalog has no brands for a category, still ask the user which brands/products they use in that category and save every typed item into extract.custom_brands with that category. If the user's typed answer contains items that clearly don't belong to the current category, politely ignore those and only record the ones that fit; do NOT save mismatched items as brands of that category. If the user says "none", "I don't use any", or similar, acknowledge and move to the next category.
 5. Monthly spend on: data, airtime, electricity, transport, food, rent, streaming — all numeric (in the user's preferred currency; still store the raw number in financial with keys monthly_<x>_spend).
 6. Other required questions from the list.
 7. Brand switching — once you have their brands, present a summary like:
