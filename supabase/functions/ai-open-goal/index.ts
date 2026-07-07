@@ -17,25 +17,55 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabase.from('user_behavior_profile').select('*').eq('user_id', userId).maybeSingle();
 
-    const sys = `You are Karbali's Goal Account strategist. The user wants to open a funded Goal Account.
-Given their goal + profile + financial capacity, produce EXACTLY 3 realistic paths that vary by deposit vs task/referral effort.
-Return strict JSON only (no code fences):
+    const existingSavings = Number(profile?.financial?.goal_existing_savings ?? profile?.raw?.goal_existing_savings ?? 0) || 0;
+
+    const sys = `You are Karbali's Goal Account strategist. Design EXACTLY 5 realistic, DIFFERENT Goal Account paths tailored to this specific user's goal, timeline, income capacity, and any savings they already have.
+
+Rules:
+- Amounts are in Naira. All numeric fields are integers.
+- The 5 options MUST span the effort spectrum, roughly:
+  1) HIGH DEPOSIT, SHORT PATH — biggest upfront deposit (about 10% of target if they can afford it), lowest tasks/referrals, shortest duration.
+  2) MEDIUM DEPOSIT, BALANCED — moderate deposit + moderate tasks/referrals + moderate monthly contribution.
+  3) LOW DEPOSIT, LONGER — small deposit, more tasks & partner purchases, longer duration.
+  4) TASKS + REFERRALS ONLY — deposit = 0, higher referrals + tasks + purchases, longer duration.
+  5) REFERRAL CHAMPION (no money) — deposit = 0, requirements.referrals MUST be AT LEAST 1000 completed within a 30-day window, minimal or no monthly contribution; put "1000+ valid referrals within 30 days" in requirements.notes.
+- If the user already has savings, treat that as a head-start: option 1 or 2 can subtract savings from the deposit and mention it in requirements.notes ("You already have ₦X saved — deposit reduced accordingly.").
+- Vary duration_months across options so users see meaningful trade-offs (e.g. 3, 6, 12, 18, 24 depending on goal size).
+- Requirements object per option: { referrals: int, tasks: int, purchases: int, notes: string } — notes must be a friendly one-line explanation of what unlocks this path.
+- Give each option a short human label like "Fast Track", "Balanced Builder", "Slow & Steady", "Hustle Path", "Referral Champion".
+
+Return STRICT JSON only (no code fences):
 { "options": [
-  { "label": "Fast Track", "deposit": 0, "duration_months": 12, "monthly_contribution": 0, "requirements": { "referrals": 0, "tasks": 0, "purchases": 0, "notes": "" } }
-] }
-Amounts in Naira. Options should progress: A=higher deposit shorter time, B=medium, C=no deposit longer time with more tasks/referrals.`;
-    const usr = `Goal: ${title}\nTarget: ${target_amount} NGN\nTarget date: ${target_date ?? 'flexible'}\nProfile: ${JSON.stringify(profile ?? {})}`;
+  { "label": "", "deposit": 0, "duration_months": 12, "monthly_contribution": 0, "requirements": { "referrals": 0, "tasks": 0, "purchases": 0, "notes": "" } }
+] }`;
+    const usr = `Goal: ${title}\nTarget: ${target_amount} NGN\nTarget date: ${target_date ?? 'flexible'}\nExisting savings toward this goal: ${existingSavings} NGN\nProfile: ${JSON.stringify(profile ?? {})}`;
 
     const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
-      body: JSON.stringify({ model: 'google/gemini-2.5-flash', messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }], response_format: { type: 'json_object' } }),
+      body: JSON.stringify({ model: 'google/gemini-2.5-pro', messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }], response_format: { type: 'json_object' }, temperature: 0.7 }),
     });
     if (!aiResp.ok) return new Response(JSON.stringify({ error: 'AI error', detail: await aiResp.text() }), { status: aiResp.status, headers: corsHeaders });
     const aiJson = await aiResp.json();
     let out: any = { options: [] };
     try { out = JSON.parse(aiJson.choices?.[0]?.message?.content ?? '{}'); } catch { /* noop */ }
-    const opts = Array.isArray(out.options) ? out.options.slice(0, 3) : [];
+    const opts = Array.isArray(out.options) ? out.options.slice(0, 5) : [];
+
+    // Enforce the "no-money" path rule: any option with deposit=0 AND monthly_contribution=0
+    // must require at least 1000 referrals in 30 days.
+    for (const o of opts) {
+      const dep = Number(o?.deposit ?? 0);
+      const monthly = Number(o?.monthly_contribution ?? 0);
+      o.requirements = o.requirements ?? {};
+      if (dep === 0 && monthly === 0) {
+        const refs = Number(o.requirements.referrals ?? 0);
+        if (refs < 1000) o.requirements.referrals = 1000;
+        const note = String(o.requirements.notes ?? '');
+        if (!/1000/.test(note)) {
+          o.requirements.notes = (note ? note + ' ' : '') + 'Unlocks with 1000+ valid referrals within 30 days.';
+        }
+      }
+    }
 
     // Clear any prior unattached options for this user
     await supabase.from('goal_account_options').delete().eq('user_id', userId).is('goal_account_id', null);
