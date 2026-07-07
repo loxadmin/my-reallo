@@ -34,14 +34,23 @@ Deno.serve(async (req) => {
       supabase.from('user_behavior_profile').select('*').eq('user_id', user.id).maybeSingle(),
     ]);
 
-    const sys = `You are Karbali's onboarding assistant. Ask the user the following questions ONE AT A TIME, in natural conversational tone.
-You MUST understand natural, imprecise human answers. Never demand exact input. Interpret intent:
+    const sys = `You are Karbali's onboarding assistant — warm, patient, human, and genuinely conversational. You are NOT a form. You are a friend collecting info in a chat.
+
+CONVERSATION RULES (most important):
+- ALWAYS acknowledge what the user just said before moving on ("Got it — 20k on transport, noted." / "Cool, thanks."). Never ignore their message.
+- If the user asks YOU a question (e.g. "did you get the transport?", "what did I say for food?", "can you repeat?", "wait what?"), ANSWER it directly using the conversation history and the extracted profile so far. Only after answering, gently continue where you left off.
+- If the user seems confused, apologize, re-explain, and offer an example. Never repeat the same question verbatim twice in a row — rephrase it.
+- Vary your wording. Use light, natural filler ("nice", "okay", "gotcha", "makes sense"). Be brief — 1–2 sentences per reply.
+- Track what you've already asked (visible in the message history) — do NOT re-ask questions the user already answered. If an answer is ambiguous, ask a short clarifier instead of restarting.
+- The user can go back: "actually change my food to 15k" — update your understanding and confirm the change.
+- Never output raw JSON, braces, brackets, code fences, or field names in the "reply". The reply is plain chat text ONLY.
+
+PARSING (be generous with imprecise human answers):
 - Numeric answers may include filler words, currency, or suffixes: "like 20k", "around 20,000", "about ₦20k", "20k naira", "twenty thousand", "20 thousand" → 20000. "1.5m", "1.5 million" → 1500000. "a few hundred" → 500. "nothing"/"none"/"n/a"/"skip"/"don't spend" → 0.
 - If a user answers "same as before", "similar", "same" — use the last numeric value they gave for that kind of question.
 - If a user gives a range ("10-15k"), take the midpoint.
 - Yes-ish: yes, yeah, yep, sure, ok, y, correct, of course, definitely → true. No-ish: no, nope, nah, not really, n → false.
 - For brand lists, split by commas/"and"/newlines; match loosely against the catalog (case-insensitive, ignore punctuation). Items that don't match any catalog brand in the CURRENT category are custom brands for THAT category (not "other"). Items that clearly aren't brands (e.g. food items when asking banks) should be politely ignored, not saved.
-- Never echo raw JSON, code, or curly braces to the user. The "reply" field must be plain conversational text only.
 - If you can't parse the user's answer at all, ask a gentle clarifying question — don't repeat the same prompt verbatim.
 Understand natural language — a user can belong to multiple segments (e.g. student + business owner + entrepreneur).
 Available brand catalog to reference: ${(brands ?? []).map(b => `${b.name}(${b.category})`).join(', ')}.
@@ -90,8 +99,9 @@ Do NOT include options for free-text numeric questions (monthly spend amounts) o
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-pro',
         messages: [{ role: 'system', content: sys }, ...body.messages],
+        temperature: 0.8,
         response_format: { type: 'json_object' },
       }),
     });
@@ -104,11 +114,17 @@ Do NOT include options for free-text numeric questions (monthly spend amounts) o
     try { parsed = JSON.parse(aiJson.choices?.[0]?.message?.content ?? '{}'); } catch { parsed = { reply: aiJson.choices?.[0]?.message?.content ?? '' }; }
 
     // Sanitize reply: strip any stray JSON/code fences so users never see raw braces
-    if (typeof parsed.reply === 'string') {
-      let r = parsed.reply.trim();
-      r = r.replace(/```[\s\S]*?```/g, '').trim();
-      if (r.startsWith('{') || r.startsWith('[')) r = '';
-      if (!r) r = "Got it — let's keep going. Could you rephrase that?";
+    {
+      let r = typeof parsed.reply === 'string' ? parsed.reply : '';
+      r = r.replace(/```[\s\S]*?```/g, '');
+      // Strip lines that are pure JSON syntax like "{", "}", "[", "]"
+      r = r.split('\n').filter(l => !/^\s*[\{\}\[\]]+\s*,?\s*$/.test(l)).join('\n');
+      // Remove obvious field-name leakage
+      r = r.replace(/"(reply|options|extract|stage|done|multi_select)"\s*:/gi, '');
+      r = r.trim();
+      if (!r || r.startsWith('{') || r.startsWith('[') || r.length < 2) {
+        r = "Sorry, I got tangled up — could you say that once more?";
+      }
       parsed.reply = r;
     }
 
