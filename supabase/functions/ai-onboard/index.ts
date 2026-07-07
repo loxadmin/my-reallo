@@ -99,8 +99,9 @@ Do NOT include options for free-text numeric questions (monthly spend amounts) o
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-pro',
         messages: [{ role: 'system', content: sys }, ...body.messages],
+        temperature: 0.8,
         response_format: { type: 'json_object' },
       }),
     });
@@ -113,11 +114,17 @@ Do NOT include options for free-text numeric questions (monthly spend amounts) o
     try { parsed = JSON.parse(aiJson.choices?.[0]?.message?.content ?? '{}'); } catch { parsed = { reply: aiJson.choices?.[0]?.message?.content ?? '' }; }
 
     // Sanitize reply: strip any stray JSON/code fences so users never see raw braces
-    if (typeof parsed.reply === 'string') {
-      let r = parsed.reply.trim();
-      r = r.replace(/```[\s\S]*?```/g, '').trim();
-      if (r.startsWith('{') || r.startsWith('[')) r = '';
-      if (!r) r = "Got it — let's keep going. Could you rephrase that?";
+    {
+      let r = typeof parsed.reply === 'string' ? parsed.reply : '';
+      r = r.replace(/```[\s\S]*?```/g, '');
+      // Strip lines that are pure JSON syntax like "{", "}", "[", "]"
+      r = r.split('\n').filter(l => !/^\s*[\{\}\[\]]+\s*,?\s*$/.test(l)).join('\n');
+      // Remove obvious field-name leakage
+      r = r.replace(/"(reply|options|extract|stage|done|multi_select)"\s*:/gi, '');
+      r = r.trim();
+      if (!r || r.startsWith('{') || r.startsWith('[') || r.length < 2) {
+        r = "Sorry, I got tangled up — could you say that once more?";
+      }
       parsed.reply = r;
     }
 
