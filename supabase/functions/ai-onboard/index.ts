@@ -137,9 +137,9 @@ Do NOT include options for free-text numeric questions (weekly/daily/per-trip am
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.5-flash',
         messages: [{ role: 'system', content: sys }, ...body.messages],
-        temperature: 0.8,
+        temperature: 0.7,
         response_format: { type: 'json_object' },
       }),
     });
