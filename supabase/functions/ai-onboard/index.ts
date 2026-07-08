@@ -68,6 +68,10 @@ Deno.serve(async (req) => {
       return json({ reply: "What's one thing you wish you had in your life right now?", options: [], multi_select: false, done: false, stage: 'goals' });
     }
 
+    if (dream && firstIsConsent && isConsent(dream) && !amountText) {
+      return json({ reply: "What's one thing you wish you had in your life right now?", options: [], multi_select: false, done: false, stage: 'goals' });
+    }
+
     if (dream && lastUser === dream && !amountText) {
       await supabase.from('user_behavior_profile').upsert({
         user_id: user.id,
