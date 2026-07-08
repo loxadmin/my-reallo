@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')!;
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -14,17 +14,38 @@ interface Body {
   messages: { role: 'user' | 'assistant' | 'system'; content: string }[];
 }
 
+const json = (body: Record<string, unknown>, status = 200) => new Response(JSON.stringify(body), {
+  status,
+  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+});
+
+const normalize = (value: unknown) => String(value ?? '').trim().toLowerCase();
+const isConsent = (value: string) => /^(sure|okay|ok|go ahead|yes|yeah|yep|ready|start|let'?s go)$/i.test(value.trim());
+const parseMoney = (value: string) => {
+  const text = value.toLowerCase().replace(/₦|ngn|naira|,/g, '').trim();
+  const match = text.match(/(\d+(?:\.\d+)?)/);
+  if (!match) return null;
+  const n = Number(match[1]);
+  if (!Number.isFinite(n)) return null;
+  if (/\b(m|mil|million)\b/.test(text) || /\d\s*m\b/.test(text)) return Math.round(n * 1_000_000);
+  if (/\b(k|thousand)\b/.test(text) || /\d\s*k\b/.test(text)) return Math.round(n * 1_000);
+  return Math.round(n);
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
     const token = authHeader.replace('Bearer ', '');
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: 'AI is not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: userData } = await supabase.auth.getUser(token);
     const user = userData?.user;
-    if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!user) return json({ error: 'Unauthorized' }, 401);
 
     const body = (await req.json()) as Body;
 
@@ -33,6 +54,60 @@ Deno.serve(async (req) => {
       supabase.from('brand_catalog').select('name, category').eq('active', true),
       supabase.from('user_behavior_profile').select('*').eq('user_id', user.id).maybeSingle(),
     ]);
+
+    const userMessages = (body.messages ?? []).filter((m) => m.role === 'user').map((m) => m.content.trim()).filter(Boolean);
+    const firstUser = userMessages[0] ?? '';
+    const firstIsConsent = isConsent(firstUser);
+    const dreamIndex = firstIsConsent ? 1 : 0;
+    const amountIndex = dreamIndex + 1;
+    const dream = userMessages[dreamIndex];
+    const amountText = userMessages[amountIndex];
+    const lastUser = userMessages[userMessages.length - 1] ?? '';
+
+    if (userMessages.length === 1 && firstIsConsent) {
+      return json({ reply: "What's one thing you wish you had in your life right now?", options: [], multi_select: false, done: false, stage: 'goals' });
+    }
+
+    if (dream && firstIsConsent && isConsent(dream) && !amountText) {
+      return json({ reply: "What's one thing you wish you had in your life right now?", options: [], multi_select: false, done: false, stage: 'goals' });
+    }
+
+    if (dream && lastUser === dream && !amountText) {
+      await supabase.from('user_behavior_profile').upsert({
+        user_id: user.id,
+        raw: { ...(profile?.raw ?? {}), goal_title: dream, last_reply: "How much money do you think would help you achieve this goal?" },
+        updated_at: new Date().toISOString(),
+      });
+      const q = (questions ?? []).find((x: any) => x.tag_key === 'goal_title');
+      await supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: q?.id ?? null, tag_key: 'goal_title', answer: { value: dream } });
+      return json({ reply: `Nice — ${dream} is a real goal. How much money do you think would help you achieve it?`, options: [], multi_select: false, done: false, stage: 'goals', extract: { answers: [{ tag_key: 'goal_title', value: dream }] } });
+    }
+
+    const parsedAmount = amountText ? parseMoney(amountText) : null;
+    if (dream && amountText && lastUser === amountText) {
+      if (parsedAmount === null) {
+        return json({ reply: "No problem — even a rough estimate is okay. About how much would help you achieve it?", options: [], multi_select: false, done: false, stage: 'goals' });
+      }
+      await supabase.from('user_behavior_profile').upsert({
+        user_id: user.id,
+        raw: { ...(profile?.raw ?? {}), goal_title: dream, goal_target_amount: parsedAmount, last_reply: 'Which currency do you prefer?' },
+        updated_at: new Date().toISOString(),
+      });
+      const titleQ = (questions ?? []).find((x: any) => x.tag_key === 'goal_title');
+      const amountQ = (questions ?? []).find((x: any) => x.tag_key === 'goal_target_amount');
+      await Promise.all([
+        supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: titleQ?.id ?? null, tag_key: 'goal_title', answer: { value: dream } }),
+        supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: amountQ?.id ?? null, tag_key: 'goal_target_amount', answer: { value: parsedAmount } }),
+      ]);
+      return json({
+        reply: "Great — I really believe we can help you get there. Before I build the best roadmap for you, I need to understand your lifestyle a bit so I can recommend the right brands, milestones, and opportunities. Which currency do you prefer?",
+        options: ['NGN', 'USD', 'GBP', 'EUR', 'GHS', 'KES', 'ZAR', 'CAD', 'AUD', 'Other'],
+        multi_select: false,
+        done: false,
+        stage: 'currency',
+        extract: { answers: [{ tag_key: 'goal_title', value: dream }, { tag_key: 'goal_target_amount', value: parsedAmount }] },
+      });
+    }
 
     const sys = `You are Karbali's onboarding assistant — warm, patient, human, and genuinely conversational. You are NOT a form. You are a friend collecting info in a chat.
 
@@ -141,7 +216,11 @@ Do NOT include options for free-text numeric questions (weekly/daily/per-trip am
 
     const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      headers: {
+        'Content-Type': 'application/json',
+        'Lovable-API-Key': LOVABLE_API_KEY,
+        'X-Lovable-AIG-SDK': 'supabase-edge-function',
+      },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [{ role: 'system', content: sys }, ...body.messages],
@@ -151,7 +230,8 @@ Do NOT include options for free-text numeric questions (weekly/daily/per-trip am
     });
     if (!aiResp.ok) {
       const t = await aiResp.text();
-      return new Response(JSON.stringify({ error: 'AI error', detail: t }), { status: aiResp.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      console.error('AI onboarding gateway error:', aiResp.status, t);
+      return json({ reply: "Sorry, my connection was shaky for a moment. Please send that answer again and I'll continue from here.", options: [], multi_select: false, done: false, stage: 'profile' });
     }
     const aiJson = await aiResp.json();
     let parsed: any = {};
@@ -235,17 +315,16 @@ Do NOT include options for free-text numeric questions (weekly/daily/per-trip am
       await supabase.from('profiles').update({ onboarding_version: 2 }).eq('id', user.id);
     }
 
-    return new Response(JSON.stringify({
+    return json({
       reply: parsed.reply ?? '',
       options: Array.isArray(parsed.options) ? parsed.options.map((o: any) => String(o)).filter(Boolean) : [],
       multi_select: !!parsed.multi_select,
       done: !!parsed.done,
       stage: parsed.stage ?? null,
       extract: ex,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    console.error('AI onboarding error:', e);
+    return json({ reply: "Sorry, something got stuck. Please try that answer once more and I'll continue.", options: [], multi_select: false, done: false, stage: 'profile' });
   }
 });
