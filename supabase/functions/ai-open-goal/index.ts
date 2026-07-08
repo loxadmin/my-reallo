@@ -47,7 +47,7 @@ Return STRICT JSON only (no code fences):
 
     const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      headers: { 'Content-Type': 'application/json', 'Lovable-API-Key': LOVABLE_API_KEY, 'X-Lovable-AIG-SDK': 'supabase-edge-function' },
       body: JSON.stringify({ model: 'google/gemini-2.5-pro', messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }], response_format: { type: 'json_object' }, temperature: 0.7 }),
     });
     if (!aiResp.ok) return new Response(JSON.stringify({ error: 'AI error', detail: await aiResp.text() }), { status: aiResp.status, headers: corsHeaders });

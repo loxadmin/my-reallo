@@ -25,7 +25,7 @@ No code fences.`;
     const usr = `Goal: ${goal.title} | Target ₦${goal.target_amount} | Unlocked ₦${goal.unlocked_amount} (${(progress*100).toFixed(0)}%) | Plan: ${JSON.stringify(goal.plan)} | Profile: ${JSON.stringify(profile ?? {})}`;
     const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      headers: { 'Content-Type': 'application/json', 'Lovable-API-Key': LOVABLE_API_KEY, 'X-Lovable-AIG-SDK': 'supabase-edge-function' },
       body: JSON.stringify({ model: 'google/gemini-2.5-flash', messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }], response_format: { type: 'json_object' } }),
     });
     if (!aiResp.ok) return new Response(JSON.stringify({ error: 'AI error' }), { status: aiResp.status, headers: corsHeaders });

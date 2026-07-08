@@ -51,7 +51,8 @@ async function removeSignatureBg(imageUrl: string, label = "signature"): Promise
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        "Lovable-API-Key": apiKey,
+        "X-Lovable-AIG-SDK": "supabase-edge-function",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
