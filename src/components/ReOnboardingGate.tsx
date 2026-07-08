@@ -25,7 +25,7 @@ export default function ReOnboardingGate() {
 
   useEffect(() => {
     if (!open || messages.length) return;
-    setMessages([{ role: "assistant", content: "Hi! We've upgraded Karbali with smarter offers matched to your habits. It'll take ~2 minutes to answer a few questions. Ready?" }]);
+    setMessages([{ role: "assistant", content: "Before we begin, can I ask you one question?", options: ["Sure", "Okay", "Go ahead"] }]);
   }, [open, messages.length]);
 
   useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);

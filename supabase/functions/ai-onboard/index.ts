@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')!;
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -19,6 +19,9 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
     const token = authHeader.replace('Bearer ', '');
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: 'AI is not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -141,7 +144,11 @@ Do NOT include options for free-text numeric questions (weekly/daily/per-trip am
 
     const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      headers: {
+        'Content-Type': 'application/json',
+        'Lovable-API-Key': LOVABLE_API_KEY,
+        'X-Lovable-AIG-SDK': 'supabase-edge-function',
+      },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [{ role: 'system', content: sys }, ...body.messages],
