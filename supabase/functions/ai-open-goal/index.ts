@@ -19,6 +19,11 @@ Deno.serve(async (req) => {
 
     const existingSavings = Number(profile?.financial?.goal_existing_savings ?? profile?.raw?.goal_existing_savings ?? 0) || 0;
 
+    const targetNum = Math.max(0, Number(target_amount ?? 0) | 0);
+    // Scale the no-money referral requirement to the goal size so it feels realistic.
+    // Rough rule: ~1 referral per ₦2,000 of goal, clamped between 50 and 1500.
+    const scaledReferrals = Math.min(1500, Math.max(50, Math.round(targetNum / 2000)));
+
     const sys = `You are Karbali's Goal Account strategist. Design EXACTLY 5 realistic, DIFFERENT Goal Account paths tailored to this specific user's goal, timeline, income capacity, and any savings they already have.
 
 Rules:
@@ -28,7 +33,7 @@ Rules:
   2) MEDIUM DEPOSIT, BALANCED — moderate deposit + moderate tasks/referrals + moderate monthly contribution.
   3) LOW DEPOSIT, LONGER — small deposit, more tasks & partner purchases, longer duration.
   4) TASKS + REFERRALS ONLY — deposit = 0, higher referrals + tasks + purchases, longer duration.
-  5) REFERRAL CHAMPION (no money) — deposit = 0, requirements.referrals MUST be AT LEAST 1000 completed within a 30-day window, minimal or no monthly contribution; put "1000+ valid referrals within 30 days" in requirements.notes.
+  5) REFERRAL CHAMPION (no money) — deposit = 0, minimal or no monthly contribution. requirements.referrals MUST scale to the goal size — use approximately ${scaledReferrals} referrals within a 30-day window (never a flat 1000 for tiny goals or a tiny number for huge goals). Put "${scaledReferrals}+ valid referrals within 30 days" in requirements.notes.
 - If the user already has savings, treat that as a head-start: option 1 or 2 can subtract savings from the deposit and mention it in requirements.notes ("You already have ₦X saved — deposit reduced accordingly.").
 - Vary duration_months across options so users see meaningful trade-offs (e.g. 3, 6, 12, 18, 24 depending on goal size).
 - Requirements object per option: { referrals: int, tasks: int, purchases: int, notes: string } — notes must be a friendly one-line explanation of what unlocks this path.
@@ -59,10 +64,11 @@ Return STRICT JSON only (no code fences):
       o.requirements = o.requirements ?? {};
       if (dep === 0 && monthly === 0) {
         const refs = Number(o.requirements.referrals ?? 0);
-        if (refs < 1000) o.requirements.referrals = 1000;
+        if (refs < scaledReferrals) o.requirements.referrals = scaledReferrals;
         const note = String(o.requirements.notes ?? '');
-        if (!/1000/.test(note)) {
-          o.requirements.notes = (note ? note + ' ' : '') + 'Unlocks with 1000+ valid referrals within 30 days.';
+        const finalRefs = o.requirements.referrals;
+        if (!new RegExp(String(finalRefs)).test(note)) {
+          o.requirements.notes = (note ? note + ' ' : '') + `Unlocks with ${finalRefs}+ valid referrals within 30 days.`;
         }
       }
     }
