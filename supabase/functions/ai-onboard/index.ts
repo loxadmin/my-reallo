@@ -32,6 +32,23 @@ const parseMoney = (value: string) => {
   return Math.round(n);
 };
 
+const isMoneyGoal = (value: string) => {
+  const clean = value.toLowerCase().trim();
+  const genericMoneyKeywords = ["money", "cash", "funds", "capital", "wealth", "rich", "naira", "dollars", "income", "salary", "mula", "alert", "bag"];
+  const specificExcludeKeywords = ["car", "house", "rent", "school", "fees", "business", "travel", "trip", "vacation", "education", "study", "abroad", "jakpa", "family", "child", "children", "phone", "laptop", "land", "shop", "investment", "investing"];
+
+  const hasGenericMoney = genericMoneyKeywords.some(kw => {
+    const regex = new RegExp(`\\b${kw}\\b`, 'i');
+    return regex.test(clean);
+  });
+  const hasSpecificExclude = specificExcludeKeywords.some(kw => {
+    const regex = new RegExp(`\\b${kw}\\b`, 'i');
+    return regex.test(clean);
+  });
+
+  return hasGenericMoney && !hasSpecificExclude;
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   try {
@@ -72,7 +89,61 @@ Deno.serve(async (req) => {
       return json({ reply: "What's one thing you wish you had in your life right now?", options: [], multi_select: false, done: false, stage: 'goals' });
     }
 
-    if (dream && lastUser === dream && !amountText) {
+    const isMoney = dream ? isMoneyGoal(dream) : false;
+
+    if (isMoney) {
+      const moneyAmountText = userMessages[dreamIndex + 1];
+      const moneyPurposeText = userMessages[dreamIndex + 2];
+
+      if (!moneyAmountText && lastUser === dream) {
+        await supabase.from('user_behavior_profile').upsert({
+          user_id: user.id,
+          raw: { ...(profile?.raw ?? {}), goal_title_temp: dream, last_reply: "How much money do you need?" },
+          updated_at: new Date().toISOString(),
+        });
+        return json({ reply: "How much money do you need?", options: [], multi_select: false, done: false, stage: 'goals' });
+      }
+
+      if (moneyAmountText && !moneyPurposeText && lastUser === moneyAmountText) {
+        const parsedAmount = parseMoney(moneyAmountText);
+        if (parsedAmount === null) {
+          return json({ reply: "No problem — even a rough estimate is okay. About how much money do you need?", options: [], multi_select: false, done: false, stage: 'goals' });
+        }
+        await supabase.from('user_behavior_profile').upsert({
+          user_id: user.id,
+          raw: { ...(profile?.raw ?? {}), goal_target_amount: parsedAmount, last_reply: "And what do you need the money for?" },
+          updated_at: new Date().toISOString(),
+        });
+        const amountQ = (questions ?? []).find((x: any) => x.tag_key === 'goal_target_amount');
+        await supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: amountQ?.id ?? null, tag_key: 'goal_target_amount', answer: { value: parsedAmount } });
+        return json({ reply: "And what do you need the money for?", options: [], multi_select: false, done: false, stage: 'goals', extract: { answers: [{ tag_key: 'goal_target_amount', value: parsedAmount }] } });
+      }
+
+      if (moneyAmountText && moneyPurposeText && lastUser === moneyPurposeText) {
+        const parsedAmount = parseMoney(moneyAmountText);
+        await supabase.from('user_behavior_profile').upsert({
+          user_id: user.id,
+          raw: { ...(profile?.raw ?? {}), goal_title: moneyPurposeText, goal_target_amount: parsedAmount, last_reply: 'Which currency do you prefer?' },
+          updated_at: new Date().toISOString(),
+        });
+        const titleQ = (questions ?? []).find((x: any) => x.tag_key === 'goal_title');
+        const amountQ = (questions ?? []).find((x: any) => x.tag_key === 'goal_target_amount');
+        await Promise.all([
+          supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: titleQ?.id ?? null, tag_key: 'goal_title', answer: { value: moneyPurposeText } }),
+          supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: amountQ?.id ?? null, tag_key: 'goal_target_amount', answer: { value: parsedAmount } }),
+        ]);
+        return json({
+          reply: "Great — I really believe we can help you get there. Before I build the best roadmap for you, I need to understand your lifestyle a bit so I can recommend the right brands, milestones, and opportunities. Which currency do you prefer?",
+          options: ['NGN', 'USD', 'GBP', 'EUR', 'GHS', 'KES', 'ZAR', 'CAD', 'AUD', 'Other'],
+          multi_select: false,
+          done: false,
+          stage: 'currency',
+          extract: { answers: [{ tag_key: 'goal_title', value: moneyPurposeText }, { tag_key: 'goal_target_amount', value: parsedAmount }] },
+        });
+      }
+    }
+
+    if (!isMoney && dream && lastUser === dream && !amountText) {
       await supabase.from('user_behavior_profile').upsert({
         user_id: user.id,
         raw: { ...(profile?.raw ?? {}), goal_title: dream, last_reply: "How much money do you think would help you achieve this goal?" },
@@ -84,7 +155,7 @@ Deno.serve(async (req) => {
     }
 
     const parsedAmount = amountText ? parseMoney(amountText) : null;
-    if (dream && amountText && lastUser === amountText) {
+    if (!isMoney && dream && amountText && lastUser === amountText) {
       if (parsedAmount === null) {
         return json({ reply: "No problem — even a rough estimate is okay. About how much would help you achieve it?", options: [], multi_select: false, done: false, stage: 'goals' });
       }
@@ -113,6 +184,10 @@ Deno.serve(async (req) => {
 
 FLOW ORDER (VERY IMPORTANT — do NOT start with profiling):
 STAGE A — DREAM FIRST. Your very first message must be: "Before we begin, can I ask you one question?" with options ["Sure","Okay","Go ahead"]. After the user agrees, ask: "What's one thing you wish you had in your life right now?" (free text, no options). Accept ANY natural free-text answer (e.g. "buy a car", "relocate abroad", "business capital", "pay my rent", "sponsor my child's education", "build a house"). Save into extract.answers as tag_key "goal_title".
+- EXCEPTION: If the user replies with generic money (e.g., "money", "cash", "capital", "wealth", "funds", etc. without specifying what it is for), the flow flips/reverses:
+  1. Ask: "How much money do you need?"
+  2. Once the user replies with the amount, document the amount under "goal_target_amount", then redirect and ask what they need the money for to define their goal: "And what do you need the money for?"
+  3. Once they reply with the purpose, document that purpose under "goal_title", then proceed to the EXCITEMENT BRIDGE.
 STAGE B — GOAL AMOUNT. Next ask: "How much money do you think would help you achieve this goal?" (numeric, no options). Parse loosely (5m = 5000000, 500k = 500000). Save tag_key "goal_target_amount".
 STAGE C — EXCITEMENT BRIDGE. Reply warmly, e.g. "Great — I really believe we can help you get there. Before I build the best roadmap for you, I need to understand your lifestyle a bit so I can recommend the right brands, milestones, and opportunities." Then continue into profiling.
 STAGE D — PROFILING (the existing flow below: currency, location, segments, brands per category, lifestyle & spend, switch intent). Every so often, briefly remind the user WHY you're asking ("this helps me match you with brands you already use", "this shapes the milestones I'll build for your goal"). Do NOT re-ask goal_title or goal_target_amount — they're already captured.
