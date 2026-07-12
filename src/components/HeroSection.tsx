@@ -41,7 +41,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
   const [ghostEnabled, setGhostEnabled] = useState(true);
   const [titleNumber, setTitleNumber] = useState(0);
 
-  const titles = useMemo(() => ["Losing", "Wasting", "Burning", "Draining"], []);
+  const titles = useMemo(() => ["Business", "Education", "Rent", "Vacation", "Car", "Future"], []);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -84,7 +84,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
         >
           <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-glow" />
           <span className="text-[10px] font-semibold text-primary/80 tracking-[0.32em] uppercase">
-            Reclaim What's Yours
+            Just Make a Wish
           </span>
           <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-glow" />
         </motion.div>
@@ -96,7 +96,9 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           transition={{ delay: 0.3, duration: 0.7 }}
           className="font-display text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] mb-5"
         >
-          <span className="text-foreground">Stop </span>
+          <span className="text-foreground">Just Make a Wish.</span>
+          <br />
+          <span className="text-foreground">We'll Fund Your </span>
           <span className="relative inline-block overflow-hidden align-top">
             <AnimatePresence mode="wait">
               {titles.map(
@@ -116,8 +118,6 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
               )}
             </AnimatePresence>
           </span>
-          <br />
-          <span className="text-foreground">Your Money</span>
         </motion.h1>
 
         <motion.p
@@ -126,7 +126,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           transition={{ delay: 0.5, duration: 0.7 }}
           className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto mb-8 leading-relaxed"
         >
-          Tell us what you spend, show us proof, and we will pay you back, up to 30 to 60% at the end of the year
+          Tell us your dream, set a goal, and let partner offers fully fund your biggest life ambitions.
         </motion.p>
 
         {/* CTA */}
@@ -137,7 +137,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto"
         >
           <GlassButton variant="primary" onClick={onGetStarted} className="text-[13px] px-8 py-3.5 flex-1">
-            Calculate & Claim <MoveRight className="inline w-4 h-4 ml-2" />
+            Make a Wish <MoveRight className="inline w-4 h-4 ml-2" />
           </GlassButton>
           <GlassButton variant="outline" className="text-[13px] px-8 py-3.5 flex-1" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
             How It Works
@@ -179,9 +179,9 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
         className="z-10 w-full max-w-3xl mx-auto mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 px-4"
       >
         {[
-          { title: "Tell Us", desc: "Tell us what you spend on data, power, and food monthly." },
-          { title: "Show Proof", desc: "Upload your receipts or transaction IDs as proof." },
-          { title: "Get Paid", desc: "Once verified, we pay you back toward your goals." },
+          { title: "1. Make a Wish", desc: "Tell our friendly AI what you've been dreaming of — a new car, rent, travel, or starting a business." },
+          { title: "2. Set Your Target", desc: "Set your funding amount and choose the AI-personalized roadmap that fits your lifestyle." },
+          { title: "3. Unlock Your Fund", desc: "Earn points by trying offers from partner brands to fast-track and fully unlock your goal." },
         ].map((item, i) => (
           <div key={i} className="glass-card rounded-2xl p-5 text-center">
             <p className="text-[13px] font-semibold text-foreground mb-1">{item.title}</p>
