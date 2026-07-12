@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import nlp from 'npm:compromise@14.14.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,7 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -19,8 +19,6 @@ const json = (body: Record<string, unknown>, status = 200) => new Response(JSON.
   headers: { ...corsHeaders, 'Content-Type': 'application/json' },
 });
 
-const normalize = (value: unknown) => String(value ?? '').trim().toLowerCase();
-const isConsent = (value: string) => /^(sure|okay|ok|go ahead|yes|yeah|yep|ready|start|let'?s go)$/i.test(value.trim());
 const parseMoney = (value: string) => {
   const text = value.toLowerCase().replace(/₦|ngn|naira|,/g, '').trim();
   const match = text.match(/(\d+(?:\.\d+)?)/);
@@ -32,31 +30,154 @@ const parseMoney = (value: string) => {
   return Math.round(n);
 };
 
-const isMoneyGoal = (value: string) => {
-  const clean = value.toLowerCase().trim();
-  const genericMoneyKeywords = ["money", "cash", "funds", "capital", "wealth", "rich", "naira", "dollars", "income", "salary", "mula", "alert", "bag"];
-  const specificExcludeKeywords = ["car", "house", "rent", "school", "fees", "business", "travel", "trip", "vacation", "education", "study", "abroad", "jakpa", "family", "child", "children", "phone", "laptop", "land", "shop", "investment", "investing"];
+export function isInvalidGoal(text: string): boolean {
+  const clean = text.trim().toLowerCase();
 
-  const hasGenericMoney = genericMoneyKeywords.some(kw => {
-    const regex = new RegExp(`\\b${kw}\\b`, 'i');
-    return regex.test(clean);
-  });
-  const hasSpecificExclude = specificExcludeKeywords.some(kw => {
-    const regex = new RegExp(`\\b${kw}\\b`, 'i');
-    return regex.test(clean);
-  });
+  const invalidWords = new Set([
+    'you', 'me', 'this', 'that', 'nothing', 'anything', 'something', 'everything',
+    'money', 'cash', 'capital', 'wealth', 'funds', 'naira', 'dollars', 'none', 'nah', 'nope', 'no', 'fool'
+  ]);
+  if (invalidWords.has(clean)) {
+    return true;
+  }
 
-  return hasGenericMoney && !hasSpecificExclude;
-};
+  const doc = nlp(clean);
+  if (doc.terms().length === 1) {
+    if (doc.has('#Pronoun') || doc.has('#Preposition') || doc.has('#Conjunction')) {
+      return true;
+    }
+    if (doc.has('(money|cash|capital|wealth|funds|naira|dollar|you|me|this|that|nothing|something|everything|anything|none|what|who|why|how|fool)')) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function isSkipIntent(text: string): boolean {
+  const doc = nlp(text.trim().toLowerCase());
+  return doc.has('(skip|next|leave|pass)') && (doc.has('(question|this|me|to|step)') || doc.terms().length === 1);
+}
+
+export function isNoIntent(text: string): boolean {
+  const doc = nlp(text.trim().toLowerCase());
+  return doc.has('^(no|nope|nah|not really)$') || doc.has('^(dont|do not|never)$');
+}
+
+export class OnboardingState {
+  stage: 'start' | 'goal_title' | 'goal_amount' | 'currency' | 'done' = 'start';
+  consentGiven = false;
+  goalTitle: string | null = null;
+  goalTargetAmount: number | null = null;
+  preferredCurrency: string | null = null;
+  invalidGoalAttempts = 0;
+  lastReply = '';
+  done = false;
+}
+
+export class ContextManager {
+  state: OnboardingState;
+
+  constructor() {
+    this.state = new OnboardingState();
+  }
+
+  processMessage(userText: string) {
+    const cleanText = userText.trim();
+    if (!cleanText) return;
+
+    const isSkip = isSkipIntent(cleanText);
+    const isNo = isNoIntent(cleanText);
+
+    if (this.state.stage === 'start') {
+      if (isNo) {
+        this.state.lastReply = "Aw, why not? Karbali can help you get up to 30 to 60% of your spend back. Whenever you're ready, let me know!";
+        return;
+      }
+      this.state.consentGiven = true;
+      this.state.stage = 'goal_title';
+      this.state.lastReply = "What's one thing you wish you had in your life right now?";
+      return;
+    }
+
+    if (this.state.stage === 'goal_title') {
+      if (isSkip) {
+        this.state.goalTitle = "General Savings";
+        this.state.stage = 'currency';
+        this.state.lastReply = "No problem! Let's skip the goal for now and set it to General Savings. Which currency do you prefer?";
+        return;
+      }
+
+      if (isInvalidGoal(cleanText)) {
+        this.state.invalidGoalAttempts++;
+        if (this.state.invalidGoalAttempts === 1) {
+          this.state.lastReply = `Haha, "${cleanText}"? Nice try, but that's not a specific goal! 😂 To help you build a proper roadmap and pay you back, I need a real, specific goal—like buying a car, starting a business, or school fees. So, tell me: what's one thing you wish you had in your life right now?`;
+        } else if (this.state.invalidGoalAttempts === 2) {
+          this.state.lastReply = `I see we are still playing! 😉 Seriously though, having a real goal is why we need to answer correctly so I can personalize your roadmap. Let's try again: what's that one thing you wish you had in your life right now?`;
+        } else {
+          this.state.goalTitle = "General Savings";
+          this.state.stage = 'currency';
+          this.state.lastReply = "No worries, let's just set your goal to General Savings for now and move on. Which currency do you prefer?";
+        }
+        return;
+      }
+
+      this.state.goalTitle = cleanText;
+      this.state.stage = 'goal_amount';
+      this.state.lastReply = `Nice — ${cleanText} is a real goal. How much money do you think would help you achieve it?`;
+      return;
+    }
+
+    if (this.state.stage === 'goal_amount') {
+      if (isSkip) {
+        this.state.goalTargetAmount = null;
+        this.state.stage = 'currency';
+        this.state.lastReply = "No problem, let's skip the budget for now! Which currency do you prefer?";
+        return;
+      }
+
+      if (isNo) {
+        this.state.lastReply = "No problem — even a rough estimate is okay. About how much would help you achieve it?";
+        return;
+      }
+
+      const parsedAmount = parseMoney(cleanText);
+      if (parsedAmount === null) {
+        this.state.lastReply = "No problem — even a rough estimate is okay. About how much would help you achieve it?";
+        return;
+      }
+
+      this.state.goalTargetAmount = parsedAmount;
+      this.state.stage = 'currency';
+      this.state.lastReply = "Great — I really believe we can help you get there. Before I build the best roadmap for you, I need to understand your lifestyle a bit so I can recommend the right brands, milestones, and opportunities. Which currency do you prefer?";
+      return;
+    }
+
+    if (this.state.stage === 'currency') {
+      if (isSkip) {
+        this.state.preferredCurrency = "NGN";
+        this.state.stage = 'done';
+        this.state.done = true;
+        this.state.lastReply = "Perfect. I now understand your goal, and I'll use this to personalize your milestones and recommend the best offers to help you reach your goal.";
+        return;
+      }
+
+      const currencies = ['NGN', 'USD', 'GBP', 'EUR', 'GHS', 'KES', 'ZAR', 'CAD', 'AUD', 'Other'];
+      const matched = currencies.find(c => cleanText.toUpperCase().includes(c));
+      this.state.preferredCurrency = matched || "NGN";
+      this.state.stage = 'done';
+      this.state.done = true;
+      this.state.lastReply = "Perfect. I now understand your goal, and I'll use this to personalize your milestones and recommend the best offers to help you reach your goal.";
+      return;
+    }
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
     const token = authHeader.replace('Bearer ', '');
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: 'AI is not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -66,337 +187,88 @@ Deno.serve(async (req) => {
 
     const body = (await req.json()) as Body;
 
-    const [{ data: questions }, { data: brands }, { data: profile }] = await Promise.all([
+    const userMessages = (body.messages ?? [])
+      .filter((m) => m.role === 'user')
+      .map((m) => m.content.trim())
+      .filter(Boolean);
+
+    if (userMessages.length === 0) {
+      return json({
+        reply: "Before we begin, can I ask you one question?",
+        options: ['Sure', 'Okay', 'Go ahead'],
+        multi_select: false,
+        done: false,
+        stage: 'start',
+      });
+    }
+
+    // Replay history to get before and after state
+    const beforeManager = new ContextManager();
+    const userMessagesBefore = userMessages.slice(0, -1);
+    for (const msg of userMessagesBefore) {
+      beforeManager.processMessage(msg);
+    }
+
+    const afterManager = new ContextManager();
+    for (const msg of userMessages) {
+      afterManager.processMessage(msg);
+    }
+
+    const stateBefore = beforeManager.state;
+    const stateAfter = afterManager.state;
+
+    // Fetch questions and profile
+    const [{ data: questions }, { data: profile }] = await Promise.all([
       supabase.from('onboarding_questions').select('id, prompt, question_type, tag_key, options, required, sort_order').eq('active', true).order('sort_order'),
-      supabase.from('brand_catalog').select('name, category').eq('active', true),
       supabase.from('user_behavior_profile').select('*').eq('user_id', user.id).maybeSingle(),
     ]);
 
-    const userMessages = (body.messages ?? []).filter((m) => m.role === 'user').map((m) => m.content.trim()).filter(Boolean);
-    const firstUser = userMessages[0] ?? '';
-    const firstIsConsent = isConsent(firstUser);
-    const dreamIndex = firstIsConsent ? 1 : 0;
-    const amountIndex = dreamIndex + 1;
-    const dream = userMessages[dreamIndex];
-    const amountText = userMessages[amountIndex];
-    const lastUser = userMessages[userMessages.length - 1] ?? '';
-
-    if (userMessages.length === 1 && firstIsConsent) {
-      return json({ reply: "What's one thing you wish you had in your life right now?", options: [], multi_select: false, done: false, stage: 'goals' });
-    }
-
-    if (dream && firstIsConsent && isConsent(dream) && !amountText) {
-      return json({ reply: "What's one thing you wish you had in your life right now?", options: [], multi_select: false, done: false, stage: 'goals' });
-    }
-
-    const isMoney = dream ? isMoneyGoal(dream) : false;
-
-    if (isMoney) {
-      const moneyAmountText = userMessages[dreamIndex + 1];
-      const moneyPurposeText = userMessages[dreamIndex + 2];
-
-      if (!moneyAmountText && lastUser === dream) {
-        await supabase.from('user_behavior_profile').upsert({
-          user_id: user.id,
-          raw: { ...(profile?.raw ?? {}), goal_title_temp: dream, last_reply: "How much money do you need?" },
-          updated_at: new Date().toISOString(),
-        });
-        return json({ reply: "How much money do you need?", options: [], multi_select: false, done: false, stage: 'goals' });
-      }
-
-      if (moneyAmountText && !moneyPurposeText && lastUser === moneyAmountText) {
-        const parsedAmount = parseMoney(moneyAmountText);
-        if (parsedAmount === null) {
-          return json({ reply: "No problem — even a rough estimate is okay. About how much money do you need?", options: [], multi_select: false, done: false, stage: 'goals' });
-        }
-        await supabase.from('user_behavior_profile').upsert({
-          user_id: user.id,
-          raw: { ...(profile?.raw ?? {}), goal_target_amount: parsedAmount, last_reply: "And what do you need the money for?" },
-          updated_at: new Date().toISOString(),
-        });
-        const amountQ = (questions ?? []).find((x: any) => x.tag_key === 'goal_target_amount');
-        await supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: amountQ?.id ?? null, tag_key: 'goal_target_amount', answer: { value: parsedAmount } });
-        return json({ reply: "And what do you need the money for?", options: [], multi_select: false, done: false, stage: 'goals', extract: { answers: [{ tag_key: 'goal_target_amount', value: parsedAmount }] } });
-      }
-
-      if (moneyAmountText && moneyPurposeText && lastUser === moneyPurposeText) {
-        const parsedAmount = parseMoney(moneyAmountText);
-        await supabase.from('user_behavior_profile').upsert({
-          user_id: user.id,
-          raw: { ...(profile?.raw ?? {}), goal_title: moneyPurposeText, goal_target_amount: parsedAmount, last_reply: 'Which currency do you prefer?' },
-          updated_at: new Date().toISOString(),
-        });
-        const titleQ = (questions ?? []).find((x: any) => x.tag_key === 'goal_title');
-        const amountQ = (questions ?? []).find((x: any) => x.tag_key === 'goal_target_amount');
-        await Promise.all([
-          supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: titleQ?.id ?? null, tag_key: 'goal_title', answer: { value: moneyPurposeText } }),
-          supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: amountQ?.id ?? null, tag_key: 'goal_target_amount', answer: { value: parsedAmount } }),
-        ]);
-        return json({
-          reply: "Great — I really believe we can help you get there. Before I build the best roadmap for you, I need to understand your lifestyle a bit so I can recommend the right brands, milestones, and opportunities. Which currency do you prefer?",
-          options: ['NGN', 'USD', 'GBP', 'EUR', 'GHS', 'KES', 'ZAR', 'CAD', 'AUD', 'Other'],
-          multi_select: false,
-          done: false,
-          stage: 'currency',
-          extract: { answers: [{ tag_key: 'goal_title', value: moneyPurposeText }, { tag_key: 'goal_target_amount', value: parsedAmount }] },
-        });
-      }
-    }
-
-    if (!isMoney && dream && lastUser === dream && !amountText) {
+    // Handle DB inserts based on transitions
+    if (stateAfter.goalTitle !== stateBefore.goalTitle && stateAfter.goalTitle !== null) {
       await supabase.from('user_behavior_profile').upsert({
         user_id: user.id,
-        raw: { ...(profile?.raw ?? {}), goal_title: dream, last_reply: "How much money do you think would help you achieve this goal?" },
+        raw: { ...(profile?.raw ?? {}), goal_title: stateAfter.goalTitle, last_reply: stateAfter.lastReply },
         updated_at: new Date().toISOString(),
       });
       const q = (questions ?? []).find((x: any) => x.tag_key === 'goal_title');
-      await supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: q?.id ?? null, tag_key: 'goal_title', answer: { value: dream } });
-      return json({ reply: `Nice — ${dream} is a real goal. How much money do you think would help you achieve it?`, options: [], multi_select: false, done: false, stage: 'goals', extract: { answers: [{ tag_key: 'goal_title', value: dream }] } });
+      await supabase.from('user_onboarding_answers').insert({
+        user_id: user.id,
+        question_id: q?.id ?? null,
+        tag_key: 'goal_title',
+        answer: { value: stateAfter.goalTitle },
+      });
     }
 
-    const parsedAmount = amountText ? parseMoney(amountText) : null;
-    if (!isMoney && dream && amountText && lastUser === amountText) {
-      if (parsedAmount === null) {
-        return json({ reply: "No problem — even a rough estimate is okay. About how much would help you achieve it?", options: [], multi_select: false, done: false, stage: 'goals' });
-      }
+    if (stateAfter.goalTargetAmount !== stateBefore.goalTargetAmount && stateAfter.goalTargetAmount !== null) {
       await supabase.from('user_behavior_profile').upsert({
         user_id: user.id,
-        raw: { ...(profile?.raw ?? {}), goal_title: dream, goal_target_amount: parsedAmount, last_reply: 'Which currency do you prefer?' },
+        raw: { ...(profile?.raw ?? {}), goal_target_amount: stateAfter.goalTargetAmount, last_reply: stateAfter.lastReply },
         updated_at: new Date().toISOString(),
       });
-      const titleQ = (questions ?? []).find((x: any) => x.tag_key === 'goal_title');
-      const amountQ = (questions ?? []).find((x: any) => x.tag_key === 'goal_target_amount');
-      await Promise.all([
-        supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: titleQ?.id ?? null, tag_key: 'goal_title', answer: { value: dream } }),
-        supabase.from('user_onboarding_answers').insert({ user_id: user.id, question_id: amountQ?.id ?? null, tag_key: 'goal_target_amount', answer: { value: parsedAmount } }),
-      ]);
-      return json({
-        reply: "Great — I really believe we can help you get there. Before I build the best roadmap for you, I need to understand your lifestyle a bit so I can recommend the right brands, milestones, and opportunities. Which currency do you prefer?",
-        options: ['NGN', 'USD', 'GBP', 'EUR', 'GHS', 'KES', 'ZAR', 'CAD', 'AUD', 'Other'],
-        multi_select: false,
-        done: false,
-        stage: 'currency',
-        extract: { answers: [{ tag_key: 'goal_title', value: dream }, { tag_key: 'goal_target_amount', value: parsedAmount }] },
+      const q = (questions ?? []).find((x: any) => x.tag_key === 'goal_target_amount');
+      await supabase.from('user_onboarding_answers').insert({
+        user_id: user.id,
+        question_id: q?.id ?? null,
+        tag_key: 'goal_target_amount',
+        answer: { value: stateAfter.goalTargetAmount },
       });
     }
 
-    const sys = `You are Karbali's onboarding assistant — warm, patient, human, and genuinely conversational. You are NOT a form. You are a friend collecting info in a chat.
-
-FLOW ORDER (VERY IMPORTANT — do NOT start with profiling):
-STAGE A — DREAM FIRST. Your very first message must be: "Before we begin, can I ask you one question?" with options ["Sure","Okay","Go ahead"]. After the user agrees, ask: "What's one thing you wish you had in your life right now?" (free text, no options). Accept ANY natural free-text answer (e.g. "buy a car", "relocate abroad", "business capital", "pay my rent", "sponsor my child's education", "build a house"). Save into extract.answers as tag_key "goal_title".
-- EXCEPTION: If the user replies with generic money (e.g., "money", "cash", "capital", "wealth", "funds", etc. without specifying what it is for), the flow flips/reverses:
-  1. Ask: "How much money do you need?"
-  2. Once the user replies with the amount, document the amount under "goal_target_amount", then redirect and ask what they need the money for to define their goal: "And what do you need the money for?"
-  3. Once they reply with the purpose, document that purpose under "goal_title", then proceed to the EXCITEMENT BRIDGE.
-STAGE B — GOAL AMOUNT. Next ask: "How much money do you think would help you achieve this goal?" (numeric, no options). Parse loosely (5m = 5000000, 500k = 500000). Save tag_key "goal_target_amount".
-STAGE C — EXCITEMENT BRIDGE. Reply warmly, e.g. "Great — I really believe we can help you get there. Before I build the best roadmap for you, I need to understand your lifestyle a bit so I can recommend the right brands, milestones, and opportunities." Then continue into profiling.
-STAGE D — PROFILING (the existing flow below: currency, location, segments, brands per category, lifestyle & spend, switch intent). Every so often, briefly remind the user WHY you're asking ("this helps me match you with brands you already use", "this shapes the milestones I'll build for your goal"). Do NOT re-ask goal_title or goal_target_amount — they're already captured.
-STAGE E — TIMELINE & SAVINGS. After profiling, ask "goal_timeline" (chips: "3 months","6 months","1 year","2 years","3+ years") then "Do you already have some savings towards this goal?" (Yes/No) → if Yes ask amount and save "goal_existing_savings"; if No save 0 warmly.
-STAGE F — SUMMARY. Before marking done, send one final summary message like: "Perfect. I now understand your goal, the brands you already use, and the kind of activities that suit you. I'll use this to personalize your milestones and recommend the best offers to help you reach your goal." THEN set done: true.
-
-CONVERSATION RULES (most important):
-- ALWAYS acknowledge what the user just said before moving on ("Got it — 20k on transport, noted." / "Cool, thanks."). Never ignore their message.
-- If the user asks YOU a question (e.g. "did you get the transport?", "what did I say for food?", "can you repeat?", "wait what?"), ANSWER it directly using the conversation history and the extracted profile so far. Only after answering, gently continue where you left off.
-- If the user seems confused, apologize, re-explain, and offer an example. Never repeat the same question verbatim twice in a row — rephrase it.
-- Vary your wording. Use light, natural filler ("nice", "okay", "gotcha", "makes sense"). Be brief — 1–2 sentences per reply.
-- Track what you've already asked (visible in the message history) — do NOT re-ask questions the user already answered. If an answer is ambiguous, ask a short clarifier instead of restarting.
-- The user can go back: "actually change my food to 15k" — update your understanding and confirm the change.
-- Never output raw JSON, braces, brackets, code fences, or field names in the "reply". The reply is plain chat text ONLY.
-
-NEVER ASK MONTHLY AMOUNTS — users can't estimate monthly spend accurately. Always ask in the smallest natural unit (per week, per day, per trip) and YOU do the math server-side. Store the derived monthly figure in extract.financial with the appropriate monthly_<x>_spend key.
-
-PARSING (be generous with imprecise human answers):
-- Numeric answers may include filler words, currency, or suffixes: "like 20k", "around 20,000", "about ₦20k", "20k naira", "twenty thousand", "20 thousand" → 20000. "1.5m", "1.5 million" → 1500000. "a few hundred" → 500. "nothing"/"none"/"n/a"/"skip"/"don't spend" → 0.
-- If a user answers "same as before", "similar", "same" — use the last numeric value they gave for that kind of question.
-- If a user gives a range ("10-15k"), take the midpoint.
-- Yes-ish: yes, yeah, yep, sure, ok, y, correct, of course, definitely → true. No-ish: no, nope, nah, not really, n → false.
-- For brand lists, split by commas/"and"/newlines; match loosely against the catalog (case-insensitive, ignore punctuation). Items that don't match any catalog brand in the CURRENT category are custom brands for THAT category (not "other"). Items that clearly aren't brands (e.g. food items when asking banks) should be politely ignored, not saved.
-- If you can't parse the user's answer at all, ask a gentle clarifying question — don't repeat the same prompt verbatim.
-Understand natural language — a user can belong to multiple segments (e.g. student + business owner + entrepreneur).
-Available brand catalog to reference: ${(brands ?? []).map(b => `${b.name}(${b.category})`).join(', ')}.
-Questions to cover: ${JSON.stringify(questions ?? [])}.
-Existing profile so far: ${JSON.stringify(profile ?? {})}.
-
-You MUST cover, in this order (AFTER Stage A + B + C above are done):
-1. Preferred currency (NGN, USD, GBP, EUR, GHS, KES, ZAR, CAD, AUD, or Other — accept typed value).
-2. Location (country, state, city), age group, occupation.
-3. Segments (student, parent, entrepreneur, employee, business owner, other — multi).
-4. Brands they use, category by category. Cover these categories in order, ONE at a time, skipping any category where the brand catalog has no matching brands AND the user has nothing to add:
-   - bank (banks & fintech apps)
-   - telecom (mobile networks / SIM)
-   - ride (ride-hailing & transport apps)
-   - food (restaurants, food delivery, quick-service)
-   - beverages (soft drinks, juices, water, energy drinks, malt, alcohol — e.g. Coca-Cola, Pepsi, Chivita, Hollandia, Eva, Predator, Guinness)
-   - groceries (supermarkets & provisions — e.g. Shoprite, Ebeano, Spar, Addide, market vendors)
-   - household (staples & home goods — rice, oil, detergent, tissue — e.g. Mama Gold, Kings Oil, Ariel, Rex, Cussons)
-   - personal_care (toiletries, skincare, cosmetics — e.g. Dettol, Nivea, Colgate, Zaron)
-   - fashion (clothing, shoes, accessories — offline stores & online e.g. Jumia Fashion, Ruff n Tumble)
-   - pharmacy (pharmacies & medicine — e.g. HealthPlus, MedPlus, Alpha Pharmacy)
-   - fuel (petrol stations — e.g. NNPC, TotalEnergies, Mobil, Ardova, Conoil)
-   - shopping (general e-commerce & marketplaces — e.g. Jumia, Konga, Jiji)
-   - utilities (electricity discos, water, waste — e.g. IKEDC, EKEDC, AEDC)
-   - internet (ISPs & data — e.g. Spectranet, Smile, Tizeti/Wifi.com.ng)
-   - streaming (Netflix, DStv, Showmax, YouTube Premium, Spotify, Boomplay)
-   - education (schools, tutoring, edtech — e.g. uLesson, Prepclass)
-   - entertainment (cinemas, events, gaming — e.g. Filmhouse, Genesis, BetKing)
-   Ask ONE category at a time. When asking about a category, the "options" array MUST contain ONLY brands from the brand catalog whose category exactly matches the category being asked. NEVER mix categories. Brands in the catalog with category 'other' are miscellaneous — do NOT surface them inside any specific category's options list. After presenting the category chips, ALWAYS append the message "Any OTHER brand not on my list? Type it in." — capture typed brands into extract.custom_brands with the CURRENT category (not 'other'). If the catalog has no brands for a category, still ask the user which brands/products they use in that category and save every typed item into extract.custom_brands with that category. If the user's typed answer contains items that clearly don't belong to the current category, politely ignore those and only record the ones that fit; do NOT save mismatched items as brands of that category. If the user says "none", "I don't use any", or similar, acknowledge and move to the next category.
-5. LIFESTYLE & SPEND — ask in the smallest natural unit; convert to monthly server-side (weekly × 4, daily × 30, per-trip × trips-per-month). Ask ONLY the relevant follow-ups based on prior answers:
-   a. FUEL: "Do you own a car?" (Yes/No). If Yes → "About how much do you spend on fuel per WEEK?" then "Which filling station do you use most?" (chips = fuel-category brands) then "Why that station?" (free text). Save to financial.monthly_fuel_spend = weekly × 4.
-   b. GENERATOR: "Do you use a generator at home?" (Yes/No). If Yes → "How much fuel for the generator per WEEK?" Save to financial.monthly_generator_fuel_spend = weekly × 4.
-   c. MOBILE DATA: "How much do you spend on mobile data per DAY?" Save financial.monthly_data_spend = daily × 30. Do NOT ask about airtime separately.
-   d. WIFI: "Do you use wifi at home or work?" (Yes/No). If Yes → present the telecom + internet catalog brands as chips: "Which provider?" plus allow custom typed answer.
-   e. GROCERIES: "Are you the one in charge of buying groceries for your household?" (Yes/No). If No, skip to (f). If Yes → "How much do you spend on transport to and from the market per trip?" then "About how much do you spend on groceries per trip?" then "How many market trips do you make per month?" Save financial.monthly_grocery_transport_spend = per_trip_transport × trips; financial.monthly_grocery_spend = per_trip_grocery × trips.
-   f. TV & STREAMING: "For TV, do you subscribe to DStv/GOtv/StarTimes, or do you just use streaming like Netflix/YouTube?" (chips: "DStv","GOtv","StarTimes","Netflix","YouTube Premium","Showmax","Spotify","None" — multi_select). Then "About how much do you spend on all of this per month?" (this is the ONE exception where monthly is acceptable because subscriptions ARE monthly). Save financial.monthly_streaming_spend.
-   g. TRANSPORT (non-market): "On a typical day, how much do you spend getting around (excluding market trips)?" Save financial.monthly_transport_spend = daily × 30.
-   h. FOOD (eating out / daily food): "How much do you spend on food per DAY?" Save financial.monthly_food_spend = daily × 30.
-   i. RENT: "About how much is your rent per YEAR?" Save financial.monthly_rent_spend = yearly ÷ 12.
-   j. ELECTRICITY: "How much do you top up on electricity per WEEK?" Save financial.monthly_electricity_spend = weekly × 4.
-6. Other required questions from the list.
-7. Brand switching — once you have their brands, present a summary like:
-   "Which of these are you willing to switch from to a Karbali partner that offers the same service? Answer yes or no for each: OPay, Uber, Peak Milk..."
-   Capture answers into extract.switch_intent as [{ brand: string, category: string, willing: boolean }].
-8. TIMELINE & SAVINGS (Stage E). Do NOT re-ask goal_title / goal_target_amount — those were captured in Stage A/B.
-   a. "How long are you willing to put in effort to achieve this?" (chips: "3 months","6 months","1 year","2 years","3+ years"). Save tag_key "goal_timeline".
-   b. "Do you already have some savings towards this goal?" (Yes/No). If Yes → ask amount, save tag_key "goal_existing_savings". If No, warmly say "No problem — we can still work with that." and save 0.
-   c. Then send the Stage F summary and set done: true.
-
-After EACH user reply, respond with a STRICT JSON object (no code fences):
-{
-  "reply": "your next message",
-  "options": ["optional", "clickable", "choices"],
-  "multi_select": false,
-  "extract": {
-    "preferred_currency": "",
-    "segments": [], "brands_used": [], "custom_brands": [{"name":"","category":""}],
-    "spending_habits": [], "task_capabilities": [],
-    "financial": { "monthly_data_spend": 0, "monthly_electricity_spend": 0, "monthly_transport_spend": 0, "monthly_food_spend": 0, "monthly_rent_spend": 0, "monthly_streaming_spend": 0, "monthly_fuel_spend": 0, "monthly_generator_fuel_spend": 0, "monthly_grocery_spend": 0, "monthly_grocery_transport_spend": 0, "owns_car": false, "owns_generator": false, "uses_wifi": false, "wifi_provider": "", "fuel_station": "", "fuel_station_reason": "", "in_charge_of_groceries": false, "tv_subscriptions": [] },
-    "location": {"country":"","state":"","city":""}, "age_group": "", "occupation": "",
-    "answers": [{"tag_key":"","value":null}],
-    "switch_intent": [{"brand":"","category":"","willing":false}]
-  },
-  "stage": "currency|profile|brands|spend|switch|goals|done",
-  "done": false
-}
-Only mark "done": true AFTER the Stage F summary has been sent to the user.
-
-IMPORTANT — whenever your question has a fixed set of choices, ALWAYS include them in the "options" array so the UI can render them as clickable chips. Set "multi_select": true when the user can pick multiple (e.g. segments, brands per category, spending habits). Examples of when to include options:
-- Currency picker: ["NGN","USD","GBP","EUR","GHS","KES","ZAR","CAD","AUD","Other"]
-- Age group, occupation categories, income ranges
-- Segments (multi): ["Student","Parent","Entrepreneur","Employee","Business owner","Other"]
-- Brand catalog per category (multi) — include ONLY the catalog brands whose category matches the one being asked; never mix categories. Do not include catalog entries with category 'other' in any specific category's chip list.
-- Yes/No for switch intent per brand and for owns_car / owns_generator / uses_wifi / in_charge_of_groceries: ["Yes","No"]
-- Timeline: ["3 months","6 months","1 year","2 years","3+ years"]
-- TV & streaming (multi): ["DStv","GOtv","StarTimes","Netflix","YouTube Premium","Showmax","Spotify","None"]
-Do NOT include options for free-text numeric questions (weekly/daily/per-trip amounts) or open-ended city/name/goal/reason inputs.`;
-
-    const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Lovable-API-Key': LOVABLE_API_KEY,
-        'X-Lovable-AIG-SDK': 'supabase-edge-function',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'system', content: sys }, ...body.messages],
-        temperature: 0.7,
-        response_format: { type: 'json_object' },
-      }),
-    });
-    if (!aiResp.ok) {
-      const t = await aiResp.text();
-      console.error('AI onboarding gateway error:', aiResp.status, t);
-      return json({ reply: "Sorry, my connection was shaky for a moment. Please send that answer again and I'll continue from here.", options: [], multi_select: false, done: false, stage: 'profile' });
-    }
-    const aiJson = await aiResp.json();
-    let parsed: any = {};
-    try { parsed = JSON.parse(aiJson.choices?.[0]?.message?.content ?? '{}'); } catch { parsed = { reply: aiJson.choices?.[0]?.message?.content ?? '' }; }
-
-    // Sanitize reply: strip any stray JSON/code fences so users never see raw braces
-    {
-      let r = typeof parsed.reply === 'string' ? parsed.reply : '';
-      r = r.replace(/```[\s\S]*?```/g, '');
-      // Strip lines that are pure JSON syntax like "{", "}", "[", "]"
-      r = r.split('\n').filter(l => !/^\s*[\{\}\[\]]+\s*,?\s*$/.test(l)).join('\n');
-      // Remove obvious field-name leakage
-      r = r.replace(/"(reply|options|extract|stage|done|multi_select)"\s*:/gi, '');
-      r = r.trim();
-      if (!r || r.startsWith('{') || r.startsWith('[') || r.length < 2) {
-        r = "Sorry, I got tangled up — could you say that once more?";
-      }
-      parsed.reply = r;
+    if (stateAfter.preferredCurrency !== stateBefore.preferredCurrency && stateAfter.preferredCurrency !== null) {
+      await supabase.from('profiles').update({ preferred_currency: stateAfter.preferredCurrency.toUpperCase() }).eq('id', user.id);
     }
 
-    const ex = parsed.extract ?? {};
-    const merge = (a: string[] = [], b: string[] = []) => Array.from(new Set([...(a || []), ...((b || []).map(String))]));
-    const updated = {
-      user_id: user.id,
-      segments: merge(profile?.segments, ex.segments),
-      brands_used: merge(profile?.brands_used, ex.brands_used),
-      spending_habits: merge(profile?.spending_habits, ex.spending_habits),
-      task_capabilities: merge(profile?.task_capabilities, ex.task_capabilities),
-      financial: { ...(profile?.financial ?? {}), ...(ex.financial ?? {}) },
-      country: ex.location?.country || profile?.country,
-      state: ex.location?.state || profile?.state,
-      city: ex.location?.city || profile?.city,
-      age_group: ex.age_group || profile?.age_group,
-      occupation: ex.occupation || profile?.occupation,
-      raw: { ...(profile?.raw ?? {}), last_reply: parsed.reply },
-      updated_at: new Date().toISOString(),
-    };
-    await supabase.from('user_behavior_profile').upsert(updated);
-
-    // Save preferred currency to profile
-    if (typeof ex.preferred_currency === 'string' && ex.preferred_currency.trim()) {
-      await supabase.from('profiles').update({ preferred_currency: ex.preferred_currency.trim().toUpperCase() }).eq('id', user.id);
-    }
-
-    // Persist user-typed custom brands
-    if (Array.isArray(ex.custom_brands)) {
-      for (const cb of ex.custom_brands) {
-        if (!cb?.name) continue;
-        await supabase.from('user_custom_brands').insert({
-          user_id: user.id, name: String(cb.name).trim(), category: cb.category ?? null,
-        });
-      }
-    }
-
-    // Persist switch intent answers
-    if (Array.isArray(ex.switch_intent)) {
-      for (const s of ex.switch_intent) {
-        if (!s?.brand) continue;
-        await supabase.from('user_brand_switch_intent').upsert({
-          user_id: user.id,
-          brand_name: String(s.brand).trim(),
-          brand_category: s.category ?? null,
-          willing_to_switch: !!s.willing,
-          captured_at: new Date().toISOString(),
-        });
-      }
-    }
-
-    if (Array.isArray(ex.answers)) {
-      for (const a of ex.answers) {
-        if (!a?.tag_key) continue;
-        const q = (questions ?? []).find((x: any) => x.tag_key === a.tag_key);
-        await supabase.from('user_onboarding_answers').insert({
-          user_id: user.id, question_id: q?.id ?? null, tag_key: a.tag_key, answer: { value: a.value },
-        });
-      }
-    }
-
-    // Bump onboarding_version when the flow is complete
-    if (parsed.done) {
+    if (stateAfter.done && !stateBefore.done) {
       await supabase.from('profiles').update({ onboarding_version: 2 }).eq('id', user.id);
     }
 
     return json({
-      reply: parsed.reply ?? '',
-      options: Array.isArray(parsed.options) ? parsed.options.map((o: any) => String(o)).filter(Boolean) : [],
-      multi_select: !!parsed.multi_select,
-      done: !!parsed.done,
-      stage: parsed.stage ?? null,
-      extract: ex,
+      reply: stateAfter.lastReply,
+      options: stateAfter.stage === 'start' ? ['Sure', 'Okay', 'Go ahead'] :
+               stateAfter.stage === 'currency' ? ['NGN', 'USD', 'GBP', 'EUR', 'GHS', 'KES', 'ZAR', 'CAD', 'AUD', 'Other'] : [],
+      multi_select: false,
+      done: stateAfter.done,
+      stage: stateAfter.stage === 'goal_title' || stateAfter.stage === 'goal_amount' ? 'goals' : stateAfter.stage,
     });
   } catch (e) {
     console.error('AI onboarding error:', e);
