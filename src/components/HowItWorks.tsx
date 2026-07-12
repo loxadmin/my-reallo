@@ -127,38 +127,38 @@ const CyclingPointValue = () => {
 /* ── Data ── */
 const userSteps = [
   {
-    icon: Calculator,
-    title: "Tell Us Your Monthly Spend",
-    desc: "Enter your monthly data, electricity, transport and food costs. We compute your total annual spend.",
-    detail: "Our smart calculator breaks down each category so you see exactly where your money goes.",
+    icon: Target,
+    title: "Make a Wish Conversationally",
+    desc: "Chat with Karbali AI and tell us your dream — whether it's starting a business, paying rent, or buying a car.",
+    detail: "Our friendly AI understands your dream and helps you define the exact target and budget needed.",
     color: "from-primary/20 to-primary/5",
   },
   {
-    icon: Target,
-    title: "Set a Savings Goal",
-    desc: "Pick what matters: education, rent, vacation, business funding, or a custom goal. We match a target amount to your spend profile.",
-    detail: "Goals keep you focused. The system tailors your journey based on what you choose.",
+    icon: Calculator,
+    title: "Get AI-Generated Paths",
+    desc: "Choose from multiple personalized roadmaps. Deposits shorten your timeline, while offers and referrals unlock your funding without any deposit.",
+    detail: "Every goal account has multiple paths. Pick the one that fits your current budget and schedule.",
     color: "from-accent/20 to-accent/5",
   },
   {
     icon: Users,
-    title: "Join the Queue",
-    desc: "Enter the waitlist. Every day the system auto-advances 50 positions. Refer a friend and jump 20 positions closer to the front.",
-    detail: "The queue is fair but rewards action — the more friends you invite, the faster you advance.",
+    title: "Join the Waitlist Queue",
+    desc: "Secure your spot on the queue. 50 positions advance daily automatically. Refer a friend to instantly jump 20 positions closer.",
+    detail: "Referring friends is the fastest way to skip ahead and activate your Goal Account.",
     color: "from-primary/20 to-primary/5",
   },
   {
     icon: Zap,
-    title: "Earn Points via Offers",
+    title: "Earn Points via Partner Offers",
     descKey: "points" as const,
-    detail: "Offers take under a minute. Points stack up fast and convert to real money.",
+    detail: "Explore deals from our partner apps. Every task you complete stacks up points that convert directly to your funding goal.",
     color: "from-accent/20 to-accent/5",
   },
   {
     icon: CheckCircle,
-    title: "Show Proof & Get Paid",
-    desc: "Verify your spend with transaction IDs. Once off the queue and verified, you get paid toward your goals.",
-    detail: "Verification keeps the ecosystem honest. Patience pays — literally.",
+    title: "Unlock & Withdraw Your Funding",
+    desc: "Once you reach your milestone and get off the queue, withdraw your unlocked funds directly to your bank account.",
+    detail: "Our goal accounts require a minimum of ₦50,000 in unlocked points/contributions to trigger a direct withdrawal.",
     color: "from-primary/20 to-primary/5",
   },
 ];
@@ -246,7 +246,7 @@ const StepDescription = ({ step }: { step: StepData }) => {
   if (step.descKey === "points") {
     return (
       <p className="text-[12px] text-muted-foreground leading-relaxed">
-        browse offers from partner brands to start your financial journey. Each offer earns points at{" "}
+        browse offers from partner brands to fund your dreams. Each offer earns points at{" "}
         <CyclingAmount naira={0.5} className="font-semibold text-primary" /> per point.
       </p>
     );
@@ -507,7 +507,7 @@ const HowItWorks = () => {
             How <span className="gradient-text">Karbali</span> Works
           </h2>
           <p className="text-[13px] text-muted-foreground mt-3 max-w-md mx-auto">
-            Two paths. One ecosystem. Whether you're saving or earning, here's your journey.
+            Two paths. One ecosystem. Whether you're dreaming or earning, here's your journey.
           </p>
         </motion.div>
 
@@ -517,9 +517,9 @@ const HowItWorks = () => {
         <div className="mb-24">
           <FloatingIllustration type="user" />
           <SectionHeader
-            badge="For Users"
-            title="Reclaim Your Utility Spend"
-            subtitle="Stop watching your money disappear on data, electricity, transport & food. Turn those expenses into savings toward real life goals."
+            badge="For Dreamers"
+            title="Fund Your Dreams"
+            subtitle="Tell us your wish, choose your AI roadmap, and let partner offers and simple actions fund your goal."
           />
           <div className="space-y-4 md:space-y-6">
             {userSteps.map((step, i) => (
@@ -582,7 +582,7 @@ const HowItWorks = () => {
             </motion.div>
             <h3 className="font-display text-xl font-bold text-foreground mb-2">Ready to Start?</h3>
             <p className="text-[12px] text-muted-foreground mb-6 leading-relaxed">
-              Join thousands already reclaiming their utility spend. It costs nothing to join.
+              Join thousands already funding their dreams with Karbali. It costs nothing to join.
             </p>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
