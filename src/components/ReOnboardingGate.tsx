@@ -25,7 +25,7 @@ export default function ReOnboardingGate() {
 
   useEffect(() => {
     if (!open || messages.length) return;
-    setMessages([{ role: "assistant", content: "Before we begin, can I ask you one question?", options: ["Sure", "Okay", "Go ahead"] }]);
+    setMessages([{ role: "assistant", content: "What's that one thing you truly wish you could achieve or have in your life right now?" }]);
   }, [open, messages.length]);
 
   useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
@@ -42,6 +42,7 @@ export default function ReOnboardingGate() {
         body: { messages: [...messages, userMsg] },
       });
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
       const reply = (data as any)?.reply ?? "Thanks!";
       const options = Array.isArray((data as any)?.options) ? (data as any).options as string[] : [];
       const multiSelect = !!(data as any)?.multi_select;
