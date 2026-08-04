@@ -232,6 +232,10 @@ Deno.serve(async (req) => {
       knownAnswers[update.tag_key] = update.value.trim();
     }
 
+    if (result.goal.currency && allowedTags.has('preferred_currency')) {
+      knownAnswers.preferred_currency = result.goal.currency.toUpperCase();
+    }
+
     const currentRaw = profileData && typeof profileData.raw === 'object' && profileData.raw ? profileData.raw as Record<string, unknown> : {};
     const nextRaw: Record<string, unknown> = { ...currentRaw, ...knownAnswers, last_reply: result.reply };
     if (result.goal.title) nextRaw.goal_title = result.goal.title.trim();
