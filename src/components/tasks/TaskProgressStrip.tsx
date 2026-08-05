@@ -1,10 +1,13 @@
 import { useTaskCenter, taskProgress } from "@/hooks/useTaskCenter";
 import { ArrowLeftRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 /** Compact active-task progress summary, used across every dashboard design. */
 export default function TaskProgressStrip({ onOpen, className }: { onOpen?: () => void; className?: string }) {
   const { tasks, enrollments, submissions, loading } = useTaskCenter();
+  const navigate = useNavigate();
+  const open = onOpen ?? (() => navigate("/dashboard/earn"));
   if (loading) return null;
 
   const active = enrollments
@@ -14,7 +17,7 @@ export default function TaskProgressStrip({ onOpen, className }: { onOpen?: () =
 
   if (active.length === 0) {
     return (
-      <button onClick={onOpen} className={cn("w-full glass-card p-4 text-left hover:border-primary/40 transition-colors", className)}>
+      <button onClick={open} className={cn("w-full glass-card p-4 text-left hover:border-primary/40 transition-colors", className)}>
         <div className="text-[13px] font-semibold text-foreground">Start a task</div>
         <p className="text-[11px] text-muted-foreground mt-0.5">Switching, online and survey tasks unlock your goal faster.</p>
       </button>
@@ -25,7 +28,7 @@ export default function TaskProgressStrip({ onOpen, className }: { onOpen?: () =
     <div className={cn("glass-card p-4 space-y-3", className)}>
       <div className="flex items-center justify-between">
         <div className="text-[13px] font-semibold text-foreground">Your tasks</div>
-        <button onClick={onOpen} className="text-[11px] text-primary">View all</button>
+        <button onClick={open} className="text-[11px] text-primary">View all</button>
       </div>
       {active.slice(0, 3).map(({ task, enrollment }) => {
         const days = taskProgress(task, enrollment, submissions);
