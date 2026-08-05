@@ -1,123 +1,68 @@
-# Onboarding v2, Brand Switching & Daily Offer Proofs
+# Conversational Onboarding, Goal Unlock Tiers & Unified Task System
 
-Scope is additive. No changes to auth, wallet, referrals, influencer program, or the goal-account math.
+## 1. Smarter onboarding AI
 
-## 1. Force re-onboarding for existing users
+Rewrite the `ai-onboard` system prompt so the assistant reasons over Karbali's actual rules instead of running a script.
 
-- Add `profiles.onboarding_version int default 0` and current required version constant `2` in code.
-- `KarbaliChat` / `QueueDisplay` gate: if `onboarding_version < 2`, launch the AI onboarding flow before the rest of the app is usable (soft banner + modal — no logout).
-- Bump to `2` when `ai-onboard` returns `done: true` AND the switch-intent step is finished.
+- Give the model a compact "system knowledge" block: how points work (1 point = ₦0.5), goal accounts, task types, influencer eligibility rules (min 1,000 followers/subscribers, min 200 views per post), switching offers, verification flow.
+- Branching intelligence: when a user's wish is "money", the assistant explores *how* they want to earn it — e.g. offers the influencer path, then qualifies them against the follower/views guardrails and routes them to the standard earning path if they don't qualify.
+- Empathy and diversion handling: if a user says "I'm tired" / goes off-topic, respond warmly, then re-anchor with a soft question. Never repeat the same phrasing twice; vary question wording across sessions.
+- Skipping: user can say "later" at any point. The assistant closes gracefully, marks onboarding incomplete, and the setup gate can be reopened from the dashboard.
+- Completion bonus: finishing onboarding in the same session as signup credits a **₦2,000 equivalent points bonus** (4,000 points), once per user.
 
-## 2. Currency picker during onboarding
+## 2. Goal account unlock options (5 tiers)
 
-- Since IP geolocation is unreliable, `ai-onboard` asks the user their preferred currency early on (NGN, USD, GBP, EUR, GHS, KES, ZAR, "Other").
-- Store on `profiles.preferred_currency` (new column). `CurrencyContext` reads `profiles.preferred_currency` first, then falls back to IP.
+When a goal target is confirmed (e.g. ₦10,000,000), generate five options where deposit and task load trade off:
 
-## 3. Fill the missing onboarding questions
+| Option | Deposit | Task load |
+|---|---|---|
+| A | 0% | Highest number of tasks, longest estimated time |
+| B | 10% | High |
+| C | 20% | Medium |
+| D | 50% | Low |
+| E | Custom / higher | Lowest |
 
-Seed missing questions into `onboarding_questions` (idempotent upsert on `tag_key`):
+Each option shows: deposit amount, estimated task count, estimated months to unlock, and monthly contribution if any. Computed deterministically from the target so numbers are always consistent, then narrated by the AI.
 
-- `monthly_data_spend` (numeric)
-- `monthly_electricity_spend` (numeric)
-- `monthly_airtime_spend` (numeric)
-- `monthly_transport_spend` (numeric)
-- `monthly_food_spend` (numeric)
-- `monthly_rent_spend` (numeric)
-- `monthly_streaming_spend` (numeric)
+## 3. Task system (user side)
 
-`ai-onboard` prompt already iterates `onboarding_questions`, so no function change beyond making sure numeric answers land in `user_behavior_profile.financial`.
+New unified **Tasks** area in the dashboard with three groups:
 
-## 4. "Other" brands + free-typed brands
+- **Switching tasks** — brand-to-brand switching (Peak → Loya, DSTV → alternative, Airtel → MTN, Uber → Bolt). Online or offline.
+- **Survey tasks** — existing surveys, unchanged.
+- **Online tasks** — app/web actions with daily progress.
 
-- Ensure every category in `brand_catalog` also has an implicit "Other" — surfaced by `ai-onboard` as a follow-up: "Any other brands you use we didn't list? Type them in."
-- New table `user_custom_brands(user_id, name, category, created_at)` for user-typed brands.
-- `AdminBrandCatalog` gets a "Suggested by users" panel to promote a custom brand into the official catalog (moves the row, dedupes case-insensitively).
+Switching tasks are **progression tasks**: a task with a 30-day duration requires one approved evidence submission per day. The user sees a day-by-day tracker (day 1…N) with per-day status: pending / submitted / approved / rejected. Reward is credited only when **all** days are approved.
 
-## 5. Brand switching intent
+Evidence types per task (admin-selected, one or more):
+- Photo/screenshot upload (with a required count, e.g. 3 shots: purchase, opened product, in use)
+- Video upload
+- Barcode/label scan or photo of product code
+- Receipt/transaction screenshot
 
-New table:
+## 4. Admin panel restructure
 
-```
-user_brand_switch_intent (
-  user_id uuid,
-  brand_name text,    -- normalized lower
-  brand_category text,
-  willing_to_switch boolean,
-  captured_at timestamptz default now(),
-  primary key (user_id, brand_name)
-)
-```
+Group everything under a single **User Tasks** tab with sub-tabs:
+- Switching Tasks (create online/offline, set duration in days, evidence types + required counts, instructions, reward, target brand being switched from)
+- Surveys
+- Online Tasks
+- Submissions review queue (approve/reject each day's evidence, same pattern as expense verification)
 
-- After brands step, `ai-onboard` returns a `switch_prompt` payload: `{ brands: [{name, category}, ...] }`.
-- Frontend renders a checklist: for each brand the user selected, a Yes/No toggle "Willing to switch from <Brand> to a Karbali partner?".
-- Submission writes/updates `user_brand_switch_intent`. Onboarding v2 is only complete once this step is submitted.
-- Admin export: `AdminBehaviorAnalytics` gets a "Switch intent" tab — bar chart per brand of Yes counts + CSV download ("how many will switch from Opay / Peak Milk / …").
+**Influencer Tasks** stays a separate tab (challenges, influencer surveys, leaderboard).
 
-## 6. Admin brand-competition targeting on offers
+## 5. Design coverage
 
-Extend `campaign_eligibility`:
+Task progress, available tasks, and goal unlock options render in all dashboard variants: default, bold, minimal, neon, cards — each using its own visual language via shared data hooks so logic is written once.
 
-- `competes_with_brands text[] default '{}'` — admin picks brands this offer is designed to steal customers from.
-- `exclusive_to_switchers boolean default true` — when true, offer only surfaces to users who (a) selected one of those brands AND (b) said "willing to switch" AND (c) have never had an approved offer completion with another Karbali partner brand. Users can still opt to view via the existing "All offers" toggle on the Earn tab.
+## Technical notes
 
-`ai-recommend-campaigns` scoring update:
+- New tables: `user_tasks` (definition: type, mode online/offline, duration_days, evidence_config jsonb, reward_points, switch_from_brand, instructions, active), `user_task_enrollments` (user, task, status, day progress), `user_task_submissions` (enrollment, day_index, evidence urls/type, status, reviewer notes). Each with GRANTs + RLS (users see/insert own; admins full access via `has_role`).
+- Storage: reuse a private bucket for evidence with signed URLs for admin review; video uploads allowed.
+- Goal tier generation: deterministic helper in `supabase/functions/_shared/`, consumed by `ai-onboard` and `ai-goal-plan`, written into `goal_account_options`.
+- Reward crediting on final-day approval via a DB trigger, mirroring `trg_offer_proof_completion`, and also unlocking goal-account progress.
+- Onboarding bonus tracked with a `onboarding_bonus_awarded` flag on `profiles`.
+- Existing `offer_enrollments` / `offer_daily_proofs` are folded into the new task model so there is one progression engine, not two.
 
-```
-if (competes_with_brands.length) {
-  const willing = switchIntent.filter(s => competes.includes(s.brand) && s.willing).map(s=>s.brand);
-  if (willing.length === 0 && exclusive_to_switchers) skip;
-  else score += willing.length * 5;   // strong boost
-}
-// exemption: if user has any approved offer_daily_proofs with campaign whose category === this.category, skip when exclusive_to_switchers
-```
+## Note
 
-`AdminCampaignEligibility.tsx` gains a brand multi-select bound to `brand_catalog` + toggle for `exclusive_to_switchers`.
-
-## 7. Daily-screenshot proof for offers
-
-New tables:
-
-```
-offer_enrollments (
-  id, user_id, campaign_id, started_at, expected_days int, status ('active'|'completed'|'expired')
-)
-offer_daily_proofs (
-  id, enrollment_id, user_id, day_index int, screenshot_url text,
-  status ('pending'|'approved'|'rejected'), admin_note, reviewed_by, reviewed_at, created_at
-)
-unique (enrollment_id, day_index)
-```
-
-- `campaign_eligibility.duration_days int default 1` — admin sets how many daily proofs are required.
-- User flow (`OfferEnrollmentCard.tsx` inside `RecommendedOffers`):
-  - "Accept offer" → creates enrollment.
-  - Each day shows an upload slot ("Day 3 of 10 — upload today's screenshot"). One upload per calendar day per enrollment.
-  - Screenshot goes to existing `survey_screenshots` bucket under `offers/<user>/<enrollment>/<day>.jpg`.
-- Admin queue: new `AdminOfferProofs.tsx` (mirrors `VerifySpend` admin view) — approve/reject each daily proof. On the final approved day, enrollment flips to `completed` and the goal-account contribution trigger fires (reuse the `apply_goal_unlock` pattern).
-- Partial completion = no reward. Rejected day requires re-upload same day.
-
-## 8. Files
-
-**New**
-- `supabase/migrations/…_onboarding_v2_switch_intent_offer_proofs.sql`
-- `src/components/OfferEnrollmentCard.tsx`
-- `src/components/BrandSwitchIntentStep.tsx`
-- `src/components/admin/AdminOfferProofs.tsx`
-- `src/components/admin/AdminBrandSwitchIntent.tsx` (tab inside behavior analytics)
-
-**Edited**
-- `supabase/functions/ai-onboard/index.ts` — currency Q, custom brands, switch-intent payload, sets `onboarding_version=2`
-- `supabase/functions/ai-recommend-campaigns/index.ts` — switch-intent scoring & exemption
-- `src/components/admin/AdminBrandCatalog.tsx` — suggested-by-users panel
-- `src/components/admin/AdminCampaignEligibility.tsx` — competes_with_brands, exclusive_to_switchers, duration_days
-- `src/components/admin/AdminBehaviorAnalytics.tsx` — switch-intent tab + CSV
-- `src/components/RecommendedOffers.tsx` — enroll + daily proof entry point
-- `src/components/QueueDisplay.tsx` / `KarbaliChat.tsx` — force re-onboarding when `onboarding_version < 2`
-- `src/contexts/CurrencyContext.tsx` — prefer `profiles.preferred_currency`
-- `src/pages/Admin.tsx` — new "Offer Proofs" sidebar entry
-
-## Out of scope
-
-Auth, wallets, existing goal-account math, influencer program, existing surveys/decision/spend flows, currency conversion rates.
-
-Confirm and I'll ship it.
+The screenshots you mentioned did not come through — if you re-attach them I'll match the task progress UI to them exactly. Otherwise I'll build a clean day-tracker layout consistent with the current design system.
