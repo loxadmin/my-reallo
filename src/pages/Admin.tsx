@@ -28,6 +28,8 @@ import AdminUserGoals from "@/components/admin/AdminUserGoals";
 import AdminCampaignEligibility from "@/components/admin/AdminCampaignEligibility";
 import AdminGoalAccounts from "@/components/admin/AdminGoalAccounts";
 import AdminOfferProofs from "@/components/admin/AdminOfferProofs";
+import AdminUserTasks from "@/components/admin/AdminUserTasks";
+import AdminUserTaskSubmissions from "@/components/admin/AdminUserTaskSubmissions";
 import PageSkeleton from "@/components/PageSkeleton";
 import {
   SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
@@ -91,7 +93,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps");
 const fromDResponses = () => supabase.from("decision_responses");
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "inf_leaderboard" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config" | "ai_onboarding" | "brand_catalog" | "goal_ideas" | "behavior_analytics" | "user_goals" | "goal_accounts" | "campaign_eligibility" | "offer_proofs";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "inf_leaderboard" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config" | "ai_onboarding" | "brand_catalog" | "goal_ideas" | "behavior_analytics" | "user_goals" | "goal_accounts" | "campaign_eligibility" | "offer_proofs" | "user_tasks" | "user_task_submissions";
 
 const navGroups = [
   {
@@ -100,11 +102,19 @@ const navGroups = [
       { id: "overview" as AdminTab, label: "Dashboard", icon: LayoutDashboard },
       { id: "users" as AdminTab, label: "Users", icon: Users },
       { id: "goals" as AdminTab, label: "Goals", icon: Settings },
-      { id: "decisions" as AdminTab, label: "Decision Apps", icon: Smartphone },
-      { id: "dec_submissions" as AdminTab, label: "Decision Submissions", icon: FileSpreadsheet },
-      { id: "surveys" as AdminTab, label: "Surveys", icon: FileSpreadsheet },
       { id: "verification" as AdminTab, label: "Verification", icon: CheckCircle2 },
       { id: "warnings" as AdminTab, label: "Warnings", icon: AlertTriangle },
+    ],
+  },
+  {
+    label: "USER TASKS",
+    items: [
+      { id: "user_tasks" as AdminTab, label: "Switching & Online Tasks", icon: Upload },
+      { id: "user_task_submissions" as AdminTab, label: "Task Submissions", icon: CheckCircle2 },
+      { id: "surveys" as AdminTab, label: "Surveys", icon: FileSpreadsheet },
+      { id: "decisions" as AdminTab, label: "Decision Apps", icon: Smartphone },
+      { id: "dec_submissions" as AdminTab, label: "Decision Submissions", icon: FileSpreadsheet },
+      { id: "offer_proofs" as AdminTab, label: "Offer Daily Proofs", icon: CheckCircle2 },
     ],
   },
   {
@@ -142,7 +152,6 @@ const navGroups = [
       { id: "user_goals" as AdminTab, label: "User Goals", icon: TrendingUp },
       { id: "goal_accounts" as AdminTab, label: "Goal Accounts", icon: TrendingUp },
       { id: "campaign_eligibility" as AdminTab, label: "Campaign Eligibility", icon: Settings },
-      { id: "offer_proofs" as AdminTab, label: "Offer Daily Proofs", icon: CheckCircle2 },
     ],
   },
   {
@@ -1304,6 +1313,8 @@ const Admin = () => {
     goal_accounts: "Goal Accounts",
     campaign_eligibility: "Campaign Eligibility",
     offer_proofs: "Offer Daily Proofs",
+    user_tasks: "User Tasks",
+    user_task_submissions: "Task Submissions",
   };
 
   const downloadFinancialStatement = (format: "csv" | "pdf") => {
@@ -3547,6 +3558,8 @@ const Admin = () => {
             {activeTab === "goal_accounts" && <AdminGoalAccounts />}
             {activeTab === "campaign_eligibility" && <AdminCampaignEligibility />}
             {activeTab === "offer_proofs" && <AdminOfferProofs />}
+            {activeTab === "user_tasks" && <AdminUserTasks />}
+            {activeTab === "user_task_submissions" && <AdminUserTaskSubmissions />}
 
           </main>
         </div>
