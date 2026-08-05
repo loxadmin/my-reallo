@@ -22,6 +22,8 @@ import type { DashView } from "@/pages/Dashboard";
 import RecommendedOffers from "./RecommendedOffers";
 import GoalAccountFlow from "./GoalAccountFlow";
 import GoalAccountCard from "./GoalAccountCard";
+import TaskCenter from "./tasks/TaskCenter";
+import TaskProgressStrip from "./tasks/TaskProgressStrip";
 
 interface QueueDisplayProps {
   totalAnnualSpend: number;
