@@ -408,6 +408,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             {view === "earn" && (
               <div className="grid grid-cols-1 gap-4">
                 <GoalAccountsSection />
+                <TaskCenter onOpenSurveys={() => onViewChange?.("surveys")} />
                 <RecommendedOffers />
                 <button
                   onClick={() => onViewChange?.("offers")}
