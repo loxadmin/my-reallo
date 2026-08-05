@@ -377,6 +377,8 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
             </div>
 
             {/* Referred Users — collapsible */}
+            <TaskProgressStrip onOpen={() => onViewChange?.("earn")} />
+
             {referredUsers.length > 0 && (
               <GlassCard className="p-3">
                 <p className="text-[11px] text-muted-foreground font-medium mb-2">Referred Users ({referredUsers.length})</p>
