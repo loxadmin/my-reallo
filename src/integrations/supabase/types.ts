@@ -2128,6 +2128,7 @@ export type Database = {
           last_active: string | null
           monthly_business_spend: number | null
           off_queue_at: string | null
+          onboarding_bonus_awarded: boolean
           onboarding_version: number
           points_balance: number
           preferred_currency: string | null
@@ -2159,6 +2160,7 @@ export type Database = {
           last_active?: string | null
           monthly_business_spend?: number | null
           off_queue_at?: string | null
+          onboarding_bonus_awarded?: boolean
           onboarding_version?: number
           points_balance?: number
           preferred_currency?: string | null
@@ -2190,6 +2192,7 @@ export type Database = {
           last_active?: string | null
           monthly_business_spend?: number | null
           off_queue_at?: string | null
+          onboarding_bonus_awarded?: boolean
           onboarding_version?: number
           points_balance?: number
           preferred_currency?: string | null
@@ -2800,6 +2803,163 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_task_enrollments: {
+        Row: {
+          approved_days: number
+          completed_at: string | null
+          created_at: string
+          id: string
+          reward_credited: boolean
+          started_at: string
+          status: string
+          task_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_days?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          reward_credited?: boolean
+          started_at?: string
+          status?: string
+          task_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_days?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          reward_credited?: boolean
+          started_at?: string
+          status?: string
+          task_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_task_enrollments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "user_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_task_submissions: {
+        Row: {
+          created_at: string
+          day_index: number
+          enrollment_id: string
+          evidence: Json
+          id: string
+          note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_notes: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_index?: number
+          enrollment_id: string
+          evidence?: Json
+          id?: string
+          note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_index?: number
+          enrollment_id?: string
+          evidence?: Json
+          id?: string
+          note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_task_submissions_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "user_task_enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_tasks: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          duration_days: number
+          evidence_config: Json
+          id: string
+          instructions: string | null
+          is_active: boolean
+          max_participants: number | null
+          mode: string
+          reward_points: number
+          switch_from_brand: string | null
+          switch_to_brand: string | null
+          task_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          evidence_config?: Json
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          max_participants?: number | null
+          mode?: string
+          reward_points?: number
+          switch_from_brand?: string | null
+          switch_to_brand?: string | null
+          task_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          evidence_config?: Json
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          max_participants?: number | null
+          mode?: string
+          reward_points?: number
+          switch_from_brand?: string | null
+          switch_to_brand?: string | null
+          task_type?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
