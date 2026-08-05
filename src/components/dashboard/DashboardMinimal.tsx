@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Copy, Check, Share2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import MinimalAutoSlider from "./MinimalAutoSlider";
+import TaskProgressStrip from "@/components/tasks/TaskProgressStrip";
 
 const DashboardMinimal = () => {
   const { profile } = useAuth();
@@ -66,6 +67,8 @@ const DashboardMinimal = () => {
 
       {/* Divider */}
       <div className="border-t border-border/30" />
+
+      <TaskProgressStrip />
 
       {/* Referral - Clean */}
       <div className="text-center space-y-3">

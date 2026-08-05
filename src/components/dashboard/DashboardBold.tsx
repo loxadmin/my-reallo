@@ -3,6 +3,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useState } from "react";
 import { Share2, Copy, Check, Wallet, Clock, Users, Zap } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import TaskProgressStrip from "@/components/tasks/TaskProgressStrip";
 
 const DashboardBold = () => {
   const { profile } = useAuth();
@@ -81,6 +82,8 @@ const DashboardBold = () => {
           </div>
         </div>
       )}
+
+      <TaskProgressStrip />
 
       {/* Referral Card - Bold */}
       <div className="rounded-2xl bg-card border border-border/50 p-5">
