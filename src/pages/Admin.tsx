@@ -2612,6 +2612,38 @@ const Admin = () => {
                         <option value="business">Business accounts only</option>
                       </select>
                     </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-1">Programme</p>
+                        <select
+                          value={(newChallenge as any).program || "influencer"}
+                          onChange={e => setNewChallenge(p => ({ ...(p as any), program: e.target.value }))}
+                          className={inputCls}
+                        >
+                          <option value="influencer">Influencers only</option>
+                          <option value="monthly_earner">Monthly Earners only</option>
+                          <option value="both">Both programmes</option>
+                        </select>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-1">Proof required</p>
+                        <select
+                          value={(newChallenge as any).proof_type || "video"}
+                          onChange={e => setNewChallenge(p => ({ ...(p as any), proof_type: e.target.value }))}
+                          className={inputCls}
+                        >
+                          <option value="video">Video post link</option>
+                          <option value="link">Post link (any platform)</option>
+                          <option value="screenshot">Screenshot upload</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-1">Minimum views required (0 = none)</p>
+                      <input type="number" min={0} value={(newChallenge as any).min_views ?? 0}
+                        onChange={e => setNewChallenge(p => ({ ...(p as any), min_views: parseInt(e.target.value) || 0 }))}
+                        className={inputCls} />
+                    </div>
                     <Btn variant="primary" onClick={async () => {
                       if (!newChallenge.title) return;
                       await supabase.from("influencer_challenges" as any).insert({
@@ -2621,9 +2653,12 @@ const Admin = () => {
                         total_videos: newChallenge.challenge_type === "single" ? 1 : newChallenge.total_videos,
                         reward_per_video: newChallenge.reward_per_video, posting_interval_days: newChallenge.posting_interval_days,
                         audience: (newChallenge as any).audience || "both",
+                        program: (newChallenge as any).program || "influencer",
+                        proof_type: (newChallenge as any).proof_type || "video",
+                        min_views: (newChallenge as any).min_views ?? 0,
                       } as any);
                       toast({ title: "Challenge created" });
-                      setNewChallenge({ title: "", description: "", instructions: "", hashtag: "", challenge_type: "single", total_videos: 1, reward_per_video: 3000, posting_interval_days: 1, audience: "both" } as any);
+                      setNewChallenge({ title: "", description: "", instructions: "", hashtag: "", challenge_type: "single", total_videos: 1, reward_per_video: 3000, posting_interval_days: 1, audience: "both", program: "influencer", proof_type: "video", min_views: 0 } as any);
                       await fetchData();
                     }}><Plus className="w-3 h-3" /> Create Challenge</Btn>
                   </div>
