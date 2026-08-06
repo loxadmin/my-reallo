@@ -121,7 +121,7 @@ const InfluencerPanel = () => {
       supabase.from("influencer_bank_accounts" as any).select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("influencer_referrals" as any).select("*").eq("influencer_id", user.id).order("created_at", { ascending: false }),
       supabase.from("influencer_withdrawals" as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("influencer_challenges" as any).select("*").eq("is_active", true).in("audience", profile?.account_type === "business" ? ["both", "business"] : ["both", "personal"]).order("created_at", { ascending: false }),
+      supabase.from("influencer_challenges" as any).select("*").eq("is_active", true).in("audience", profile?.account_type === "business" ? ["both", "business"] : ["both", "personal"]).in("program", ["influencer", "both"]).order("created_at", { ascending: false }),
       supabase.from("influencer_challenge_enrollments" as any).select("*").eq("user_id", user.id),
       supabase.from("influencer_challenge_submissions" as any).select("*").eq("user_id", user.id).order("submitted_at", { ascending: false }),
       supabase.from("influencer_wallet_transactions" as any).select("*").eq("user_id", user.id).eq("status", "completed"),
