@@ -20,6 +20,7 @@ import AdvertiserManagement from "@/components/admin/AdvertiserManagement";
 import AdminInfluencerSurveys from "@/components/admin/AdminInfluencerSurveys";
 import AdminInfluencerSurveyResponses from "@/components/admin/AdminInfluencerSurveyResponses";
 import AdminLeaderboardContests from "@/components/admin/AdminLeaderboardContests";
+import AdminMonthlyEarners from "@/components/admin/AdminMonthlyEarners";
 import AdminOnboardingManager from "@/components/admin/AdminOnboardingManager";
 import AdminBrandCatalog from "@/components/admin/AdminBrandCatalog";
 import AdminGoalIdeas from "@/components/admin/AdminGoalIdeas";
@@ -93,7 +94,7 @@ const makeAdminFormat = (currency: AdminCurrency, rates: Record<AdminCurrency, n
 const fromApps = () => supabase.from("decision_apps");
 const fromDResponses = () => supabase.from("decision_responses");
 
-type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "inf_leaderboard" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config" | "ai_onboarding" | "brand_catalog" | "goal_ideas" | "behavior_analytics" | "user_goals" | "goal_accounts" | "campaign_eligibility" | "offer_proofs" | "user_tasks" | "user_task_submissions";
+type AdminTab = "overview" | "users" | "ghosts" | "activity" | "goals" | "decisions" | "dec_submissions" | "analytics" | "verification" | "settings" | "inf_apps" | "inf_wallets" | "inf_referrals" | "inf_withdrawals" | "inf_challenges" | "inf_submissions" | "inf_surveys" | "inf_leaderboard" | "monthly_earners" | "warnings" | "advertisers" | "surveys" | "app_design" | "error_logs" | "security_incidents" | "blacklist" | "security_config" | "ai_onboarding" | "brand_catalog" | "goal_ideas" | "behavior_analytics" | "user_goals" | "goal_accounts" | "campaign_eligibility" | "offer_proofs" | "user_tasks" | "user_task_submissions";
 
 const navGroups = [
   {
@@ -128,6 +129,12 @@ const navGroups = [
       { id: "inf_submissions" as AdminTab, label: "Submissions", icon: Eye },
       { id: "inf_surveys" as AdminTab, label: "Survey Rewards", icon: DollarSign },
       { id: "inf_leaderboard" as AdminTab, label: "Leaderboard Contests", icon: Star },
+    ],
+  },
+  {
+    label: "MONTHLY EARNERS",
+    items: [
+      { id: "monthly_earners" as AdminTab, label: "Monthly Earners", icon: Wallet },
     ],
   },
   {
@@ -1300,6 +1307,7 @@ const Admin = () => {
     surveys: "Surveys",
     inf_surveys: "Influencer Survey Rewards",
     inf_leaderboard: "Leaderboard Contests",
+    monthly_earners: "Monthly Earners",
     app_design: "App Design",
     error_logs: "Error Logs",
     security_incidents: "Security Incidents",
@@ -3062,6 +3070,10 @@ const Admin = () => {
             )}
             {activeTab === "inf_leaderboard" && (
               <AdminLeaderboardContests />
+            )}
+
+            {activeTab === "monthly_earners" && (
+              <AdminMonthlyEarners />
             )}
             {activeTab === "surveys" && (
               <div className="space-y-6">
