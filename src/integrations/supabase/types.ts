@@ -1011,7 +1011,10 @@ export type Database = {
           id: string
           instructions: string
           is_active: boolean
+          min_views: number
           posting_interval_days: number
+          program: string
+          proof_type: string
           reward_per_video: number
           title: string
           total_videos: number
@@ -1025,7 +1028,10 @@ export type Database = {
           id?: string
           instructions?: string
           is_active?: boolean
+          min_views?: number
           posting_interval_days?: number
+          program?: string
+          proof_type?: string
           reward_per_video?: number
           title: string
           total_videos?: number
@@ -1039,7 +1045,10 @@ export type Database = {
           id?: string
           instructions?: string
           is_active?: boolean
+          min_views?: number
           posting_interval_days?: number
+          program?: string
+          proof_type?: string
           reward_per_video?: number
           title?: string
           total_videos?: number
@@ -1385,6 +1394,8 @@ export type Database = {
       leaderboard_contest_winners: {
         Row: {
           awarded_at: string
+          contact_phone: string | null
+          contact_submitted_at: string | null
           contest_id: string
           id: string
           paid: boolean
@@ -1395,6 +1406,8 @@ export type Database = {
         }
         Insert: {
           awarded_at?: string
+          contact_phone?: string | null
+          contact_submitted_at?: string | null
           contest_id: string
           id?: string
           paid?: boolean
@@ -1405,6 +1418,8 @@ export type Database = {
         }
         Update: {
           awarded_at?: string
+          contact_phone?: string | null
+          contact_submitted_at?: string | null
           contest_id?: string
           id?: string
           paid?: boolean
@@ -1433,6 +1448,9 @@ export type Database = {
           period_days: number
           prize_amount: number
           prize_currency: string
+          prize_description: string | null
+          program: string
+          requires_contact: boolean
           rules: string | null
           starts_at: string
           target_referrals: number
@@ -1449,6 +1467,9 @@ export type Database = {
           period_days?: number
           prize_amount?: number
           prize_currency?: string
+          prize_description?: string | null
+          program?: string
+          requires_contact?: boolean
           rules?: string | null
           starts_at?: string
           target_referrals?: number
@@ -1465,12 +1486,63 @@ export type Database = {
           period_days?: number
           prize_amount?: number
           prize_currency?: string
+          prize_description?: string | null
+          program?: string
+          requires_contact?: boolean
           rules?: string | null
           starts_at?: string
           target_referrals?: number
           title?: string
           updated_at?: string
           winner_count?: number
+        }
+        Relationships: []
+      }
+      monthly_earners: {
+        Row: {
+          contact_phone: string | null
+          created_at: string
+          cycle_end: string
+          cycle_index: number
+          cycle_start: string
+          id: string
+          last_cycle_referrals: number
+          status: string
+          target_referrals: number
+          terminated_at: string | null
+          termination_reason: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_phone?: string | null
+          created_at?: string
+          cycle_end?: string
+          cycle_index?: number
+          cycle_start?: string
+          id?: string
+          last_cycle_referrals?: number
+          status?: string
+          target_referrals?: number
+          terminated_at?: string | null
+          termination_reason?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_phone?: string | null
+          created_at?: string
+          cycle_end?: string
+          cycle_index?: number
+          cycle_start?: string
+          id?: string
+          last_cycle_referrals?: number
+          status?: string
+          target_referrals?: number
+          terminated_at?: string | null
+          termination_reason?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -3136,6 +3208,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      evaluate_monthly_earner_cycles: { Args: never; Returns: number }
       generate_referral_code: { Args: never; Returns: string }
       generate_voucher_code: { Args: never; Returns: string }
       get_next_queue_position: { Args: never; Returns: number }
@@ -3150,9 +3223,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      join_monthly_earner_program: { Args: never; Returns: Json }
       mark_referral_valid: {
         Args: { _referred_user_id: string; _source: string }
         Returns: undefined
+      }
+      monthly_earner_cycle_referrals: {
+        Args: { _user_id: string }
+        Returns: number
       }
       oauth_get_matured_points: { Args: { _user_id: string }; Returns: number }
       open_goal_account: {
