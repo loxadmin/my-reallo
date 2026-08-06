@@ -23,6 +23,7 @@ import RecommendedOffers from "./RecommendedOffers";
 import GoalAccountFlow from "./GoalAccountFlow";
 import GoalAccountCard from "./GoalAccountCard";
 import TaskCenter from "./tasks/TaskCenter";
+import MonthlyEarnerPanel from "./MonthlyEarnerPanel";
 import TaskProgressStrip from "./tasks/TaskProgressStrip";
 
 interface QueueDisplayProps {
@@ -413,6 +414,7 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               <div className="grid grid-cols-1 gap-4">
                 <GoalAccountsSection />
                 <TaskCenter onOpenSurveys={() => onViewChange?.("surveys")} />
+                <MonthlyEarnerPanel />
                 <RecommendedOffers />
                 <button
                   onClick={() => onViewChange?.("offers")}

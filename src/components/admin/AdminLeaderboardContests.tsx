@@ -19,6 +19,9 @@ interface Contest {
   starts_at: string;
   ends_at: string | null;
   created_at: string;
+  program: string;
+  prize_description: string | null;
+  requires_contact: boolean;
 }
 
 interface Winner {
@@ -30,6 +33,7 @@ interface Winner {
   prize_amount: number;
   awarded_at: string;
   paid: boolean;
+  contact_phone: string | null;
 }
 
 const empty: Partial<Contest> = {
@@ -42,6 +46,9 @@ const empty: Partial<Contest> = {
   target_referrals: 1000,
   period_days: 30,
   is_active: true,
+  program: "both",
+  prize_description: "",
+  requires_contact: false,
 };
 
 export default function AdminLeaderboardContests() {
@@ -85,6 +92,9 @@ export default function AdminLeaderboardContests() {
       period_days: Number(editing.period_days) || 30,
       is_active: !!editing.is_active,
       ends_at: editing.ends_at || null,
+      program: editing.program || "both",
+      prize_description: editing.prize_description || null,
+      requires_contact: !!editing.requires_contact,
     };
     const q = editing.id
       ? supabase.from("leaderboard_contests" as any).update(payload).eq("id", editing.id)
@@ -136,6 +146,8 @@ export default function AdminLeaderboardContests() {
                       <div>Winners: <span className="text-foreground font-medium">{cw.length} / {c.winner_count}</span></div>
                       <div>Target: <span className="text-foreground font-medium">{c.target_referrals} refs</span></div>
                       <div>Period: <span className="text-foreground font-medium">{c.period_days}d</span></div>
+                      <div>For: <span className="text-foreground font-medium">{c.program === "both" ? "Influencers + Monthly Earners" : c.program === "monthly_earner" ? "Monthly Earners" : "Influencers"}</span></div>
+                      {c.prize_description && <div className="col-span-2">Prize: <span className="text-foreground font-medium">{c.prize_description}</span></div>}
                     </div>
                     {c.rules && (
                       <details className="mt-2">
@@ -149,7 +161,7 @@ export default function AdminLeaderboardContests() {
                         <ul className="text-[11px] mt-1 space-y-0.5">
                           {cw.map(w => (
                             <li key={w.id} className="flex justify-between">
-                              <span>#{w.rank} · {profiles[w.user_id] || w.user_id.slice(0, 8)}</span>
+                              <span>#{w.rank} · {profiles[w.user_id] || w.user_id.slice(0, 8)}{w.contact_phone ? ` · ☎ ${w.contact_phone}` : ""}</span>
                               <span className="text-muted-foreground">{w.valid_referrals} refs · ₦{Number(w.prize_amount).toLocaleString()}</span>
                             </li>
                           ))}
@@ -194,6 +206,20 @@ export default function AdminLeaderboardContests() {
                 <textarea rows={4} className="w-full glass-input rounded-lg px-3 py-2 mt-1 font-mono text-xs"
                   value={editing.rules || ""} onChange={e => setEditing({ ...editing, rules: e.target.value })} />
               </label>
+              <label className="block">
+                <span className="text-xs text-muted-foreground">Non-cash prize description (e.g. Trip to Zanzibar)</span>
+                <input className="w-full glass-input rounded-lg px-3 py-2 mt-1"
+                  value={editing.prize_description || ""} onChange={e => setEditing({ ...editing, prize_description: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="text-xs text-muted-foreground">Who can enter</span>
+                <select className="w-full glass-input rounded-lg px-3 py-2 mt-1"
+                  value={editing.program || "both"} onChange={e => setEditing({ ...editing, program: e.target.value })}>
+                  <option value="both">Influencers + Monthly Earners</option>
+                  <option value="influencer">Influencers only</option>
+                  <option value="monthly_earner">Monthly Earners only</option>
+                </select>
+              </label>
               <div className="grid grid-cols-2 gap-3">
                 <label className="block">
                   <span className="text-xs text-muted-foreground">Prize amount</span>
@@ -230,6 +256,11 @@ export default function AdminLeaderboardContests() {
                 <input type="checkbox" checked={!!editing.is_active}
                   onChange={e => setEditing({ ...editing, is_active: e.target.checked })} />
                 Active
+              </label>
+              <label className="flex items-center gap-2 text-xs">
+                <input type="checkbox" checked={!!editing.requires_contact}
+                  onChange={e => setEditing({ ...editing, requires_contact: e.target.checked })} />
+                Ask winners for a phone number so an admin can contact them
               </label>
               <div className="flex gap-2 justify-end pt-2">
                 <GlassButton variant="outline" onClick={() => setEditing(null)}>Cancel</GlassButton>
