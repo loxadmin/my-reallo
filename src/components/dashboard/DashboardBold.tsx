@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Share2, Copy, Check, Wallet, Clock, Users, Zap } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import TaskProgressStrip from "@/components/tasks/TaskProgressStrip";
+import GoalAccountStrip from "@/components/GoalAccountStrip";
 
 const DashboardBold = () => {
   const { profile } = useAuth();
@@ -83,6 +84,7 @@ const DashboardBold = () => {
         </div>
       )}
 
+      <GoalAccountStrip />
       <TaskProgressStrip />
 
       {/* Referral Card - Bold */}

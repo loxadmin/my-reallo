@@ -5,6 +5,7 @@ import { Copy, Check, Share2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import MinimalAutoSlider from "./MinimalAutoSlider";
 import TaskProgressStrip from "@/components/tasks/TaskProgressStrip";
+import GoalAccountStrip from "@/components/GoalAccountStrip";
 
 const DashboardMinimal = () => {
   const { profile } = useAuth();
@@ -68,6 +69,7 @@ const DashboardMinimal = () => {
       {/* Divider */}
       <div className="border-t border-border/30" />
 
+      <GoalAccountStrip />
       <TaskProgressStrip />
 
       {/* Referral - Clean */}

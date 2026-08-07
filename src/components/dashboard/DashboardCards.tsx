@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Copy, Check, Share2, CreditCard, Clock, Gift } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import TaskProgressStrip from "@/components/tasks/TaskProgressStrip";
+import GoalAccountStrip from "@/components/GoalAccountStrip";
 
 const DashboardCards = () => {
   const { profile } = useAuth();
@@ -88,6 +89,7 @@ const DashboardCards = () => {
         </div>
       )}
 
+      <GoalAccountStrip />
       <TaskProgressStrip />
 
       {/* Referral */}
