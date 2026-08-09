@@ -53,8 +53,11 @@ const Dashboard = () => {
       if (p?.business_category && (p?.monthly_business_spend ?? 0) > 0) return "dashboard";
       return "onboarding";
     }
-    // Personal onboarding is optional: only shown until a path is chosen.
-    return (p as any)?.onboarding_path ? "dashboard" : "onboarding";
+    // Personal onboarding is optional: only shown until a path is chosen (or finished).
+    const path = (p as any)?.onboarding_path ?? null;
+    if (!path) return "onboarding";
+    if (path === "dreams" && ((p as any)?.onboarding_version ?? 0) < 2) return "onboarding";
+    return "dashboard";
   };
 
   const getInitialSpendResult = (p: typeof profile): SpendResult | null => {
@@ -115,7 +118,7 @@ const Dashboard = () => {
       });
       const path = (profile as any).onboarding_path ?? null;
       setChosenPath(path);
-      setStep(path ? "dashboard" : "onboarding");
+      setStep(getInitialStep(profile));
     }
   }, [profile]);
 
