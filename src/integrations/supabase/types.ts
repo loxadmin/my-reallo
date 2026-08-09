@@ -2201,6 +2201,7 @@ export type Database = {
           monthly_business_spend: number | null
           off_queue_at: string | null
           onboarding_bonus_awarded: boolean
+          onboarding_path: string | null
           onboarding_version: number
           points_balance: number
           preferred_currency: string | null
@@ -2208,6 +2209,7 @@ export type Database = {
           referral_code: string | null
           referred_by: string | null
           selected_goal: string | null
+          signup_bonus_awarded: boolean
           spend_verified: boolean | null
           target_amount: number | null
           total_annual_spend: number | null
@@ -2233,6 +2235,7 @@ export type Database = {
           monthly_business_spend?: number | null
           off_queue_at?: string | null
           onboarding_bonus_awarded?: boolean
+          onboarding_path?: string | null
           onboarding_version?: number
           points_balance?: number
           preferred_currency?: string | null
@@ -2240,6 +2243,7 @@ export type Database = {
           referral_code?: string | null
           referred_by?: string | null
           selected_goal?: string | null
+          signup_bonus_awarded?: boolean
           spend_verified?: boolean | null
           target_amount?: number | null
           total_annual_spend?: number | null
@@ -2265,6 +2269,7 @@ export type Database = {
           monthly_business_spend?: number | null
           off_queue_at?: string | null
           onboarding_bonus_awarded?: boolean
+          onboarding_path?: string | null
           onboarding_version?: number
           points_balance?: number
           preferred_currency?: string | null
@@ -2272,6 +2277,7 @@ export type Database = {
           referral_code?: string | null
           referred_by?: string | null
           selected_goal?: string | null
+          signup_bonus_awarded?: boolean
           spend_verified?: boolean | null
           target_amount?: number | null
           total_annual_spend?: number | null
@@ -3199,6 +3205,7 @@ export type Database = {
         }
         Returns: number
       }
+      award_onboarding_bonus: { Args: never; Returns: Json }
       count_valid_referrals_last_30d: {
         Args: { _user_id: string }
         Returns: number
