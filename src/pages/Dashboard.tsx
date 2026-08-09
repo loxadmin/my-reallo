@@ -9,7 +9,8 @@ import WaterBackground from "@/components/WaterBackground";
 import PageSkeleton from "@/components/PageSkeleton";
 import KarbaliChat from "@/components/KarbaliChat";
 import { ChatPopup } from "@/components/KarbaliChat";
-import ReOnboardingGate from "@/components/ReOnboardingGate";
+import PathChooser from "@/components/PathChooser";
+import OnboardingChat from "@/components/OnboardingChat";
 import DashboardBold from "@/components/dashboard/DashboardBold";
 import DashboardMinimal from "@/components/dashboard/DashboardMinimal";
 import DashboardNeon from "@/components/dashboard/DashboardNeon";
@@ -52,8 +53,11 @@ const Dashboard = () => {
       if (p?.business_category && (p?.monthly_business_spend ?? 0) > 0) return "dashboard";
       return "onboarding";
     }
-    if (p?.selected_goal && p?.total_annual_spend && p.total_annual_spend > 0) return "dashboard";
-    return "onboarding";
+    // Personal onboarding is optional: only shown until a path is chosen (or finished).
+    const path = (p as any)?.onboarding_path ?? null;
+    if (!path) return "onboarding";
+    if (path === "dreams" && ((p as any)?.onboarding_version ?? 0) < 2) return "onboarding";
+    return "dashboard";
   };
 
   const getInitialSpendResult = (p: typeof profile): SpendResult | null => {
@@ -71,6 +75,7 @@ const Dashboard = () => {
   };
 
   const [step, setStep] = useState<DashStep>(() => getInitialStep(profile));
+  const [chosenPath, setChosenPath] = useState<string | null>(() => ((profile as any)?.onboarding_path ?? null));
   const [spendResult, setSpendResult] = useState<SpendResult | null>(() => getInitialSpendResult(profile));
 
   const activeView: DashView = urlView && validViews.includes(urlView as DashView)
@@ -103,25 +108,23 @@ const Dashboard = () => {
         }
         return;
       }
-      if (profile.selected_goal && profile.total_annual_spend && profile.total_annual_spend > 0) {
-        setSpendResult({
-          weeklyData: 0, monthlyElectricity: 0,
-          annualData: profile.annual_data_spend ?? 0,
-          annualElectricity: profile.annual_electricity_spend ?? 0,
-          annualFood: profile.annual_food_spend ?? 0,
-          annualTransport: profile.annual_transport_spend ?? 0,
-          totalAnnual: profile.total_annual_spend,
-        });
-        setStep("dashboard");
-      } else {
-        setSpendResult(null);
-        setStep("onboarding");
-      }
+      setSpendResult({
+        weeklyData: 0, monthlyElectricity: 0,
+        annualData: profile.annual_data_spend ?? 0,
+        annualElectricity: profile.annual_electricity_spend ?? 0,
+        annualFood: profile.annual_food_spend ?? 0,
+        annualTransport: profile.annual_transport_spend ?? 0,
+        totalAnnual: profile.total_annual_spend ?? 0,
+      });
+      const path = (profile as any).onboarding_path ?? null;
+      setChosenPath(path);
+      setStep(getInitialStep(profile));
     }
   }, [profile]);
 
   const handleOnboardingComplete = async () => {
     await refreshProfile();
+    setChosenPath("dreams");
     setStep("dashboard");
   };
 
@@ -214,7 +217,19 @@ const Dashboard = () => {
       <div className="relative min-h-screen overflow-x-hidden bg-background">
         <Navbar />
         <div className="relative z-10 pt-14">
-          <KarbaliChat mode="fullscreen" onOnboardingComplete={handleOnboardingComplete} />
+          {chosenPath === "dreams" ? (
+            <OnboardingChat
+              onComplete={handleOnboardingComplete}
+              onSkip={() => { setChosenPath("skipped"); setStep("dashboard"); }}
+            />
+          ) : (
+            <PathChooser
+              onChosen={(path) => {
+                setChosenPath(path);
+                if (path !== "dreams") setStep("dashboard");
+              }}
+            />
+          )}
         </div>
       </div>
     );
@@ -337,7 +352,6 @@ const Dashboard = () => {
       {activeView === "home" && (
         <ChatPopup proactiveTip={proactiveTip} />
       )}
-      <ReOnboardingGate />
     </div>
   );
 };
