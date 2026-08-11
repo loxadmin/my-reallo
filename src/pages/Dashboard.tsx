@@ -12,7 +12,7 @@ import { ChatPopup } from "@/components/KarbaliChat";
 import PathChooser from "@/components/PathChooser";
 import OnboardingChat from "@/components/OnboardingChat";
 import GoalAccountWizard from "@/components/GoalAccountWizard";
-import { Gift, X } from "lucide-react";
+import { Gift } from "lucide-react";
 import DashboardBold from "@/components/dashboard/DashboardBold";
 import DashboardMinimal from "@/components/dashboard/DashboardMinimal";
 import DashboardNeon from "@/components/dashboard/DashboardNeon";
