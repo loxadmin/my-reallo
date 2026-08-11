@@ -11,6 +11,8 @@ import KarbaliChat from "@/components/KarbaliChat";
 import { ChatPopup } from "@/components/KarbaliChat";
 import PathChooser from "@/components/PathChooser";
 import OnboardingChat from "@/components/OnboardingChat";
+import GoalAccountWizard from "@/components/GoalAccountWizard";
+import { Gift, X } from "lucide-react";
 import DashboardBold from "@/components/dashboard/DashboardBold";
 import DashboardMinimal from "@/components/dashboard/DashboardMinimal";
 import DashboardNeon from "@/components/dashboard/DashboardNeon";
@@ -23,11 +25,11 @@ import { cn } from "@/lib/utils";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useNotifications } from "@/contexts/NotificationContext";
 
-export type DashView = "home" | "earn" | "offers" | "surveys" | "goal" | "verify" | "influencer" | "notifications" | "chat" | "profile";
+export type DashView = "home" | "earn" | "offers" | "surveys" | "goal" | "verify" | "influencer" | "notifications" | "chat" | "profile" | "onboarding" | "paths";
 
-const validViews: DashView[] = ["home", "earn", "offers", "surveys", "goal", "verify", "influencer", "notifications", "chat", "profile"];
+const validViews: DashView[] = ["home", "earn", "offers", "surveys", "goal", "verify", "influencer", "notifications", "chat", "profile", "onboarding", "paths"];
 
-type DashStep = "onboarding" | "dashboard";
+type DashStep = "onboarding" | "goal" | "dashboard";
 
 interface SpendResult {
   weeklyData: number;
@@ -53,10 +55,9 @@ const Dashboard = () => {
       if (p?.business_category && (p?.monthly_business_spend ?? 0) > 0) return "dashboard";
       return "onboarding";
     }
-    // Personal onboarding is optional: only shown until a path is chosen (or finished).
+    // First thing a new personal account does is open a Goal Account. Everything else is optional.
     const path = (p as any)?.onboarding_path ?? null;
-    if (!path) return "onboarding";
-    if (path === "dreams" && ((p as any)?.onboarding_version ?? 0) < 2) return "onboarding";
+    if (!path) return "goal";
     return "dashboard";
   };
 
@@ -126,6 +127,7 @@ const Dashboard = () => {
     await refreshProfile();
     setChosenPath("dreams");
     setStep("dashboard");
+    navigate("/dashboard");
   };
 
   const [tipIndex, setTipIndex] = useState(0);
@@ -213,23 +215,17 @@ const Dashboard = () => {
         </div>
       );
     }
+  }
+
+  if (step === "goal" && profile.account_type !== "business") {
     return (
       <div className="relative min-h-screen overflow-x-hidden bg-background">
         <Navbar />
         <div className="relative z-10 pt-14">
-          {chosenPath === "dreams" ? (
-            <OnboardingChat
-              onComplete={handleOnboardingComplete}
-              onSkip={() => { setChosenPath("skipped"); setStep("dashboard"); }}
-            />
-          ) : (
-            <PathChooser
-              onChosen={(path) => {
-                setChosenPath(path);
-                if (path !== "dreams") setStep("dashboard");
-              }}
-            />
-          )}
+          <GoalAccountWizard
+            onDone={async () => { await refreshProfile(); setChosenPath("dreams"); setStep("dashboard"); }}
+            onSkip={async () => { await refreshProfile(); setChosenPath("skipped"); setStep("dashboard"); }}
+          />
         </div>
       </div>
     );
@@ -326,7 +322,29 @@ const Dashboard = () => {
             </div>
           ) : activeView === "home" ? (
             <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+              {!isBusiness && !(profile as any).onboarding_bonus_awarded && (
+                <div className="px-5 lg:px-8 pt-5 max-w-lg mx-auto lg:max-w-none">
+                  <button
+                    onClick={() => setActiveView("onboarding")}
+                    className="w-full flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-left"
+                  >
+                    <Gift className="w-4 h-4 text-primary shrink-0" />
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-medium text-foreground">Finish your profile, get ₦2,000 in points</span>
+                      <span className="block text-[11px] text-muted-foreground">A few questions about the brands you use. Takes two minutes.</span>
+                    </span>
+                  </button>
+                </div>
+              )}
               {renderHomeDashboard()}
+            </motion.div>
+          ) : activeView === "onboarding" ? (
+            <motion.div key="onboarding" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+              <OnboardingChat onComplete={handleOnboardingComplete} onSkip={() => setActiveView("home")} />
+            </motion.div>
+          ) : activeView === "paths" ? (
+            <motion.div key="paths" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+              <PathChooser onChosen={(path) => { setChosenPath(path); setActiveView(path === "dreams" ? "onboarding" : "home"); }} />
             </motion.div>
           ) : activeView === "verify" && isBusiness ? (
             <motion.div key="bverify" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
