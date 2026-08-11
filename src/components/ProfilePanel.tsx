@@ -4,6 +4,7 @@ import GlassCard from "./GlassCard";
 import GlassButton from "./GlassButton";
 import { LogOut, User, Mail, Star, Hash, Calendar, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import CurrencySelect from "./CurrencySelect";
 
 const ProfilePanel = () => {
   const { profile, signOut } = useAuth();
@@ -56,6 +57,13 @@ const ProfilePanel = () => {
       </div>
 
       <GlassCard className="p-0 overflow-hidden divide-y divide-border/30">
+        <div className="p-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Currency</p>
+            <p className="text-[12px] text-muted-foreground">Every amount in Karbali is shown in this currency.</p>
+          </div>
+          <CurrencySelect compact />
+        </div>
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">

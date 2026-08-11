@@ -20,7 +20,8 @@ import { Share2, Copy, Check, TrendingUp, Clock, Zap, ExternalLink, Wallet, Awar
 import { toast } from "@/hooks/use-toast";
 import type { DashView } from "@/pages/Dashboard";
 import RecommendedOffers from "./RecommendedOffers";
-import GoalAccountFlow from "./GoalAccountFlow";
+import GoalAccountWizard from "./GoalAccountWizard";
+import GoalFundingPanel from "./GoalFundingPanel";
 import GoalAccountCard from "./GoalAccountCard";
 import TaskCenter from "./tasks/TaskCenter";
 import MonthlyEarnerPanel from "./MonthlyEarnerPanel";
@@ -377,7 +378,8 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
               ))}
             </div>
 
-            {/* Referred Users — collapsible */}
+            {/* Goal Account + task progress */}
+            <GoalFundingPanel />
             <TaskProgressStrip onOpen={() => onViewChange?.("earn")} />
 
             {referredUsers.length > 0 && (
@@ -592,7 +594,10 @@ function GoalAccountsSection() {
       )}
       {showNew && (
         <div>
-          <GoalAccountFlow onOpened={() => { setShowNew(false); void load(); }} />
+          <GoalAccountWizard
+            onDone={() => { setShowNew(false); void load(); }}
+            onSkip={() => setShowNew(false)}
+          />
           <button onClick={() => setShowNew(false)} className="mt-2 text-xs text-muted-foreground">Cancel</button>
         </div>
       )}
