@@ -56,8 +56,12 @@ interface CurrencyContextType {
   currency: CurrencyInfo;
   currencyCode: CurrencyCode;
   rates: Record<CurrencyCode, number>; // naira per 1 unit
+  /** Persist and apply a user-chosen currency */
+  setCurrency: (code: CurrencyCode) => Promise<void>;
   /** Convert naira amount to user's local currency */
   fromNaira: (naira: number) => number;
+  /** Convert a local-currency amount back to naira */
+  toNaira: (local: number) => number;
   /** Format a naira amount in user's local currency */
   formatCurrency: (naira: number) => string;
   /** Format compact (K/M) in user's local currency */
@@ -69,6 +73,18 @@ interface CurrencyContextType {
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
+
+export const CURRENCY_LIST: { code: CurrencyCode; symbol: string; label: string }[] = [
+  { code: "NGN", symbol: "₦", label: "Nigerian Naira" },
+  { code: "USD", symbol: "$", label: "US Dollar" },
+  { code: "EUR", symbol: "€", label: "Euro" },
+  { code: "GBP", symbol: "£", label: "British Pound" },
+  { code: "CAD", symbol: "C$", label: "Canadian Dollar" },
+  { code: "AUD", symbol: "A$", label: "Australian Dollar" },
+  { code: "ZAR", symbol: "R", label: "South African Rand" },
+  { code: "GHS", symbol: "₵", label: "Ghanaian Cedi" },
+  { code: "KES", symbol: "KSh", label: "Kenyan Shilling" },
+];
 
 const DEFAULT_RATES: Record<CurrencyCode, number> = {
   NGN: 1,
@@ -197,6 +213,23 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
     [currencyCode, rates]
   );
 
+  const toNaira = useCallback(
+    (local: number): number => {
+      if (currencyCode === "NGN") return local;
+      return local * rates[currencyCode];
+    },
+    [currencyCode, rates]
+  );
+
+  const setCurrency = useCallback(async (code: CurrencyCode) => {
+    setCurrencyCode(code);
+    try {
+      const { data: sess } = await supabase.auth.getUser();
+      const uid = sess?.user?.id;
+      if (uid) await supabase.from("profiles").update({ preferred_currency: code }).eq("id", uid);
+    } catch { /* keep the local selection even if persistence fails */ }
+  }, []);
+
   const formatCurrency = useCallback(
     (naira: number): string => {
       if (currencyCode === "NGN") {
@@ -231,7 +264,7 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   );
 
   return (
-    <CurrencyContext.Provider value={{ currency, currencyCode, rates, fromNaira, formatCurrency, formatCurrencyCompact, formatPoints, loaded }}>
+    <CurrencyContext.Provider value={{ currency, currencyCode, rates, setCurrency, fromNaira, toNaira, formatCurrency, formatCurrencyCompact, formatPoints, loaded }}>
       {children}
     </CurrencyContext.Provider>
   );
