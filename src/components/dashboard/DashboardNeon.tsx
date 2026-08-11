@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Copy, Check, Share2, Wallet, Zap, Users, ArrowUpRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import TaskProgressStrip from "@/components/tasks/TaskProgressStrip";
-import GoalAccountStrip from "@/components/GoalAccountStrip";
+import GoalFundingPanel from "@/components/GoalFundingPanel";
 
 const DashboardNeon = () => {
   const { profile } = useAuth();
@@ -99,7 +99,7 @@ const DashboardNeon = () => {
         </div>
       )}
 
-      <GoalAccountStrip />
+      <GoalFundingPanel />
       <TaskProgressStrip />
 
       {/* Referral */}
