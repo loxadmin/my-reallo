@@ -89,36 +89,76 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-glow" />
         </motion.div>
 
-        {/* Headline */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.7 }}
-          className="font-display text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] mb-5"
-        >
-          <span className="text-foreground">Just Make a Wish.</span>
-          <br />
-          <span className="text-foreground">We'll Fund Your </span>
-          <span className="relative inline-block overflow-hidden align-top">
-            <AnimatePresence mode="wait">
-              {titles.map(
-                (title, index) =>
-                  index === titleNumber && (
-                    <motion.span
-                      key={title}
-                      className="gradient-text block"
-                      initial={{ opacity: 0, y: 40 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -40 }}
-                      transition={{ duration: 0.4, ease: "easeInOut" }}
-                    >
-                      {title}
-                    </motion.span>
-                  )
-              )}
-            </AnimatePresence>
-          </span>
-        </motion.h1>
+        {/* Headline with Handwritten SVG Design Overlay */}
+        <div className="relative w-full max-w-3xl mx-auto py-12 px-6 sm:px-12 mb-5">
+          {/* Handwritten SVG background loop */}
+          <div className="absolute inset-0 pointer-events-none select-none z-0">
+            <motion.svg
+              width="100%"
+              height="100%"
+              viewBox="0 0 1200 600"
+              initial="hidden"
+              animate="visible"
+              className="w-full h-full"
+            >
+              <title>KokonutUI</title>
+              <motion.path
+                d="M 950 90
+                   C 1250 300, 1050 480, 600 520
+                   C 250 520, 150 480, 150 300
+                   C 150 120, 350 80, 600 80
+                   C 850 80, 950 180, 950 180"
+                fill="none"
+                strokeWidth="12"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                variants={{
+                  hidden: { pathLength: 0, opacity: 0 },
+                  visible: {
+                    pathLength: 1,
+                    opacity: 1,
+                    transition: {
+                      pathLength: { duration: 2.5, ease: [0.43, 0.13, 0.23, 0.96] },
+                      opacity: { duration: 0.5 },
+                    },
+                  },
+                }}
+                className="text-black dark:text-white opacity-40 dark:opacity-30"
+              />
+            </motion.svg>
+          </div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.7 }}
+            className="relative z-10 font-display text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] text-center"
+          >
+            <span className="text-foreground">Just Make a Wish.</span>
+            <br />
+            <span className="text-foreground">We'll Fund Your </span>
+            <span className="relative inline-block overflow-hidden align-top">
+              <AnimatePresence mode="wait">
+                {titles.map(
+                  (title, index) =>
+                    index === titleNumber && (
+                      <motion.span
+                        key={title}
+                        className="gradient-text block"
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -40 }}
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                      >
+                        {title}
+                      </motion.span>
+                    )
+                )}
+              </AnimatePresence>
+            </span>
+          </motion.h1>
+        </div>
 
         <motion.p
           initial={{ opacity: 0 }}
