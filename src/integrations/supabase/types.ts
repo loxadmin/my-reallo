@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_2fa_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_settings: {
         Row: {
           key: string
@@ -461,6 +491,56 @@ export type Database = {
           },
         ]
       }
+      deposits: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          goal_account_id: string | null
+          id: string
+          metadata: Json
+          paid_at: string | null
+          reference: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          goal_account_id?: string | null
+          id?: string
+          metadata?: Json
+          paid_at?: string | null
+          reference: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          goal_account_id?: string | null
+          id?: string
+          metadata?: Json
+          paid_at?: string | null
+          reference?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deposits_goal_account_id_fkey"
+            columns: ["goal_account_id"]
+            isOneToOne: false
+            referencedRelation: "goal_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dummy_activity: {
         Row: {
           action_type: string
@@ -643,11 +723,13 @@ export type Database = {
           chosen: boolean
           created_at: string
           deposit: number
+          deposit_percent: number
           duration_months: number | null
           goal_account_id: string | null
           id: string
           label: string
           monthly_contribution: number | null
+          points_required: number
           requirements: Json
           user_id: string
         }
@@ -655,11 +737,13 @@ export type Database = {
           chosen?: boolean
           created_at?: string
           deposit?: number
+          deposit_percent?: number
           duration_months?: number | null
           goal_account_id?: string | null
           id?: string
           label: string
           monthly_contribution?: number | null
+          points_required?: number
           requirements?: Json
           user_id: string
         }
@@ -667,11 +751,13 @@ export type Database = {
           chosen?: boolean
           created_at?: string
           deposit?: number
+          deposit_percent?: number
           duration_months?: number | null
           goal_account_id?: string | null
           id?: string
           label?: string
           monthly_contribution?: number | null
+          points_required?: number
           requirements?: Json
           user_id?: string
         }
@@ -692,11 +778,14 @@ export type Database = {
           closed_at: string | null
           created_at: string
           deposit_paid: number
+          deposit_percent: number
           deposit_required: number
           id: string
           maturity_months: number | null
           opened_at: string
           plan: Json
+          points_contributed: number
+          points_required: number
           risk_level: string | null
           status: string
           target_amount: number
@@ -715,11 +804,14 @@ export type Database = {
           closed_at?: string | null
           created_at?: string
           deposit_paid?: number
+          deposit_percent?: number
           deposit_required?: number
           id?: string
           maturity_months?: number | null
           opened_at?: string
           plan?: Json
+          points_contributed?: number
+          points_required?: number
           risk_level?: string | null
           status?: string
           target_amount: number
@@ -738,11 +830,14 @@ export type Database = {
           closed_at?: string | null
           created_at?: string
           deposit_paid?: number
+          deposit_percent?: number
           deposit_required?: number
           id?: string
           maturity_months?: number | null
           opened_at?: string
           plan?: Json
+          points_contributed?: number
+          points_required?: number
           risk_level?: string | null
           status?: string
           target_amount?: number
@@ -1764,6 +1859,8 @@ export type Database = {
           logo_url: string | null
           name: string
           owner_user_id: string | null
+          point_value_ngn: number
+          points_exchange_enabled: boolean
           public_key: string | null
           status: Database["public"]["Enums"]["oauth_app_status"]
           updated_at: string
@@ -1781,6 +1878,8 @@ export type Database = {
           logo_url?: string | null
           name: string
           owner_user_id?: string | null
+          point_value_ngn?: number
+          points_exchange_enabled?: boolean
           public_key?: string | null
           status?: Database["public"]["Enums"]["oauth_app_status"]
           updated_at?: string
@@ -1798,6 +1897,8 @@ export type Database = {
           logo_url?: string | null
           name?: string
           owner_user_id?: string | null
+          point_value_ngn?: number
+          points_exchange_enabled?: boolean
           public_key?: string | null
           status?: Database["public"]["Enums"]["oauth_app_status"]
           updated_at?: string
@@ -2181,6 +2282,82 @@ export type Database = {
           },
         ]
       }
+      partner_point_balances: {
+        Row: {
+          app_id: string
+          balance: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          app_id: string
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          app_id?: string
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_point_balances_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_point_transfers: {
+        Row: {
+          app_id: string
+          created_at: string
+          direction: string
+          id: string
+          karbali_points: number
+          partner_points: number
+          rate_ngn_per_partner_point: number
+          user_id: string
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          direction: string
+          id?: string
+          karbali_points: number
+          partner_points: number
+          rate_ngn_per_partner_point: number
+          user_id: string
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          karbali_points?: number
+          partner_points?: number
+          rate_ngn_per_partner_point?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_point_transfers_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: string
@@ -2198,6 +2375,8 @@ export type Database = {
           id: string
           is_banned: boolean
           last_active: string | null
+          legal_name: string | null
+          legal_name_updated_at: string | null
           monthly_business_spend: number | null
           off_queue_at: string | null
           onboarding_bonus_awarded: boolean
@@ -2232,6 +2411,8 @@ export type Database = {
           id: string
           is_banned?: boolean
           last_active?: string | null
+          legal_name?: string | null
+          legal_name_updated_at?: string | null
           monthly_business_spend?: number | null
           off_queue_at?: string | null
           onboarding_bonus_awarded?: boolean
@@ -2266,6 +2447,8 @@ export type Database = {
           id?: string
           is_banned?: boolean
           last_active?: string | null
+          legal_name?: string | null
+          legal_name_updated_at?: string | null
           monthly_business_spend?: number | null
           off_queue_at?: string | null
           onboarding_bonus_awarded?: boolean
@@ -3189,12 +3372,77 @@ export type Database = {
           },
         ]
       }
+      withdrawal_requests: {
+        Row: {
+          account_name: string | null
+          account_number: string | null
+          admin_note: string | null
+          amount: number
+          bank_name: string | null
+          created_at: string
+          goal_account_id: string | null
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          admin_note?: string | null
+          amount: number
+          bank_name?: string | null
+          created_at?: string
+          goal_account_id?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          admin_note?: string | null
+          amount?: number
+          bank_name?: string | null
+          created_at?: string
+          goal_account_id?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_goal_account_id_fkey"
+            columns: ["goal_account_id"]
+            isOneToOne: false
+            referencedRelation: "goal_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       active_goal_account: { Args: { _user_id: string }; Returns: string }
+      apply_goal_points: {
+        Args: {
+          p_goal_id: string
+          p_note: string
+          p_points: number
+          p_source: string
+        }
+        Returns: number
+      }
       apply_goal_unlock: {
         Args: {
           p_amount: number
@@ -3256,7 +3504,13 @@ export type Database = {
       withdraw_goal_account: { Args: { p_goal_id: string }; Returns: Json }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "super_admin"
+        | "influencer"
+        | "monthly_earner"
       oauth_app_status: "pending" | "approved" | "suspended" | "revoked"
       oauth_environment: "sandbox" | "production"
       oauth_ledger_type: "spend" | "reversal"
@@ -3397,7 +3651,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "super_admin",
+        "influencer",
+        "monthly_earner",
+      ],
       oauth_app_status: ["pending", "approved", "suspended", "revoked"],
       oauth_environment: ["sandbox", "production"],
       oauth_ledger_type: ["spend", "reversal"],
