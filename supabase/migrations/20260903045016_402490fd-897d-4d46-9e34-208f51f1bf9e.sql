@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.apply_goal_points(uuid, bigint, text, text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.apply_goal_points(uuid, bigint, text, text) TO service_role;
