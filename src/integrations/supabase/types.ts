@@ -723,11 +723,13 @@ export type Database = {
           chosen: boolean
           created_at: string
           deposit: number
+          deposit_percent: number
           duration_months: number | null
           goal_account_id: string | null
           id: string
           label: string
           monthly_contribution: number | null
+          points_required: number
           requirements: Json
           user_id: string
         }
@@ -735,11 +737,13 @@ export type Database = {
           chosen?: boolean
           created_at?: string
           deposit?: number
+          deposit_percent?: number
           duration_months?: number | null
           goal_account_id?: string | null
           id?: string
           label: string
           monthly_contribution?: number | null
+          points_required?: number
           requirements?: Json
           user_id: string
         }
@@ -747,11 +751,13 @@ export type Database = {
           chosen?: boolean
           created_at?: string
           deposit?: number
+          deposit_percent?: number
           duration_months?: number | null
           goal_account_id?: string | null
           id?: string
           label?: string
           monthly_contribution?: number | null
+          points_required?: number
           requirements?: Json
           user_id?: string
         }
