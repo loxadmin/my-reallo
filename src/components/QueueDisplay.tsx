@@ -470,6 +470,8 @@ const QueueDisplay = ({ totalAnnualSpend, goal, targetAmount, view, onViewChange
         {/* ═══ GOAL VIEW ═══ */}
         {view === "goal" && (
           <motion.div key="goal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <GoalAccountsSection />
+
             <GlassCard>
               <div className="flex items-center justify-between">
                 <div>
