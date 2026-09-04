@@ -24,7 +24,7 @@ export default function GoalFundingPanel({ className }: { className?: string }) 
       if (!user) { setLoading(false); return; }
       const { data } = await supabase
         .from("goal_accounts")
-        .select("id, title, target_amount, unlocked_amount, status, maturity_months")
+        .select("id, title, target_amount, unlocked_amount, status, points_required, points_contributed")
         .eq("user_id", user.id)
         .neq("status", "closed")
         .order("created_at", { ascending: false })
@@ -54,7 +54,10 @@ export default function GoalFundingPanel({ className }: { className?: string }) 
 
   const target = Number(goal.target_amount || 0);
   const unlocked = Number(goal.unlocked_amount || 0);
-  const pct = target > 0 ? Math.min(100, Math.round((unlocked / target) * 100)) : 0;
+  const pointsRequired = Number(goal.points_required || 0);
+  const pointsDone = Number(goal.points_contributed || 0);
+  const pointsLeft = Math.max(0, pointsRequired - pointsDone);
+  const pct = pointsRequired > 0 ? Math.min(100, Math.round((pointsDone / pointsRequired) * 100)) : 0;
   const enrolledIds = new Set(enrollments.map((e) => e.task_id));
   const milestones = tasks.filter((t) => !enrolledIds.has(t.id)).slice(0, 2);
 
@@ -66,7 +69,7 @@ export default function GoalFundingPanel({ className }: { className?: string }) 
             <Target className="w-3 h-3 text-primary" /> {goal.title}
           </span>
           <p className="mt-1.5 text-[24px] font-light text-foreground leading-none">{formatCurrency(unlocked)}</p>
-          <p className="text-[11px] text-muted-foreground mt-1">of {formatCurrency(target)} target</p>
+          <p className="text-[11px] text-muted-foreground mt-1">of {formatCurrency(target)} target · {pointsLeft.toLocaleString()} points to go</p>
         </div>
         <span className="text-[12px] text-primary font-medium">{pct}% funded</span>
       </div>

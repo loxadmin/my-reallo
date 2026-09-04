@@ -10,16 +10,14 @@ interface Option {
   id: string;
   label: string;
   deposit: number;
-  duration_months: number;
-  monthly_contribution: number;
+  deposit_percent: number;
+  points_required: number;
   requirements: any;
 }
 
-const DURATIONS = [6, 12, 18, 24, 36];
-
 /**
- * First screen after signup: create the Goal Account.
- * Currency -> goal details (amount, duration, monthly income) -> five AI-built plans.
+ * Goal Account creation. No duration: a goal unlocks the moment its points target is met.
+ * Currency -> what you want and what it costs -> five funding plans (points + optional deposit).
  */
 export default function GoalAccountWizard({
   onDone,
@@ -33,13 +31,10 @@ export default function GoalAccountWizard({
   const [step, setStep] = useState<"currency" | "details" | "options">("currency");
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
-  const [income, setIncome] = useState("");
-  const [months, setMonths] = useState(12);
   const [loading, setLoading] = useState(false);
   const [options, setOptions] = useState<Option[]>([]);
 
   const targetNaira = Math.round(toNaira(Number(amount || 0)));
-  const incomeNaira = Math.round(toNaira(Number(income || 0)));
 
   const generate = async () => {
     if (!title.trim()) return toast({ title: "What are you working towards?", variant: "destructive" });
@@ -47,7 +42,7 @@ export default function GoalAccountWizard({
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("ai-open-goal", {
-        body: { target_amount: targetNaira, duration_months: months, monthly_income: incomeNaira, title: title.trim() },
+        body: { target_amount: targetNaira, title: title.trim() },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -63,17 +58,15 @@ export default function GoalAccountWizard({
   const choose = async (opt: Option) => {
     setLoading(true);
     try {
-      const targetDate = new Date();
-      targetDate.setMonth(targetDate.getMonth() + months);
       const { error } = await supabase.rpc("open_goal_account", {
         p_title: title.trim(),
         p_target_amount: targetNaira,
-        p_target_date: targetDate.toISOString().slice(0, 10),
+        p_target_date: null as any,
         p_option_id: opt.id,
       });
       if (error) throw error;
       if (user) await supabase.from("profiles").update({ onboarding_path: "dreams" } as any).eq("id", user.id);
-      toast({ title: "Your Goal Account is open", description: "Tasks and offers will now fund it." });
+      toast({ title: "Your Goal Account is open", description: "Earn points and they fund this goal." });
       onDone();
     } catch (e: any) {
       toast({ title: "Could not open your Goal Account", description: e?.message ?? "Try again", variant: "destructive" });
@@ -100,8 +93,8 @@ export default function GoalAccountWizard({
           {step === "currency"
             ? "Everything in Karbali will be shown in this currency."
             : step === "details"
-            ? "We'll build five funding plans around your answer."
-            : "One plan needs no money at all — just tasks and referrals."}
+            ? "We'll show you five ways to unlock it. No deadlines."
+            : "Reach the points target and your goal unlocks — whenever that happens."}
         </p>
       </div>
 
@@ -127,23 +120,6 @@ export default function GoalAccountWizard({
               className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-[14px]" style={{ fontSize: 16 }} />
             {targetNaira > 0 && <p className="text-[11px] text-muted-foreground">{formatCurrency(targetNaira)}</p>}
           </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] uppercase tracking-widest text-muted-foreground">When do you want it?</label>
-            <div className="flex flex-wrap gap-2">
-              {DURATIONS.map((m) => (
-                <button key={m} onClick={() => setMonths(m)}
-                  className={`px-3 py-1.5 rounded-full text-[12px] border transition ${months === m ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
-                  {m} months
-                </button>
-              ))}
-            </div>
-            <p className="text-[11px] text-muted-foreground">Six months is the shortest a Goal Account can run.</p>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] uppercase tracking-widest text-muted-foreground">What you earn a month (optional)</label>
-            <input value={income} onChange={(e) => setIncome(e.target.value.replace(/[^0-9]/g, ""))} inputMode="numeric" placeholder="150000"
-              className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-[14px]" style={{ fontSize: 16 }} />
-          </div>
           <div className="flex gap-2">
             <button onClick={() => setStep("currency")} className="px-3 py-3 rounded-xl border border-border text-[13px] text-muted-foreground">
               <ArrowLeft className="w-4 h-4" />
@@ -162,17 +138,16 @@ export default function GoalAccountWizard({
             <div key={o.id} className="rounded-2xl border border-border bg-card p-4 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-[14px] font-semibold text-foreground">{o.label}</h3>
-                <span className="text-[11px] text-primary shrink-0">{o.duration_months} months</span>
+                <span className="text-[11px] text-primary shrink-0">No deadline</span>
               </div>
-              <p className="text-[12px] text-muted-foreground">
-                {Number(o.deposit) > 0 ? `You put in ${formatCurrency(Number(o.deposit))} to start` : "You put in nothing to start"}
-                {Number(o.monthly_contribution) > 0 ? ` · then ${formatCurrency(Number(o.monthly_contribution))} a month` : ""}
+              <p className="text-[16px] font-light text-foreground">
+                {Number(o.points_required).toLocaleString()} points
               </p>
-              <div className="flex flex-wrap gap-1.5 text-[10px]">
-                {o.requirements?.tasks ? <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{o.requirements.tasks} tasks</span> : null}
-                {o.requirements?.referrals ? <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{o.requirements.referrals} valid referrals</span> : null}
-              </div>
-              {o.requirements?.notes && <p className="text-[11px] text-muted-foreground">{o.requirements.notes}</p>}
+              <p className="text-[12px] text-muted-foreground">
+                {Number(o.deposit) > 0
+                  ? `Plus a ${formatCurrency(Number(o.deposit))} deposit (${Math.round(Number(o.deposit_percent) * 100)}%) to unlock this goal.`
+                  : "No deposit at all — earn every point."}
+              </p>
               <button disabled={loading} onClick={() => void choose(o)}
                 className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-[12px] font-medium inline-flex items-center justify-center gap-1.5 disabled:opacity-60">
                 <Check className="w-3.5 h-3.5" /> Use this plan

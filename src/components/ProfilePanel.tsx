@@ -5,6 +5,7 @@ import GlassButton from "./GlassButton";
 import { LogOut, User, Mail, Star, Hash, Calendar, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CurrencySelect from "./CurrencySelect";
+import LegalNameCard from "./LegalNameCard";
 
 const ProfilePanel = () => {
   const { profile, signOut } = useAuth();
@@ -56,7 +57,10 @@ const ProfilePanel = () => {
         </GlassCard>
       </div>
 
+      <LegalNameCard />
+
       <GlassCard className="p-0 overflow-hidden divide-y divide-border/30">
+
         <div className="p-4 flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Currency</p>
