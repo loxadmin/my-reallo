@@ -5,6 +5,7 @@ import GlassButton from "./GlassButton";
 import { LogOut, User, Mail, Star, Hash, Calendar, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CurrencySelect from "./CurrencySelect";
+import LegalNameCard from "./LegalNameCard";
 
 const ProfilePanel = () => {
   const { profile, signOut } = useAuth();
